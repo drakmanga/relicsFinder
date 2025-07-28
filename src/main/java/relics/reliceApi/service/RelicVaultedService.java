@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class VaultedRelicService {
+public class RelicVaultedService {
 
     private String getPageHtml() throws IOException {
         // Per esempio prendi la pagina web da cui estrarre la tabella
@@ -76,9 +76,9 @@ public class VaultedRelicService {
         return sortedList;
     }
 
-    public boolean isVaulted(String tier, String relicName) throws IOException {
+    public boolean isVaulted(String relicName) throws IOException {
         List<String> unvaultedRelics = extractUnvaultedRelics();
-        String fullRelicName = (tier.trim().toLowerCase() + " " + relicName.trim().toLowerCase());
+        String fullRelicName = (relicName.replace("_", " ").trim().toLowerCase());
 
         Set<String> unvaultedLower = unvaultedRelics.stream()
                 .map(String::toLowerCase)

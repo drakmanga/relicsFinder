@@ -34,22 +34,4 @@ public class RelicUpdateService {
 
         objectMapper.writeValue(new File(LOCAL_FILE_PATH), objectMapper.readTree(response.body()));
     }
-
-    private JsonNode loadRelicsFromFile() throws IOException {
-        File file = new File(LOCAL_FILE_PATH);
-        if (!file.exists()) {
-            throw new IOException("Relics file not found: " + LOCAL_FILE_PATH);
-        }
-        return objectMapper.readTree(file);
-    }
-
-    public JsonNode loadRelicsWithCheckData() throws IOException {
-        JsonNode rootNode = loadRelicsFromFile();
-        assert rootNode != null;
-        JsonNode relicsArray = rootNode.get("relics");
-        if (relicsArray == null || !relicsArray.isArray()) {
-            throw new IOException("Invalid relics data format.");
-        }
-        return relicsArray;
-    }
 }
