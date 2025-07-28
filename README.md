@@ -22,7 +22,6 @@ We're working on new features, including:
 
 This guide explains how to package the project as a .jar file and run it.
 
-```bash
 # 1. Navigate to the root of the project
 cd /path/to/your/project
 
