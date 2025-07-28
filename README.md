@@ -18,44 +18,44 @@ We're working on new features, including:
  
 
 
-## 🛠️ Come compilare ed eseguire questo progetto Spring Boot
+## 🛠️ How to Build and Run This Spring Boot Project
 
-Questa guida mostra i passaggi per compilare il progetto in un file .jar ed eseguirlo.
+This guide explains how to package the project as a .jar file and run it.
 
 ```bash
-# 1. Vai nella cartella del progetto
-cd /percorso/del/progetto
+# 1. Navigate to the root of the project
+cd /path/to/your/project
 
-# 2. Costruisci il file .jar
-# Se usi Maven:
+# 2. Build the .jar file
+# If you use Maven:
 ./mvnw clean package
-# Oppure, se Maven è installato nel sistema:
+# Or, if Maven is installed globally:
 mvn clean package
 
-# Se vuoi evitare l'esecuzione dei test:
+# To skip running tests:
 mvn clean package -DskipTests
 
-# Se usi Gradle:
+# If you use Gradle:
 ./gradlew bootJar
-# Oppure:
+# Or:
 gradle bootJar
 
-# Se vuoi evitare i test con Gradle:
+# To skip tests with Gradle:
 ./gradlew bootJar -x test
 
-# 3. Trova il file .jar generato
-# Maven: lo troverai in target/
-# Gradle: lo troverai in build/libs/
+# 3. Locate the generated .jar file
+# For Maven: check the target/ directory
+# For Gradle: check the build/libs/ directory
 
-# Esempio:
+# Example:
 ls target/
-# Output atteso: mio-progetto-0.0.1-SNAPSHOT.jar
+# Expected output: your-project-0.0.1-SNAPSHOT.jar
 
-# 4. Esegui il file .jar
-java -jar target/mio-progetto-0.0.1-SNAPSHOT.jar
+# 4. Run the .jar file
+java -jar target/your-project-0.0.1-SNAPSHOT.jar
 
-# (Opzionale) Se vuoi specificare un file di configurazione esterno:
-java -jar target/mio-progetto.jar --spring.config.location=file:/percorso/config/
+# (Optional) If you want to use an external configuration file:
+java -jar target/your-project.jar --spring.config.location=file:/path/to/application.properties
 ```
 
-✅ Ora la tua applicazione Spring Boot è attiva e funzionante!
+✅ Your Spring Boot application is now up and running!
