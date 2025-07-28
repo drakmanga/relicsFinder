@@ -59,3 +59,14 @@ java -jar target/your-project.jar --spring.config.location=file:/path/to/applica
 
 ✅ Your Spring Boot application is now up and running!
 
+## 📬 API Testing with Postman
+
+If you want to test the API endpoints, you’ll find a file named `warframeRelic.postman_collection.json` inside the `resources` folder.
+
+Simply import it into **Postman** to start testing the available requests.
+
+**Steps:**
+1. Open Postman
+2. Click **Import**
+3. Select the file `warframeRelic.postman_collection.json`
+4. Explore and test the API with ease!

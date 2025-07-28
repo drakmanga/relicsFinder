@@ -1,0 +1,175 @@
+{
+	"info": {
+		"_postman_id": "75e0f177-8de3-431f-b94d-d08b3835bf3a",
+		"name": "warframeRelic",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43332647"
+	},
+	"item": [
+		{
+			"name": "downloadRelic",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/relics/update",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"relics",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestRelic",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/relics",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"relics"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestRelicFromParam",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/relics/axi",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"relics",
+						"axi"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestRelicTiers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/relics/tiers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"relics",
+						"tiers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestRelicStates",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/relics/Axi_a19",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"relics",
+						"Axi_a19"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestUnvaulted",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "RequestCheckVaulted",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/relics/isVaulted/Axi/A1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"relics",
+						"isVaulted",
+						"Axi",
+						"A1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestDropInfo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/relics/drop-info/Axi_A1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"relics",
+						"drop-info",
+						"Axi_A1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestAvgPrice",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
