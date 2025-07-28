@@ -16,3 +16,46 @@ We're working on new features, including:
 
 - 🧾 Check if a specific item or relic is already in your inventory  
  
+
+
+## 🛠️ Come compilare ed eseguire questo progetto Spring Boot
+
+Questa guida mostra i passaggi per compilare il progetto in un file .jar ed eseguirlo.
+
+```bash
+# 1. Vai nella cartella del progetto
+cd /percorso/del/progetto
+
+# 2. Costruisci il file .jar
+# Se usi Maven:
+./mvnw clean package
+# Oppure, se Maven è installato nel sistema:
+mvn clean package
+
+# Se vuoi evitare l'esecuzione dei test:
+mvn clean package -DskipTests
+
+# Se usi Gradle:
+./gradlew bootJar
+# Oppure:
+gradle bootJar
+
+# Se vuoi evitare i test con Gradle:
+./gradlew bootJar -x test
+
+# 3. Trova il file .jar generato
+# Maven: lo troverai in target/
+# Gradle: lo troverai in build/libs/
+
+# Esempio:
+ls target/
+# Output atteso: mio-progetto-0.0.1-SNAPSHOT.jar
+
+# 4. Esegui il file .jar
+java -jar target/mio-progetto-0.0.1-SNAPSHOT.jar
+
+# (Opzionale) Se vuoi specificare un file di configurazione esterno:
+java -jar target/mio-progetto.jar --spring.config.location=file:/percorso/config/
+```
+
+✅ Ora la tua applicazione Spring Boot è attiva e funzionante!
