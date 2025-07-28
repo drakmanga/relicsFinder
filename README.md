@@ -8,10 +8,11 @@ Whether you're hunting for a specific Prime part (like **Volt Prime**) or lookin
 - 📦 View which relic drops the part you’re looking for  
 - 💰 Check the average market price of each item  
 - 🛒 Jump directly to purchase the item  
+- 🌍 See where each relic can be farmed or dropped in the game
 
 ## 🔧 Upcoming Features
 
 We're working on new features, including:
 
 - 🧾 Check if a specific item or relic is already in your inventory  
-- 🌍 See where each relic can be farmed or dropped in the game  
+ 
