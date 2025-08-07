@@ -37,7 +37,6 @@ public class RelicDropInfoService {
                             dropList.add(new DropInfoRelic(mission, location, rotation, chance));
                         }
                     }
-                    break;
                 }
             }
         } catch (Exception e) {

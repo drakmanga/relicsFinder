@@ -5,10 +5,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import relics.reliceApi.model.Relic;
 import relics.reliceApi.service.RelicVaultedService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/relics")
@@ -27,7 +29,7 @@ public class RelicVaultedController {
     }
 
     @GetMapping("/unvaulted")
-    public ResponseEntity<List<String>> getUnvaultedRelics() throws IOException {
+    public ResponseEntity <Map<String,List<Relic>>> getUnvaultedRelics() throws IOException {
         return ResponseEntity.ok(vaultedRelicService.extractUnvaultedRelics());
     }
 }

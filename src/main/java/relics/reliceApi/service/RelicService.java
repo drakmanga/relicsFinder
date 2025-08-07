@@ -1,8 +1,8 @@
 package relics.reliceApi.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 import relics.reliceApi.Expection.RelicNotFoundException;
+import relics.reliceApi.model.Relic;
 
 import java.io.IOException;
 import java.util.*;
@@ -16,14 +16,15 @@ public class RelicService {
     }
 
 
-    public List<JsonNode> getOnlyTierRelics(String tier) throws IOException {
-        JsonNode relicsArray = relicLoadService.loadRelicsWithCheckData();
-        if (relicsArray == null || !relicsArray.isArray()) {
-            throw new RelicNotFoundException("Invalid relics data format or no relics found.");
+    public List<Relic> getOnlyTierRelics(String tier) throws IOException {
+        List<Relic> relicsArray = relicLoadService.loadRelicsWithCheckData();
+        if(relicsArray == null || relicsArray.isEmpty()) {
+            throw new RelicNotFoundException("No relics found.");
         }
-        List<JsonNode> filteredRelics = new ArrayList<>();
+
+        List<Relic> filteredRelics = new ArrayList<>();
         relicsArray.forEach(relic -> {
-        if (tier.equalsIgnoreCase(relic.get("tier").asText())) {
+        if (tier.equalsIgnoreCase(relic.getTier())) {
             filteredRelics.add(relic);
         }
         });
@@ -31,13 +32,11 @@ public class RelicService {
     }
 
     public Map<String, Map<String, List<String>>> getAllRelicTiers() throws IOException {
-        JsonNode relicsArray = relicLoadService.loadRelicsWithCheckData();
+        List<Relic> relicsArray = relicLoadService.loadRelicsWithCheckData();
         Map<String, Set<String>> tierSetMap = new HashMap<>();
         // Estrae i tiers unici dai relics
         relicsArray.forEach(relic -> {
-            String tier = relic.get("tier").asText();
-            String name = relic.get("relicName").asText();
-            tierSetMap.computeIfAbsent(tier, k -> new HashSet<>()).add(name);
+            tierSetMap.computeIfAbsent(relic.getTier(), k -> new HashSet<>()).add(relic.getRelicName());
         });
 
         Map<String, List<String>> tierMap = new HashMap<>();
@@ -60,17 +59,16 @@ public class RelicService {
         return response;
     }
 
-    public List<JsonNode> getAllRelicStates(String relicName) throws IOException {
-        JsonNode relicsArray = relicLoadService.loadRelicsWithCheckData();
-        if (relicsArray == null || !relicsArray.isArray()) {
-            throw new RelicNotFoundException("Invalid relics data format or no relics found.");
+    public List<Relic> getAllRelicStates(String relicName) throws IOException {
+        List<Relic> relicsArray = relicLoadService.loadRelicsWithCheckData();
+        if (relicsArray == null || relicsArray.isEmpty()) {
+            throw new RelicNotFoundException("No relics found.");
         }
-        List<JsonNode> matchedRelics = new ArrayList<>();
+        List<Relic> matchedRelics = new ArrayList<>();
 
         // Estrae i tiers unici dai relics
         relicsArray.forEach(relic -> {
-
-            String tierNameRelic = relic.get("tier").asText() + " " + relic.get("relicName").asText();
+            String tierNameRelic = relic.getTier() + " " + relic.getRelicName();
             if (tierNameRelic.equalsIgnoreCase(relicName.replace("_", " ").trim())){
                 matchedRelics.add(relic);
             }

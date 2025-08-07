@@ -3,6 +3,7 @@ package relics.reliceApi.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import relics.reliceApi.model.Relic;
 import relics.reliceApi.service.RelicLoadService;
 import relics.reliceApi.service.RelicService;
 
@@ -22,7 +23,7 @@ public class RelicController {
     }
 
     @GetMapping
-    public ResponseEntity<JsonNode> getAllRelics() {
+    public ResponseEntity<List<Relic>> getAllRelics() {
         try {
 
             return ResponseEntity.ok(relicLoadService.loadRelicsWithCheckData());
@@ -32,8 +33,8 @@ public class RelicController {
     }
 
     @GetMapping("/{tier}")
-    public ResponseEntity<List<JsonNode>> getOnlyTierRelics(@PathVariable String tier) throws IOException {
-            List<JsonNode> filteredRelics = relicService.getOnlyTierRelics(tier);
+    public ResponseEntity<List<Relic>> getOnlyTierRelics(@PathVariable String tier) throws IOException {
+            List<Relic> filteredRelics = relicService.getOnlyTierRelics(tier);
             if (filteredRelics.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
@@ -48,9 +49,9 @@ public class RelicController {
     }
 
     @GetMapping("/relic/{relicName}")
-    public ResponseEntity<List<JsonNode>> getRelicAllStates(@PathVariable String relicName) throws IOException {
+    public ResponseEntity<List<Relic>> getRelicAllStates(@PathVariable String relicName) throws IOException {
 
-        List<JsonNode> matchedRelics = relicService.getAllRelicStates(relicName);
+        List<Relic> matchedRelics = relicService.getAllRelicStates(relicName);
         if (matchedRelics.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

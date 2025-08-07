@@ -5,6 +5,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
+import relics.reliceApi.model.Relic;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,30 +15,28 @@ import java.util.stream.Collectors;
 public class RelicVaultedService {
 
     private String getPageHtml() throws IOException {
-        // Per esempio prendi la pagina web da cui estrarre la tabella
         return Jsoup.connect("https://warframe.fandom.com/wiki/Void_Relic#List_of_Void_Relics_and_Drop_Sites").get().html();
     }
 
-    public List<String> extractUnvaultedRelics() throws IOException {
+    public Map<String, List<Relic>> extractUnvaultedRelics() throws IOException {
         String html = getPageHtml();
-        Set<String> relics = new HashSet<>();
+        Set<Relic> relics = new HashSet<>();
 
         Document doc = Jsoup.parse(html);
 
         Element table = doc.selectFirst("table.article-table:has(caption:contains(Unvaulted/Available Relics))");
         if (table == null) {
             System.out.println("Tabella non trovata");
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
         Elements rows = table.select("tbody > tr");
         if (rows.size() < 2) {
             System.out.println("Righe insufficienti nella tabella");
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
         Element relicsRow = rows.get(1);
-
         Elements columns = relicsRow.select("td");
 
         for (Element cell : columns) {
@@ -45,7 +45,11 @@ public class RelicVaultedService {
             for (Element li : listItems) {
                 Element a = li.selectFirst("a");
                 if (a != null) {
-                    relics.add(a.text().trim());
+                    String text = a.text().trim();
+                    String[] parts = text.split(" ", 2);
+                    if (parts.length == 2) {
+                        relics.add(new Relic(parts[0], parts[1]));
+                    }
                 }
             }
         }
@@ -58,30 +62,27 @@ public class RelicVaultedService {
                 "Requiem", 5
         );
 
-        List<String> sortedList = new ArrayList<>(relics);
-        sortedList.sort((r1, r2) -> {
-            String prefix1 = r1.split(" ")[0];
-            String prefix2 = r2.split(" ")[0];
+        Map<String, List<Relic>> grouped = relics.stream()
+                .collect(Collectors.groupingBy(Relic::getTier));
 
-            int order1 = orderMap.getOrDefault(prefix1, 999);
-            int order2 = orderMap.getOrDefault(prefix2, 999);
+        for (List<Relic> list : grouped.values()){
+            list.sort(Comparator.comparing(Relic::getRelicName, String.CASE_INSENSITIVE_ORDER));
+        }
 
-            if (order1 != order2) {
-                return Integer.compare(order1, order2);
-            } else {
-                return r1.compareToIgnoreCase(r2);
-            }
-        });
-
-        return sortedList;
+        Map<String, List<Relic>> sortedGrouped = new LinkedHashMap<>();
+        grouped.entrySet().stream()
+                        .sorted(Comparator.comparingInt(e -> orderMap.getOrDefault(e.getKey(), 999)))
+                        .forEachOrdered(e -> sortedGrouped.put(e.getKey(), e.getValue()));
+        return sortedGrouped;
     }
 
     public boolean isVaulted(String relicName) throws IOException {
-        List<String> unvaultedRelics = extractUnvaultedRelics();
+        Map<String,List<Relic>> unvaultedRelics = extractUnvaultedRelics();
         String fullRelicName = (relicName.replace("_", " ").trim().toLowerCase());
 
-        Set<String> unvaultedLower = unvaultedRelics.stream()
-                .map(String::toLowerCase)
+        Set<String> unvaultedLower = unvaultedRelics.values().stream()
+                .flatMap(List::stream)
+                .map(relic -> (relic.getTier() + relic.getRelicName().toLowerCase()))
                 .collect(Collectors.toSet());
 
         boolean isUnvaulted = unvaultedLower.contains(fullRelicName);

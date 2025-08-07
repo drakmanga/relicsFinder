@@ -17,11 +17,9 @@ import java.util.List;
 public class RelicDropInfoController {
 
     private final RelicDropInfoService relicDropInfoService;
-    private final RelicVaultedService vaultedRelicService;
 
-    public RelicDropInfoController(RelicDropInfoService relicDropInfoService, RelicVaultedService vaultedRelicService) {
+    public RelicDropInfoController(RelicDropInfoService relicDropInfoService) {
         this.relicDropInfoService = relicDropInfoService;
-        this.vaultedRelicService = vaultedRelicService;
     }
 
     @GetMapping("/drop-info/{relicName}")
@@ -29,10 +27,7 @@ public class RelicDropInfoController {
         if (relicName == null || relicName.isEmpty()) {
             return ResponseEntity.badRequest().body(null);
         }
-
-        boolean relicVaulted = vaultedRelicService.isVaulted(relicName);
         List<DropInfoRelic> dropInfo = relicDropInfoService.getRelicDropInfo(relicName);
-
         return ResponseEntity.ok(dropInfo);
     }
 }
