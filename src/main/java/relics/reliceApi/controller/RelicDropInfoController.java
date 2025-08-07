@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import relics.reliceApi.model.DropInfoRelic;
 import relics.reliceApi.service.RelicDropInfoService;
-import relics.reliceApi.service.RelicVaultedService;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,7 +22,7 @@ public class RelicDropInfoController {
     }
 
     @GetMapping("/drop-info/{relicName}")
-    public ResponseEntity<List<DropInfoRelic>> getRelicDropInfo(@PathVariable String relicName) throws IOException {
+    public ResponseEntity<List<DropInfoRelic>> getRelicDropInfo(@PathVariable String relicName) {
         if (relicName == null || relicName.isEmpty()) {
             return ResponseEntity.badRequest().body(null);
         }

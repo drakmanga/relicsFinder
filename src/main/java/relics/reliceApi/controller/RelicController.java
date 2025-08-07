@@ -1,6 +1,5 @@
 package relics.reliceApi.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import relics.reliceApi.model.Relic;
