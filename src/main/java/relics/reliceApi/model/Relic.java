@@ -3,6 +3,7 @@ package relics.reliceApi.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
@@ -11,13 +12,12 @@ import java.util.List;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
 public class Relic {
     private String tier;
     private String relicName;
     private String state;
     private List<Rewards> rewards;
-
-    public Relic() {}
 
     public Relic(String tier, String name, String state, List<Rewards> rewards) {
         this.tier = tier;
