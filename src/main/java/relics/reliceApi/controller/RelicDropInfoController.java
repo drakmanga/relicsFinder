@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import relics.reliceApi.model.DropInfoRelic;
 import relics.reliceApi.service.RelicDropInfoService;
-
-import java.io.IOException;
 import java.util.List;
 
 @RestController

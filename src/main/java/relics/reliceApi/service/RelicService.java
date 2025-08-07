@@ -36,7 +36,7 @@ public class RelicService {
         Map<String, Set<String>> tierSetMap = new HashMap<>();
         // Estrae i tiers unici dai relics
         relicsArray.forEach(relic ->
-            tierSetMap.computeIfAbsent(relic.getTier(), k -> new HashSet<>()).add(relic.getRelicName()));
+            tierSetMap.computeIfAbsent(relic.getTier(), _ -> new HashSet<>()).add(relic.getRelicName()));
 
         Map<String, List<String>> tierMap = new HashMap<>();
 
