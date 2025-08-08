@@ -30,4 +30,8 @@ public class Relic {
         this.tier = tier;
         this.relicName = name;
     }
+
+    public Relic( String name) {
+        this.relicName = name;
+    }
 }

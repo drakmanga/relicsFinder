@@ -72,7 +72,12 @@ public class RelicVaultedService {
         Map<String, List<Relic>> sortedGrouped = new LinkedHashMap<>();
         grouped.entrySet().stream()
                         .sorted(Comparator.comparingInt(e -> orderMap.getOrDefault(e.getKey(), 999)))
-                        .forEachOrdered(e -> sortedGrouped.put(e.getKey(), e.getValue()));
+                        .forEachOrdered(e -> {
+                            List<Relic> relicsWithoutTier = e.getValue().stream()
+                                    .map(relic -> new Relic(relic.getRelicName()))
+                                    .toList();
+                            sortedGrouped.put(e.getKey(), relicsWithoutTier);
+                        });
         return sortedGrouped;
     }
 
