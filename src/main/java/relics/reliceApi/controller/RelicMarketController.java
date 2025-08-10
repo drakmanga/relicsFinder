@@ -9,7 +9,7 @@ import relics.reliceApi.model.RelicPrice;
 import relics.reliceApi.service.RelicMarketService;
 
 @RestController
-@RequestMapping("/api/market/relics")
+@RequestMapping("/api/market")
 public class RelicMarketController {
     private final RelicMarketService relicMarketService;
 

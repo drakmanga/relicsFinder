@@ -167,6 +167,27 @@
 			"name": "RequestAvgPrice",
 			"request": {
 				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/market/axi_a19",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"market",
+						"axi_a19"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestSearchItem",
+			"request": {
+				"method": "GET",
 				"header": []
 			},
 			"response": []

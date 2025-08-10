@@ -41,9 +41,9 @@ public class RelicController {
     }
 
     @GetMapping("/tiers")
-    public ResponseEntity<Map<String, Map<String, List<String>>>> getAllTiers() throws IOException {
+    public ResponseEntity<Map<String, Map<String, List<Relic>>>> getAllTiers() throws IOException {
 
-        Map<String, Map<String, List<String>>> response = relicService.getAllRelicTiers();
+        Map<String, Map<String, List<Relic>>> response = relicService.getAllRelicTiers();
         return ResponseEntity.ok(response);
     }
 

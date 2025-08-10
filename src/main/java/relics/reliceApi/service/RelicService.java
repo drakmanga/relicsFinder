@@ -31,32 +31,45 @@ public class RelicService {
         return filteredRelics;
     }
 
-    public Map<String, Map<String, List<String>>> getAllRelicTiers() throws IOException {
+    public Map<String, Map<String, List<Relic>>> getAllRelicTiers() throws IOException {
         List<Relic> relicsArray = relicLoadService.loadRelicsWithCheckData();
         Map<String, Set<String>> tierSetMap = new HashMap<>();
-        // Estrae i tiers unici dai relics
+        if (relicsArray == null || relicsArray.isEmpty()) {
+            throw new RelicNotFoundException("No relics found.");
+        }
         relicsArray.forEach(relic ->
-            tierSetMap.computeIfAbsent(relic.getTier(), _ -> new HashSet<>()).add(relic.getRelicName()));
+                tierSetMap.computeIfAbsent(relic.getTier(), _ -> new HashSet<>()).add(relic.getRelicName())
+        );
+        // Ordina i tiers in un ordine specifico
+        List<String> tierOrder = List.of("Lith", "Meso", "Axi", "Requiem");
 
-        Map<String, List<String>> tierMap = new HashMap<>();
+        Map<String, List<Relic>> tierMap = new LinkedHashMap<>();
 
-        tierSetMap.forEach((key, value) -> {
-            List<String> sortedList = new ArrayList<>(value);
+        tierOrder.forEach(tier -> {
+            if (tierSetMap.containsKey(tier)) {
+                List<String> sortedList = new ArrayList<>(tierSetMap.get(tier));
 
-            sortedList.sort(Comparator
-                    .comparing((String s) -> s.replaceAll("\\d", "")) // lettere
-                    .thenComparing(s -> {
-                        String numberPart = s.replaceAll("\\D", "");
-                        return numberPart.isEmpty() ? 0 : Integer.parseInt(numberPart);
-                    }) // numeri
-            );
-            tierMap.put(key, sortedList);
+                sortedList.sort(Comparator
+                        .comparing((String s) -> s.replaceAll("\\d", "")) // lettere
+                        .thenComparing(s -> {
+                            String numberPart = s.replaceAll("\\D", "");
+                            return numberPart.isEmpty() ? 0 : Integer.parseInt(numberPart);
+                        })
+                );
+
+                List<Relic> relicList = sortedList.stream()
+                        .map(Relic::new)
+                        .toList();
+
+                tierMap.put(tier, relicList);
+            }
         });
 
-        Map<String, Map<String, List<String>>> response = new HashMap<>();
+        Map<String, Map<String, List<Relic>>> response = new HashMap<>();
         response.put("tiers", tierMap);
         return response;
     }
+
 
     public List<Relic> getAllRelicStates(String relicName) throws IOException {
         List<Relic> relicsArray = relicLoadService.loadRelicsWithCheckData();
