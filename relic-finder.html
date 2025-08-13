@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relic Finder</title>
+    <meta name="description" content="A simple HTML5 template for the Relic Finder project.">
+    <meta name="author" content="Your Name">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beercss@3.11.33/dist/cdn/beer.min.css">
+    <style>
+        /* Light theme (default) */
+        body {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /* Dark theme */
+        body.dark-theme {
+            background-color: #121212;
+            color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>RelicFinder</h1>
+        <button id="theme-toggle" class="beer"><i>light_mode</i></button>
+    </header>
+    <hr>
+    <main>
+        <section id="filter-section" class="grid">
+            <form id="filter-form">
+                <div class="s3">
+                    <label for="availability">Availability:</label>
+                    <select id="availability">
+                        <option value="all">All</option>
+                        <option value="non-vaulted">Non-Vaulted</option>
+                        <option value="vaulted">Vaulted</option>
+                    </select>
+                </div>
+                <div class="s3">
+                    <label for="tier">Tier:</label>
+                    <select id="tier">
+                        <option value="">Select Tier</option>
+                    </select>
+                </div>
+
+                <div class="s3">
+                    <label for="relics">Relics:</label>
+                    <select id="relics">
+                        <option value="">Select Relic</option>
+                    </select>
+                </div>
+
+                <div class="s3">
+                    <label for="search">Search:</label>
+                    <input type="text" id="search" placeholder="Enter search term">
+                </div>
+
+                <button type="button" id="filter-button">Filter</button>
+            </form>
+        </section>
+    </main>
+    <hr>
+    <footer>
+        <p><a href="https://github.com/drakmanga/relicsFinder/tree/main">GitHub Repository</a></p>
+    </footer>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.11.33/dist/cdn/beer.min.js"></script>
+    <script type="module"
+        src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tierSelect = document.getElementById('tier');
+            const relicsSelect = document.getElementById('relics');
+            const filterButton = document.getElementById('filter-button');
+
+            // Placeholder for API endpoints
+            const tierApiEndpoint = 'https://api.example.com/tier'; // Replace with actual API endpoint
+            const relicsApiEndpoint = 'https://api.example.com/relics'; // Replace with actual API endpoint
+
+            // Fetch and populate Tier options
+            fetch(tierApiEndpoint)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        tierSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching tier data:', error));
+
+            // Fetch and populate Relics options
+            fetch(relicsApiEndpoint)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        relicsSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching relics data:', error));
+
+            // Filter button click event
+            filterButton.addEventListener('click', () => {
+                const availability = tierSelect.value;
+                const tier = tierSelect.value;
+                const relic = relicsSelect.value;
+                const searchTerm = document.getElementById('search').value;
+
+                // Implement filtering logic here
+                console.log('Filtering with:', { availability, tier, relic, searchTerm });
+            });
+
+            // Theme toggle functionality
+            const themeToggleButton = document.getElementById('theme-toggle');
+            themeToggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('dark-theme');
+            });
+        });
+    </script>
+</body>
+
+</html>
