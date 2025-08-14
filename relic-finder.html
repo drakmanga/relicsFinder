@@ -163,6 +163,7 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.11.33/dist/cdn/beer.min.js"></script>
     <script type="module"
         src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const tierSelect = document.getElementById('tier');
@@ -174,10 +175,9 @@
             const relicsApiEndpoint = 'https://api.example.com/relics'; // Replace with actual API endpoint
 
             // Fetch and populate Tier options
-            fetch(tierApiEndpoint)
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(item => {
+            axios.get(tierApiEndpoint)
+                .then(response => {
+                    response.data.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.id;
                         option.textContent = item.name;
@@ -187,10 +187,9 @@
                 .catch(error => console.error('Error fetching tier data:', error));
 
             // Fetch and populate Relics options
-            fetch(relicsApiEndpoint)
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(item => {
+            axios.get(relicsApiEndpoint)
+                .then(response => {
+                    response.data.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.id;
                         option.textContent = item.name;
