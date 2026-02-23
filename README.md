@@ -228,7 +228,7 @@ Distribuito sotto licenza MIT. Vedi `LICENSE` per maggiori informazioni.
 
 ---
 
-**Sviluppato con ❤️ da [drakmanga](https://github.com/drakmanga)**
+**Sviluppato con ❤️ da [drakmanga](https://github.com/drakmanga) e [Outbox](https://github.com/Sblash)**
 
 *"Dream... not of what you are... but of what you want to be."* - Warframe
 
