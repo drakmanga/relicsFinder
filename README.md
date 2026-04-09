@@ -58,6 +58,8 @@ Se giochi a Warframe, sai quanto può essere frustrante:
 git clone https://github.com/drakmanga/relicsFinder.git
 cd relicsFinder
 
+chmod +x mvnw
+
 # Avvia l'applicazione
 ./mvnw spring-boot:run
 ```
