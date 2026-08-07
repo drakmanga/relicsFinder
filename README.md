@@ -139,7 +139,9 @@ relicsFinder/
 │   │   ├── resources/         # Config e Postman collection
 │   │   └── webapp/            # File statici
 │   └── test/                  # Unit e integration tests
-├── relic-finder.html          # Interfaccia utente
+├── apps/web/                  # Interfaccia utente (React + Vite)
+├── packages/ui/               # Design system Orokin (libreria React)
+├── design-system/             # Specifica del design
 ├── pom.xml                    # Dipendenze Maven
 └── README.md                  # Questo file!
 ```

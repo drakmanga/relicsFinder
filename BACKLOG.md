@@ -207,8 +207,8 @@ quello che prevede il §3.
 
 ### 6.6 Cose che il frontend nuovo rende non più necessarie
 
-- **`relic-finder.html`** alla radice è il vecchio frontend statico. Quando
-  `apps/web` lo sostituisce, va rimosso — tenerlo significa due UI divergenti.
+- ~~**`relic-finder.html`**~~ — **rimosso**. Era il vecchio frontend statico;
+  `apps/web` lo sostituisce.
 - **CORS** non serve: in sviluppo il proxy di Vite parla con la 8080, in
   produzione Spring Boot serve i file statici della stessa origine.
 
