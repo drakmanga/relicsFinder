@@ -216,8 +216,25 @@ quello che prevede il §3.
 
 ## 7. Pannello dettaglio a due modi — richiesto il 2026-08-07
 
-Oggi il pannello mostra sempre la stessa cosa: i luoghi di drop della reliquia.
-Deve invece dipendere da **cosa** è stato cliccato nella riga.
+### Stato attuale: il contenuto di una reliquia non si vede da nessuna parte
+
+Questa è una **regressione**, non una funzionalità mai esistita. Lo scaffold
+iniziale aveva un pannello che elencava tutti i drop della reliquia con le tab
+di raffinazione; riscrivendo la tabella a granularità item (§1) l'ho sostituito
+con i luoghi di drop, e i sei premi sono spariti dall'interfaccia.
+
+Oggi quindi si può solo **cercare un pezzo Prime e vedere in quali reliquie
+sta**. Il percorso inverso — parto da una reliquia, voglio sapere cosa contiene
+— non esiste più, ed è la domanda più frequente di chi apre una reliquia nel
+gioco. Va rimesso, ed è il motivo per cui questo §7 conta più di §4 e §5.
+
+Nota: i dati ci sono già tutti in memoria. `RelicGroup.states[refinement]`
+contiene i sei premi, e `groupRelics()` in `api/normalize.ts` li raggruppa già.
+Non serve nessuna chiamata nuova per la metà "reliquia" — è solo lavoro di UI.
+
+### Come deve comportarsi
+
+Il pannello deve dipendere da **cosa** è stato cliccato nella riga.
 
 **Click sull'item** → dove si ottiene quell'item:
 
