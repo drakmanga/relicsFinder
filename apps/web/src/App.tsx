@@ -18,6 +18,7 @@ import {
 
 import { FilterBar } from "./components/FilterBar";
 import { QtyStepper } from "./components/QtyStepper";
+import { ItemDetailPanel } from "./components/ItemDetailPanel";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
 import { WishlistPanel } from "./components/WishlistPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
@@ -51,7 +52,13 @@ export function App() {
     direction: "desc",
   });
   const [selected, setSelected] = useState<string | null>(null);
-  const [panel, setPanel] = useState<"detail" | "wishlist">("detail");
+  /**
+   * Which side of the row is on show. The row is a relic paired with an item,
+   * so the cell that was clicked is enough to tell the two apart — no extra
+   * control, and no second panel competing for the same 380px.
+   */
+  const [panel, setPanel] = useState<"relic" | "item" | "wishlist">("relic");
+  const [pickedItem, setPickedItem] = useState<string | null>(null);
 
   const relics = useRelics();
   const wishlist = useWishlist();
@@ -148,7 +155,7 @@ export function App() {
           <Button
             variant={panel === "wishlist" ? "accent" : "outline"}
             size="sm"
-            onClick={() => setPanel((current) => (current === "wishlist" ? "detail" : "wishlist"))}
+            onClick={() => setPanel((current) => (current === "wishlist" ? "relic" : "wishlist"))}
           >
             Wishlist · {wishlist.totalItems}
           </Button>
@@ -208,11 +215,12 @@ export function App() {
             prices={prices.data}
             pricesPending={prices.isPending}
             selected={selected}
-            onSelect={(id) => {
+            onSelect={(id, mode) => {
               setSelected(id);
+              setPickedItem(null);
               // Picking a row while the wishlist is open should show what was
               // picked, not leave the click with no visible effect.
-              setPanel("detail");
+              setPanel(mode);
             }}
             sort={sort}
             onSort={toggleSort}
@@ -226,6 +234,13 @@ export function App() {
             entries={wishlist.entries}
             prices={prices.data}
             pricesUpdatedAt={prices.dataUpdatedAt}
+          />
+        ) : panel === "item" && selectedRow ? (
+          <ItemDetailPanel
+            row={pickedItem ? { ...selectedRow, itemName: pickedItem } : selectedRow}
+            relics={relics.data ?? []}
+            prices={prices.data}
+            onPickItem={setPickedItem}
           />
         ) : (
           <RelicDetailPanel
@@ -248,7 +263,7 @@ interface ResultsProps {
   prices: Map<string, number | null> | undefined;
   pricesPending: boolean;
   selected: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, mode: "relic" | "item") => void;
   sort: { column: SortColumn; direction: SortDirection };
   onSort: (column: SortColumn) => void;
   filtered: boolean;
@@ -344,13 +359,22 @@ function Results({
             <TableRow
               key={row.id}
               selected={row.id === selected}
-              onClick={() => onSelect(row.id)}
+              onClick={() => onSelect(row.id, "relic")}
             >
               <TableCell>
                 <TierChip tier={row.tier} refinement={row.refinement} />
               </TableCell>
               <TableCell>{row.relicFullName}</TableCell>
-              <TableCell>{row.itemName}</TableCell>
+              <TableCell
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelect(row.id, "item");
+                }}
+                style={{ cursor: "pointer" }}
+                title={`What drops ${row.itemName}`}
+              >
+                {row.itemName}
+              </TableCell>
               <TableCell>
                 <RarityTag rarity={row.rarity} />
               </TableCell>
