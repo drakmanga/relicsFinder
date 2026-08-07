@@ -21,7 +21,10 @@ import {
 } from "relic-finder-ui";
 
 import { FilterBar } from "./components/FilterBar";
+import { QtyStepper } from "./components/QtyStepper";
+import { WishlistPanel } from "./components/WishlistPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
+import { bump, remove, useWishlist } from "./lib/wishlist";
 import type { RelicItemRow } from "./api/types";
 import {
   applyPriceCeiling,
@@ -32,7 +35,7 @@ import {
   type SortColumn,
   type SortDirection,
 } from "./lib/rows";
-import { relativeTime } from "./lib/format";
+import { marketUrl, relativeTime } from "./lib/format";
 
 /**
  * Rows rendered at once.
@@ -51,8 +54,10 @@ export function App() {
     direction: "desc",
   });
   const [selected, setSelected] = useState<string | null>(null);
+  const [panel, setPanel] = useState<"detail" | "wishlist">("detail");
 
   const relics = useRelics();
+  const wishlist = useWishlist();
 
   const rows = useMemo(
     () => buildRows(relics.data ?? [], filters),
@@ -61,11 +66,17 @@ export function App() {
 
   // Prices only for what is about to be shown: the batch is one request, but it
   // is still forty market lookups on the server the first time round.
-  const visibleNames = useMemo(
-    () => rows.slice(0, PAGE).map((row) => row.itemName),
-    [rows],
+  // Wishlist entries join the batch even when scrolled out of the results:
+  // the panel total needs their prices, and asking separately would double the
+  // number of market lookups.
+  const pricedNames = useMemo(
+    () => [
+      ...rows.slice(0, PAGE).map((row) => row.itemName),
+      ...wishlist.entries.map((entry) => entry.itemName),
+    ],
+    [rows, wishlist.entries],
   );
-  const prices = useItemPrices(visibleNames);
+  const prices = useItemPrices(pricedNames);
 
   const visible = useMemo(() => {
     const ceiled = applyPriceCeiling(rows, filters.maxPrice, prices.data);
@@ -108,6 +119,16 @@ export function App() {
         >
           RELIC FINDER
         </span>
+
+        <div style={{ marginLeft: "auto" }}>
+          <Button
+            variant={panel === "wishlist" ? "accent" : "outline"}
+            size="sm"
+            onClick={() => setPanel((current) => (current === "wishlist" ? "detail" : "wishlist"))}
+          >
+            Wishlist · {wishlist.totalItems}
+          </Button>
+        </div>
       </header>
 
       <div
@@ -163,14 +184,28 @@ export function App() {
             prices={prices.data}
             pricesPending={prices.isPending}
             selected={selected}
-            onSelect={setSelected}
+            onSelect={(id) => {
+              setSelected(id);
+              // Picking a row while the wishlist is open should show what was
+              // picked, not leave the click with no visible effect.
+              setPanel("detail");
+            }}
             sort={sort}
             onSort={toggleSort}
             filtered={filters.term.length > 0 || filters.tiers.size > 0 || filters.rarities.size > 0}
+            quantityOf={wishlist.quantityOf}
           />
         </main>
 
-        <ItemDetail row={selectedRow} price={prices.data?.get(selectedRow?.itemName ?? "")} />
+        {panel === "wishlist" ? (
+          <WishlistPanel
+            entries={wishlist.entries}
+            prices={prices.data}
+            pricesUpdatedAt={prices.dataUpdatedAt}
+          />
+        ) : (
+          <ItemDetail row={selectedRow} price={prices.data?.get(selectedRow?.itemName ?? "")} />
+        )}
       </div>
     </div>
   );
@@ -187,6 +222,7 @@ interface ResultsProps {
   sort: { column: SortColumn; direction: SortDirection };
   onSort: (column: SortColumn) => void;
   filtered: boolean;
+  quantityOf: (itemName: string) => number;
 }
 
 function Results({
@@ -200,6 +236,7 @@ function Results({
   sort,
   onSort,
   filtered,
+  quantityOf,
 }: ResultsProps) {
   if (state.isPending) {
     return (
@@ -268,6 +305,8 @@ function Results({
             >
               Price
             </TableHeaderCell>
+            <TableHeaderCell align="center">Wishlist</TableHeaderCell>
+            <TableHeaderCell align="center">Market</TableHeaderCell>
           </tr>
         </thead>
         <tbody>
@@ -294,6 +333,48 @@ function Results({
                 ) : (
                   <Price value={prices?.get(row.itemName) ?? null} />
                 )}
+              </TableCell>
+              <TableCell align="center">
+                <QtyStepper
+                  itemName={row.itemName}
+                  qty={quantityOf(row.itemName)}
+                  onIncrement={() =>
+                    bump(
+                      {
+                        itemName: row.itemName,
+                        tier: row.tier,
+                        relicFullName: row.relicFullName,
+                        refinement: row.refinement,
+                      },
+                      1,
+                    )
+                  }
+                  onDecrement={() =>
+                    bump(
+                      {
+                        itemName: row.itemName,
+                        tier: row.tier,
+                        relicFullName: row.relicFullName,
+                        refinement: row.refinement,
+                      },
+                      -1,
+                    )
+                  }
+                  onRemove={() => remove(row.itemName)}
+                />
+              </TableCell>
+              <TableCell align="center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  iconOnly
+                  icon={<ExternalLinkIcon />}
+                  aria-label={`Open ${row.itemName} on Warframe Market`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer");
+                  }}
+                />
               </TableCell>
             </TableRow>
           ))}
