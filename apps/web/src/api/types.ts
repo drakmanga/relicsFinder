@@ -96,3 +96,36 @@ export interface RelicPrice {
   relicName: string;
   averagePrice: number;
 }
+
+/* ------------------------------------------------------------------------- */
+
+export interface WireItemPrice {
+  itemName: string;
+  averagePrice: number | null;
+  slug: string;
+}
+
+export interface ItemPrice {
+  itemName: string;
+  /** Platinum, 48h average. Null when the item has no listings. */
+  averagePrice: number | null;
+  slug: string;
+}
+
+/**
+ * One row of the results table: a relic paired with one of its drops.
+ *
+ * The table is item-granular, not relic-granular — `Axi A2 / Odonata Prime
+ * Systems` is a row, and the same relic appears once per drop it contains.
+ * Price, wishlist and sorting all hang off this pairing.
+ */
+export interface RelicItemRow {
+  /** Stable across refinements, so selection and wishlist keys survive a filter change. */
+  id: string;
+  tier: Tier;
+  relicFullName: string;
+  refinement: Refinement;
+  itemName: string;
+  rarity: Rarity;
+  chance: number;
+}

@@ -1,9 +1,11 @@
 import { normalizeDropInfo, normalizeRelic } from "./normalize";
 import type {
   DropInfo,
+  ItemPrice,
   Relic,
   RelicPrice,
   WireDropInfo,
+  WireItemPrice,
   WireRelic,
   WireRelicPrice,
 } from "./types";
@@ -97,6 +99,39 @@ export const api = {
     return await get<WireRelicPrice>(`/market/${seg(relicName)}`, signal);
   },
 
+  /** Average price of a single Prime part. */
+  async itemPrice(itemName: string, signal?: AbortSignal): Promise<ItemPrice> {
+    return await get<WireItemPrice>(`/market/item/${seg(itemName)}`, signal);
+  },
+
+  /**
+   * Prices for many items in one call.
+   *
+   * The batch exists because warframe.market allows roughly three requests a
+   * second: forty individual GETs get throttled, while these queue behind one
+   * server-side limiter and share the server cache.
+   */
+  async itemPrices(itemNames: string[], signal?: AbortSignal): Promise<ItemPrice[]> {
+    if (itemNames.length === 0) return [];
+
+    const url = `${BASE}/market/items`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        signal,
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(itemNames),
+      });
+    } catch (cause) {
+      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
+    return (await res.json()) as WireItemPrice[];
+  },
+
   async isVaulted(relicName: string, signal?: AbortSignal): Promise<boolean> {
     return await get<boolean>(`/relics/isVaulted/${seg(relicName)}`, signal);
   },
@@ -112,21 +147,12 @@ export const api = {
 /**
  * NOTE — state of the backend, verified against a running instance 2026-08-07.
  *
- * Working: /api/relics, /api/relics/{tier}, /api/relics/tiers,
- * /api/relics/relic/{fullName}, /api/search/{item}, /api/market/{fullName}.
+ * All endpoints above work. `drop-info`, `isVaulted` and `unvaulted` were
+ * repaired the same day: they used to scrape a Cloudflare-protected wiki and
+ * answered `[]` and 500 respectively; they now read the official drop tables.
  *
- * Broken or empty — the calls above are kept because the contract is right and
- * they will light up once the backend is fixed:
- * - `/api/relics/drop-info/{name}` answers 200 with `[]` for every relic. The
- *   detail panel therefore has no mission, location or rotation to show.
- * - `/api/relics/isVaulted/{name}` answers 500 for every relic.
- * - `/api/relics/unvaulted` answers 500.
- *
- * Missing entirely, and needed by the design:
- * - Per-item prices. The mockup prices each drop ("Volt Prime Neuroptics 45p");
- *   /api/market only answers for a whole relic.
+ * Still missing, and needed by the design:
  * - Ducats.
- * - Price history, so the "+12% / updated 4 minutes ago" delta cannot be
- *   computed server-side.
+ * - Price history, so the "+12%" delta cannot be computed server-side.
  * - Wishlist persistence. Client-side only until an endpoint exists.
  */

@@ -1,17 +1,21 @@
 # Backlog — dallo scaffold alla schermata di Claude Design
 
-Aperto il 2026-08-07 su revisione dell'utente. **Niente di questo è stato
-implementato.** Riferimento visivo:
+Aperto il 2026-08-07 su revisione dell'utente.
+
+**Stato**: fatti §1 e §2 (tabella a granularità item, barra filtri) e §6.1–§6.2
+(riparazione dei tre endpoint rotti, prezzo per item con batch e cache).
+Restano §3 wishlist, §4 navigazione e Prime Items, §5 rifiniture, §6.3–§6.5. Riferimento visivo:
 `design-imports/relic-finder-main/target-screenshot.png`. Sorgente autorevole:
 `templates/relic-finder-main/RelicFinderMain.dc.html` nel progetto Claude Design
 `82b30910-ffd9-4ff8-987b-1d568f7e1fd1`.
 
-Quello che c'è oggi in `apps/web` è uno scaffold: ricerca, tabella raggruppata
-per reliquia, pannello dettaglio con tab di raffinazione. Manca tutto il resto.
+Oggi `apps/web` ha ricerca, filtri, tabella a granularità item con prezzi reali
+e ordinamento, e un pannello dettaglio con i luoghi di drop. Mancano wishlist,
+navigazione e vista Prime Items.
 
 ---
 
-## 1. La tabella ha la granularità sbagliata — bloccante per tutto il resto
+## 1. ~~Tabella a granularità item~~ — FATTO
 
 Nello scaffold ogni riga è **una reliquia**. Nel target ogni riga è una coppia
 **reliquia × item**: `Axi A2 / Odonata Prime Systems`, `Lith V9 / Volt Prime
@@ -28,7 +32,7 @@ vivono tutti sulla riga-item.
 mostra 23 perché filtrate. Serve decidere se la vista senza filtri mostra tutto
 (e allora serve virtualizzazione) o se richiede almeno un filtro attivo.
 
-## 2. Filtri — assenti
+## 2. ~~Filtri~~ — FATTO
 
 Barra orizzontale collassabile sotto la ricerca, aperta di default, quattro
 gruppi separati da un bordo verticale:
@@ -101,16 +105,12 @@ funzionalità sopra restano parziali o con dati finti.
 
 | Serve a | Stato |
 |---|---|
-| Prezzo per singolo item (colonna PRICE, totale wishlist) | **manca** — `/api/market/{name}` dà solo il prezzo della reliquia intera |
+| Prezzo per singolo item | **fatto** — `GET /api/market/item/{name}` e `POST /api/market/items` |
+| Luogo di drop | **fatto** — dalle drop table ufficiali, non più scraping |
+| Stato vaulted | **fatto** — presenza nelle drop table |
 | Ducati (vista Prime Items) | **manca** |
 | Storico prezzi (delta `▲ +12%`) | **manca** — nessuna persistenza del prezzo precedente |
-| Luogo di drop (meta del pannello) | `/api/relics/drop-info/{name}` risponde 200 con `[]` per ogni reliquia |
-| Stato vaulted | `/api/relics/isVaulted/{name}` e `/unvaulted` rispondono 500 |
 | Persistenza wishlist | nessun endpoint |
-
-Due strade per i prezzi per item: aggiungere l'endpoint al backend, oppure far
-chiamare `warframe.market` direttamente al frontend — che però significa CORS,
-rate limit e nessuna cache condivisa tra utenti. La prima è più sensata.
 
 ---
 
@@ -119,7 +119,7 @@ rate limit e nessuna cache condivisa tra utenti. La prima è più sensata.
 Da qui in poi si tocca `src/main/java/relics/reliceApi/`. Ora che il repo è
 unico, frontend e backend si muovono nello stesso commit.
 
-### 6.1 Riparare quello che è già scritto ma non funziona
+### 6.1 ~~Riparare quello che è già scritto ma non funziona~~ — FATTO
 
 **`RelicDropInfoController` / `RelicDropInfoService`** — `/api/relics/drop-info/{name}`
 risponde 200 con `[]` per ogni reliquia, sia col nome corto (`A1`) che con
@@ -133,7 +133,7 @@ visto che `jsoup` è già fra le dipendenze del `pom.xml`.
 è sistematica e non dipende dall'input. Da guardare per prima: è la più veloce
 da chiudere.
 
-### 6.2 Prezzo per singolo item — il buco più grosso
+### 6.2 ~~Prezzo per singolo item~~ — FATTO
 
 Oggi `RelicMarketController` espone solo `/api/market/{relicName}` →
 `RelicPrice{relicName, averagePrice}`, cioè il prezzo di una reliquia intera.

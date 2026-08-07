@@ -12,6 +12,7 @@ export const keys = {
   dropInfo: (name: string) => ["relics", "drop-info", name] as const,
   search: (term: string) => ["search", term] as const,
   price: (name: string) => ["market", name] as const,
+  itemPrices: (names: string[]) => ["market", "items", names] as const,
   vaulted: (name: string) => ["relics", "vaulted", name] as const,
 };
 
@@ -91,6 +92,25 @@ export function useRelicPrice(relicName: string | null) {
     },
     enabled: !!relicName,
     ...PRICE_DATA,
+  });
+}
+
+/**
+ * Prices for the items currently on screen, in one request.
+ *
+ * The key is the sorted name list, so scrolling back to a set already fetched
+ * hits the cache instead of the network. The server caches too, which is what
+ * keeps this affordable under warframe.market's rate limit.
+ */
+export function useItemPrices(itemNames: string[]) {
+  const names = [...new Set(itemNames)].sort();
+
+  return useQuery({
+    queryKey: keys.itemPrices(names),
+    queryFn: ({ signal }) => api.itemPrices(names, signal),
+    enabled: names.length > 0,
+    ...PRICE_DATA,
+    select: (prices) => new Map(prices.map((p) => [p.itemName, p.averagePrice])),
   });
 }
 

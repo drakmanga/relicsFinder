@@ -1,49 +1,38 @@
 package relics.reliceApi.service;
 
-import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 import relics.reliceApi.model.DropInfoRelic;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import java.util.ArrayList;
+
 import java.util.List;
 
+/**
+ * Drop sites of a relic.
+ *
+ * <p>Previously this scraped warframe.fandom.com and returned an empty list for
+ * every relic. Two reasons it could not work: Fandom answers a Cloudflare
+ * challenge to server-side clients, and the per-relic page holds only the
+ * wikitext {@code {{RelicPage}}} — the table is rendered from a template, so the
+ * HTML never carried the data. The column indexing was also out of bounds
+ * ({@code cols.size() >= 3} guarding a read of {@code cols.get(4)}), which the
+ * broad catch turned into the same silent empty list.
+ *
+ * <p>The work now lives in {@link DropTableService}, reading the official drop
+ * tables.
+ */
 @Service
 public class RelicDropInfoService {
 
+    private final DropTableService dropTableService;
 
+    public RelicDropInfoService(DropTableService dropTableService) {
+        this.dropTableService = dropTableService;
+    }
+
+    /**
+     * Accepts "Lith V9" and "lith_v9" alike. A vaulted relic drops nowhere, so
+     * an empty list is the correct answer rather than an error.
+     */
     public List<DropInfoRelic> getRelicDropInfo(String relicName) {
-        List<DropInfoRelic> dropList = new ArrayList<>();
-
-        try {
-            String formatted = relicName.trim().replace(" ", "_");
-            String url = "https://warframe.fandom.com/wiki/" + formatted;
-
-            Document doc = Jsoup.connect(url).userAgent("Mozilla").get();
-            Elements tables = doc.select("table.wikitable");
-
-            for (Element table : tables) {
-                if (table.text().contains("Mission") && table.text().contains("Rotation")) {
-                    Elements rows = table.select("tr");
-
-                    for (Element row : rows) {
-                        Elements cols = row.select("td");
-                        if (cols.size() >= 3) {
-                            String mission = cols.get(0).text();
-                            String rotation = cols.get(2).text();
-                            String chance = cols.get(3).text();
-                            String location = cols.get(4).text();
-                            dropList.add(new DropInfoRelic(mission, location, rotation, chance));
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Log e.g. URL not found
-            System.out.println("Errore: " + e.getMessage());
-        }
-
-        return dropList;
+        return dropTableService.getRelicDropInfo(relicName);
     }
 }

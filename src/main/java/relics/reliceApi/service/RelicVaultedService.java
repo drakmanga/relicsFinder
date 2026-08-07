@@ -1,101 +1,80 @@
 package relics.reliceApi.service;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 import relics.reliceApi.model.Relic;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Which relics are currently obtainable.
+ *
+ * <p>A relic is unvaulted exactly when it appears in the drop tables, so this
+ * reads the same cached source as {@link RelicDropInfoService} rather than
+ * scraping the wiki's "Unvaulted/Available Relics" table.
+ *
+ * <p>The scraping version answered HTTP 500 on every call, for two independent
+ * reasons. It connected to Fandom without a user agent and Cloudflare replied
+ * 403, which surfaced as an IOException. And had it got through, the comparison
+ * could not have matched: it joined tier and name without a separator
+ * ({@code "LithV9"}) against a space-separated input, and read the tier from
+ * objects that {@code extractUnvaultedRelics} had deliberately stripped of it,
+ * so every tier was literally the string "null".
+ */
 @Service
 public class RelicVaultedService {
 
-    private String getPageHtml() throws IOException {
-        return Jsoup.connect("https://warframe.fandom.com/wiki/Void_Relic#List_of_Void_Relics_and_Drop_Sites").get().html();
+    /** Display order of the eras, rather than alphabetical. */
+    private static final List<String> TIER_ORDER =
+            List.of("Lith", "Meso", "Neo", "Axi", "Requiem");
+
+    private final DropTableService dropTableService;
+
+    public RelicVaultedService(DropTableService dropTableService) {
+        this.dropTableService = dropTableService;
     }
 
-    public Map<String, List<Relic>> extractUnvaultedRelics() throws IOException {
-        String html = getPageHtml();
-        Set<Relic> relics = new HashSet<>();
+    /**
+     * Currently obtainable relics, grouped by era and sorted within it.
+     *
+     * <p>The relics carry only their short name — the era is the map key, so
+     * repeating it in every entry would be noise.
+     */
+    public Map<String, List<Relic>> extractUnvaultedRelics() {
+        Map<String, List<Relic>> grouped = new LinkedHashMap<>();
 
-        Document doc = Jsoup.parse(html);
+        for (String fullName : dropTableService.unvaultedRelicNames()) {
+            String[] parts = fullName.split(" ", 2);
+            if (parts.length != 2) continue;
 
-        Element table = doc.selectFirst("table.article-table:has(caption:contains(Unvaulted/Available Relics))");
-        if (table == null) {
-            System.out.println("Tabella non trovata");
-            return Collections.emptyMap();
+            String tier = capitalize(parts[0]);
+            String shortName = parts[1].toUpperCase(Locale.ROOT);
+
+            grouped.computeIfAbsent(tier, t -> new ArrayList<>()).add(new Relic(shortName));
         }
 
-        Elements rows = table.select("tbody > tr");
-        if (rows.size() < 2) {
-            System.out.println("Righe insufficienti nella tabella");
-            return Collections.emptyMap();
-        }
+        grouped.values().forEach(list ->
+                list.sort(Comparator.comparing(Relic::getRelicName, String.CASE_INSENSITIVE_ORDER)));
 
-        Element relicsRow = rows.get(1);
-        Elements columns = relicsRow.select("td");
-
-        for (Element cell : columns) {
-            Elements listItems = cell.select("ul > li");
-
-            for (Element li : listItems) {
-                Element a = li.selectFirst("a");
-                if (a != null) {
-                    String text = a.text().trim();
-                    String[] parts = text.split(" ", 2);
-                    if (parts.length == 2) {
-                        relics.add(new Relic(parts[0], parts[1]));
-                    }
-                }
-            }
-        }
-
-        Map<String, Integer> orderMap = Map.of(
-                "Lith", 1,
-                "Meso", 2,
-                "Neo", 3,
-                "Axi", 4,
-                "Requiem", 5
-        );
-
-        Map<String, List<Relic>> grouped = relics.stream()
-                .collect(Collectors.groupingBy(Relic::getTier));
-
-        for (List<Relic> list : grouped.values()){
-            list.sort(Comparator.comparing(Relic::getRelicName, String.CASE_INSENSITIVE_ORDER));
-        }
-
-        Map<String, List<Relic>> sortedGrouped = new LinkedHashMap<>();
-        grouped.entrySet().stream()
-                        .sorted(Comparator.comparingInt(e -> orderMap.getOrDefault(e.getKey(), 999)))
-                        .forEachOrdered(e -> {
-                            List<Relic> relicsWithoutTier = e.getValue().stream()
-                                    .map(relic -> new Relic(relic.getRelicName()))
-                                    .toList();
-                            sortedGrouped.put(e.getKey(), relicsWithoutTier);
-                        });
-        return sortedGrouped;
+        return grouped.entrySet().stream()
+                .sorted(Comparator.comparingInt(e -> {
+                    int i = TIER_ORDER.indexOf(e.getKey());
+                    return i < 0 ? Integer.MAX_VALUE : i;
+                }))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        LinkedHashMap::new));
     }
 
-    public boolean isVaulted(String relicName) throws IOException {
-        Map<String,List<Relic>> unvaultedRelics = extractUnvaultedRelics();
-        String fullRelicName = (relicName.replace("_", " ").trim().toLowerCase());
-
-        Set<String> unvaultedLower = unvaultedRelics.values().stream()
-                .flatMap(List::stream)
-                .map(relic -> (relic.getTier() + relic.getRelicName().toLowerCase()))
-                .collect(Collectors.toSet());
-
-        boolean isUnvaulted = unvaultedLower.contains(fullRelicName);
-        return !isUnvaulted;
+    /** Accepts "Lith V9" and "lith_v9" alike. */
+    public boolean isVaulted(String relicName) {
+        return dropTableService.isVaulted(relicName);
     }
 
+    private static String capitalize(String value) {
+        if (value.isEmpty()) return value;
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1).toLowerCase(Locale.ROOT);
+    }
 }
-
-
-
-
