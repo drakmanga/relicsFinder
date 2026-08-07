@@ -9,14 +9,14 @@ import {
 
 import { PlatPrice } from "./Plat";
 
-import type { Relic, RelicItemRow } from "../api/types";
+import type { PriceMap, Relic, RelicItemRow } from "../api/types";
 import { partsOfSet, setOf, sourcesFor } from "../lib/sets";
-import { marketUrl } from "../lib/format";
+import { marketUrl, priceOf } from "../lib/format";
 
 interface Props {
   row: RelicItemRow;
   relics: Relic[];
-  prices: Map<string, number | null> | undefined;
+  prices: PriceMap | undefined;
   /** Selecting a sibling part swaps the panel to it without touching the table. */
   onPickItem: (itemName: string) => void;
 }
@@ -33,7 +33,11 @@ const SOURCES_SHOWN = 6;
  */
 export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
   const sources = sourcesFor(relics, row.itemName);
-  const setName = setOf(row.itemName);
+  const meta = prices?.get(row.itemName);
+  // The server derives the set from the item database, which knows what a name
+  // like "Forma Blueprint" actually is; the local rule is the fallback for when
+  // the price batch has not answered yet.
+  const setName = meta?.setName ?? setOf(row.itemName);
   const siblings = setName ? partsOfSet(relics, setName).filter((p) => p !== row.itemName) : [];
 
   // Only Intact rows, so one relic is not listed four times at four chances.
@@ -53,9 +57,21 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
       <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
         <span className="rf-text-overline rf-fg-muted">Market price</span>
         <span style={{ marginLeft: "auto" }}>
-          <PlatPrice value={prices?.get(row.itemName) ?? null} size="lg" />
+          <PlatPrice value={priceOf(prices, row.itemName)} size="lg" />
         </span>
       </div>
+
+      {meta?.ducats != null && (
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 6 }}>
+          <span className="rf-text-overline rf-fg-muted">Ducats</span>
+          <span
+            className="rf-text-data-md"
+            style={{ marginLeft: "auto", color: "var(--rf-currency-ducat)" }}
+          >
+            {meta.ducats}
+          </span>
+        </div>
+      )}
 
       <Divider />
 
@@ -126,7 +142,7 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
                 >
                   {part.replace(`${setName} `, "")}
                 </span>
-                <PlatPrice value={prices?.get(part) ?? null} />
+                <PlatPrice value={priceOf(prices, part)} />
               </button>
             ))}
           </div>

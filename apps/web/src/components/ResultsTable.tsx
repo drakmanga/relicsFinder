@@ -15,8 +15,8 @@ import {
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, remove } from "../lib/wishlist";
-import { marketUrl } from "../lib/format";
-import type { RelicItemRow } from "../api/types";
+import { marketUrl, priceOf } from "../lib/format";
+import type { PriceMap, RelicItemRow } from "../api/types";
 import type { SortColumn, SortDirection } from "../lib/rows";
 
 /**
@@ -34,7 +34,7 @@ const OVERSCAN = 12;
 
 interface Props {
   rows: RelicItemRow[];
-  prices: Map<string, number | null> | undefined;
+  prices: PriceMap | undefined;
   pricesPending: boolean;
   selected: string | null;
   onSelect: (id: string, mode: "relic" | "item") => void;
@@ -165,7 +165,7 @@ export function ResultsTable({
                   {pricesPending && !prices ? (
                     <Skeleton width={44} height={14} />
                   ) : (
-                    <PlatPrice value={prices?.get(row.itemName) ?? null} />
+                    <PlatPrice value={priceOf(prices, row.itemName)} />
                   )}
                 </TableCell>
                 <TableCell align="center">

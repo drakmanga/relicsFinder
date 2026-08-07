@@ -103,6 +103,8 @@ export interface WireItemPrice {
   itemName: string;
   averagePrice: number | null;
   slug: string;
+  ducats: number | null;
+  setName: string | null;
 }
 
 export interface ItemPrice {
@@ -110,7 +112,19 @@ export interface ItemPrice {
   /** Platinum, 48h average. Null when the item has no listings. */
   averagePrice: number | null;
   slug: string;
+  /** Static ducat value. Null for anything that is not a Prime part. */
+  ducats: number | null;
+  /** The Prime set it completes, e.g. "Volt Prime". Null when it has none. */
+  setName: string | null;
 }
+
+/**
+ * Everything known about the items on screen, keyed by item name.
+ *
+ * One map rather than three: price, ducats and set all arrive from the same
+ * request, and splitting them would mean three lookups per row.
+ */
+export type PriceMap = Map<string, ItemPrice>;
 
 /**
  * One row of the results table: a relic paired with one of its drops.

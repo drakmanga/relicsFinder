@@ -182,12 +182,18 @@ di raffinazione e non si può sostituire con un ordinamento**. A Flawless il 20%
 è Common, a Radiant il 20% è Uncommon, e sempre a Radiant le tre Common (16.67%)
 stanno *sotto* le due Uncommon (20%) — l'ordine si inverte.
 
-### 6.3 Ducati
+### 6.3 ~~Ducati~~ — FATTO
 
-Nessun endpoint, nessun campo. Il valore in ducati è un dato statico per item
-(non varia col mercato) e sta nelle stesse fonti da cui arriva `relics.json`.
-Può stare dentro la risposta di `/api/market/item/{itemName}` oppure su un
-endpoint suo.
+Fatto: `ItemPrice` ora porta `ducats` e `setName`, quindi arrivano con la stessa
+richiesta dei prezzi invece che con una in più.
+
+La fonte è il database WFCD (`warframe-items`), otto categorie invece di
+`All.json` — 12 MB contro 55 MB, e il resto sono quest, mod e risorse senza
+valore in ducati. Cache di 24 ore: il dato si muove solo all'uscita di un Prime.
+
+Anche il **set** si deriva lì, come previsto dal §7b: il database sa che
+`Volt Prime Neuroptics Blueprint` è il componente `Neuroptics` del set
+`Volt Prime`, e che `Forma Blueprint` non è nessuno dei due.
 
 ### 6.4 Storico prezzi e delta
 
