@@ -1,0 +1,788 @@
+/* ============================================================================
+   Components
+   Sizes, states and colours follow design-system/DESIGN_SYSTEM.md §10.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- Button - */
+.rf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rf-space-2);
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background var(--rf-dur-fast) var(--rf-ease-standard),
+    color var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-btn > svg {
+  flex: none;
+}
+
+.rf-btn-xs { height: 24px; padding: 0 var(--rf-space-2); font-size: 12px; --rf-notch: var(--rf-notch-xs); }
+.rf-btn-sm { height: 32px; padding: 0 var(--rf-space-3); font-size: 13px; --rf-notch: var(--rf-notch-sm); }
+.rf-btn-md { height: 40px; padding: 0 var(--rf-space-4); font-size: 15px; --rf-notch: var(--rf-notch-sm); }
+.rf-btn-lg { height: 48px; padding: 0 var(--rf-space-5); font-size: 16px; --rf-notch: var(--rf-notch-md); }
+
+.rf-btn-xs > svg { width: 16px; height: 16px; }
+.rf-btn-sm > svg { width: 16px; height: 16px; }
+.rf-btn-md > svg { width: 20px; height: 20px; }
+.rf-btn-lg > svg { width: 24px; height: 24px; }
+
+/* Icon-only: square at the control height. */
+.rf-btn-icon-xs { width: 24px; padding: 0; }
+.rf-btn-icon-sm { width: 32px; padding: 0; }
+.rf-btn-icon-md { width: 40px; padding: 0; }
+.rf-btn-icon-lg { width: 48px; padding: 0; }
+
+.rf-btn-primary {
+  background: var(--rf-action-primary-bg);
+  color: var(--rf-action-primary-fg);
+}
+.rf-btn-primary:hover:not(:disabled) { background: var(--rf-action-primary-bg-hover); }
+.rf-btn-primary:active:not(:disabled) { background: var(--rf-action-primary-bg-active); }
+
+.rf-btn-accent {
+  background: var(--rf-action-accent-bg);
+  color: var(--rf-action-accent-fg);
+}
+.rf-btn-accent:hover:not(:disabled) { background: var(--rf-action-accent-bg-hover); }
+.rf-btn-accent:active:not(:disabled) { background: var(--rf-action-accent-bg-active); }
+
+.rf-btn-danger {
+  background: var(--rf-action-danger-bg);
+  color: var(--rf-action-danger-fg);
+}
+.rf-btn-danger:hover:not(:disabled) { background: var(--rf-action-danger-bg-hover); }
+
+.rf-btn-ghost {
+  background: transparent;
+  color: var(--rf-fg-secondary);
+}
+.rf-btn-ghost:hover:not(:disabled) {
+  background: var(--rf-action-ghost-bg-hover);
+  color: var(--rf-fg-primary);
+}
+
+/* Outline lives inside a frame, so it fills the frame's inner surface. */
+.rf-btn-outline {
+  background: transparent;
+  color: var(--rf-fg-primary);
+  width: 100%;
+}
+.rf-btn-outline:hover:not(:disabled) { background: var(--rf-action-ghost-bg-hover); }
+
+/* Never dim the whole button with opacity — it drops the border below
+   contrast threshold along with the label. */
+.rf-btn:disabled {
+  background: var(--rf-action-disabled-bg);
+  color: var(--rf-action-disabled-fg);
+  cursor: not-allowed;
+}
+
+.rf-btn-ghost:disabled,
+.rf-btn-outline:disabled {
+  background: transparent;
+  color: var(--rf-action-disabled-fg);
+}
+
+/* inline-flex both levels: as an inline box the inner leaves descender space
+   below the button, and the frame's border colour shows through it as a gold
+   band along the bottom edge. */
+.rf-btn-outline-wrap {
+  display: inline-flex;
+}
+
+.rf-btn-outline-wrap > .rf-frame-inner {
+  display: flex;
+}
+
+/* The frame paints the border colour across its whole box and the inner sits
+   on top of it, so `transparent` here reveals gold rather than the page — an
+   outline button would render as a filled gold block. The inner must be
+   opaque; override --rf-frame-inner-bg when placing one on a lighter surface.
+   */
+.rf-frame-inner-plain {
+  background: var(--rf-frame-inner-bg, var(--rf-surface-0));
+}
+
+/* --------------------------------------------------------------- Spinner - */
+.rf-spinner {
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  animation: rf-spin 700ms linear infinite;
+  flex: none;
+}
+
+.rf-spinner-sm { width: 14px; height: 14px; }
+.rf-spinner-md { width: 16px; height: 16px; }
+.rf-spinner-lg { width: 20px; height: 20px; }
+
+/* ----------------------------------------------------------------- Input - */
+.rf-field {
+  display: block;
+}
+
+.rf-field-label {
+  display: block;
+  margin-bottom: var(--rf-space-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rf-fg-secondary);
+}
+
+.rf-field-box {
+  background: var(--rf-surface-2);
+}
+
+.rf-field-row {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-3);
+  padding: 0 var(--rf-space-3);
+}
+
+.rf-field-sm .rf-field-row { height: 30px; }
+.rf-field-md .rf-field-row { height: 38px; }
+.rf-field-lg .rf-field-row { height: 46px; }
+
+.rf-field-row > svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--rf-fg-muted);
+}
+
+.rf-field-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--rf-fg-primary);
+}
+
+.rf-field-input::placeholder {
+  color: var(--rf-fg-muted);
+}
+
+.rf-field-helper {
+  margin-top: var(--rf-space-2);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--rf-fg-muted);
+}
+
+.rf-field-helper-error {
+  color: var(--rf-danger);
+}
+
+.rf-kbd {
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--rf-fg-muted);
+  background: var(--rf-surface-3);
+  --rf-notch: 3px;
+  flex: none;
+}
+
+/* ------------------------------------------------------------------ Chip - */
+.rf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  --rf-notch: var(--rf-notch-xs);
+}
+
+.rf-chip > svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+/* Tier chip: filled, ink text, uppercase overline. */
+.rf-chip-tier {
+  height: 20px;
+  padding: 0 var(--rf-space-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rf-ink-950);
+}
+
+.rf-tier-lith { background: var(--rf-tier-lith); }
+.rf-tier-meso { background: var(--rf-tier-meso); }
+.rf-tier-neo { background: var(--rf-tier-neo); }
+.rf-tier-axi { background: var(--rf-tier-axi); }
+.rf-tier-requiem { background: var(--rf-tier-requiem); }
+
+/* Refinement modulates the tier chip; it has no colour of its own.
+   The label always travels with it — opacity alone is not an accessible
+   channel. */
+.rf-ref-intact { opacity: 0.55; }
+.rf-ref-exceptional { opacity: 0.7; box-shadow: 0 0 0 1px var(--rf-gold-800); }
+.rf-ref-flawless { opacity: 0.85; box-shadow: 0 0 0 1px var(--rf-gold-700); }
+.rf-ref-radiant { opacity: 1; box-shadow: 0 0 0 1px var(--rf-gold-500); }
+
+.rf-chip-filter {
+  height: 24px;
+  padding: 0 var(--rf-space-2);
+  font-size: 12px;
+  background: var(--rf-state-row-selected);
+  color: var(--rf-fg-accent);
+}
+
+.rf-chip-count {
+  height: 20px;
+  padding: 0 var(--rf-space-2);
+  font-size: 12px;
+  background: var(--rf-surface-3);
+  color: var(--rf-fg-secondary);
+}
+
+.rf-chip-dismiss {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-left: 2px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.rf-chip-dismiss:hover { opacity: 1; }
+
+/* ---------------------------------------------------------------- Rarity - */
+.rf-rarity {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.rf-rarity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex: none;
+  background: currentColor;
+}
+
+.rf-rarity-common { color: var(--rf-rarity-common); }
+.rf-rarity-uncommon { color: var(--rf-rarity-uncommon); }
+.rf-rarity-rare { color: var(--rf-rarity-rare); }
+
+/* ----------------------------------------------------------------- Price - */
+.rf-price {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.rf-price-platinum { color: var(--rf-currency-platinum); }
+.rf-price-ducat { color: var(--rf-currency-ducat); }
+.rf-price-credit { color: var(--rf-currency-credit); }
+
+.rf-price-md { font-size: 14px; }
+.rf-price-lg { font-size: 20px; font-weight: 600; }
+
+.rf-price-suffix {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--rf-fg-muted);
+  margin-left: 2px;
+}
+
+/* An absent price is a dash, never a zero. */
+.rf-price-empty {
+  color: var(--rf-fg-disabled);
+}
+
+.rf-delta {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rf-delta-up { color: var(--rf-success); }
+.rf-delta-down { color: var(--rf-danger); }
+.rf-delta-flat { color: var(--rf-fg-muted); }
+
+/* ----------------------------------------------------------------- Table - */
+.rf-table-wrap {
+  overflow-x: auto;
+}
+
+.rf-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+/* top:0 — the wrapper's overflow-x makes it the scroll container, so any
+   offset above zero pushes the header down over the first rows. Topbar
+   offset belongs to the shell layout, never to these cells. */
+.rf-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--rf-z-raised);
+  height: 36px;
+  padding: 0 var(--rf-space-3);
+  background: var(--rf-surface-2);
+  border-bottom: 1px solid var(--rf-border-default);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rf-fg-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.rf-table th.rf-align-right,
+.rf-table td.rf-align-right {
+  text-align: right;
+}
+
+.rf-table th.rf-align-center,
+.rf-table td.rf-align-center {
+  text-align: center;
+}
+
+.rf-th-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.rf-th-sortable:hover {
+  color: var(--rf-fg-secondary);
+}
+
+.rf-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rf-sort-arrow {
+  width: 14px;
+  height: 14px;
+  opacity: 0.85;
+}
+
+.rf-table tbody td {
+  height: 40px;
+  padding: 0 var(--rf-space-3);
+  border-bottom: 1px solid var(--rf-border-subtle);
+  vertical-align: middle;
+}
+
+.rf-table-compact tbody td { height: 32px; }
+.rf-table-comfortable tbody td { height: 48px; }
+
+.rf-table tbody tr {
+  transition: background var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-table-interactive tbody tr {
+  cursor: pointer;
+}
+
+/* Rows are never clipped. Hover is a flat fill plus a 2px marker. */
+.rf-table tbody td:first-child {
+  box-shadow: inset 2px 0 0 0 transparent;
+  transition: box-shadow var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-table-interactive tbody tr:hover {
+  background: var(--rf-state-row-hover);
+}
+
+.rf-table-interactive tbody tr:hover td:first-child {
+  box-shadow: inset 2px 0 0 0 var(--rf-gold-500);
+}
+
+.rf-table tbody tr[aria-selected="true"] {
+  background: var(--rf-state-row-selected);
+}
+
+.rf-table tbody tr[aria-selected="true"] td:first-child {
+  box-shadow: inset 2px 0 0 0 var(--rf-void-400);
+}
+
+.rf-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* --------------------------------------------------------------- DropRow - */
+/* Column widths are tight on purpose: the detail panel is 380px, and every
+   pixel the fixed slots take comes straight out of the item name. */
+.rf-droprow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 var(--rf-space-2);
+  border-bottom: 1px solid var(--rf-border-subtle);
+  transition: background var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-droprow-compact { height: 36px; }
+
+.rf-droprow:last-child { border-bottom: 0; }
+
+.rf-droprow-interactive { cursor: pointer; }
+
+.rf-droprow-interactive:hover { background: var(--rf-state-row-hover); }
+
+.rf-droprow-interactive:hover .rf-droprow-name { color: var(--rf-fg-accent); }
+
+.rf-droprow-img {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  background: var(--rf-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rf-bone-500);
+  --rf-notch: var(--rf-notch-sm);
+  object-fit: contain;
+}
+
+.rf-droprow-img > svg,
+.rf-droprow-img > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Never truncate mid-word: ellipsis lands on the last whole word, and the
+   full value stays available through the title attribute. */
+.rf-droprow-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-droprow-rarity {
+  width: 64px;
+  flex: none;
+}
+
+.rf-droprow-rate {
+  width: 48px;
+  text-align: right;
+  flex: none;
+  color: var(--rf-fg-muted);
+}
+
+.rf-droprow-price {
+  width: 52px;
+  text-align: right;
+  flex: none;
+}
+
+/* ------------------------------------------------------------------ Card - */
+.rf-card-body {
+  padding: var(--rf-space-4);
+  background: var(--rf-surface-2);
+}
+
+.rf-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--rf-space-3);
+}
+
+.rf-card-footer {
+  margin-top: var(--rf-space-3);
+  padding-top: var(--rf-space-3);
+  border-top: 1px solid var(--rf-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rf-space-3);
+}
+
+/* ---------------------------------------------------------- DetailPanel - */
+.rf-detail {
+  width: 380px;
+  flex: none;
+}
+
+.rf-detail-body {
+  padding: var(--rf-space-4);
+  background: var(--rf-surface-1);
+  height: 100%;
+}
+
+.rf-detail-meta {
+  margin-top: var(--rf-space-1);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--rf-fg-muted);
+}
+
+.rf-detail-title {
+  margin-top: var(--rf-space-3);
+}
+
+.rf-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rf-space-3);
+  padding: var(--rf-space-12) var(--rf-space-6);
+  text-align: center;
+  color: var(--rf-fg-muted);
+}
+
+.rf-detail-empty > svg {
+  width: 48px;
+  height: 48px;
+  color: var(--rf-bone-500);
+}
+
+/* ------------------------------------------------------------------ Tabs - */
+.rf-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--rf-border-default);
+}
+
+.rf-tab {
+  height: 36px;
+  padding: 0 14px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rf-fg-muted);
+  --rf-notch: var(--rf-notch-sm);
+  clip-path: polygon(
+    var(--rf-notch) 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 var(--rf-notch)
+  );
+  transition:
+    color var(--rf-dur-fast) var(--rf-ease-standard),
+    background var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-tab:hover {
+  color: var(--rf-fg-primary);
+}
+
+.rf-tab[aria-selected="true"] {
+  background: var(--rf-surface-2);
+  color: var(--rf-fg-primary);
+  box-shadow: inset 0 -2px 0 0 var(--rf-gold-500);
+}
+
+.rf-tab:disabled {
+  color: var(--rf-fg-disabled);
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------- Tooltip - */
+.rf-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.rf-tooltip {
+  position: absolute;
+  z-index: var(--rf-z-tooltip);
+  max-width: 280px;
+  width: max-content;
+  padding: 6px 10px;
+  background: var(--rf-surface-4);
+  color: var(--rf-fg-primary);
+  font-size: 12px;
+  line-height: 1.4;
+  --rf-notch: var(--rf-notch-sm);
+  pointer-events: none;
+  animation: rf-rise var(--rf-dur-base) var(--rf-ease-enter) both;
+}
+
+.rf-tooltip-top { bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); }
+.rf-tooltip-bottom { top: calc(100% + 6px); left: 50%; transform: translateX(-50%); }
+.rf-tooltip-left { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+.rf-tooltip-right { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+
+/* ---------------------------------------------------------------- Dialog - */
+.rf-dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--rf-z-overlay);
+  background: var(--rf-scrim);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--rf-space-6);
+  animation: rf-rise var(--rf-dur-base) var(--rf-ease-enter) both;
+}
+
+.rf-dialog {
+  z-index: var(--rf-z-modal);
+  width: 100%;
+  max-width: 560px;
+  --rf-notch: var(--rf-notch-xl);
+  animation: rf-rise var(--rf-dur-slow) var(--rf-ease-enter) both;
+}
+
+.rf-dialog-body {
+  background: var(--rf-surface-4);
+  padding: var(--rf-space-6);
+}
+
+.rf-dialog-desc {
+  margin-top: var(--rf-space-3);
+  color: var(--rf-fg-secondary);
+}
+
+.rf-dialog-content {
+  margin-top: var(--rf-space-5);
+}
+
+.rf-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--rf-space-3);
+  margin-top: var(--rf-space-6);
+}
+
+/* ----------------------------------------------------------------- Toast - */
+.rf-toast-region {
+  position: fixed;
+  right: var(--rf-space-6);
+  bottom: var(--rf-space-6);
+  z-index: var(--rf-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-2);
+  width: 360px;
+  max-width: calc(100vw - var(--rf-space-12));
+}
+
+.rf-toast {
+  display: flex;
+  gap: var(--rf-space-2);
+  padding: var(--rf-space-3) 14px;
+  background: var(--rf-surface-4);
+  align-items: flex-start;
+  --rf-notch: var(--rf-notch-sm);
+  animation: rf-rise var(--rf-dur-base) var(--rf-ease-enter) both;
+}
+
+.rf-toast-bar {
+  width: 2px;
+  align-self: stretch;
+  flex: none;
+}
+
+.rf-toast-success .rf-toast-bar { background: var(--rf-success); }
+.rf-toast-warning .rf-toast-bar { background: var(--rf-warning); }
+.rf-toast-danger .rf-toast-bar { background: var(--rf-danger); }
+.rf-toast-info .rf-toast-bar { background: var(--rf-info); }
+
+.rf-toast-content { flex: 1; min-width: 0; }
+
+.rf-toast-title { font-size: 13px; font-weight: 600; }
+
+.rf-toast-desc { font-size: 12px; line-height: 1.4; color: var(--rf-fg-muted); }
+
+.rf-toast-close {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--rf-fg-muted);
+  padding: 0;
+  line-height: 1;
+  flex: none;
+}
+
+.rf-toast-close:hover { color: var(--rf-fg-primary); }
+
+/* -------------------------------------------------------------- Skeleton - */
+/* surface-2 → surface-3 is 1.06:1 — a loading state nobody can see, and
+   invisible outright on a surface-2 card. The base steps up to ink-700 and the
+   sweep to ink-500, which reads on every surface the skeleton sits on. */
+.rf-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--rf-ink-700) 25%,
+    var(--rf-ink-500) 50%,
+    var(--rf-ink-700) 75%
+  );
+  background-size: 200% 100%;
+  animation: rf-shimmer 1400ms linear infinite;
+}
+
+.rf-skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-2);
+}
+
+/* ------------------------------------------------------------ EmptyState - */
+.rf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rf-space-2);
+  padding: var(--rf-space-10) var(--rf-space-6);
+  text-align: center;
+}
+
+.rf-empty-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--rf-bone-500);
+}
+
+.rf-empty-icon-initial {
+  width: 64px;
+  height: 64px;
+  color: var(--rf-gold-800);
+}
+
+.rf-empty-icon-error { color: var(--rf-danger); }
+
+.rf-empty-desc {
+  color: var(--rf-fg-muted);
+  max-width: 48ch;
+}
+
+.rf-empty-actions {
+  display: flex;
+  gap: var(--rf-space-2);
+  margin-top: var(--rf-space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}

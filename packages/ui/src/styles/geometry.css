@@ -1,0 +1,201 @@
+/* ============================================================================
+   Orokin geometry
+   border-radius is 0 on every surface; the silhouette comes from clip-path.
+   Clip containers only — never table rows, cells, list items or avatars.
+   ========================================================================= */
+
+.rf-notch-xs { --rf-notch: var(--rf-notch-xs); }
+.rf-notch-sm { --rf-notch: var(--rf-notch-sm); }
+.rf-notch-md { --rf-notch: var(--rf-notch-md); }
+.rf-notch-lg { --rf-notch: var(--rf-notch-lg); }
+.rf-notch-xl { --rf-notch: var(--rf-notch-xl); }
+
+/* Default silhouette: cuts top-left and bottom-right. */
+.rf-clip {
+  clip-path: polygon(
+    var(--rf-notch) 0,
+    100% 0,
+    100% calc(100% - var(--rf-notch)),
+    calc(100% - var(--rf-notch)) 100%,
+    0 100%,
+    0 var(--rf-notch)
+  );
+}
+
+/* Mirrored half of a split layout — cuts top-right and bottom-left. */
+.rf-clip-inverse {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--rf-notch)) 0,
+    100% var(--rf-notch),
+    100% 100%,
+    var(--rf-notch) 100%,
+    0 calc(100% - var(--rf-notch))
+  );
+}
+
+/* All four corners. Chips and badges only. */
+.rf-clip-octagon {
+  clip-path: polygon(
+    var(--rf-notch) 0,
+    calc(100% - var(--rf-notch)) 0,
+    100% var(--rf-notch),
+    100% calc(100% - var(--rf-notch)),
+    calc(100% - var(--rf-notch)) 100%,
+    var(--rf-notch) 100%,
+    0 calc(100% - var(--rf-notch)),
+    0 var(--rf-notch)
+  );
+}
+
+/* ----------------------------------------------------------------------------
+   Frame — the only correct border on a clipped surface.
+   clip-path cuts away box-shadow and outline, so the border is drawn as a
+   second surface: the outer element IS the border, the inner one is inset by
+   --rf-frame-width and carries the real background.
+
+   The inner notch subtracts the frame width. Without that subtraction the
+   border reads ~1.41x thinner along the diagonal than on the straight edges.
+-------------------------------------------------------------------------- */
+.rf-frame {
+  padding: var(--rf-frame-width);
+  background: var(--rf-frame-color);
+  clip-path: polygon(
+    var(--rf-notch) 0,
+    100% 0,
+    100% calc(100% - var(--rf-notch)),
+    calc(100% - var(--rf-notch)) 100%,
+    0 100%,
+    0 var(--rf-notch)
+  );
+  transition:
+    background var(--rf-dur-base) var(--rf-ease-standard),
+    padding var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-frame-inner {
+  --rf-notch-inner: calc(var(--rf-notch) - var(--rf-frame-width));
+  background: var(--rf-surface-1);
+  height: 100%;
+  clip-path: polygon(
+    var(--rf-notch-inner) 0,
+    100% 0,
+    100% calc(100% - var(--rf-notch-inner)),
+    calc(100% - var(--rf-notch-inner)) 100%,
+    0 100%,
+    0 var(--rf-notch-inner)
+  );
+}
+
+.rf-frame-inverse {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--rf-notch)) 0,
+    100% var(--rf-notch),
+    100% 100%,
+    var(--rf-notch) 100%,
+    0 calc(100% - var(--rf-notch))
+  );
+}
+
+.rf-frame-inverse > .rf-frame-inner {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--rf-notch-inner)) 0,
+    100% var(--rf-notch-inner),
+    100% 100%,
+    var(--rf-notch-inner) 100%,
+    0 calc(100% - var(--rf-notch-inner))
+  );
+}
+
+.rf-frame-octagon {
+  clip-path: polygon(
+    var(--rf-notch) 0,
+    calc(100% - var(--rf-notch)) 0,
+    100% var(--rf-notch),
+    100% calc(100% - var(--rf-notch)),
+    calc(100% - var(--rf-notch)) 100%,
+    var(--rf-notch) 100%,
+    0 calc(100% - var(--rf-notch)),
+    0 var(--rf-notch)
+  );
+}
+
+.rf-frame-octagon > .rf-frame-inner {
+  clip-path: polygon(
+    var(--rf-notch-inner) 0,
+    calc(100% - var(--rf-notch-inner)) 0,
+    100% var(--rf-notch-inner),
+    100% calc(100% - var(--rf-notch-inner)),
+    calc(100% - var(--rf-notch-inner)) 100%,
+    var(--rf-notch-inner) 100%,
+    0 calc(100% - var(--rf-notch-inner)),
+    0 var(--rf-notch-inner)
+  );
+}
+
+/* Interactive boundary — 3.26:1 minimum against every surface. Any control
+   whose only presence signal is its border must use this or stronger. */
+.rf-frame-interactive {
+  --rf-frame-color: var(--rf-border-interactive);
+}
+
+.rf-frame-interactive:hover {
+  --rf-frame-color: var(--rf-border-emphasis);
+}
+
+/* Orokin inlay — gold concentrates at the two cut corners. */
+.rf-frame-gilded {
+  --rf-frame-color: linear-gradient(
+    135deg,
+    var(--rf-gold-600) 0%,
+    var(--rf-border-default) 35%,
+    var(--rf-border-default) 65%,
+    var(--rf-gold-600) 100%
+  );
+}
+
+.rf-frame-danger {
+  --rf-frame-color: var(--rf-danger);
+}
+
+/* ----------------------------------------------------------------------------
+   Focus. outline is clipped away, so the ring is the frame growing to 2px.
+-------------------------------------------------------------------------- */
+/* Only the INNERMOST frame takes the ring. Two things go wrong without the
+   :not(): a focused input lights up every ancestor frame as well as its own,
+   and a frame that is itself focusable — the dialog panel, which takes
+   focus() on open — replaces its gilded border with a permanent purple ring. */
+.rf-frame:has(:focus-visible):not(:has(.rf-frame :focus-visible)) {
+  --rf-frame-width: 2px;
+  --rf-frame-color: var(--rf-border-focus);
+}
+
+.rf-frame:focus-visible {
+  outline: none;
+}
+
+.rf-frame :focus-visible {
+  outline: none;
+}
+
+/* Unclipped elements (links, rows, tabs) get a real ring. */
+.rf-focus-ring:focus-visible {
+  outline: 2px solid var(--rf-border-focus);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------------------
+   Elevation — surface + border intensity. Never box-shadow: clip-path cuts it.
+-------------------------------------------------------------------------- */
+.rf-e0 { background: var(--rf-surface-0); }
+.rf-e1 { background: var(--rf-surface-1); }
+.rf-e2 { background: var(--rf-surface-2); }
+.rf-e3 { background: var(--rf-surface-3); }
+.rf-e4 { background: var(--rf-surface-4); }
+
+/* drop-shadow follows clip-path; box-shadow does not. Floating layers only. */
+.rf-float {
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.5)) drop-shadow(0 8px 24px rgb(0 0 0 / 0.4));
+}

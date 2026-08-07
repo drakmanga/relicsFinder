@@ -1,0 +1,155 @@
+/* ============================================================================
+   Base — everything is scoped under .rf-root so the design system can be
+   dropped into a host page without leaking styles into it.
+   OrokinProvider renders this class; components are unstyled without it.
+   ========================================================================= */
+
+.rf-root {
+  background: var(--rf-surface-0);
+  color: var(--rf-fg-primary);
+  font-family: var(--rf-font-ui);
+  font-size: 15px;
+  line-height: 1.55;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.rf-root *,
+.rf-root *::before,
+.rf-root *::after {
+  box-sizing: border-box;
+}
+
+/* :where() keeps this at zero element-specificity, so a component class can
+   still set its own colour. Written as a plain `.rf-root button` selector it
+   scores (0,1,1) and silently beats every (0,1,0) component rule — which is
+   exactly how primary buttons ended up with inherited light text on gold. */
+.rf-root :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+
+.rf-root a {
+  color: var(--rf-fg-accent);
+  text-decoration: none;
+}
+
+.rf-root a:hover {
+  color: var(--rf-void-300);
+}
+
+.rf-root ::selection {
+  background: #7c5ce659;
+  color: var(--rf-fg-primary);
+}
+
+/* Scrollbar */
+.rf-root * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rf-border-strong) transparent;
+}
+
+.rf-root *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.rf-root *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rf-root *::-webkit-scrollbar-thumb {
+  background: var(--rf-border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.rf-root *::-webkit-scrollbar-thumb:hover {
+  background: var(--rf-gold-800);
+  background-clip: content-box;
+}
+
+/* ============================================================================
+   Typography scale. Cinzel is capital-only by construction: never apply
+   text-transform on top of it, and never use it below 18px.
+   ========================================================================= */
+
+.rf-text-display-xl,
+.rf-text-display-lg,
+.rf-text-display-md,
+.rf-text-display-sm {
+  font-family: var(--rf-font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.rf-text-display-xl { font-size: 48px; line-height: 1.05; }
+.rf-text-display-lg { font-size: 36px; line-height: 1.1; }
+.rf-text-display-md { font-size: 28px; line-height: 1.15; }
+.rf-text-display-sm { font-size: 22px; line-height: 1.2; }
+
+.rf-text-heading-lg { font-size: 18px; line-height: 1.3; font-weight: 600; }
+.rf-text-heading-md { font-size: 16px; line-height: 1.4; font-weight: 600; }
+.rf-text-heading-sm { font-size: 14px; line-height: 1.4; font-weight: 600; }
+
+.rf-text-body-lg { font-size: 16px; line-height: 1.6; }
+.rf-text-body-md { font-size: 15px; line-height: 1.55; }
+.rf-text-body-sm { font-size: 13px; line-height: 1.5; }
+.rf-text-caption { font-size: 12px; line-height: 1.4; }
+
+.rf-text-overline {
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rf-text-data-lg,
+.rf-text-data-md,
+.rf-text-data-sm {
+  font-family: var(--rf-font-data);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.rf-text-data-lg { font-size: 20px; line-height: 1.2; font-weight: 600; }
+.rf-text-data-md { font-size: 14px; line-height: 1.2; font-weight: 500; }
+.rf-text-data-sm { font-size: 13px; line-height: 1.2; }
+
+/* Colour helpers */
+.rf-fg-primary { color: var(--rf-fg-primary); }
+.rf-fg-secondary { color: var(--rf-fg-secondary); }
+.rf-fg-muted { color: var(--rf-fg-muted); }
+.rf-fg-brand { color: var(--rf-fg-brand); }
+.rf-fg-accent { color: var(--rf-fg-accent); }
+
+/* Numbers in a column must never dance. */
+.rf-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Ornament divider — a diamond interrupting a hairline. Max 2 per view. */
+.rf-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-3);
+  margin: var(--rf-space-8) 0;
+}
+
+.rf-divider::before,
+.rf-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rf-border-strong);
+}
+
+.rf-divider-mark {
+  width: 6px;
+  height: 6px;
+  background: var(--rf-gold-700);
+  transform: rotate(45deg);
+}

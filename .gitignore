@@ -1,10 +1,30 @@
+### Java / Maven ###
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+### Node / frontend ###
+node_modules/
+dist/
+apps/web/dist/
+.vite/
+
+### design-sync — script staged, output rigenerato, stato macchina ###
+.ds-sync/
+.ds-verify/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.lavish/
+
+### IDE ###
+.idea
+*.iws
+*.iml
+*.ipr
 .apt_generated
 .classpath
 .factorypath
@@ -12,22 +32,11 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
+.vscode/
 /nbproject/private/
 /nbbuild/
-/dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+### Claude Code — impostazioni personali, non del progetto ###
+.claude/settings.local.json

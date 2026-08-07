@@ -1,0 +1,509 @@
+/* ============================================================================
+   Relic Finder — Orokin Design System
+   Tailwind CSS v4 theme + Orokin geometry primitives.
+   Dark-only. No border-radius on surfaces: identity comes from notched clips.
+   ========================================================================= */
+
+@import "tailwindcss";
+
+@theme {
+  /* ---- Primitives: ink -------------------------------------------------- */
+  --color-ink-950: #0b0a08;
+  --color-ink-900: #131210;
+  --color-ink-800: #1a1815;
+  --color-ink-700: #23201a;
+  --color-ink-600: #2b2720;
+  --color-ink-500: #3a3529;
+
+  /* ---- Primitives: bone (warm neutral text) ----------------------------- */
+  --color-bone-50: #f2ede3;
+  --color-bone-200: #d6cfc2;
+  --color-bone-300: #b9b1a2;
+  --color-bone-400: #9a9280;
+  --color-bone-500: #6e6757;
+  --color-bone-600: #5c5648;
+
+  /* ---- Primitives: gold (brand / primary / Rare / Radiant) --------------- */
+  --color-gold-50: #fbf3d9;
+  --color-gold-100: #f5e4af;
+  --color-gold-200: #f0cc66;
+  --color-gold-300: #e3b341;
+  --color-gold-400: #d4a32f;
+  --color-gold-500: #c9a227;
+  --color-gold-600: #a08428;
+  --color-gold-700: #8a7423;
+  --color-gold-800: #5e4a13;
+  --color-gold-900: #3a2d0c;
+
+  /* ---- Primitives: void purple (UI accent) ------------------------------ */
+  --color-void-100: #dcd2fd;
+  --color-void-200: #c4b4fa;
+  --color-void-300: #b7a3f7;
+  --color-void-400: #9b82f0;
+  --color-void-500: #7c5ce6;
+  --color-void-600: #6647d6;
+  --color-void-700: #4e2fbf;
+  --color-void-800: #3d24a0;
+  --color-void-900: #2b1970;
+
+  /* ---- Domain: relic tier (chip fills only) ----------------------------- */
+  --color-tier-lith: #6bbee0;
+  --color-tier-meso: #7fbf6a;
+  --color-tier-neo: #db9463;
+  --color-tier-axi: #de8ce8;
+  --color-tier-requiem: #b9b1a2;
+
+  /* ---- Domain: drop rarity (dot + text) --------------------------------- */
+  --color-rarity-common: #c97f3e;
+  --color-rarity-uncommon: #b8bfc7;
+  --color-rarity-rare: #e3b341;
+
+  /* ---- Domain: currency ------------------------------------------------- */
+  --color-currency-platinum: #b8c9d9;
+  --color-currency-ducat: #d9b87a;
+  --color-currency-credit: #9a9280;
+
+  /* ---- Semantic feedback ------------------------------------------------ */
+  --color-success: #5fbf7f;
+  --color-success-dim: #2e6b45;
+  --color-warning: #e0a63c;
+  --color-warning-dim: #6b4e14;
+  --color-danger: #f07a75;
+  --color-danger-solid: #a32b27;
+  --color-info: #6bbee0;
+  --color-info-dim: #22505f;
+
+  /* ---- Semantic surfaces ------------------------------------------------ */
+  --color-surface-0: #0b0a08;
+  --color-surface-1: #131210;
+  --color-surface-2: #1a1815;
+  --color-surface-3: #23201a;
+  --color-surface-4: #2b2720;
+
+  /* ---- Semantic foreground ---------------------------------------------- */
+  --color-fg-primary: #f2ede3;
+  --color-fg-secondary: #b9b1a2;
+  --color-fg-muted: #9a9280;
+  --color-fg-disabled: #5c5648;
+  --color-fg-brand: #e3b341;
+  --color-fg-accent: #9b82f0;
+
+  /* ---- Semantic borders ------------------------------------------------- */
+  --color-border-subtle: #221f19;
+  --color-border-default: #2e2920;
+  --color-border-strong: #4a4030;
+  --color-border-interactive: #8a7423;
+  --color-border-emphasis: #a08428;
+  --color-border-focus: #9b82f0;
+
+  /* ---- Typography ------------------------------------------------------- */
+  --font-display: "Cinzel", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", system-ui, -apple-system, sans-serif;
+  --font-data: "Inter", system-ui, sans-serif;
+
+  --text-display-xl: 48px;
+  --text-display-xl--line-height: 1.05;
+  --text-display-xl--letter-spacing: 0.01em;
+  --text-display-lg: 36px;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: 0.01em;
+  --text-display-md: 28px;
+  --text-display-md--line-height: 1.15;
+  --text-display-sm: 22px;
+  --text-display-sm--line-height: 1.2;
+  --text-heading-lg: 18px;
+  --text-heading-lg--line-height: 1.3;
+  --text-heading-md: 16px;
+  --text-heading-md--line-height: 1.4;
+  --text-heading-sm: 14px;
+  --text-heading-sm--line-height: 1.4;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 1.6;
+  --text-body-md: 15px;
+  --text-body-md--line-height: 1.55;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 1.5;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+  --text-overline: 11px;
+  --text-overline--line-height: 1.2;
+  --text-overline--letter-spacing: 0.12em;
+  --text-data-lg: 20px;
+  --text-data-lg--line-height: 1.2;
+  --text-data-md: 14px;
+  --text-data-md--line-height: 1.2;
+  --text-data-sm: 13px;
+  --text-data-sm--line-height: 1.2;
+
+  /* ---- Spacing (4px base) ----------------------------------------------- */
+  --spacing: 4px;
+
+  /* ---- Radius: surfaces are never rounded ------------------------------- */
+  --radius-none: 0px;
+  --radius-full: 9999px;
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0, 0.6, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-orokin: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- Layout sizes ----------------------------------------------------- */
+  --spacing-sidebar: 260px;
+  --spacing-detail: 380px;
+  --spacing-topbar: 56px;
+  --spacing-container: 1600px;
+}
+
+/* ============================================================================
+   Root: non-Tailwind runtime variables (notch depth, durations, z-index)
+   ========================================================================= */
+:root {
+  --notch-xs: 4px;
+  --notch-sm: 6px;
+  --notch-md: 10px;
+  --notch-lg: 16px;
+  --notch-xl: 24px;
+  --notch: var(--notch-md); /* per-component override */
+
+  --dur-instant: 80ms;
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+  --dur-sweep: 420ms;
+  --dur-pulse: 2400ms;
+  --stagger: 40ms;
+
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-dropdown: 1000;
+  --z-overlay: 1100;
+  --z-modal: 1200;
+  --z-toast: 1300;
+  --z-tooltip: 1400;
+
+  --frame-width: 1px;
+  --frame-color: var(--color-border-default);
+
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-surface-0);
+  color: var(--color-fg-primary);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ============================================================================
+   Orokin geometry
+   Two clip shapes. `--notch` controls cut depth; inner frame subtracts 1px so
+   the 1px border stays visually even along the diagonal.
+   ========================================================================= */
+@utility clip-orokin {
+  /* Cuts top-left + bottom-right. Default silhouette for panels and buttons. */
+  clip-path: polygon(
+    var(--notch) 0,
+    100% 0,
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    0 100%,
+    0 var(--notch)
+  );
+}
+
+@utility clip-octagon {
+  /* Cuts all four corners. Reserved for chips, badges, dialogs. */
+  clip-path: polygon(
+    var(--notch) 0,
+    calc(100% - var(--notch)) 0,
+    100% var(--notch),
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    var(--notch) 100%,
+    0 calc(100% - var(--notch)),
+    0 var(--notch)
+  );
+}
+
+@utility clip-orokin-inverse {
+  /* Cuts top-right + bottom-left. Use for the mirrored half of split layouts. */
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--notch)) 0,
+    100% var(--notch),
+    100% 100%,
+    var(--notch) 100%,
+    0 calc(100% - var(--notch))
+  );
+}
+
+/* ----------------------------------------------------------------------------
+   Frame: the only correct way to draw a border on a clipped surface.
+   box-shadow and outline are clipped away by clip-path — do not use them.
+   Outer element IS the border (its background is the border paint);
+   inner element is inset by --frame-width and carries the real surface.
+-------------------------------------------------------------------------- */
+.o-frame {
+  --notch: var(--notch-md);
+  padding: var(--frame-width);
+  background: var(--frame-color);
+  clip-path: polygon(
+    var(--notch) 0,
+    100% 0,
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    0 100%,
+    0 var(--notch)
+  );
+  transition:
+    background var(--dur-base) var(--ease-standard),
+    padding var(--dur-fast) var(--ease-standard);
+}
+
+.o-frame > .o-frame-inner {
+  --notch: calc(var(--notch-md) - var(--frame-width));
+  background: var(--color-surface-1);
+  clip-path: polygon(
+    var(--notch) 0,
+    100% 0,
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    0 100%,
+    0 var(--notch)
+  );
+  height: 100%;
+}
+
+/* Gradient frame — Orokin inlay. Gold concentrates at the two cut corners. */
+.o-frame--gilded {
+  --frame-color: linear-gradient(
+    135deg,
+    var(--color-gold-600) 0%,
+    var(--color-border-default) 35%,
+    var(--color-border-default) 65%,
+    var(--color-gold-600) 100%
+  );
+}
+
+.o-frame--interactive {
+  --frame-color: var(--color-border-interactive);
+}
+
+/* ----------------------------------------------------------------------------
+   Focus. outline is clipped, so the ring is drawn by growing the frame.
+   Interactive elements MUST sit inside an .o-frame to receive it.
+-------------------------------------------------------------------------- */
+.o-frame:has(:focus-visible),
+.o-frame:focus-visible {
+  --frame-width: 2px;
+  --frame-color: var(--color-border-focus);
+  outline: none;
+}
+
+.o-frame > .o-frame-inner :focus-visible {
+  outline: none;
+}
+
+/* Unclipped elements (links, table rows, plain text buttons) use a real ring. */
+.o-focus-ring:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Motion — signature Orokin
+   ========================================================================= */
+@keyframes o-sweep {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes o-radiant-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 0 6px #c9a22766);
+    opacity: 0.92;
+  }
+}
+
+@keyframes o-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes o-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.o-anim-sweep {
+  animation: o-sweep var(--dur-sweep) var(--ease-orokin) both;
+}
+
+.o-anim-radiant {
+  animation: o-radiant-pulse var(--dur-pulse) var(--ease-standard) infinite;
+}
+
+/* Stagger: set --i on each child (0-based). Caps at 6 items — drops per relic. */
+.o-stagger > * {
+  animation: o-rise var(--dur-base) var(--ease-enter) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+.o-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-2) 25%,
+    var(--color-surface-3) 50%,
+    var(--color-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: o-shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .o-anim-sweep,
+  .o-anim-radiant,
+  .o-stagger > *,
+  .o-skeleton {
+    animation: none !important;
+  }
+  .o-anim-sweep,
+  .o-stagger > * {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: var(--dur-fast) !important;
+  }
+}
+
+/* ============================================================================
+   Data / table primitives
+   Rows are NEVER clipped — the wrapper carries the silhouette.
+   ========================================================================= */
+.o-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-body-sm);
+}
+
+.o-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  height: 36px;
+  padding: 0 12px;
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border-default);
+  font-size: var(--text-overline);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.o-table tbody td {
+  height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.o-table tbody tr {
+  position: relative;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+
+.o-table tbody tr:hover {
+  background: #c9a2270d;
+}
+
+.o-table tbody tr td:first-child {
+  box-shadow: inset 2px 0 0 0 transparent;
+  transition: box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.o-table tbody tr:hover td:first-child {
+  box-shadow: inset 2px 0 0 0 var(--color-gold-500);
+}
+
+.o-table tbody tr[aria-selected="true"] {
+  background: #7c5ce61a;
+}
+
+.o-table tbody tr[aria-selected="true"] td:first-child {
+  box-shadow: inset 2px 0 0 0 var(--color-void-400);
+}
+
+.o-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  text-align: right;
+}
+
+/* ============================================================================
+   Scrollbar
+   ========================================================================= */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-800);
+  background-clip: content-box;
+}
+
+/* ============================================================================
+   Selection
+   ========================================================================= */
+::selection {
+  background: #7c5ce659;
+  color: var(--color-fg-primary);
+}

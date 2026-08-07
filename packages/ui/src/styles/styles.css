@@ -1,0 +1,16 @@
+/* ============================================================================
+   Relic Finder — Orokin design system
+   Entry stylesheet. Everything the design system needs is reachable from here;
+   the build inlines each @import so the shipped dist/styles.css is one file.
+
+   Fonts are self-hosted (see fonts.css). Nothing here reaches the network, so
+   the design system renders identically offline, behind a blocking proxy, and
+   in jurisdictions where serving fonts from a third party is a privacy problem.
+   ========================================================================= */
+
+@import "./fonts.css";
+@import "./tokens.css";
+@import "./base.css";
+@import "./geometry.css";
+@import "./motion.css";
+@import "./components.css";

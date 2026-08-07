@@ -1,0 +1,93 @@
+/* ============================================================================
+   Motion — functional base plus three Orokin signatures.
+   Only opacity, transform, background-color, clip-path and filter animate.
+   ========================================================================= */
+
+@keyframes rf-sweep {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes rf-radiant-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 0 6px #c9a22766);
+    opacity: 0.92;
+  }
+}
+
+@keyframes rf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rf-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes rf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Signature 1 — the detail panel materialises inside its frame. */
+.rf-anim-sweep {
+  animation: rf-sweep var(--rf-dur-sweep) var(--rf-ease-orokin) both;
+}
+
+/* Signature 2 — Radiant refinement. One pulsing element per view, never more. */
+.rf-anim-radiant {
+  animation: rf-radiant-pulse var(--rf-dur-pulse) var(--rf-ease-standard) infinite;
+}
+
+/* Signature 3 — drop rows cascade. Capped at 6: the relic drop count. */
+.rf-stagger > * {
+  animation: rf-rise var(--rf-dur-base) var(--rf-ease-enter) both;
+  animation-delay: calc(var(--rf-i, 0) * var(--rf-stagger));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-anim-sweep,
+  .rf-anim-radiant,
+  .rf-stagger > *,
+  .rf-skeleton {
+    animation: none !important;
+  }
+
+  .rf-anim-sweep,
+  .rf-stagger > * {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+
+  .rf-root *,
+  .rf-root *::before,
+  .rf-root *::after {
+    transition-duration: var(--rf-dur-fast) !important;
+  }
+}

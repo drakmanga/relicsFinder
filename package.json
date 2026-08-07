@@ -1,0 +1,22 @@
+{
+  "name": "relic-finder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Relic Finder — Orokin design system, component library and web frontend",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=relic-finder-ui && npm run build --workspace=@relic-finder/web",
+    "build:ui": "npm run build --workspace=relic-finder-ui",
+    "dev": "npm run dev --workspace=@relic-finder/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "verify": "npm run verify --workspace=relic-finder-ui"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
