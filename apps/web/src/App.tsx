@@ -2,10 +2,6 @@ import { useMemo, useState } from "react";
 import {
   Button,
   Chip,
-  DetailPanel,
-  Divider,
-  DropList,
-  DropRow,
   EmptyState,
   ExternalLinkIcon,
   Input,
@@ -22,10 +18,11 @@ import {
 
 import { FilterBar } from "./components/FilterBar";
 import { QtyStepper } from "./components/QtyStepper";
+import { RelicDetailPanel } from "./components/RelicDetailPanel";
 import { WishlistPanel } from "./components/WishlistPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
 import { bump, remove, useWishlist } from "./lib/wishlist";
-import type { RelicItemRow } from "./api/types";
+import type { RelicItemRow, Reward } from "./api/types";
 import {
   applyPriceCeiling,
   buildRows,
@@ -35,7 +32,7 @@ import {
   type SortColumn,
   type SortDirection,
 } from "./lib/rows";
-import { marketUrl, relativeTime } from "./lib/format";
+import { marketUrl } from "./lib/format";
 
 /**
  * Rows rendered at once.
@@ -64,6 +61,34 @@ export function App() {
     [relics.data, filters],
   );
 
+  // Resolved against the full row set rather than the visible page: sorting by
+  // price reorders the page, and a selection must not vanish because the row
+  // it points at moved past the cut.
+  const selectedRow = useMemo(
+    () => rows.find((row) => row.id === selected) ?? null,
+    [rows, selected],
+  );
+
+  // The row carries one item; the panel shows the whole relic, so the other
+  // five rewards are looked up rather than re-fetched.
+  const rewardsByRelic = useMemo(() => {
+    const map = new Map<string, Reward[]>();
+    for (const relic of relics.data ?? []) {
+      map.set(`${relic.fullName}|${relic.refinement}`, relic.rewards);
+    }
+    return map;
+  }, [relics.data]);
+
+  const selectedRewards = useMemo(
+    () =>
+      selectedRow
+        ? (rewardsByRelic.get(`${selectedRow.relicFullName}|${selectedRow.refinement}`) ?? [])
+        : [],
+    [rewardsByRelic, selectedRow],
+  );
+
+  const selectedSites = useDropInfo(selectedRow?.relicFullName ?? null);
+
   // Prices only for what is about to be shown: the batch is one request, but it
   // is still forty market lookups on the server the first time round.
   // Wishlist entries join the batch even when scrolled out of the results:
@@ -73,8 +98,9 @@ export function App() {
     () => [
       ...rows.slice(0, PAGE).map((row) => row.itemName),
       ...wishlist.entries.map((entry) => entry.itemName),
+      ...selectedRewards.map((reward) => reward.itemName),
     ],
-    [rows, wishlist.entries],
+    [rows, wishlist.entries, selectedRewards],
   );
   const prices = useItemPrices(pricedNames);
 
@@ -83,10 +109,8 @@ export function App() {
     return sortRows(ceiled, sort.column, sort.direction, prices.data).slice(0, PAGE);
   }, [rows, filters.maxPrice, prices.data, sort]);
 
-  const selectedRow = useMemo(
-    () => visible.find((row) => row.id === selected) ?? null,
-    [visible, selected],
-  );
+
+
 
   const toggleSort = (column: SortColumn) =>
     setSort((current) =>
@@ -204,7 +228,13 @@ export function App() {
             pricesUpdatedAt={prices.dataUpdatedAt}
           />
         ) : (
-          <ItemDetail row={selectedRow} price={prices.data?.get(selectedRow?.itemName ?? "")} />
+          <RelicDetailPanel
+            row={selectedRow}
+            rewards={selectedRewards}
+            prices={prices.data}
+            sites={selectedSites.data ?? []}
+            sitesPending={selectedSites.isPending}
+          />
         )}
       </div>
     </div>
@@ -387,97 +417,5 @@ function Results({
         </p>
       )}
     </>
-  );
-}
-
-function ItemDetail({
-  row,
-  price,
-}: {
-  row: RelicItemRow | null;
-  price: number | null | undefined;
-}) {
-  const drops = useDropInfo(row?.relicFullName ?? null);
-
-  if (!row) return <DetailPanel empty />;
-
-  const sites = drops.data ?? [];
-
-  return (
-    <DetailPanel
-      key={row.id}
-      badges={<TierChip tier={row.tier} refinement={row.refinement} />}
-      title={row.relicFullName}
-      meta={row.itemName}
-    >
-      <Divider />
-
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-        <RarityTag rarity={row.rarity} />
-        <span className="rf-text-data-md rf-fg-muted">{row.chance.toFixed(2)}%</span>
-        <span style={{ marginLeft: "auto" }}>
-          <Price value={price ?? null} size="lg" />
-        </span>
-      </div>
-
-      <Divider />
-
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        Drop sites
-      </p>
-
-      {drops.isPending ? (
-        <Skeleton height={40} />
-      ) : sites.length === 0 ? (
-        <p className="rf-text-body-sm rf-fg-muted">
-          No mission drops it — the relic is vaulted.
-        </p>
-      ) : (
-        <DropList>
-          {sites.slice(0, 6).map((site, index) => (
-            <DropRow
-              key={`${site.location}-${site.rotation}-${index}`}
-              name={`${site.location} · ${site.mission}`}
-              rarity={row.rarity}
-              chance={site.chance}
-              index={index}
-            />
-          ))}
-        </DropList>
-      )}
-
-      {sites.length > 6 && (
-        <p className="rf-text-caption rf-fg-muted" style={{ marginTop: 8 }}>
-          and {sites.length - 6} more missions
-        </p>
-      )}
-
-      <div style={{ marginTop: 20 }}>
-        <Button
-          variant="primary"
-          icon={<ExternalLinkIcon />}
-          style={{ width: "100%" }}
-          onClick={() =>
-            window.open(
-              `https://warframe.market/items/${row.itemName
-                .toLowerCase()
-                .replace(/ blueprint$/, "")
-                .replace(/[^a-z0-9]+/g, "_")
-                .replace(/^_+|_+$/g, "")}`,
-              "_blank",
-              "noopener,noreferrer",
-            )
-          }
-        >
-          Open on Warframe Market
-        </Button>
-      </div>
-
-      {drops.dataUpdatedAt > 0 && (
-        <p className="rf-text-caption rf-fg-muted" style={{ marginTop: 12 }}>
-          updated {relativeTime(drops.dataUpdatedAt)}
-        </p>
-      )}
-    </DetailPanel>
   );
 }
