@@ -10,11 +10,12 @@ import {
 import { PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, listTotal, remove, type WishlistEntry } from "../lib/wishlist";
-import { marketUrl, relativeTime } from "../lib/format";
+import { marketUrl, priceOf, relativeTime } from "../lib/format";
+import type { PriceMap } from "../api/types";
 
 interface Props {
   entries: WishlistEntry[];
-  prices: Map<string, number | null> | undefined;
+  prices: PriceMap | undefined;
   pricesUpdatedAt: number;
 }
 
@@ -80,7 +81,7 @@ export function WishlistPanel({ entries, prices, pricesUpdatedAt }: Props) {
                 {entry.itemName}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                <PlatPrice value={prices?.get(entry.itemName) ?? null} />
+                <PlatPrice value={priceOf(prices, entry.itemName)} />
                 <span className="rf-text-caption rf-fg-muted">from {entry.relicFullName}</span>
               </div>
             </div>

@@ -110,7 +110,7 @@ export function useItemPrices(itemNames: string[]) {
     queryFn: ({ signal }) => api.itemPrices(names, signal),
     enabled: names.length > 0,
     ...PRICE_DATA,
-    select: (prices) => new Map(prices.map((p) => [p.itemName, p.averagePrice])),
+    select: (prices) => new Map(prices.map((p) => [p.itemName, p])),
   });
 }
 

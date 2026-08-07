@@ -1,4 +1,4 @@
-import type { Rarity, Refinement, Relic, RelicItemRow, Tier } from "../api/types";
+import type { PriceMap, Rarity, Refinement, Relic, RelicItemRow, Tier } from "../api/types";
 
 export interface Filters {
   tiers: Set<Tier>;
@@ -72,12 +72,12 @@ export function sortRows(
   rows: RelicItemRow[],
   column: SortColumn,
   direction: SortDirection,
-  prices?: Map<string, number | null>,
+  prices?: PriceMap,
 ): RelicItemRow[] {
   const sign = direction === "asc" ? 1 : -1;
 
   const valueOf = (row: RelicItemRow) =>
-    column === "chance" ? row.chance : (prices?.get(row.itemName) ?? null);
+    column === "chance" ? row.chance : (prices?.get(row.itemName)?.averagePrice ?? null);
 
   return [...rows].sort((a, b) => {
     const av = valueOf(a);
@@ -95,12 +95,12 @@ export function sortRows(
 export function applyPriceCeiling(
   rows: RelicItemRow[],
   maxPrice: number | null,
-  prices: Map<string, number | null> | undefined,
+  prices: PriceMap | undefined,
 ): RelicItemRow[] {
   if (maxPrice === null || !prices) return rows;
 
   return rows.filter((row) => {
-    const price = prices.get(row.itemName);
+    const price = prices.get(row.itemName)?.averagePrice;
     // Unpriced rows survive the ceiling: hiding them would silently drop every
     // item warframe.market does not list, Forma included.
     return price === null || price === undefined || price <= maxPrice;

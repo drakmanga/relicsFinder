@@ -32,10 +32,17 @@ export const tierLabel = (tier: string) => TIER_LABEL[tier] ?? tier;
  * API — kept in sync with RelicMarketService.itemSlug.
  */
 export function marketUrl(itemName: string): string {
-  const cleaned =
-    /\sprime\s/i.test(` ${itemName} `) && /\sblueprint$/i.test(itemName)
-      ? itemName.slice(0, -" blueprint".length)
-      : itemName;
+  let cleaned = itemName;
+
+  if (/\sblueprint$/i.test(itemName)) {
+    const withoutSuffix = itemName.slice(0, -" blueprint".length);
+    const remainder = withoutSuffix.toLowerCase().trim();
+    // "Volt Prime Blueprint" is the main blueprint, a part in its own right —
+    // stripping the suffix would point at the set instead.
+    if (remainder.includes("prime") && !remainder.endsWith("prime")) {
+      cleaned = withoutSuffix;
+    }
+  }
 
   const slug = cleaned
     .toLowerCase()
@@ -43,4 +50,12 @@ export function marketUrl(itemName: string): string {
     .replace(/^_+|_+$/g, "");
 
   return `https://warframe.market/items/${slug}`;
+}
+
+/** Platinum price of an item, or null when unlisted or not yet fetched. */
+export function priceOf(
+  prices: Map<string, { averagePrice: number | null }> | undefined,
+  itemName: string,
+): number | null {
+  return prices?.get(itemName)?.averagePrice ?? null;
 }

@@ -25,4 +25,13 @@ public class ItemPrice {
 
     /** The warframe.market slug the price was read from, for debugging. */
     private String slug;
+
+    /**
+     * Ducat value. Static — it does not move with the market — and null for
+     * anything the item database does not list, Forma included.
+     */
+    private Integer ducats;
+
+    /** The Prime set the part belongs to, e.g. "Volt Prime". Null when it has none. */
+    private String setName;
 }

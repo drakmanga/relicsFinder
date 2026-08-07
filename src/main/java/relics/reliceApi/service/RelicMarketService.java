@@ -54,6 +54,12 @@ public class RelicMarketService {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+    private final DucatService ducatService;
+
+    public RelicMarketService(DucatService ducatService) {
+        this.ducatService = ducatService;
+    }
+
     private final Semaphore slots = new Semaphore(MAX_CONCURRENT);
 
     private record Cached(Double price, Instant at) {
@@ -75,10 +81,14 @@ public class RelicMarketService {
         return price == null ? -1 : price;
     }
 
-    /** Average price of a single Prime part. */
+    /**
+     * Everything the UI needs about one Prime part: what it trades for, what it
+     * is worth in ducats, and which set it completes.
+     */
     public ItemPrice getItemPrice(String itemName) {
         String slug = itemSlug(itemName);
-        return new ItemPrice(itemName, priceFor(slug), slug);
+        DucatService.ItemMeta meta = ducatService.lookup(itemName);
+        return new ItemPrice(itemName, priceFor(slug), slug, meta.ducats(), meta.setName());
     }
 
     /**
@@ -173,18 +183,26 @@ public class RelicMarketService {
     /**
      * "Volt Prime Neuroptics Blueprint" → "volt_prime_neuroptics".
      *
-     * <p>The drop tables append "Blueprint" to most part names; warframe.market
-     * does not, except for the full-set blueprint of a weapon. Stripping it here
-     * keeps the mapping in one place instead of duplicating it in the frontend.
+     * <p>The drop tables append "Blueprint" to most part names while
+     * warframe.market does not, so the suffix is dropped — but only when
+     * something sits between "Prime" and it.
+     *
+     * <p>Two names must survive intact. "Volt Prime Blueprint" is a part in its
+     * own right, the main blueprint; stripping the suffix would turn it into the
+     * set and cost it its price. "Forma Blueprint" is not a Prime part at all.
      */
     static String itemSlug(String itemName) {
         String cleaned = itemName == null ? "" : itemName.trim();
+        String lower = cleaned.toLowerCase(Locale.ROOT);
 
-        // "Forma Blueprint" is itself the item — only a trailing "Blueprint"
-        // after a part name is redundant.
-        if (cleaned.toLowerCase(Locale.ROOT).endsWith(" blueprint")
-                && cleaned.toLowerCase(Locale.ROOT).contains(" prime ")) {
-            cleaned = cleaned.substring(0, cleaned.length() - " blueprint".length());
+        if (lower.endsWith(" blueprint")) {
+            String withoutSuffix = cleaned.substring(0, cleaned.length() - " blueprint".length());
+            String remainder = withoutSuffix.toLowerCase(Locale.ROOT).trim();
+
+            // Ends with "prime" → "Blueprint" was the component, not a suffix.
+            if (remainder.contains(" prime ") || !remainder.endsWith("prime")) {
+                if (remainder.contains("prime")) cleaned = withoutSuffix;
+            }
         }
 
         return baseSlug(cleaned);

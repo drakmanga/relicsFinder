@@ -11,14 +11,14 @@ import {
 
 import { PlatPrice } from "./Plat";
 
-import type { DropInfo, RelicItemRow, Reward } from "../api/types";
-import { marketUrl } from "../lib/format";
+import type { DropInfo, PriceMap, RelicItemRow, Reward } from "../api/types";
+import { marketUrl, priceOf } from "../lib/format";
 
 interface Props {
   row: RelicItemRow | null;
   /** Every reward of the relic in the row's refinement state. */
   rewards: Reward[];
-  prices: Map<string, number | null> | undefined;
+  prices: PriceMap | undefined;
   sites: DropInfo[];
   sitesPending: boolean;
 }
@@ -67,7 +67,7 @@ export function RelicDetailPanel({ row, rewards, prices, sites, sitesPending }: 
                 name={reward.itemName}
                 rarity={reward.rarity}
                 chance={reward.chance}
-                price={prices?.get(reward.itemName) ?? null}
+                price={priceOf(prices, reward.itemName)}
                 index={index}
               />
             </div>
@@ -129,7 +129,7 @@ export function RelicDetailPanel({ row, rewards, prices, sites, sitesPending }: 
       <div style={{ marginTop: 12, display: "flex", alignItems: "baseline", gap: 8 }}>
         <span className="rf-text-caption rf-fg-muted">Selected part</span>
         <span style={{ marginLeft: "auto" }}>
-          <PlatPrice value={prices?.get(row.itemName) ?? null} />
+          <PlatPrice value={priceOf(prices, row.itemName)} />
         </span>
       </div>
     </DetailPanel>

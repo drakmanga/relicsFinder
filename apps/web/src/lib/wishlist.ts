@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Refinement, Tier } from "../api/types";
+import type { PriceMap, Refinement, Tier } from "../api/types";
 
 /**
  * Versioned on purpose: when the backend grows a wishlist endpoint, a migration
@@ -131,13 +131,13 @@ export function useWishlist() {
  */
 export function listTotal(
   wishlist: WishlistEntry[],
-  prices: Map<string, number | null> | undefined,
+  prices: PriceMap | undefined,
 ): { total: number; unpriced: number } {
   let total = 0;
   let unpriced = 0;
 
   for (const entry of wishlist) {
-    const price = prices?.get(entry.itemName);
+    const price = prices?.get(entry.itemName)?.averagePrice;
     if (price === null || price === undefined) unpriced += 1;
     else total += price * entry.qty;
   }
