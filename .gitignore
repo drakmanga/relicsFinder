@@ -40,3 +40,6 @@ ds-bundle/
 
 ### Claude Code — impostazioni personali, non del progetto ###
 .claude/settings.local.json
+
+### Claude Code — stato runtime
+.claude/scheduled_tasks.lock
