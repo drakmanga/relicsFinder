@@ -2,10 +2,12 @@
 
 Aperto il 2026-08-07 su revisione dell'utente.
 
-**Stato**: fatti §1 e §2 (tabella a granularità item, barra filtri) e §6.1–§6.2
-(riparazione dei tre endpoint rotti, prezzo per item con batch e cache).
-Restano §4 navigazione e Prime Items, §5 rifiniture, §6.3–§6.5 e §7
-(pannello a due modi). La lingua e stata portata in inglese. Riferimento visivo:
+**Stato al 2026-08-07 sera**: fatti §1, §2, §3, §4, §5, §7 e §6.1, §6.2, §6.3,
+§6.6, §6.7.
+
+Restano fuori solo **§6.4 (storico prezzi e delta)** e **§6.5 (wishlist lato
+server)**, deliberatamente: implicano introdurre un database e un concetto di
+utente, decisioni architetturali che il progetto non ha preso. Riferimento visivo:
 `design-imports/relic-finder-main/target-screenshot.png`. Sorgente autorevole:
 `templates/relic-finder-main/RelicFinderMain.dc.html` nel progetto Claude Design
 `82b30910-ffd9-4ff8-987b-1d568f7e1fd1`.
@@ -80,15 +82,14 @@ per poter migrare quando il backend la esporrà.
 posto il pannello segnala quanti item non sono quotati, così il totale non
 finge che valgano zero.
 
-## 4. Navigazione e vista Prime Items — assenti
+## 4. ~~Navigazione e vista Prime Items~~ — FATTO
 
-Topbar: `RELICS` / `PRIME ITEMS` con sottolineatura sull'attivo. Nel template di
-Claude Design sono bottoni custom `.rf-nav`; **è il caso d'uso di `Tabs`**, che
-esiste già nel design system ed è stato ignorato. Da usare, o da capire perché
-non convinceva.
+Fatto con il componente `Tabs` del design system, non con bottoni custom come
+nel template di Claude Design.
 
-Vista Prime Items — colonne `ITEM | SET | RARITY | RELICS | DUCATS | PRICE |
-WISHLIST | MARKET`. Richiede due dati che il backend non ha (sotto).
+Vista Prime Items: una riga per pezzo invece che per coppia reliquia × pezzo —
+552 righe contro 4134. Costruita dai soli stati Intact, altrimenti ogni reliquia
+verrebbe contata quattro volte fra le fonti.
 
 ## 5. Differenze grafiche minori rispetto al target
 

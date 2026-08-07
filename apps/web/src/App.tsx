@@ -6,17 +6,20 @@ import {
   Input,
   SearchIcon,
   Skeleton,
+  Tabs,
 } from "relic-finder-ui";
 
 import { FilterBar } from "./components/FilterBar";
 import { ItemDetailPanel } from "./components/ItemDetailPanel";
+import { ItemsTable } from "./components/ItemsTable";
 import { ResultsTable } from "./components/ResultsTable";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
 import { WishlistPanel } from "./components/WishlistPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
 import { useDebounced } from "./lib/useDebounced";
-import type { Reward } from "./api/types";
+import { buildItemRows } from "./lib/items";
+import type { RelicItemRow, Reward } from "./api/types";
 import {
   applyPriceCeiling,
   buildRows,
@@ -43,6 +46,7 @@ export function App() {
    */
   const [panel, setPanel] = useState<"relic" | "item" | "wishlist">("relic");
   const [pickedItem, setPickedItem] = useState<string | null>(null);
+  const [view, setView] = useState<"relics" | "items">("relics");
 
   /** Item names the virtualiser currently has on screen. */
   const [windowItems, setWindowItems] = useState<string[]>([]);
@@ -64,6 +68,11 @@ export function App() {
     [rows, selected],
   );
 
+  const itemRows = useMemo(
+    () => (view === "items" ? buildItemRows(relics.data ?? [], filters) : []),
+    [view, relics.data, filters],
+  );
+
   // The row carries one item; the panel shows the whole relic, so the other
   // five rewards are looked up rather than re-fetched.
   const rewardsByRelic = useMemo(() => {
@@ -83,6 +92,37 @@ export function App() {
   );
 
   const selectedSites = useDropInfo(selectedRow?.relicFullName ?? null);
+
+  /**
+   * What the item panel should show.
+   *
+   * In the relics view it is the clicked row, optionally swapped to a sibling
+   * part. In the Prime Items view there is no relic row at all, so one is
+   * synthesised from the first relic that drops the item — the panel only needs
+   * a name, a rarity and somewhere to have come from.
+   */
+  const itemPanelRow = useMemo((): RelicItemRow | null => {
+    const name = pickedItem ?? selectedRow?.itemName ?? null;
+    if (!name) return null;
+    if (selectedRow) return pickedItem ? { ...selectedRow, itemName: name } : selectedRow;
+
+    for (const relic of relics.data ?? []) {
+      if (relic.refinement !== "intact") continue;
+      const reward = relic.rewards.find((r) => r.itemName === name);
+      if (!reward) continue;
+
+      return {
+        id: `${relic.fullName}|${relic.refinement}|${name}`,
+        tier: relic.tier,
+        relicFullName: relic.fullName,
+        refinement: relic.refinement,
+        itemName: name,
+        rarity: reward.rarity,
+        chance: reward.chance,
+      };
+    }
+    return null;
+  }, [pickedItem, selectedRow, relics.data]);
 
   // Prices only for what is about to be shown: the batch is one request, but it
   // is still forty market lookups on the server the first time round.
@@ -130,6 +170,7 @@ export function App() {
       >
         <span
           style={{
+            flex: "none",
             fontFamily: "var(--rf-font-display)",
             fontSize: 17,
             letterSpacing: "0.14em",
@@ -138,6 +179,16 @@ export function App() {
         >
           RELIC FINDER
         </span>
+
+        <Tabs
+          label="Views"
+          value={view}
+          onChange={(id) => setView(id as "relics" | "items")}
+          items={[
+            { id: "relics", label: "Relics" },
+            { id: "items", label: "Prime Items" },
+          ]}
+        />
 
         <div style={{ marginLeft: "auto" }}>
           <Button
@@ -179,7 +230,9 @@ export function App() {
             }
           />
         </div>
-        {relics.data && <Chip>{visible.length} results</Chip>}
+        {relics.data && (
+          <Chip>{view === "items" ? itemRows.length : visible.length} results</Chip>
+        )}
       </div>
 
       {filtersOpen && <FilterBar filters={filters} onChange={setFilters} />}
@@ -213,7 +266,7 @@ export function App() {
                 </Button>
               }
             />
-          ) : visible.length === 0 ? (
+          ) : (view === "items" ? itemRows.length : visible.length) === 0 ? (
             filters.term || filters.tiers.size > 0 || filters.rarities.size > 0 ? (
               <EmptyState
                 title="No results"
@@ -226,6 +279,18 @@ export function App() {
                 description="The name of the relic, or of the Prime part you are after."
               />
             )
+          ) : view === "items" ? (
+            <ItemsTable
+              rows={itemRows}
+              prices={prices.data}
+              quantityOf={wishlist.quantityOf}
+              onVisibleItems={setWindowItems}
+              selected={pickedItem}
+              onSelect={(itemName) => {
+                setPickedItem(itemName);
+                setPanel("item");
+              }}
+            />
           ) : (
             <ResultsTable
               rows={visible}
@@ -251,9 +316,9 @@ export function App() {
             prices={prices.data}
             pricesUpdatedAt={prices.dataUpdatedAt}
           />
-        ) : panel === "item" && selectedRow ? (
+        ) : panel === "item" && itemPanelRow ? (
           <ItemDetailPanel
-            row={pickedItem ? { ...selectedRow, itemName: pickedItem } : selectedRow}
+            row={itemPanelRow}
             relics={relics.data ?? []}
             prices={prices.data}
             onPickItem={setPickedItem}
