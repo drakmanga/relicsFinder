@@ -216,9 +216,9 @@ quello che prevede il §3.
 
 ## 7. Pannello dettaglio a due modi — richiesto il 2026-08-07
 
-### Stato attuale: il contenuto di una reliquia non si vede da nessuna parte
+### ~~Stato attuale: il contenuto di una reliquia non si vede da nessuna parte~~ — RISOLTO
 
-Questa è una **regressione**, non una funzionalità mai esistita. Lo scaffold
+Era una **regressione**, non una funzionalità mai esistita. Lo scaffold
 iniziale aveva un pannello che elencava tutti i drop della reliquia con le tab
 di raffinazione; riscrivendo la tabella a granularità item (§1) l'ho sostituito
 con i luoghi di drop, e i sei premi sono spariti dall'interfaccia.
@@ -244,8 +244,8 @@ Il pannello deve dipendere da **cosa** è stato cliccato nella riga.
 
 **Click sulla reliquia** → il contenuto completo:
 
-- tutti e sei i drop, non solo quello della riga
-- **il pezzo della riga cliccata evidenziato** fra gli altri
+- ~~tutti e sei i drop, non solo quello della riga~~ — fatto
+- ~~**il pezzo della riga cliccata evidenziato** fra gli altri~~ — fatto
 
 ### Cosa serve
 
