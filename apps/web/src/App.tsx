@@ -127,19 +127,19 @@ export function App() {
             placeholder="Lith V9, Volt Prime Neuroptics…"
             value={filters.term}
             onChange={(event) => setFilters({ ...filters, term: event.target.value })}
-            aria-label="Cerca reliquia o item"
+            aria-label="Search relic or item"
             trailing={
               <Button
                 variant={filtersOpen ? "accent" : "ghost"}
                 size="sm"
                 onClick={() => setFiltersOpen((open) => !open)}
               >
-                Filtri {filtersOpen ? "▴" : "▾"}
+                Filters {filtersOpen ? "▴" : "▾"}
               </Button>
             }
           />
         </div>
-        {relics.data && <Chip>{rows.length} risultati</Chip>}
+        {relics.data && <Chip>{rows.length} results</Chip>}
       </div>
 
       {filtersOpen && <FilterBar filters={filters} onChange={setFilters} />}
@@ -215,11 +215,11 @@ function Results({
     return (
       <EmptyState
         tone="error"
-        title="Impossibile caricare le reliquie"
+        title="Could not load relics"
         description={String(state.error)}
         actions={
           <Button variant="outline" size="sm" onClick={() => state.refetch()}>
-            Riprova
+            Retry
           </Button>
         }
       />
@@ -229,14 +229,14 @@ function Results({
   if (rows.length === 0) {
     return filtered ? (
       <EmptyState
-        title="Nessun risultato"
-        description="Nessun item corrisponde alla ricerca e ai filtri attivi."
+        title="No results"
+        description="No item matches the search and the active filters."
       />
     ) : (
       <EmptyState
         tone="initial"
-        title="Cerca una reliquia"
-        description="Nome della reliquia o dell'item Prime."
+        title="Search for a relic"
+        description="The name of the relic, or of the Prime part you are after."
       />
     );
   }
@@ -249,9 +249,9 @@ function Results({
         <thead>
           <tr>
             <TableHeaderCell>Tier</TableHeaderCell>
-            <TableHeaderCell>Reliquia</TableHeaderCell>
+            <TableHeaderCell>Relic</TableHeaderCell>
             <TableHeaderCell>Item</TableHeaderCell>
-            <TableHeaderCell>Rarità</TableHeaderCell>
+            <TableHeaderCell>Rarity</TableHeaderCell>
             <TableHeaderCell
               align="right"
               sortable
@@ -266,7 +266,7 @@ function Results({
               sortDirection={dir("price")}
               onSort={() => onSort("price")}
             >
-              Prezzo
+              Price
             </TableHeaderCell>
           </tr>
         </thead>
@@ -302,7 +302,7 @@ function Results({
 
       {total > rows.length && (
         <p className="rf-text-caption rf-fg-muted" style={{ padding: "12px 18px" }}>
-          Mostrati {rows.length} di {total}. Restringi con la ricerca o i filtri.
+          Showing {rows.length} of {total}. Narrow it down with the search or the filters.
         </p>
       )}
     </>
@@ -342,14 +342,14 @@ function ItemDetail({
       <Divider />
 
       <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        Dove droppa
+        Drop sites
       </p>
 
       {drops.isPending ? (
         <Skeleton height={40} />
       ) : sites.length === 0 ? (
         <p className="rf-text-body-sm rf-fg-muted">
-          Nessuna missione la droppa: la reliquia è vaulted.
+          No mission drops it — the relic is vaulted.
         </p>
       ) : (
         <DropList>
@@ -367,7 +367,7 @@ function ItemDetail({
 
       {sites.length > 6 && (
         <p className="rf-text-caption rf-fg-muted" style={{ marginTop: 8 }}>
-          e altre {sites.length - 6} missioni
+          and {sites.length - 6} more missions
         </p>
       )}
 
@@ -388,13 +388,13 @@ function ItemDetail({
             )
           }
         >
-          Apri su Warframe Market
+          Open on Warframe Market
         </Button>
       </div>
 
       {drops.dataUpdatedAt > 0 && (
         <p className="rf-text-caption rf-fg-muted" style={{ marginTop: 12 }}>
-          aggiornato {relativeTime(drops.dataUpdatedAt)}
+          updated {relativeTime(drops.dataUpdatedAt)}
         </p>
       )}
     </DetailPanel>

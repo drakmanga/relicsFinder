@@ -1,7 +1,7 @@
-const rtf = new Intl.RelativeTimeFormat("it", { numeric: "auto" });
+const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
 /**
- * "aggiornato 4 minuti fa" — driven by TanStack Query's `dataUpdatedAt`, which
+ * "updated 4 minutes ago" — driven by TanStack Query's `dataUpdatedAt`, which
  * is why nothing here needs to store a timestamp of its own.
  */
 export function relativeTime(timestamp: number, now = Date.now()): string {
