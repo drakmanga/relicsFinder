@@ -164,21 +164,21 @@ warframe.market usa slug come `volt_prime_neuroptics`. La normalizzazione va
 fatta lato server, una volta, non replicata nel frontend.
 
 
-### 6.7 Rarità sbagliate nella fonte dati
+### 6.7 ~~Rarità sbagliate nella fonte dati~~ — FATTO
 
 `relics.json` etichetta come `Uncommon` tutti i drop al 25.33%, che sono
 `Common`. La stringa `Common` non compare **da nessuna parte** nel dataset:
 sulle sole reliquie Intact ci sono 2067 `Uncommon@25.33`, 1378 `Uncommon@11` e
 689 `Rare@2`.
 
-Il frontend lo aggira derivando la rarità dalla percentuale
-(`apps/web/src/api/normalize.ts`), che è deterministica per stato di
-raffinazione. Attenzione a chi ci mette mano: **non si può ordinare per
-percentuale** per dedurre la rarità, perché a Radiant le tre Common stanno al
-16.67% e le due Uncommon al 20%, quindi l'ordine si inverte.
+Corretto in `RelicLoadService`: ogni servizio carica da lì, quindi la
+correzione copre tutti gli endpoint e nessun client deve replicare la tabella.
+Il frontend ora si fida della rarità che riceve.
 
-Andrebbe corretto lato server, in `RelicLoadService`, così ogni client riceve il
-dato giusto invece di replicare la tabella di conversione.
+Attenzione a chi ci mette mano: **la tabella deve restare indicizzata per stato
+di raffinazione e non si può sostituire con un ordinamento**. A Flawless il 20%
+è Common, a Radiant il 20% è Uncommon, e sempre a Radiant le tre Common (16.67%)
+stanno *sotto* le due Uncommon (20%) — l'ordine si inverte.
 
 ### 6.3 Ducati
 
