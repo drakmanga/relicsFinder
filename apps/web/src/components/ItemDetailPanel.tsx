@@ -3,10 +3,11 @@ import {
   DetailPanel,
   Divider,
   ExternalLinkIcon,
-  Price,
   RarityTag,
   TierChip,
 } from "relic-finder-ui";
+
+import { PlatPrice } from "./Plat";
 
 import type { Relic, RelicItemRow } from "../api/types";
 import { partsOfSet, setOf, sourcesFor } from "../lib/sets";
@@ -52,7 +53,7 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
       <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
         <span className="rf-text-overline rf-fg-muted">Market price</span>
         <span style={{ marginLeft: "auto" }}>
-          <Price value={prices?.get(row.itemName) ?? null} size="lg" />
+          <PlatPrice value={prices?.get(row.itemName) ?? null} size="lg" />
         </span>
       </div>
 
@@ -125,7 +126,7 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
                 >
                   {part.replace(`${setName} `, "")}
                 </span>
-                <Price value={prices?.get(part) ?? null} />
+                <PlatPrice value={prices?.get(part) ?? null} />
               </button>
             ))}
           </div>

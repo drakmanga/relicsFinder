@@ -5,10 +5,11 @@ import {
   DropList,
   DropRow,
   ExternalLinkIcon,
-  Price,
   Skeleton,
   TierChip,
 } from "relic-finder-ui";
+
+import { PlatPrice } from "./Plat";
 
 import type { DropInfo, RelicItemRow, Reward } from "../api/types";
 import { marketUrl } from "../lib/format";
@@ -128,7 +129,7 @@ export function RelicDetailPanel({ row, rewards, prices, sites, sitesPending }: 
       <div style={{ marginTop: 12, display: "flex", alignItems: "baseline", gap: 8 }}>
         <span className="rf-text-caption rf-fg-muted">Selected part</span>
         <span style={{ marginLeft: "auto" }}>
-          <Price value={prices?.get(row.itemName) ?? null} />
+          <PlatPrice value={prices?.get(row.itemName) ?? null} />
         </span>
       </div>
     </DetailPanel>

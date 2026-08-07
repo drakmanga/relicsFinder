@@ -29,9 +29,10 @@ TIER | RELIC | ITEM | RARITY | DROP % ⇅ | PRICE ⇅ | WISHLIST | MARKET
 Va rifatta prima di ogni altra cosa, perché wishlist, prezzo e ordinamento
 vivono tutti sulla riga-item.
 
-**Nota sui volumi**: 689 reliquie × ~6 drop ≈ 4000 righe possibili. Il target ne
-mostra 23 perché filtrate. Serve decidere se la vista senza filtri mostra tutto
-(e allora serve virtualizzazione) o se richiede almeno un filtro attivo.
+**Volumi**: 4134 righe. ~~Serve virtualizzazione~~ — **fatta** con
+`@tanstack/react-virtual`: tutte le righe sono raggiungibili, ~29 nel DOM. Il
+batch dei prezzi segue la finestra visibile con 400ms di debounce, altrimenti
+scorrere farebbe partire una richiesta per frame.
 
 ## 2. ~~Filtri~~ — FATTO
 
@@ -93,8 +94,9 @@ WISHLIST | MARKET`. Richiede due dati che il backend non ha (sotto).
 
 - Riga selezionata: fill viola + marcatore a sinistra. Nello scaffold c'è già
   via `TableRow selected`, ma va verificato dopo il rifacimento della tabella.
-- Il glifo platinum compare **accanto a ogni prezzo** e nell'intestazione della
-  colonna, non solo nel pannello.
+- ~~Glifo platinum accanto a ogni prezzo e nell'intestazione~~ — **fatto**.
+  Nascosto quando il prezzo manca: un trattino seguito dal simbolo si
+  leggerebbe come "costa — platinum" invece di "non quotato".
 - Le percentuali di drop sono allineate a destra con due decimali — già corretto
   nello scaffold.
 - ~~Lingua~~ — **fatto**: interfaccia, `lang` del documento e formattazione delle

@@ -4,10 +4,10 @@ import {
   DetailPanel,
   Divider,
   ExternalLinkIcon,
-  Price,
   TierChip,
 } from "relic-finder-ui";
 
+import { PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, listTotal, remove, type WishlistEntry } from "../lib/wishlist";
 import { marketUrl, relativeTime } from "../lib/format";
@@ -80,7 +80,7 @@ export function WishlistPanel({ entries, prices, pricesUpdatedAt }: Props) {
                 {entry.itemName}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                <Price value={prices?.get(entry.itemName) ?? null} />
+                <PlatPrice value={prices?.get(entry.itemName) ?? null} />
                 <span className="rf-text-caption rf-fg-muted">from {entry.relicFullName}</span>
               </div>
             </div>
@@ -105,7 +105,7 @@ export function WishlistPanel({ entries, prices, pricesUpdatedAt }: Props) {
           <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 4 }}>
             List total
           </p>
-          <Price value={total} size="lg" />
+          <PlatPrice value={total} size="lg" />
         </div>
 
         {unpriced > 0 && (
