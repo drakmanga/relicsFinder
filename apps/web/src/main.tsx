@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { OrokinProvider } from "relic-finder-ui";
 
 import "relic-finder-ui/styles.css";
+import "./app.css";
 import { App } from "./App";
 
 const queryClient = new QueryClient({

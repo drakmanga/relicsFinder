@@ -3,27 +3,20 @@ import {
   Button,
   Chip,
   EmptyState,
-  ExternalLinkIcon,
   Input,
-  Price,
-  RarityTag,
   SearchIcon,
   Skeleton,
-  Table,
-  TableCell,
-  TableHeaderCell,
-  TableRow,
-  TierChip,
 } from "relic-finder-ui";
 
 import { FilterBar } from "./components/FilterBar";
-import { QtyStepper } from "./components/QtyStepper";
 import { ItemDetailPanel } from "./components/ItemDetailPanel";
+import { ResultsTable } from "./components/ResultsTable";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
 import { WishlistPanel } from "./components/WishlistPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
-import { bump, remove, useWishlist } from "./lib/wishlist";
-import type { RelicItemRow, Reward } from "./api/types";
+import { useWishlist } from "./lib/wishlist";
+import { useDebounced } from "./lib/useDebounced";
+import type { Reward } from "./api/types";
 import {
   applyPriceCeiling,
   buildRows,
@@ -33,16 +26,7 @@ import {
   type SortColumn,
   type SortDirection,
 } from "./lib/rows";
-import { marketUrl } from "./lib/format";
 
-/**
- * Rows rendered at once.
- *
- * 689 relics times six drops is roughly 4000 rows; the cap keeps the DOM small
- * and, just as importantly, keeps the price batch inside what warframe.market
- * will serve. Virtualisation is the real answer when filters stop being enough.
- */
-const PAGE = 60;
 
 export function App() {
   const [filters, setFilters] = useState<Filters>(emptyFilters);
@@ -59,6 +43,10 @@ export function App() {
    */
   const [panel, setPanel] = useState<"relic" | "item" | "wishlist">("relic");
   const [pickedItem, setPickedItem] = useState<string | null>(null);
+
+  /** Item names the virtualiser currently has on screen. */
+  const [windowItems, setWindowItems] = useState<string[]>([]);
+  const settledWindow = useDebounced(windowItems, 400);
 
   const relics = useRelics();
   const wishlist = useWishlist();
@@ -103,17 +91,17 @@ export function App() {
   // number of market lookups.
   const pricedNames = useMemo(
     () => [
-      ...rows.slice(0, PAGE).map((row) => row.itemName),
+      ...settledWindow,
       ...wishlist.entries.map((entry) => entry.itemName),
       ...selectedRewards.map((reward) => reward.itemName),
     ],
-    [rows, wishlist.entries, selectedRewards],
+    [settledWindow, wishlist.entries, selectedRewards],
   );
   const prices = useItemPrices(pricedNames);
 
   const visible = useMemo(() => {
     const ceiled = applyPriceCeiling(rows, filters.maxPrice, prices.data);
-    return sortRows(ceiled, sort.column, sort.direction, prices.data).slice(0, PAGE);
+    return sortRows(ceiled, sort.column, sort.direction, prices.data);
   }, [rows, filters.maxPrice, prices.data, sort]);
 
 
@@ -191,7 +179,7 @@ export function App() {
             }
           />
         </div>
-        {relics.data && <Chip>{rows.length} results</Chip>}
+        {relics.data && <Chip>{visible.length} results</Chip>}
       </div>
 
       {filtersOpen && <FilterBar filters={filters} onChange={setFilters} />}
@@ -206,27 +194,55 @@ export function App() {
         }}
       >
         <main
-          style={{ flex: 1, minWidth: 0, background: "var(--rf-surface-0)", overflow: "auto" }}
+          style={{ flex: 1, minWidth: 0, background: "var(--rf-surface-0)", overflow: "hidden" }}
         >
-          <Results
-            rows={visible}
-            total={rows.length}
-            state={relics}
-            prices={prices.data}
-            pricesPending={prices.isPending}
-            selected={selected}
-            onSelect={(id, mode) => {
-              setSelected(id);
-              setPickedItem(null);
-              // Picking a row while the wishlist is open should show what was
-              // picked, not leave the click with no visible effect.
-              setPanel(mode);
-            }}
-            sort={sort}
-            onSort={toggleSort}
-            filtered={filters.term.length > 0 || filters.tiers.size > 0 || filters.rarities.size > 0}
-            quantityOf={wishlist.quantityOf}
-          />
+          {relics.isPending ? (
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              {Array.from({ length: 12 }, (_, i) => (
+                <Skeleton key={i} height={40} />
+              ))}
+            </div>
+          ) : relics.isError ? (
+            <EmptyState
+              tone="error"
+              title="Could not load relics"
+              description={String(relics.error)}
+              actions={
+                <Button variant="outline" size="sm" onClick={() => relics.refetch()}>
+                  Retry
+                </Button>
+              }
+            />
+          ) : visible.length === 0 ? (
+            filters.term || filters.tiers.size > 0 || filters.rarities.size > 0 ? (
+              <EmptyState
+                title="No results"
+                description="No item matches the search and the active filters."
+              />
+            ) : (
+              <EmptyState
+                tone="initial"
+                title="Search for a relic"
+                description="The name of the relic, or of the Prime part you are after."
+              />
+            )
+          ) : (
+            <ResultsTable
+              rows={visible}
+              prices={prices.data}
+              pricesPending={prices.isPending}
+              selected={selected}
+              onSelect={(id, mode) => {
+                setSelected(id);
+                setPickedItem(null);
+                setPanel(mode);
+              }}
+              sort={sort}
+              onSort={toggleSort}
+              quantityOf={wishlist.quantityOf}
+              onVisibleItems={setWindowItems}
+            />
+          )}
         </main>
 
         {panel === "wishlist" ? (
@@ -253,193 +269,5 @@ export function App() {
         )}
       </div>
     </div>
-  );
-}
-
-interface ResultsProps {
-  rows: RelicItemRow[];
-  total: number;
-  state: ReturnType<typeof useRelics>;
-  prices: Map<string, number | null> | undefined;
-  pricesPending: boolean;
-  selected: string | null;
-  onSelect: (id: string, mode: "relic" | "item") => void;
-  sort: { column: SortColumn; direction: SortDirection };
-  onSort: (column: SortColumn) => void;
-  filtered: boolean;
-  quantityOf: (itemName: string) => number;
-}
-
-function Results({
-  rows,
-  total,
-  state,
-  prices,
-  pricesPending,
-  selected,
-  onSelect,
-  sort,
-  onSort,
-  filtered,
-  quantityOf,
-}: ResultsProps) {
-  if (state.isPending) {
-    return (
-      <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-        {Array.from({ length: 12 }, (_, i) => (
-          <Skeleton key={i} height={40} />
-        ))}
-      </div>
-    );
-  }
-
-  if (state.isError) {
-    return (
-      <EmptyState
-        tone="error"
-        title="Could not load relics"
-        description={String(state.error)}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => state.refetch()}>
-            Retry
-          </Button>
-        }
-      />
-    );
-  }
-
-  if (rows.length === 0) {
-    return filtered ? (
-      <EmptyState
-        title="No results"
-        description="No item matches the search and the active filters."
-      />
-    ) : (
-      <EmptyState
-        tone="initial"
-        title="Search for a relic"
-        description="The name of the relic, or of the Prime part you are after."
-      />
-    );
-  }
-
-  const dir = (column: SortColumn) => (sort.column === column ? sort.direction : null);
-
-  return (
-    <>
-      <Table interactive framed={false}>
-        <thead>
-          <tr>
-            <TableHeaderCell>Tier</TableHeaderCell>
-            <TableHeaderCell>Relic</TableHeaderCell>
-            <TableHeaderCell>Item</TableHeaderCell>
-            <TableHeaderCell>Rarity</TableHeaderCell>
-            <TableHeaderCell
-              align="right"
-              sortable
-              sortDirection={dir("chance")}
-              onSort={() => onSort("chance")}
-            >
-              Drop %
-            </TableHeaderCell>
-            <TableHeaderCell
-              align="right"
-              sortable
-              sortDirection={dir("price")}
-              onSort={() => onSort("price")}
-            >
-              Price
-            </TableHeaderCell>
-            <TableHeaderCell align="center">Wishlist</TableHeaderCell>
-            <TableHeaderCell align="center">Market</TableHeaderCell>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <TableRow
-              key={row.id}
-              selected={row.id === selected}
-              onClick={() => onSelect(row.id, "relic")}
-            >
-              <TableCell>
-                <TierChip tier={row.tier} refinement={row.refinement} />
-              </TableCell>
-              <TableCell>{row.relicFullName}</TableCell>
-              <TableCell
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onSelect(row.id, "item");
-                }}
-                style={{ cursor: "pointer" }}
-                title={`What drops ${row.itemName}`}
-              >
-                {row.itemName}
-              </TableCell>
-              <TableCell>
-                <RarityTag rarity={row.rarity} />
-              </TableCell>
-              <TableCell align="right" numeric>
-                {row.chance.toFixed(2)}%
-              </TableCell>
-              <TableCell align="right" numeric>
-                {pricesPending ? (
-                  <Skeleton width={44} height={14} />
-                ) : (
-                  <Price value={prices?.get(row.itemName) ?? null} />
-                )}
-              </TableCell>
-              <TableCell align="center">
-                <QtyStepper
-                  itemName={row.itemName}
-                  qty={quantityOf(row.itemName)}
-                  onIncrement={() =>
-                    bump(
-                      {
-                        itemName: row.itemName,
-                        tier: row.tier,
-                        relicFullName: row.relicFullName,
-                        refinement: row.refinement,
-                      },
-                      1,
-                    )
-                  }
-                  onDecrement={() =>
-                    bump(
-                      {
-                        itemName: row.itemName,
-                        tier: row.tier,
-                        relicFullName: row.relicFullName,
-                        refinement: row.refinement,
-                      },
-                      -1,
-                    )
-                  }
-                  onRemove={() => remove(row.itemName)}
-                />
-              </TableCell>
-              <TableCell align="center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  iconOnly
-                  icon={<ExternalLinkIcon />}
-                  aria-label={`Open ${row.itemName} on Warframe Market`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer");
-                  }}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </tbody>
-      </Table>
-
-      {total > rows.length && (
-        <p className="rf-text-caption rf-fg-muted" style={{ padding: "12px 18px" }}>
-          Showing {rows.length} of {total}. Narrow it down with the search or the filters.
-        </p>
-      )}
-    </>
   );
 }

@@ -1,0 +1,16 @@
+/* ============================================================================
+   Overrides local to the app. Anything reusable belongs in packages/ui.
+   ========================================================================= */
+
+/**
+ * The design system's Table wraps itself in `.rf-table-wrap` with
+ * `overflow-x: auto`, which makes that wrapper the containing block for the
+ * sticky header. The virtualiser scrolls the element *outside* it, so the
+ * header used to stick to a box that was itself scrolling away.
+ *
+ * Letting the wrapper overflow visibly hands both axes to the virtual scroller,
+ * and the header then sticks to the thing the user is actually scrolling.
+ */
+.rf-virtual-scroll .rf-table-wrap {
+  overflow: visible;
+}
