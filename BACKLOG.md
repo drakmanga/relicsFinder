@@ -214,7 +214,7 @@ quello che prevede il §3.
 
 ---
 
-## 7. Pannello dettaglio a due modi — richiesto il 2026-08-07
+## 7. ~~Pannello dettaglio a due modi~~ — FATTO
 
 ### ~~Stato attuale: il contenuto di una reliquia non si vede da nessuna parte~~ — RISOLTO
 
@@ -238,9 +238,13 @@ Il pannello deve dipendere da **cosa** è stato cliccato nella riga.
 
 **Click sull'item** → dove si ottiene quell'item:
 
-- l'elenco delle reliquie che lo contengono, con tier, refinement e percentuale
-- il **set** a cui appartiene (`Volt Prime Neuroptics Blueprint` → `Volt Prime`)
-  e, idealmente, gli altri pezzi del set
+- ~~l'elenco delle reliquie che lo contengono~~ — fatto, calcolato in memoria
+  invece che con `/api/search`: il dataset è già caricato, quindi una richiesta
+  sarebbe più lenta e potrebbe dissentire dalla tabella, che applica la
+  correzione delle rarità in ingresso
+- ~~il **set** e gli altri pezzi~~ — fatto, derivato in `lib/sets.ts`. Da
+  spostare lato server insieme ai ducati (§6.3), così la regola sta in un posto
+  solo
 
 **Click sulla reliquia** → il contenuto completo:
 
