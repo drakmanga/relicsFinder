@@ -23,3 +23,24 @@ const TIER_LABEL: Record<string, string> = {
 };
 
 export const tierLabel = (tier: string) => TIER_LABEL[tier] ?? tier;
+
+/**
+ * warframe.market item URL.
+ *
+ * The drop tables append "Blueprint" to most part names and the market does
+ * not, which is the same normalisation the backend applies before calling the
+ * API — kept in sync with RelicMarketService.itemSlug.
+ */
+export function marketUrl(itemName: string): string {
+  const cleaned =
+    /\sprime\s/i.test(` ${itemName} `) && /\sblueprint$/i.test(itemName)
+      ? itemName.slice(0, -" blueprint".length)
+      : itemName;
+
+  const slug = cleaned
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return `https://warframe.market/items/${slug}`;
+}

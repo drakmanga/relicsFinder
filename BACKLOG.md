@@ -4,7 +4,7 @@ Aperto il 2026-08-07 su revisione dell'utente.
 
 **Stato**: fatti §1 e §2 (tabella a granularità item, barra filtri) e §6.1–§6.2
 (riparazione dei tre endpoint rotti, prezzo per item con batch e cache).
-Restano §3 wishlist, §4 navigazione e Prime Items, §5 rifiniture, §6.3–§6.5 e §7
+Restano §4 navigazione e Prime Items, §5 rifiniture, §6.3–§6.5 e §7
 (pannello a due modi). La lingua e stata portata in inglese. Riferimento visivo:
 `design-imports/relic-finder-main/target-screenshot.png`. Sorgente autorevole:
 `templates/relic-finder-main/RelicFinderMain.dc.html` nel progetto Claude Design
@@ -52,7 +52,7 @@ Il pattern toggle (superficie, bordo, opacità come stato on/off) **non esiste
 nel design system** — nel template di Claude Design è CSS scritto a mano
 (`.rf-tog`). Va deciso se diventa un componente vero o resta locale all'app.
 
-## 3. Wishlist — assente
+## 3. ~~Wishlist~~ — FATTO (senza delta)
 
 Due parti.
 
@@ -73,8 +73,11 @@ Il bottone `Wishlist · N` in topbar alterna i due. Contenuto:
 **Persistenza**: nessun endpoint. Va su `localStorage`, con una chiave versionata
 per poter migrare quando il backend la esporrà.
 
-**`UNDER TARGET` implica un prezzo obiettivo per voce** che nel mock è finto
-(`target` nello stato del template). Va deciso se l'utente lo imposta a mano.
+**Non implementato**: il delta `▲ +12%` (serve lo storico prezzi, §6.4) e
+`UNDER TARGET`, che implica un prezzo obiettivo per voce — nel mock è finto
+(`target` nello stato del template) e va deciso se lo imposta l'utente. Al loro
+posto il pannello segnala quanti item non sono quotati, così il totale non
+finge che valgano zero.
 
 ## 4. Navigazione e vista Prime Items — assenti
 
@@ -159,6 +162,23 @@ prezzo si paga una volta per tutti gli utenti invece che una volta per browser.
 **Attenzione ai nomi**: il JSON dei drop scrive `Volt Prime Neuroptics Blueprint`,
 warframe.market usa slug come `volt_prime_neuroptics`. La normalizzazione va
 fatta lato server, una volta, non replicata nel frontend.
+
+
+### 6.7 Rarità sbagliate nella fonte dati
+
+`relics.json` etichetta come `Uncommon` tutti i drop al 25.33%, che sono
+`Common`. La stringa `Common` non compare **da nessuna parte** nel dataset:
+sulle sole reliquie Intact ci sono 2067 `Uncommon@25.33`, 1378 `Uncommon@11` e
+689 `Rare@2`.
+
+Il frontend lo aggira derivando la rarità dalla percentuale
+(`apps/web/src/api/normalize.ts`), che è deterministica per stato di
+raffinazione. Attenzione a chi ci mette mano: **non si può ordinare per
+percentuale** per dedurre la rarità, perché a Radiant le tre Common stanno al
+16.67% e le due Uncommon al 20%, quindi l'ordine si inverte.
+
+Andrebbe corretto lato server, in `RelicLoadService`, così ogni client riceve il
+dato giusto invece di replicare la tabella di conversione.
 
 ### 6.3 Ducati
 
