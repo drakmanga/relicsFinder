@@ -35,61 +35,19 @@ export function parseChance(raw: string | number | null | undefined): number {
 }
 
 /**
- * Drop chance to rarity, per refinement state.
+ * Rarity is taken as sent.
  *
- * The source labels rarity wrongly and always has: every 25.33% drop is tagged
- * "Uncommon" when it is Common, and the string "Common" appears nowhere in the
- * dataset — 2067 Uncommon@25.33, 1378 Uncommon@11, 689 Rare@2 across the Intact
- * relics alone. Filtering by Common would therefore match nothing.
- *
- * The chances themselves are correct and fixed by the game, so they are the
- * reliable signal. Note that ranking by chance would not work: at Radiant the
- * three Commons sit at 16.67% while the two Uncommons are at 20%, so the order
- * inverts. The table has to be explicit.
+ * The source data mislabels it — every 25.33% drop is tagged "Uncommon" when it
+ * is Common — but the correction now happens in RelicLoadService, on the way out
+ * of the backend, so every client gets it right without carrying a copy of the
+ * chance-to-rarity table. Do not reintroduce that table here.
  */
-const RARITY_BY_CHANCE: Record<Refinement, Array<[number, Rarity]>> = {
-  intact: [
-    [25.33, "common"],
-    [11, "uncommon"],
-    [2, "rare"],
-  ],
-  exceptional: [
-    [23.33, "common"],
-    [13, "uncommon"],
-    [4, "rare"],
-  ],
-  flawless: [
-    [20, "common"],
-    [17, "uncommon"],
-    [6, "rare"],
-  ],
-  radiant: [
-    [16.67, "common"],
-    [20, "uncommon"],
-    [10, "rare"],
-  ],
-};
-
-/** Chances are published to two decimals, so this only absorbs float noise. */
-const CHANCE_TOLERANCE = 0.05;
-
-function rarityFor(chance: number, refinement: Refinement, declared: string): Rarity {
-  for (const [value, rarity] of RARITY_BY_CHANCE[refinement]) {
-    if (Math.abs(chance - value) < CHANCE_TOLERANCE) return rarity;
-  }
-  // An unrecognised chance means the game changed the tables; the declared
-  // label is then a better guess than a hardcoded default.
-  return pick(declared, RARITIES, "common");
-}
-
-export function normalizeReward(wire: WireRewards, refinement: Refinement): Reward {
-  const chance = parseChance(wire.chance);
-
+export function normalizeReward(wire: WireRewards): Reward {
   return {
     id: wire._id,
     itemName: wire.itemName,
-    rarity: rarityFor(chance, refinement, wire.rarity),
-    chance,
+    rarity: pick(wire.rarity, RARITIES, "common"),
+    chance: parseChance(wire.chance),
   };
 }
 
@@ -105,7 +63,7 @@ export function normalizeRelic(wire: WireRelic): Relic {
     // each call site.
     fullName: wire.tier ? `${wire.tier} ${wire.relicName}` : wire.relicName,
     refinement,
-    rewards: (wire.rewards ?? []).map((reward) => normalizeReward(reward, refinement)),
+    rewards: (wire.rewards ?? []).map(normalizeReward),
   };
 }
 
