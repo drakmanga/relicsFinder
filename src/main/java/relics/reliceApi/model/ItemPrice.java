@@ -20,8 +20,26 @@ public class ItemPrice {
 
     private String itemName;
 
-    /** Platinum, averaged over the last 48 hours. Null when unlisted. */
+    /**
+     * Platinum, from trades actually completed in the last 48 hours.
+     *
+     * <p>Not from open orders: those split into buy and sell, and averaging the
+     * two together produces a number nobody trades at — for Volt Prime
+     * Neuroptics, buyers offer around 15 and sellers ask around 30, while the
+     * trades that close land near 27.
+     *
+     * <p>Null when nothing sold recently.
+     */
     private Double averagePrice;
+
+    /** Median of the same trades. More honest than the mean on a thin market. */
+    private Double median;
+
+    /** Trades in the window. A price backed by two sales is barely a price. */
+    private Integer volume;
+
+    /** Percent change against the 90-day average. Null without enough history. */
+    private Double trend;
 
     /** The warframe.market slug the price was read from, for debugging. */
     private String slug;

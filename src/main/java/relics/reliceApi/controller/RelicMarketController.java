@@ -3,17 +3,23 @@ package relics.reliceApi.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import relics.reliceApi.model.ItemPrice;
+import relics.reliceApi.model.PricePoint;
 import relics.reliceApi.model.RelicPrice;
 import relics.reliceApi.service.RelicMarketService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/market")
 public class RelicMarketController {
 
-    /** A single screenful of results is far below this; the cap is a guard, not a page size. */
-    private static final int MAX_BATCH = 100;
+    /**
+     * The whole catalogue is about 550 parts and the client asks for all of
+     * them at once — the server answers from cache, so this is map lookups, not
+     * network calls. The cap only guards against a nonsense request.
+     */
+    private static final int MAX_BATCH = 1000;
 
     private final RelicMarketService relicMarketService;
 
@@ -50,6 +56,31 @@ public class RelicMarketController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(relicMarketService.getItemPrices(itemNames));
+    }
+
+    /**
+     * Ninety days of completed trades, for the price chart.
+     *
+     * <p>warframe.market keeps this itself, so nothing needs storing on our
+     * side — the series arrives in the same response the price comes from.
+     */
+    @GetMapping("/item/{itemName}/history")
+    public ResponseEntity<List<PricePoint>> getItemHistory(@PathVariable String itemName) {
+        if (itemName == null || itemName.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(relicMarketService.getHistory(itemName));
+    }
+
+    /**
+     * How much of the catalogue is priced.
+     *
+     * <p>The cache fills in the background over a few minutes; the UI reads this
+     * to say so instead of showing a table full of dashes with no explanation.
+     */
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Object>> status() {
+        return ResponseEntity.ok(relicMarketService.cacheStatus());
     }
 
     /** Average price of a whole relic, e.g. "Lith V9". */
