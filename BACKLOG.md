@@ -4,7 +4,8 @@ Aperto il 2026-08-07 su revisione dell'utente.
 
 **Stato**: fatti §1 e §2 (tabella a granularità item, barra filtri) e §6.1–§6.2
 (riparazione dei tre endpoint rotti, prezzo per item con batch e cache).
-Restano §3 wishlist, §4 navigazione e Prime Items, §5 rifiniture, §6.3–§6.5. Riferimento visivo:
+Restano §3 wishlist, §4 navigazione e Prime Items, §5 rifiniture, §6.3–§6.5 e §7
+(pannello a due modi). La lingua e stata portata in inglese. Riferimento visivo:
 `design-imports/relic-finder-main/target-screenshot.png`. Sorgente autorevole:
 `templates/relic-finder-main/RelicFinderMain.dc.html` nel progetto Claude Design
 `82b30910-ffd9-4ff8-987b-1d568f7e1fd1`.
@@ -93,10 +94,9 @@ WISHLIST | MARKET`. Richiede due dati che il backend non ha (sotto).
   colonna, non solo nel pannello.
 - Le percentuali di drop sono allineate a destra con due decimali — già corretto
   nello scaffold.
-- Lingua: il target è **in inglese**, lo scaffold in italiano. Da decidere una
-  volta e applicare ovunque.
+- ~~Lingua~~ — **fatto**: interfaccia, `lang` del documento e formattazione delle
+  date relative sono in inglese.
 
----
 
 ## Bloccanti lato backend
 
@@ -191,6 +191,45 @@ quello che prevede il §3.
   `apps/web` lo sostituisce, va rimosso — tenerlo significa due UI divergenti.
 - **CORS** non serve: in sviluppo il proxy di Vite parla con la 8080, in
   produzione Spring Boot serve i file statici della stessa origine.
+
+---
+
+## 7. Pannello dettaglio a due modi — richiesto il 2026-08-07
+
+Oggi il pannello mostra sempre la stessa cosa: i luoghi di drop della reliquia.
+Deve invece dipendere da **cosa** è stato cliccato nella riga.
+
+**Click sull'item** → dove si ottiene quell'item:
+
+- l'elenco delle reliquie che lo contengono, con tier, refinement e percentuale
+- il **set** a cui appartiene (`Volt Prime Neuroptics Blueprint` → `Volt Prime`)
+  e, idealmente, gli altri pezzi del set
+
+**Click sulla reliquia** → il contenuto completo:
+
+- tutti e sei i drop, non solo quello della riga
+- **il pezzo della riga cliccata evidenziato** fra gli altri
+
+### Cosa serve
+
+| Dato | Stato |
+|---|---|
+| Reliquie che contengono un item | **c'e gia** — `GET /api/search/{itemName}` |
+| Luoghi di drop di una reliquia | **c'e gia** — `GET /api/relics/drop-info/{name}` |
+| Set di appartenenza | **manca**, ma e derivabile dal nome |
+
+Il set si ricava dal nome dell'item: si taglia dopo `Prime`
+(`Volt Prime Neuroptics Blueprint` → `Volt Prime`). Funziona per warframe e armi;
+va verificato sui casi strani — `Forma Blueprint` non ha set, Kavat, Kubrow e
+Archwing seguono altre convenzioni. Meglio derivarlo **lato server** insieme ai
+ducati (§6.3), cosi la regola sta in un posto solo.
+
+### Come distinguere il click
+
+La riga e gia una coppia reliquia × item, quindi il punto cliccato basta a
+decidere: cella `Relic` → modo reliquia, cella `Item` → modo item. Da non
+risolvere con due pannelli affiancati: il target ne ha uno solo, e la wishlist
+(§3) si contende gia quello spazio.
 
 ---
 

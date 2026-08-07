@@ -43,7 +43,7 @@ export function FilterBar({ filters, onChange }: Props) {
           <Toggle
             key={tier}
             on={filters.tiers.has(tier)}
-            label={`Filtra per tier ${tier}`}
+            label={`Filter by tier ${tier}`}
             onClick={() => onChange({ ...filters, tiers: toggle(filters.tiers, tier) })}
           >
             <TierChip tier={tier as Tier} />
@@ -51,12 +51,12 @@ export function FilterBar({ filters, onChange }: Props) {
         ))}
       </Group>
 
-      <Group label="Rarità">
+      <Group label="Rarity">
         {ALL_RARITIES.map((rarity) => (
           <Toggle
             key={rarity}
             on={filters.rarities.has(rarity)}
-            label={`Filtra per rarità ${rarity}`}
+            label={`Filter by rarity ${rarity}`}
             onClick={() => onChange({ ...filters, rarities: toggle(filters.rarities, rarity) })}
           >
             <RarityTag rarity={rarity as Rarity} />
@@ -64,12 +64,12 @@ export function FilterBar({ filters, onChange }: Props) {
         ))}
       </Group>
 
-      <Group label="Raffinazione">
+      <Group label="Refinement">
         {ALL_REFINEMENTS.map((refinement) => (
           <Toggle
             key={refinement}
             on={filters.refinements.has(refinement)}
-            label={`Filtra per raffinazione ${refinement}`}
+            label={`Filter by refinement ${refinement}`}
             onClick={() =>
               onChange({
                 ...filters,
@@ -91,7 +91,7 @@ export function FilterBar({ filters, onChange }: Props) {
         ))}
       </Group>
 
-      <Group label="Prezzo massimo" last>
+      <Group label="Max price" last>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <input
             type="range"
@@ -103,14 +103,14 @@ export function FilterBar({ filters, onChange }: Props) {
               const value = Number(event.target.value);
               onChange({ ...filters, maxPrice: value >= 500 ? null : value });
             }}
-            aria-label="Prezzo massimo in platinum"
+            aria-label="Maximum price in platinum"
             style={{ width: 160, accentColor: "var(--rf-gold-500)" }}
           />
           <span
             className="rf-tabular"
             style={{ fontSize: 13, color: "var(--rf-fg-secondary)", minWidth: 76 }}
           >
-            {filters.maxPrice === null ? "nessuno" : `${filters.maxPrice} p`}
+            {filters.maxPrice === null ? "none" : `${filters.maxPrice} p`}
           </span>
         </div>
       </Group>
