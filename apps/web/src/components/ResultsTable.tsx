@@ -4,8 +4,6 @@ import {
   Button,
   DucatGlyph,
   ExternalLinkIcon,
-  InfoIcon,
-  RarityTag,
   Skeleton,
   Table,
   TableCell,
@@ -15,11 +13,10 @@ import {
 } from "relic-finder-ui";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
-import { QtyStepper } from "./QtyStepper";
-import { bump, remove } from "../lib/wishlist";
-import { marketUrl, priceOf } from "../lib/format";
-import type { PriceMap, RelicItemRow } from "../api/types";
-import type { SortColumn, SortDirection } from "../lib/rows";
+import { relicMarketUrl } from "../lib/format";
+import { bestDropValue, ducatTotal } from "../lib/rows";
+import type { PriceMap, RelicRow } from "../api/types";
+import type { RelicSortColumn, SortDirection } from "../lib/rows";
 
 /**
  * Row height, fixed at the design system's 40px.
@@ -35,27 +32,35 @@ const ROW_HEIGHT = 40;
 const OVERSCAN = 12;
 
 interface Props {
-  rows: RelicItemRow[];
+  rows: RelicRow[];
   prices: PriceMap | undefined;
   pricesPending: boolean;
+  /** Full names of the relics currently in rotation; undefined while loading. */
+  unvaulted: Set<string> | undefined;
   selected: string | null;
-  onSelect: (id: string, mode: "relic" | "item") => void;
-  sort: { column: SortColumn; direction: SortDirection };
-  onSort: (column: SortColumn) => void;
-  quantityOf: (itemName: string) => number;
-  onInfo: (itemName: string) => void;
+  onSelect: (id: string) => void;
+  sort: { column: RelicSortColumn; direction: SortDirection };
+  onSort: (column: RelicSortColumn) => void;
 }
 
+/**
+ * The relics, one per row.
+ *
+ * The table used to pair every relic with each of its six drops, which made a
+ * relic occupy six rows and turned a list of relics into a list of parts —
+ * the question the Prime Items view exists to answer. What a relic holds is
+ * read in the detail panel, where the six drops can be seen together and
+ * compared, which is how the decision to open one is actually made.
+ */
 export function ResultsTable({
   rows,
   prices,
   pricesPending,
+  unvaulted,
   selected,
   onSelect,
   sort,
   onSort,
-  quantityOf,
-  onInfo,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -68,8 +73,7 @@ export function ResultsTable({
 
   const items = virtualizer.getVirtualItems();
 
-
-  const dir = (column: SortColumn) => (sort.column === column ? sort.direction : null);
+  const dir = (column: RelicSortColumn) => (sort.column === column ? sort.direction : null);
 
   // Spacers stand in for the rows that are not rendered, so the scrollbar
   // reflects the whole result set rather than the handful in the DOM.
@@ -83,46 +87,31 @@ export function ResultsTable({
         <thead>
           <tr>
             <TableHeaderCell>Tier</TableHeaderCell>
-            <TableHeaderCell
-              sortable
-              sortDirection={dir("relic")}
-              onSort={() => onSort("relic")}
-            >
+            <TableHeaderCell sortable sortDirection={dir("relic")} onSort={() => onSort("relic")}>
               Relic
             </TableHeaderCell>
-            {/*
-              "Item" said nothing about the relationship between the two
-              columns, and a relic occupying six consecutive rows read as six
-              unrelated results. "Drops" names it: this relic drops this part.
-            */}
-            <TableHeaderCell>Drops</TableHeaderCell>
-            <TableHeaderCell>Rarity</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
             <TableHeaderCell
               align="right"
               sortable
-              sortDirection={dir("chance")}
-              onSort={() => onSort("chance")}
+              sortDirection={dir("value")}
+              onSort={() => onSort("value")}
             >
-              Drop %
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                Best drop <PlatGlyph size={12} />
+              </span>
             </TableHeaderCell>
-            <TableHeaderCell align="right">
+            <TableHeaderCell
+              align="right"
+              sortable
+              sortDirection={dir("ducats")}
+              onSort={() => onSort("ducats")}
+            >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 Ducats
                 <DucatGlyph style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }} />
               </span>
             </TableHeaderCell>
-            <TableHeaderCell
-              align="right"
-              sortable
-              sortDirection={dir("price")}
-              onSort={() => onSort("price")}
-            >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                Price <PlatGlyph size={12} />
-              </span>
-            </TableHeaderCell>
-            <TableHeaderCell align="center">Wishlist</TableHeaderCell>
-            <TableHeaderCell align="center">Info</TableHeaderCell>
             <TableHeaderCell align="center">Market</TableHeaderCell>
           </tr>
         </thead>
@@ -130,7 +119,7 @@ export function ResultsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={6} style={{ height: paddingTop, padding: 0, border: 0 }} />
             </tr>
           )}
 
@@ -138,107 +127,50 @@ export function ResultsTable({
             const row = rows[virtualRow.index];
             if (!row) return null;
 
-            /*
-              A relic fills six consecutive rows, one per drop. Marking where a
-              new one begins turns that block into an obvious group instead of
-              six results that happen to repeat a name.
-
-              Sorting by price scatters a relic's drops across the table, and
-              then every row is a group of one — which is exactly right, because
-              at that point the rows genuinely are unrelated.
-            */
-            const previous = rows[virtualRow.index - 1];
-            const startsGroup =
-              !previous ||
-              previous.relicFullName !== row.relicFullName ||
-              previous.refinement !== row.refinement;
-
-            const seed = {
-              itemName: row.itemName,
-              kind: "part" as const,
-              tier: row.tier,
-              relicFullName: row.relicFullName,
-              refinement: row.refinement,
-            };
+            const best = bestDropValue(row, prices);
+            const ducats = ducatTotal(row, prices);
 
             return (
               <TableRow
                 key={row.id}
                 selected={row.id === selected}
-                onClick={() => onSelect(row.id, "relic")}
-                style={
-                  startsGroup ? { borderTop: "1px solid var(--rf-border-default)" } : undefined
-                }
-                title={`${row.relicFullName} — click for everything it drops`}
+                onClick={() => onSelect(row.id)}
+                title={`${row.relicFullName} — click to see everything inside`}
               >
                 <TableCell>
-                  {/* The chip belongs to the relic, so it appears once per relic. */}
-                  {startsGroup ? <TierChip tier={row.tier} refinement={row.refinement} /> : null}
+                  <TierChip tier={row.tier} refinement={row.refinement} />
                 </TableCell>
+                <TableCell>{row.relicFullName}</TableCell>
                 {/*
-                  The name stays on every row rather than being blanked out:
-                  with virtual scrolling the first row of a group is often above
-                  the viewport, and a row that names no relic is worse than a
-                  repeated one. Repeats recede instead.
+                  Whether the relic can still be farmed. This was a breakdown of
+                  the contents by rarity, which reads well until you notice every
+                  relic in the game holds three commons, two uncommons and one
+                  rare — a column identical on all 689 rows says nothing.
                 */}
                 <TableCell>
-                  <span className={startsGroup ? undefined : "rf-fg-disabled"}>
-                    {row.relicFullName}
-                  </span>
-                </TableCell>
-                <TableCell
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSelect(row.id, "item");
-                  }}
-                  style={{ cursor: "pointer" }}
-                  title={`Where ${row.itemName} comes from`}
-                >
-                  {row.itemName}
-                </TableCell>
-                <TableCell>
-                  <RarityTag rarity={row.rarity} />
-                </TableCell>
-                <TableCell align="right" numeric>
-                  {row.chance.toFixed(2)}%
-                </TableCell>
-                <TableCell align="right" numeric>
-                  {prices?.get(row.itemName)?.ducats == null ? (
-                    <span className="rf-fg-disabled">—</span>
-                  ) : (
-                    <span style={{ color: "var(--rf-currency-ducat)" }}>
-                      {prices.get(row.itemName)!.ducats}
+                  {unvaulted === undefined ? (
+                    <Skeleton width={64} height={14} />
+                  ) : unvaulted.has(row.relicFullName) ? (
+                    <span className="rf-text-caption" style={{ color: "var(--rf-success)" }}>
+                      Farmable
                     </span>
+                  ) : (
+                    <span className="rf-text-caption rf-fg-muted">Vaulted</span>
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
                   {pricesPending && !prices ? (
                     <Skeleton width={44} height={14} />
                   ) : (
-                    <PlatPrice value={priceOf(prices, row.itemName)} />
+                    <PlatPrice value={best} />
                   )}
                 </TableCell>
-                <TableCell align="center">
-                  <QtyStepper
-                    itemName={row.itemName}
-                    qty={quantityOf(row.itemName)}
-                    onIncrement={() => bump(seed, 1)}
-                    onDecrement={() => bump(seed, -1)}
-                    onRemove={() => remove(row.itemName)}
-                  />
-                </TableCell>
-                <TableCell align="center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    iconOnly
-                    icon={<InfoIcon />}
-                    aria-label={`More about ${row.itemName}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onInfo(row.itemName);
-                    }}
-                  />
+                <TableCell align="right" numeric>
+                  {ducats === 0 ? (
+                    <span className="rf-fg-disabled">—</span>
+                  ) : (
+                    <span style={{ color: "var(--rf-currency-ducat)" }}>{ducats}</span>
+                  )}
                 </TableCell>
                 <TableCell align="center">
                   <Button
@@ -246,10 +178,14 @@ export function ResultsTable({
                     size="sm"
                     iconOnly
                     icon={<ExternalLinkIcon />}
-                    aria-label={`Open ${row.itemName} on Warframe Market`}
+                    aria-label={`Open ${row.relicFullName} on Warframe Market`}
                     onClick={(event) => {
                       event.stopPropagation();
-                      window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer");
+                      window.open(
+                        relicMarketUrl(row.relicFullName),
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
                     }}
                   />
                 </TableCell>
@@ -259,7 +195,7 @@ export function ResultsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={6} style={{ height: paddingBottom, padding: 0, border: 0 }} />
             </tr>
           )}
         </tbody>

@@ -152,6 +152,21 @@ export function useEndoOffers(enabled: boolean) {
   });
 }
 
+/**
+ * Which relics are currently farmable, in one request.
+ *
+ * The per-relic `isVaulted` endpoint would be 689 calls to fill a column. This
+ * is the same answer as one small list — around thirty relics are in rotation
+ * at a time — and it changes only when Digital Extremes rotates the vault.
+ */
+export function useUnvaultedNames() {
+  return useQuery({
+    queryKey: ["relics", "unvaulted", "names"] as const,
+    queryFn: ({ signal }) => api.unvaultedNames(signal),
+    ...STATIC_DATA,
+  });
+}
+
 export function useIsVaulted(relicName: string | null) {
   return useQuery({
     queryKey: keys.vaulted(relicName ?? ""),
