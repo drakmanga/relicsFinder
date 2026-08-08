@@ -87,13 +87,19 @@ export function buildRows(relics: Relic[], filters: Filters): RelicItemRow[] {
   return rows;
 }
 
-export type SortColumn = "chance" | "price";
+export type SortColumn = "relic" | "chance" | "price";
 export type SortDirection = "asc" | "desc";
 
 /**
  * Sorts rows, with prices supplied separately because they load after the rows
  * do. A row with no price sorts last in either direction — an unlisted item is
  * not "cheap".
+ *
+ * Sorting by relic is the default and is a different shape from the other two:
+ * it groups rather than ranks. Every drop of a relic ends up together, best
+ * chance first, so the table reads as a list of relics and what is inside them.
+ * Ranking by drop chance instead interleaves all the relics — every Common in
+ * the game, then every Uncommon — and a relic is then never seen whole.
  */
 export function sortRows(
   rows: RelicItemRow[],
@@ -102,6 +108,14 @@ export function sortRows(
   prices?: PriceMap,
 ): RelicItemRow[] {
   const sign = direction === "asc" ? 1 : -1;
+
+  if (column === "relic") {
+    return [...rows].sort(
+      (a, b) =>
+        a.relicFullName.localeCompare(b.relicFullName, "en", { numeric: true }) * sign ||
+        b.chance - a.chance,
+    );
+  }
 
   const valueOf = (row: RelicItemRow) =>
     column === "chance" ? row.chance : (prices?.get(row.itemName)?.averagePrice ?? null);

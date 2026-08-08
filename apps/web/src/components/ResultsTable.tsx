@@ -83,7 +83,13 @@ export function ResultsTable({
         <thead>
           <tr>
             <TableHeaderCell>Tier</TableHeaderCell>
-            <TableHeaderCell>Relic</TableHeaderCell>
+            <TableHeaderCell
+              sortable
+              sortDirection={dir("relic")}
+              onSort={() => onSort("relic")}
+            >
+              Relic
+            </TableHeaderCell>
             {/*
               "Item" said nothing about the relationship between the two
               columns, and a relic occupying six consecutive rows read as six
