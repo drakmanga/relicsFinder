@@ -223,6 +223,7 @@
 .rf-tier-neo { background: var(--rf-tier-neo); }
 .rf-tier-axi { background: var(--rf-tier-axi); }
 .rf-tier-requiem { background: var(--rf-tier-requiem); }
+.rf-tier-vanguard { background: var(--rf-tier-vanguard); }
 
 /* Refinement modulates the tier chip; it has no colour of its own.
    The label always travels with it — opacity alone is not an accessible
