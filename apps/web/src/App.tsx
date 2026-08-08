@@ -11,13 +11,13 @@ import {
 
 import { FilterBar } from "./components/FilterBar";
 import { ItemDetailPanel } from "./components/ItemDetailPanel";
+import { ItemInfoDialog } from "./components/ItemInfoDialog";
 import { ItemsTable } from "./components/ItemsTable";
 import { ResultsTable } from "./components/ResultsTable";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
 import { WishlistPanel } from "./components/WishlistPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
-import { useDebounced } from "./lib/useDebounced";
 import { buildItemRows } from "./lib/items";
 import type { RelicItemRow, Reward } from "./api/types";
 import {
@@ -47,10 +47,9 @@ export function App() {
   const [panel, setPanel] = useState<"relic" | "item" | "wishlist">("relic");
   const [pickedItem, setPickedItem] = useState<string | null>(null);
   const [view, setView] = useState<"relics" | "items">("relics");
+  /** Item whose info dialog is open. Null closes it. */
+  const [infoItem, setInfoItem] = useState<string | null>(null);
 
-  /** Item names the virtualiser currently has on screen. */
-  const [windowItems, setWindowItems] = useState<string[]>([]);
-  const settledWindow = useDebounced(windowItems, 400);
 
   const relics = useRelics();
   const wishlist = useWishlist();
@@ -129,14 +128,20 @@ export function App() {
   // Wishlist entries join the batch even when scrolled out of the results:
   // the panel total needs their prices, and asking separately would double the
   // number of market lookups.
-  const pricedNames = useMemo(
-    () => [
-      ...settledWindow,
-      ...wishlist.entries.map((entry) => entry.itemName),
-      ...selectedRewards.map((reward) => reward.itemName),
-    ],
-    [settledWindow, wishlist.entries, selectedRewards],
-  );
+  /**
+   * Every distinct part in the dataset, priced in one request.
+   *
+   * The list is stable, so this is a single query whatever the user filters or
+   * scrolls to — and sorting by price needs the whole set anyway.
+   */
+  const pricedNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const relic of relics.data ?? []) {
+      if (relic.refinement !== "intact") continue;
+      for (const reward of relic.rewards) names.add(reward.itemName);
+    }
+    return [...names];
+  }, [relics.data]);
   const prices = useItemPrices(pricedNames);
 
   const visible = useMemo(() => {
@@ -284,12 +289,12 @@ export function App() {
               rows={itemRows}
               prices={prices.data}
               quantityOf={wishlist.quantityOf}
-              onVisibleItems={setWindowItems}
               selected={pickedItem}
               onSelect={(itemName) => {
                 setPickedItem(itemName);
                 setPanel("item");
               }}
+              onInfo={setInfoItem}
             />
           ) : (
             <ResultsTable
@@ -305,7 +310,7 @@ export function App() {
               sort={sort}
               onSort={toggleSort}
               quantityOf={wishlist.quantityOf}
-              onVisibleItems={setWindowItems}
+              onInfo={setInfoItem}
             />
           )}
         </main>
@@ -333,6 +338,12 @@ export function App() {
           />
         )}
       </div>
+
+      <ItemInfoDialog
+        itemName={infoItem}
+        prices={prices.data}
+        onClose={() => setInfoItem(null)}
+      />
     </div>
   );
 }

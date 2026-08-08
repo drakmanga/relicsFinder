@@ -2,6 +2,8 @@ import { normalizeDropInfo, normalizeRelic } from "./normalize";
 import type {
   DropInfo,
   ItemPrice,
+  MarketStatus,
+  PricePoint,
   Relic,
   RelicPrice,
   WireDropInfo,
@@ -130,6 +132,16 @@ export const api = {
 
     if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
     return (await res.json()) as WireItemPrice[];
+  },
+
+  /** Ninety days of completed trades. */
+  async itemHistory(itemName: string, signal?: AbortSignal): Promise<PricePoint[]> {
+    return await get<PricePoint[]>(`/market/item/${seg(itemName)}/history`, signal);
+  },
+
+  /** How much of the price cache is filled — the UI says so while it warms. */
+  async marketStatus(signal?: AbortSignal): Promise<MarketStatus> {
+    return await get<MarketStatus>("/market/status", signal);
   },
 
   async isVaulted(relicName: string, signal?: AbortSignal): Promise<boolean> {

@@ -3,7 +3,11 @@ import type { PriceMap, Rarity, Refinement, Relic, RelicItemRow, Tier } from "..
 export interface Filters {
   tiers: Set<Tier>;
   rarities: Set<Rarity>;
-  refinements: Set<Refinement>;
+  /**
+   * One state, not a set. A relic is in one refinement at a time, and showing
+   * all four would repeat every row four times with different chances.
+   */
+  refinement: Refinement;
   /** Platinum ceiling. `null` means no ceiling. */
   maxPrice: number | null;
   term: string;
@@ -16,7 +20,7 @@ export const ALL_REFINEMENTS: Refinement[] = ["intact", "exceptional", "flawless
 export const emptyFilters = (): Filters => ({
   tiers: new Set(),
   rarities: new Set(),
-  refinements: new Set(["intact"]),
+  refinement: "intact",
   maxPrice: null,
   term: "",
 });
@@ -37,7 +41,7 @@ export function buildRows(relics: Relic[], filters: Filters): RelicItemRow[] {
 
   for (const relic of relics) {
     if (!allows(filters.tiers, relic.tier)) continue;
-    if (!allows(filters.refinements, relic.refinement)) continue;
+    if (relic.refinement !== filters.refinement) continue;
 
     const relicMatches = !term || relic.fullName.toLowerCase().includes(term);
 

@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Button,
   DucatGlyph,
   ExternalLinkIcon,
+  InfoIcon,
   RarityTag,
   Table,
   TableCell,
@@ -26,9 +27,9 @@ interface Props {
   rows: PrimeItemRow[];
   prices: PriceMap | undefined;
   quantityOf: (itemName: string) => number;
-  onVisibleItems: (itemNames: string[]) => void;
   onSelect: (itemName: string) => void;
   selected: string | null;
+  onInfo: (itemName: string) => void;
 }
 
 /** One row per Prime part: set, rarity, which relics hold it, ducats and price. */
@@ -36,9 +37,9 @@ export function ItemsTable({
   rows,
   prices,
   quantityOf,
-  onVisibleItems,
   onSelect,
   selected,
+  onInfo,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,12 +51,6 @@ export function ItemsTable({
   });
 
   const items = virtualizer.getVirtualItems();
-  const first = items[0]?.index ?? 0;
-  const last = items[items.length - 1]?.index ?? 0;
-
-  useEffect(() => {
-    onVisibleItems(rows.slice(first, last + 1).map((row) => row.itemName));
-  }, [rows, first, last, onVisibleItems]);
 
   const paddingTop = items.length > 0 ? (items[0]?.start ?? 0) : 0;
   const paddingBottom =
@@ -70,6 +65,7 @@ export function ItemsTable({
             <TableHeaderCell>Set</TableHeaderCell>
             <TableHeaderCell>Rarity</TableHeaderCell>
             <TableHeaderCell>Relics</TableHeaderCell>
+            <TableHeaderCell align="right">Best drop</TableHeaderCell>
             <TableHeaderCell align="right">
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 Ducats
@@ -84,6 +80,7 @@ export function ItemsTable({
               </span>
             </TableHeaderCell>
             <TableHeaderCell align="center">Wishlist</TableHeaderCell>
+            <TableHeaderCell align="center">Info</TableHeaderCell>
             <TableHeaderCell align="center">Market</TableHeaderCell>
           </tr>
         </thead>
@@ -91,7 +88,7 @@ export function ItemsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={8} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={10} style={{ height: paddingTop, padding: 0, border: 0 }} />
             </tr>
           )}
 
@@ -132,6 +129,9 @@ export function ItemsTable({
                   </span>
                 </TableCell>
                 <TableCell align="right" numeric>
+                  {row.bestChance.toFixed(2)}%
+                </TableCell>
+                <TableCell align="right" numeric>
                   {meta?.ducats == null ? (
                     <span className="rf-fg-disabled">—</span>
                   ) : (
@@ -155,6 +155,19 @@ export function ItemsTable({
                     variant="ghost"
                     size="sm"
                     iconOnly
+                    icon={<InfoIcon />}
+                    aria-label={`More about ${row.itemName}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onInfo(row.itemName);
+                    }}
+                  />
+                </TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    iconOnly
                     icon={<ExternalLinkIcon />}
                     aria-label={`Open ${row.itemName} on Warframe Market`}
                     onClick={(event) => {
@@ -169,7 +182,7 @@ export function ItemsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={8} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={10} style={{ height: paddingBottom, padding: 0, border: 0 }} />
             </tr>
           )}
         </tbody>

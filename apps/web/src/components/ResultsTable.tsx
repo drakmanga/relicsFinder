@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Button,
+  DucatGlyph,
   ExternalLinkIcon,
+  InfoIcon,
   RarityTag,
   Skeleton,
   Table,
@@ -41,8 +43,7 @@ interface Props {
   sort: { column: SortColumn; direction: SortDirection };
   onSort: (column: SortColumn) => void;
   quantityOf: (itemName: string) => number;
-  /** Item names currently on screen — the price batch follows the window. */
-  onVisibleItems: (itemNames: string[]) => void;
+  onInfo: (itemName: string) => void;
 }
 
 export function ResultsTable({
@@ -54,7 +55,7 @@ export function ResultsTable({
   sort,
   onSort,
   quantityOf,
-  onVisibleItems,
+  onInfo,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -67,15 +68,6 @@ export function ResultsTable({
 
   const items = virtualizer.getVirtualItems();
 
-  // Report the window upward so only what is on screen gets priced. Without
-  // this the batch would either cover 4134 items or stop being accurate the
-  // moment the user scrolls.
-  const first = items[0]?.index ?? 0;
-  const last = items[items.length - 1]?.index ?? 0;
-
-  useEffect(() => {
-    onVisibleItems(rows.slice(first, last + 1).map((row) => row.itemName));
-  }, [rows, first, last, onVisibleItems]);
 
   const dir = (column: SortColumn) => (sort.column === column ? sort.direction : null);
 
@@ -102,6 +94,12 @@ export function ResultsTable({
             >
               Drop %
             </TableHeaderCell>
+            <TableHeaderCell align="right">
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                Ducats
+                <DucatGlyph style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }} />
+              </span>
+            </TableHeaderCell>
             <TableHeaderCell
               align="right"
               sortable
@@ -113,6 +111,7 @@ export function ResultsTable({
               </span>
             </TableHeaderCell>
             <TableHeaderCell align="center">Wishlist</TableHeaderCell>
+            <TableHeaderCell align="center">Info</TableHeaderCell>
             <TableHeaderCell align="center">Market</TableHeaderCell>
           </tr>
         </thead>
@@ -120,7 +119,7 @@ export function ResultsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={8} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={10} style={{ height: paddingTop, padding: 0, border: 0 }} />
             </tr>
           )}
 
@@ -162,6 +161,15 @@ export function ResultsTable({
                   {row.chance.toFixed(2)}%
                 </TableCell>
                 <TableCell align="right" numeric>
+                  {prices?.get(row.itemName)?.ducats == null ? (
+                    <span className="rf-fg-disabled">—</span>
+                  ) : (
+                    <span style={{ color: "var(--rf-currency-ducat)" }}>
+                      {prices.get(row.itemName)!.ducats}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell align="right" numeric>
                   {pricesPending && !prices ? (
                     <Skeleton width={44} height={14} />
                   ) : (
@@ -175,6 +183,19 @@ export function ResultsTable({
                     onIncrement={() => bump(seed, 1)}
                     onDecrement={() => bump(seed, -1)}
                     onRemove={() => remove(row.itemName)}
+                  />
+                </TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    iconOnly
+                    icon={<InfoIcon />}
+                    aria-label={`More about ${row.itemName}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onInfo(row.itemName);
+                    }}
                   />
                 </TableCell>
                 <TableCell align="center">
@@ -196,7 +217,7 @@ export function ResultsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={8} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={10} style={{ height: paddingBottom, padding: 0, border: 0 }} />
             </tr>
           )}
         </tbody>
