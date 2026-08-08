@@ -7,7 +7,7 @@ import {
   REFINEMENT_LABEL,
   type Filters,
 } from "../lib/rows";
-import type { Rarity, Refinement, Tier } from "../api/types";
+import type { Rarity, Tier } from "../api/types";
 
 interface Props {
   filters: Filters;
@@ -65,30 +65,44 @@ export function FilterBar({ filters, onChange }: Props) {
       </Group>
 
       <Group label="Refinement">
-        {ALL_REFINEMENTS.map((refinement) => (
-          <Toggle
-            key={refinement}
-            on={filters.refinements.has(refinement)}
-            label={`Filter by refinement ${refinement}`}
-            onClick={() =>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 210 }}>
+          <input
+            type="range"
+            min={0}
+            max={ALL_REFINEMENTS.length - 1}
+            step={1}
+            value={ALL_REFINEMENTS.indexOf(filters.refinement)}
+            onChange={(event) =>
               onChange({
                 ...filters,
-                refinements: toggle(filters.refinements, refinement as Refinement),
+                refinement: ALL_REFINEMENTS[Number(event.target.value)] ?? "intact",
               })
             }
-          >
-            <span
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--rf-fg-secondary)",
-              }}
-            >
-              {REFINEMENT_LABEL[refinement]}
-            </span>
-          </Toggle>
-        ))}
+            aria-label="Refinement level"
+            aria-valuetext={REFINEMENT_LABEL[filters.refinement]}
+            style={{ width: "100%", accentColor: "var(--rf-gold-500)" }}
+          />
+          {/* Labelled ticks rather than a single readout: the slider is also a
+              legend for what the four positions are. */}
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            {ALL_REFINEMENTS.map((refinement) => (
+              <span
+                key={refinement}
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color:
+                    refinement === filters.refinement
+                      ? "var(--rf-fg-primary)"
+                      : "var(--rf-fg-muted)",
+                }}
+              >
+                {refinement === "exceptional" ? "Except." : REFINEMENT_LABEL[refinement]}
+              </span>
+            ))}
+          </div>
+        </div>
       </Group>
 
       <Group label="Max price" last>

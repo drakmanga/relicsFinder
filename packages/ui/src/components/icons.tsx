@@ -162,6 +162,23 @@ export const AlertTriangleIcon = strokeIcon(
 
 export const XIcon = strokeIcon(<path d="M18 6 6 18M6 6l12 12" />, "XIcon");
 
+export const InfoIcon = strokeIcon(
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5" />
+    <path d="M12 8h.01" />
+  </>,
+  "InfoIcon",
+);
+
+export const TrendingUpIcon = strokeIcon(
+  <>
+    <path d="m3 17 6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </>,
+  "TrendingUpIcon",
+);
+
 export const ArrowUpDownIcon = strokeIcon(
   <>
     <path d="m7 4 0 16M7 4 4 7M7 4l3 3" />

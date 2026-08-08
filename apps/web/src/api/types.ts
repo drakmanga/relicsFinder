@@ -102,6 +102,9 @@ export interface RelicPrice {
 export interface WireItemPrice {
   itemName: string;
   averagePrice: number | null;
+  median: number | null;
+  volume: number | null;
+  trend: number | null;
   slug: string;
   ducats: number | null;
   setName: string | null;
@@ -109,8 +112,18 @@ export interface WireItemPrice {
 
 export interface ItemPrice {
   itemName: string;
-  /** Platinum, 48h average. Null when the item has no listings. */
+  /**
+   * Platinum, from trades completed in the last 48 hours — not from open
+   * orders, whose buy and sell sides average to a number nobody trades at.
+   * Null when nothing sold, or when the cache has not reached it yet.
+   */
   averagePrice: number | null;
+  /** Median of the same trades. Steadier than the mean on a thin market. */
+  median: number | null;
+  /** Trades in the window. A price backed by two sales is barely a price. */
+  volume: number | null;
+  /** Percent against the 90-day average. */
+  trend: number | null;
   slug: string;
   /** Static ducat value. Null for anything that is not a Prime part. */
   ducats: number | null;
@@ -142,4 +155,21 @@ export interface RelicItemRow {
   itemName: string;
   rarity: Rarity;
   chance: number;
+}
+
+/** One day of completed trades, for the price chart. */
+export interface PricePoint {
+  date: string;
+  avgPrice: number;
+  median: number;
+  minPrice: number;
+  maxPrice: number;
+  volume: number;
+}
+
+/** How much of the price catalogue the server has filled. */
+export interface MarketStatus {
+  cached: number;
+  fresh: number;
+  queued: number;
 }

@@ -13,6 +13,7 @@ export const keys = {
   search: (term: string) => ["search", term] as const,
   price: (name: string) => ["market", name] as const,
   itemPrices: (names: string[]) => ["market", "items", names] as const,
+  itemHistory: (name: string) => ["market", "history", name] as const,
   vaulted: (name: string) => ["relics", "vaulted", name] as const,
 };
 
@@ -96,11 +97,13 @@ export function useRelicPrice(relicName: string | null) {
 }
 
 /**
- * Prices for the items currently on screen, in one request.
+ * Prices for the entire catalogue, in one request.
  *
- * The key is the sorted name list, so scrolling back to a set already fetched
- * hits the cache instead of the network. The server caches too, which is what
- * keeps this affordable under warframe.market's rate limit.
+ * Not a scroll window. The server warms every part in the background, so
+ * fetching all ~550 is one round trip of map lookups — and sorting by price is
+ * only correct when every row has a price. With a window, sorting ranked 4000
+ * rows using the thirty prices that happened to be on screen, and the order
+ * shifted as the user scrolled.
  */
 export function useItemPrices(itemNames: string[]) {
   const names = [...new Set(itemNames)].sort();
@@ -110,7 +113,25 @@ export function useItemPrices(itemNames: string[]) {
     queryFn: ({ signal }) => api.itemPrices(names, signal),
     enabled: names.length > 0,
     ...PRICE_DATA,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      const missing = data.filter((p) => p.averagePrice === null).length;
+      // Some parts are genuinely untraded and never fill in, so stop polling
+      // once only a residue is left rather than waiting for zero.
+      return missing > data.length * 0.05 ? 15_000 : false;
+    },
     select: (prices) => new Map(prices.map((p) => [p.itemName, p])),
+  });
+}
+
+/** Ninety days of completed trades — the series behind the price chart. */
+export function useItemHistory(itemName: string | null) {
+  return useQuery({
+    queryKey: keys.itemHistory(itemName ?? ""),
+    queryFn: ({ signal }) => api.itemHistory(itemName!, signal),
+    enabled: !!itemName,
+    ...PRICE_DATA,
   });
 }
 

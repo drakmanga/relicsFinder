@@ -122,7 +122,7 @@ export function RelicDetailPanel({ row, rewards, prices, sites, sitesPending }: 
           style={{ width: "100%" }}
           onClick={() => window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer")}
         >
-          Open {shortName(row.itemName)} on Warframe Market
+          Open on Warframe Market
         </Button>
       </div>
 
@@ -134,10 +134,4 @@ export function RelicDetailPanel({ row, rewards, prices, sites, sitesPending }: 
       </div>
     </DetailPanel>
   );
-}
-
-/** Keeps the button label from wrapping to three lines on a long part name. */
-function shortName(itemName: string) {
-  const withoutBlueprint = itemName.replace(/\sblueprint$/i, "");
-  return withoutBlueprint.length > 24 ? `${withoutBlueprint.slice(0, 23)}…` : withoutBlueprint;
 }
