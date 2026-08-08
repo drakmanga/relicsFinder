@@ -12,10 +12,10 @@ import {
 import { FilterBar } from "./components/FilterBar";
 import { ItemDetailPanel } from "./components/ItemDetailPanel";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
+import { WishlistTable } from "./components/WishlistTable";
 import { ItemsTable } from "./components/ItemsTable";
 import { ResultsTable } from "./components/ResultsTable";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
-import { WishlistPanel } from "./components/WishlistPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
 import { buildItemRows } from "./lib/items";
@@ -44,9 +44,9 @@ export function App() {
    * so the cell that was clicked is enough to tell the two apart — no extra
    * control, and no second panel competing for the same 380px.
    */
-  const [panel, setPanel] = useState<"relic" | "item" | "wishlist">("relic");
+  const [panel, setPanel] = useState<"relic" | "item">("relic");
   const [pickedItem, setPickedItem] = useState<string | null>(null);
-  const [view, setView] = useState<"relics" | "items">("relics");
+  const [view, setView] = useState<"relics" | "items" | "wishlist">("relics");
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
 
@@ -188,24 +188,18 @@ export function App() {
         <Tabs
           label="Views"
           value={view}
-          onChange={(id) => setView(id as "relics" | "items")}
+          onChange={(id) => setView(id as typeof view)}
           items={[
             { id: "relics", label: "Relics" },
             { id: "items", label: "Prime Items" },
+            { id: "wishlist", label: `Wishlist · ${wishlist.totalItems}` },
           ]}
         />
 
-        <div style={{ marginLeft: "auto" }}>
-          <Button
-            variant={panel === "wishlist" ? "accent" : "outline"}
-            size="sm"
-            onClick={() => setPanel((current) => (current === "wishlist" ? "relic" : "wishlist"))}
-          >
-            Wishlist · {wishlist.totalItems}
-          </Button>
-        </div>
       </header>
 
+      {/* Search and filters act on the catalogue, not on the list. */}
+      {view !== "wishlist" && (
       <div
         style={{
           flex: "none",
@@ -239,8 +233,12 @@ export function App() {
           <Chip>{view === "items" ? itemRows.length : visible.length} results</Chip>
         )}
       </div>
+      )}
 
-      {filtersOpen && <FilterBar filters={filters} onChange={setFilters} />}
+      {/* Filters act on the catalogue; the wishlist is a list the user built. */}
+      {filtersOpen && view !== "wishlist" && (
+        <FilterBar filters={filters} onChange={setFilters} />
+      )}
 
       <div
         style={{
@@ -271,6 +269,8 @@ export function App() {
                 </Button>
               }
             />
+          ) : view === "wishlist" ? (
+            <WishlistTable entries={wishlist.entries} prices={prices.data} onInfo={setInfoItem} />
           ) : (view === "items" ? itemRows.length : visible.length) === 0 ? (
             filters.term || filters.tiers.size > 0 || filters.rarities.size > 0 ? (
               <EmptyState
@@ -315,13 +315,7 @@ export function App() {
           )}
         </main>
 
-        {panel === "wishlist" ? (
-          <WishlistPanel
-            entries={wishlist.entries}
-            prices={prices.data}
-            pricesUpdatedAt={prices.dataUpdatedAt}
-          />
-        ) : panel === "item" && itemPanelRow ? (
+        {view === "wishlist" ? null : panel === "item" && itemPanelRow ? (
           <ItemDetailPanel
             row={itemPanelRow}
             relics={relics.data ?? []}
