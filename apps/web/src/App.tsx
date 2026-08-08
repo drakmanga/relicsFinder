@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   Button,
   Chip,
+  DetailPanel,
   EmptyState,
   Input,
   SearchIcon,
@@ -18,17 +19,23 @@ import { WishlistTable } from "./components/WishlistTable";
 import { ItemsTable } from "./components/ItemsTable";
 import { ResultsTable } from "./components/ResultsTable";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
-import { useDropInfo, useEndoOffers, useItemPrices, useRelics } from "./api/queries";
+import {
+  useDropInfo,
+  useEndoOffers,
+  useItemPrices,
+  useRelics,
+  useUnvaultedNames,
+} from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
 import { buildItemRows } from "./lib/items";
 import type { Refinement, RelicItemRow, Reward } from "./api/types";
 import {
-  applyPriceCeiling,
-  buildRows,
+  applyRelicPriceCeiling,
+  buildRelicRows,
   emptyFilters,
-  sortRows,
+  sortRelicRows,
   type Filters,
-  type SortColumn,
+  type RelicSortColumn,
   type SortDirection,
 } from "./lib/rows";
 
@@ -48,25 +55,12 @@ const isCatalogue = (view: View) => view === "relics" || view === "items";
 export function App() {
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(true);
-  /**
-   * Grouped by relic to start with, not ranked by drop chance.
-   *
-   * A row is a relic paired with one of its drops. Ranking by chance splits
-   * those six rows across four thousand others, so the relic the user searched
-   * for is never seen whole — which made the drops column look like a single
-   * arbitrary pick rather than one line of a list.
-   */
-  const [sort, setSort] = useState<{ column: SortColumn; direction: SortDirection }>({
+  /** Alphabetical: the Relics view is a catalogue, and A comes first. */
+  const [sort, setSort] = useState<{ column: RelicSortColumn; direction: SortDirection }>({
     column: "relic",
     direction: "asc",
   });
   const [selected, setSelected] = useState<string | null>(null);
-  /**
-   * Which side of the row is on show. The row is a relic paired with an item,
-   * so the cell that was clicked is enough to tell the two apart — no extra
-   * control, and no second panel competing for the same 380px.
-   */
-  const [panel, setPanel] = useState<"relic" | "item">("relic");
   const [pickedItem, setPickedItem] = useState<string | null>(null);
   const [view, setView] = useState<View>("relics");
   /** Item whose info dialog is open. Null closes it. */
@@ -74,6 +68,7 @@ export function App() {
 
 
   const relics = useRelics();
+  const unvaulted = useUnvaultedNames();
   const wishlist = useWishlist();
 
   /**
@@ -85,7 +80,7 @@ export function App() {
   const endoOffers = useEndoOffers(view === "wishlist" && wantsSculptures);
 
   const rows = useMemo(
-    () => buildRows(relics.data ?? [], filters),
+    () => buildRelicRows(relics.data ?? [], filters),
     [relics.data, filters],
   );
 
@@ -124,15 +119,13 @@ export function App() {
   /**
    * What the item panel should show.
    *
-   * In the relics view it is the clicked row, optionally swapped to a sibling
-   * part. In the Prime Items view there is no relic row at all, so one is
-   * synthesised from the first relic that drops the item — the panel only needs
-   * a name, a rarity and somewhere to have come from.
+   * Only the Prime Items view has one, and it has no relic row behind it, so a
+   * row is synthesised from the first relic that drops the part — the panel
+   * needs a name, a rarity and somewhere to have come from.
    */
   const itemPanelRow = useMemo((): RelicItemRow | null => {
-    const name = pickedItem ?? selectedRow?.itemName ?? null;
+    const name = pickedItem;
     if (!name) return null;
-    if (selectedRow) return pickedItem ? { ...selectedRow, itemName: name } : selectedRow;
 
     for (const relic of relics.data ?? []) {
       if (relic.refinement !== "intact") continue;
@@ -150,7 +143,7 @@ export function App() {
       };
     }
     return null;
-  }, [pickedItem, selectedRow, relics.data]);
+  }, [pickedItem, relics.data]);
 
   // Prices only for what is about to be shown: the batch is one request, but it
   // is still forty market lookups on the server the first time round.
@@ -174,19 +167,30 @@ export function App() {
   const prices = useItemPrices(pricedNames);
 
   const visible = useMemo(() => {
-    const ceiled = applyPriceCeiling(rows, filters.maxPrice, prices.data);
-    return sortRows(ceiled, sort.column, sort.direction, prices.data);
+    const ceiled = applyRelicPriceCeiling(rows, filters.maxPrice, prices.data);
+    return sortRelicRows(ceiled, sort.column, sort.direction, prices.data);
   }, [rows, filters.maxPrice, prices.data, sort]);
 
+  /**
+   * The part the search names, if it names one.
+   *
+   * Searching a part in this view lists the relics that hold it; the panel then
+   * points at which of the six it is, so the answer does not stop at "one of
+   * these".
+   */
+  const searchedItem = useMemo(() => {
+    const term = filters.term.trim().toLowerCase();
+    if (!term || !selectedRow) return null;
 
+    return selectedRow.rewards.find((r) => r.itemName.toLowerCase().includes(term))?.itemName ?? null;
+  }, [filters.term, selectedRow]);
 
-
-  const toggleSort = (column: SortColumn) =>
+  const toggleSort = (column: RelicSortColumn) =>
     setSort((current) =>
       current.column === column
         ? { column, direction: current.direction === "desc" ? "asc" : "desc" }
         : // A name starts at A, a number starts at its largest: nobody asks for
-          // the cheapest part or the rarest drop first.
+          // the least valuable relic first.
           { column, direction: column === "relic" ? "asc" : "desc" },
     );
 
@@ -337,10 +341,7 @@ export function App() {
               prices={prices.data}
               quantityOf={wishlist.quantityOf}
               selected={pickedItem}
-              onSelect={(itemName) => {
-                setPickedItem(itemName);
-                setPanel("item");
-              }}
+              onSelect={setPickedItem}
               onInfo={setInfoItem}
             />
           ) : (
@@ -348,30 +349,35 @@ export function App() {
               rows={visible}
               prices={prices.data}
               pricesPending={prices.isPending}
+              unvaulted={unvaulted.data}
               selected={selected}
-              onSelect={(id, mode) => {
-                setSelected(id);
-                setPickedItem(null);
-                setPanel(mode);
-              }}
+              onSelect={setSelected}
               sort={sort}
               onSort={toggleSort}
-              quantityOf={wishlist.quantityOf}
-              onInfo={setInfoItem}
             />
           )}
         </main>
 
-        {!isCatalogue(view) ? null : panel === "item" && itemPanelRow ? (
-          <ItemDetailPanel
-            row={itemPanelRow}
-            relics={relics.data ?? []}
-            prices={prices.data}
-            onPickItem={setPickedItem}
-          />
+        {/*
+          One panel per view rather than one panel with a mode: the Relics view
+          shows relics and the Prime Items view shows parts, so which panel to
+          draw is no longer a question about the clicked cell.
+        */}
+        {!isCatalogue(view) ? null : view === "items" ? (
+          itemPanelRow === null ? (
+            <DetailPanel empty />
+          ) : (
+            <ItemDetailPanel
+              row={itemPanelRow}
+              relics={relics.data ?? []}
+              prices={prices.data}
+              onPickItem={setPickedItem}
+            />
+          )
         ) : (
           <RelicDetailPanel
             row={selectedRow}
+            highlightItem={searchedItem}
             states={selectedStates}
             prices={prices.data}
             sites={selectedSites.data ?? []}

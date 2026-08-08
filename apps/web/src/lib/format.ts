@@ -52,6 +52,21 @@ export function marketUrl(itemName: string): string {
   return `https://warframe.market/items/${slug}`;
 }
 
+/**
+ * warframe.market URL for the relic itself, which is a tradeable item too.
+ *
+ * The slug carries a "_relic" suffix the part slugs do not have: `axi_a1_relic`,
+ * not `axi_a1`.
+ */
+export function relicMarketUrl(relicFullName: string): string {
+  const slug = relicFullName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return `https://warframe.market/items/${slug}_relic`;
+}
+
 /** Platinum price of an item, or null when unlisted or not yet fetched. */
 export function priceOf(
   prices: Map<string, { averagePrice: number | null }> | undefined,

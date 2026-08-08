@@ -146,6 +146,23 @@ export type PriceMap = Map<string, ItemPrice>;
  * Systems` is a row, and the same relic appears once per drop it contains.
  * Price, wishlist and sorting all hang off this pairing.
  */
+/**
+ * One relic, as the Relics table lists it.
+ *
+ * The table used to hold one row per relic-and-drop pairing, which meant a
+ * relic appeared six times and the view answered "which parts exist" — a
+ * question the Prime Items view already answers better. A row is a relic now,
+ * and its contents live in the detail panel where they can be read together.
+ */
+export interface RelicRow {
+  /** `"Lith V9|intact"` — stable while the refinement filter is unchanged. */
+  id: string;
+  tier: Tier;
+  relicFullName: string;
+  refinement: Refinement;
+  rewards: Reward[];
+}
+
 export interface RelicItemRow {
   /** Stable across refinements, so selection and wishlist keys survive a filter change. */
   id: string;

@@ -1,4 +1,11 @@
-import type { PriceMap, Rarity, Refinement, Relic, RelicItemRow, Tier } from "../api/types";
+import type {
+  PriceMap,
+  Rarity,
+  Refinement,
+  Relic,
+  RelicRow,
+  Tier,
+} from "../api/types";
 
 export interface Filters {
   tiers: Set<Tier>;
@@ -52,78 +59,116 @@ export function matchesRelic(fullName: string, term: string): boolean {
 }
 
 /**
- * Flattens relics into one row per drop and applies every filter except price.
+ * One row per relic, with everything it drops attached.
  *
- * Price is deliberately left out: it arrives asynchronously and only for the
- * rows already on screen, so filtering on it here would need prices for all
- * 4000 rows before showing any of them.
+ * Filters that describe a drop — rarity, and a search term that names a part —
+ * keep a relic when *any* of its drops matches, because the question they ask
+ * is "which relics hold one of these". The rewards are not trimmed to the
+ * matches: a relic that holds a Rare you want also holds five things you get
+ * instead, and hiding them would misrepresent what opening it does.
  */
-export function buildRows(relics: Relic[], filters: Filters): RelicItemRow[] {
+export function buildRelicRows(relics: Relic[], filters: Filters): RelicRow[] {
   const term = filters.term.trim().toLowerCase();
-  const rows: RelicItemRow[] = [];
+  const rows: RelicRow[] = [];
 
   for (const relic of relics) {
     if (!allows(filters.tiers, relic.tier)) continue;
     if (relic.refinement !== filters.refinement) continue;
 
-    const relicMatches = !term || matchesRelic(relic.fullName, term);
-
-    for (const reward of relic.rewards) {
-      if (!allows(filters.rarities, reward.rarity)) continue;
-      if (term && !relicMatches && !reward.itemName.toLowerCase().includes(term)) continue;
-
-      rows.push({
-        id: `${relic.fullName}|${relic.refinement}|${reward.itemName}`,
-        tier: relic.tier,
-        relicFullName: relic.fullName,
-        refinement: relic.refinement,
-        itemName: reward.itemName,
-        rarity: reward.rarity,
-        chance: reward.chance,
-      });
+    if (filters.rarities.size > 0 && !relic.rewards.some((r) => filters.rarities.has(r.rarity))) {
+      continue;
     }
+
+    if (
+      term &&
+      !matchesRelic(relic.fullName, term) &&
+      !relic.rewards.some((r) => r.itemName.toLowerCase().includes(term))
+    ) {
+      continue;
+    }
+
+    rows.push({
+      id: `${relic.fullName}|${relic.refinement}`,
+      tier: relic.tier,
+      relicFullName: relic.fullName,
+      refinement: relic.refinement,
+      rewards: relic.rewards,
+    });
   }
 
   return rows;
 }
 
-export type SortColumn = "relic" | "chance" | "price";
-export type SortDirection = "asc" | "desc";
+/**
+ * The most valuable thing in the relic, in platinum.
+ *
+ * This is what decides whether a relic is worth opening: the other five drops
+ * are what you get when you miss. Null while prices are still loading, and null
+ * for a relic whose drops are all unlisted — Forma-only relics exist.
+ */
+export function bestDropValue(row: RelicRow, prices: PriceMap | undefined): number | null {
+  if (!prices) return null;
+
+  let best: number | null = null;
+  for (const reward of row.rewards) {
+    const price = prices.get(reward.itemName)?.averagePrice;
+    if (price != null && (best === null || price > best)) best = price;
+  }
+  return best;
+}
+
+/** Ducats for the whole relic, if every drop were dissolved. */
+export function ducatTotal(row: RelicRow, prices: PriceMap | undefined): number {
+  if (!prices) return 0;
+  return row.rewards.reduce((sum, reward) => sum + (prices.get(reward.itemName)?.ducats ?? 0), 0);
+}
 
 /**
- * Sorts rows, with prices supplied separately because they load after the rows
- * do. A row with no price sorts last in either direction — an unlisted item is
- * not "cheap".
+ * Applies the price ceiling to the number the table actually shows.
  *
- * Sorting by relic is the default and is a different shape from the other two:
- * it groups rather than ranks. Every drop of a relic ends up together, best
- * chance first, so the table reads as a list of relics and what is inside them.
- * Ranking by drop chance instead interleaves all the relics — every Common in
- * the game, then every Uncommon — and a relic is then never seen whole.
+ * On a relic list the ceiling can only mean one thing without inventing a
+ * meaning of its own: the best drop is the column, so the best drop is what it
+ * caps. Relics with nothing listed survive — the ceiling is not a judgement
+ * about them, it is a lack of data.
  */
-export function sortRows(
-  rows: RelicItemRow[],
-  column: SortColumn,
+export function applyRelicPriceCeiling(
+  rows: RelicRow[],
+  maxPrice: number | null,
+  prices: PriceMap | undefined,
+): RelicRow[] {
+  if (maxPrice === null || !prices) return rows;
+
+  return rows.filter((row) => {
+    const best = bestDropValue(row, prices);
+    return best === null || best <= maxPrice;
+  });
+}
+
+export type RelicSortColumn = "relic" | "value" | "ducats";
+
+export function sortRelicRows(
+  rows: RelicRow[],
+  column: RelicSortColumn,
   direction: SortDirection,
-  prices?: PriceMap,
-): RelicItemRow[] {
+  prices: PriceMap | undefined,
+): RelicRow[] {
   const sign = direction === "asc" ? 1 : -1;
 
   if (column === "relic") {
     return [...rows].sort(
-      (a, b) =>
-        a.relicFullName.localeCompare(b.relicFullName, "en", { numeric: true }) * sign ||
-        b.chance - a.chance,
+      (a, b) => a.relicFullName.localeCompare(b.relicFullName, "en", { numeric: true }) * sign,
     );
   }
 
-  const valueOf = (row: RelicItemRow) =>
-    column === "chance" ? row.chance : (prices?.get(row.itemName)?.averagePrice ?? null);
+  const valueOf = (row: RelicRow) =>
+    column === "value" ? bestDropValue(row, prices) : ducatTotal(row, prices);
 
   return [...rows].sort((a, b) => {
     const av = valueOf(a);
     const bv = valueOf(b);
 
+    // A relic with nothing listed is not the cheapest relic; it is unknown, and
+    // it sorts last whichever way the column points.
     if (av === null && bv === null) return 0;
     if (av === null) return 1;
     if (bv === null) return -1;
@@ -132,21 +177,7 @@ export function sortRows(
   });
 }
 
-/** Applies the price ceiling once prices are known. */
-export function applyPriceCeiling(
-  rows: RelicItemRow[],
-  maxPrice: number | null,
-  prices: PriceMap | undefined,
-): RelicItemRow[] {
-  if (maxPrice === null || !prices) return rows;
-
-  return rows.filter((row) => {
-    const price = prices.get(row.itemName)?.averagePrice;
-    // Unpriced rows survive the ceiling: hiding them would silently drop every
-    // item warframe.market does not list, Forma included.
-    return price === null || price === undefined || price <= maxPrice;
-  });
-}
+export type SortDirection = "asc" | "desc";
 
 export const REFINEMENT_LABEL: Record<Refinement, string> = {
   intact: "Intact",

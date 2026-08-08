@@ -12,12 +12,19 @@ import {
 
 import { PlatPrice } from "./Plat";
 
-import type { DropInfo, PriceMap, Refinement, RelicItemRow, Reward } from "../api/types";
+import type { DropInfo, PriceMap, Refinement, RelicRow, Reward } from "../api/types";
 import { ALL_REFINEMENTS, REFINEMENT_LABEL } from "../lib/rows";
-import { marketUrl, priceOf } from "../lib/format";
+import { priceOf, relicMarketUrl } from "../lib/format";
 
 interface Props {
-  row: RelicItemRow | null;
+  row: RelicRow | null;
+  /**
+   * Part the user searched for, highlighted among the contents.
+   *
+   * Searching a part in this view answers "which relics hold it", and the
+   * answer is only useful if the row can then show which of the six it was.
+   */
+  highlightItem?: string | null;
   /**
    * Rewards of the relic in every refinement state.
    *
@@ -41,7 +48,14 @@ const SITES_SHOWN = 4;
  * cracked a relic wants to know what else was in it — that question had no
  * answer anywhere in the interface until now.
  */
-export function RelicDetailPanel({ row, states, prices, sites, sitesPending }: Props) {
+export function RelicDetailPanel({
+  row,
+  highlightItem,
+  states,
+  prices,
+  sites,
+  sitesPending,
+}: Props) {
   const [refinement, setRefinement] = useState<Refinement | null>(null);
 
   if (!row) return <DetailPanel empty />;
@@ -50,6 +64,13 @@ export function RelicDetailPanel({ row, states, prices, sites, sitesPending }: P
   // row, but sticks once they have moved the slider for this relic.
   const active = refinement ?? row.refinement;
   const rewards = states[active] ?? [];
+
+  // The prices do not change with refinement — only the chances do — so this is
+  // the same number the table shows, and is meant to be recognised as such.
+  const best = rewards.reduce<number | null>((top, reward) => {
+    const price = priceOf(prices, reward.itemName);
+    return price != null && (top === null || price > top) ? price : top;
+  }, null);
 
   return (
     <DetailPanel
@@ -100,7 +121,7 @@ export function RelicDetailPanel({ row, states, prices, sites, sitesPending }: P
 
       <DropList key={active}>
         {rewards.map((reward, index) => {
-          const isSelected = reward.itemName === row.itemName;
+          const isSelected = !!highlightItem && reward.itemName === highlightItem;
 
           return (
             <div
@@ -165,20 +186,27 @@ export function RelicDetailPanel({ row, states, prices, sites, sitesPending }: P
       )}
 
       <div style={{ marginTop: 20 }}>
+        {/*
+          The relic, not a part. Relics are traded in their own right, and this
+          panel is about the relic — buying one is an alternative to farming it,
+          which is exactly the choice the missions above inform.
+        */}
         <Button
           variant="primary"
           icon={<ExternalLinkIcon />}
           style={{ width: "100%" }}
-          onClick={() => window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer")}
+          onClick={() =>
+            window.open(relicMarketUrl(row.relicFullName), "_blank", "noopener,noreferrer")
+          }
         >
-          Open on Warframe Market
+          Buy this relic on Warframe Market
         </Button>
       </div>
 
       <div style={{ marginTop: 12, display: "flex", alignItems: "baseline", gap: 8 }}>
-        <span className="rf-text-caption rf-fg-muted">Selected part</span>
+        <span className="rf-text-caption rf-fg-muted">Best drop</span>
         <span style={{ marginLeft: "auto" }}>
-          <PlatPrice value={priceOf(prices, row.itemName)} />
+          <PlatPrice value={best} />
         </span>
       </div>
     </DetailPanel>

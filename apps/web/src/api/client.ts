@@ -185,6 +185,23 @@ export const api = {
       Object.entries(wire).map(([key, relics]) => [key, relics.map(normalizeRelic)]),
     );
   },
+
+  /**
+   * Full names of every relic currently dropping, as a set.
+   *
+   * The endpoint groups by tier and sends only the short name — `"A12"` under
+   * `"Axi"` — so the two are joined here into the `"Axi A12"` form the rest of
+   * the app uses as a relic's identity.
+   */
+  async unvaultedNames(signal?: AbortSignal): Promise<Set<string>> {
+    const wire = await get<Record<string, WireRelic[]>>("/relics/unvaulted", signal);
+
+    const names = new Set<string>();
+    for (const [tier, relics] of Object.entries(wire)) {
+      for (const relic of relics) names.add(`${tier} ${relic.relicName}`);
+    }
+    return names;
+  },
 };
 
 /**
