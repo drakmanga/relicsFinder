@@ -5,9 +5,8 @@ Aperto il 2026-08-07 su revisione dell'utente.
 **Stato al 2026-08-07 sera**: fatti §1, §2, §3, §4, §5, §7 e §6.1, §6.2, §6.3,
 §6.6, §6.7.
 
-Restano fuori solo **§6.4 (storico prezzi e delta)** e **§6.5 (wishlist lato
-server)**, deliberatamente: implicano introdurre un database e un concetto di
-utente, decisioni architetturali che il progetto non ha preso. Riferimento visivo:
+Resta fuori solo **§6.5 (wishlist lato server)**, che richiede un concetto di utente — decisione
+architetturale che il progetto non ha preso. Riferimento visivo:
 `design-imports/relic-finder-main/target-screenshot.png`. Sorgente autorevole:
 `templates/relic-finder-main/RelicFinderMain.dc.html` nel progetto Claude Design
 `82b30910-ffd9-4ff8-987b-1d568f7e1fd1`.
@@ -196,17 +195,17 @@ Anche il **set** si deriva lì, come previsto dal §7b: il database sa che
 `Volt Prime Neuroptics Blueprint` è il componente `Neuroptics` del set
 `Volt Prime`, e che `Forma Blueprint` non è nessuno dei due.
 
-### 6.4 Storico prezzi e delta
+### 6.4 ~~Storico prezzi e delta~~ — FATTO, senza database
 
-Il delta `▲ +12%` del design richiede di sapere quanto costava prima. Oggi non
-c'è persistenza di alcun tipo — l'app legge un JSON su disco.
+**Il database non serviva.** warframe.market espone già 90 giorni di scambi
+conclusi in `statistics_closed`, nella stessa risposta da cui si legge il
+prezzo. Esposto su `GET /api/market/item/{name}/history`, alimenta il grafico
+del popup e il delta `vs 90-day avg` senza persistere nulla.
 
-Il minimo che serve: salvare `(itemName, prezzo, timestamp)` a ogni fetch e
-esporre `GET /api/market/item/{itemName}/history?days=7`. Questo implica una
-decisione che il progetto non ha ancora preso: **introdurre un database**. Con
-H2 su file o SQLite si resta leggeri; con Postgres si complica il deploy.
-
-Finché non c'è, il delta nel frontend va omesso, non finto.
+Nella stessa occasione è emerso che **il prezzo era sbagliato**: veniva da
+`statistics_live`, cioè gli ordini aperti, mediando insieme buy e sell. Per Volt
+Prime Neuroptics dava 22.58, mentre i compratori offrono ~15, i venditori
+chiedono ~30 e gli scambi si chiudono a 27.55.
 
 ### 6.5 Persistenza della wishlist
 
