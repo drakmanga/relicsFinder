@@ -63,6 +63,7 @@ const config: Config = {
           neo: "#DB9463",
           axi: "#DE8CE8",
           requiem: "#B9B1A2",
+          vanguard: "#9AA6EE",
         },
         rarity: {
           common: "#C97F3E",

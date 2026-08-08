@@ -1,5 +1,5 @@
 /** Relic era. Each tier owns a colour; the chip is the only place it appears. */
-export type Tier = "lith" | "meso" | "neo" | "axi" | "requiem";
+export type Tier = "lith" | "meso" | "neo" | "axi" | "requiem" | "vanguard";
 
 /**
  * Relic refinement. Has no colour of its own — it modulates the tier chip's
@@ -29,6 +29,7 @@ export const TIER_LABEL: Record<Tier, string> = {
   neo: "Neo",
   axi: "Axi",
   requiem: "Requiem",
+  vanguard: "Vanguard",
 };
 
 export const REFINEMENT_LABEL: Record<Refinement, string> = {

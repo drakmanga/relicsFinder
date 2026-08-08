@@ -11,7 +11,7 @@ import type {
   WireRewards,
 } from "./types";
 
-const TIERS: Tier[] = ["lith", "meso", "neo", "axi", "requiem"];
+const TIERS: Tier[] = ["lith", "meso", "neo", "axi", "requiem", "vanguard"];
 const REFINEMENTS: Refinement[] = ["intact", "exceptional", "flawless", "radiant"];
 const RARITIES: Rarity[] = ["common", "uncommon", "rare"];
 

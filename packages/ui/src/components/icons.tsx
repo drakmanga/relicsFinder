@@ -54,6 +54,21 @@ export const RequiemGlyph = glyph(
   "RequiemGlyph",
 );
 
+/**
+ * Vanguard: a double chevron, not a diamond count.
+ *
+ * Lith through Axi count diamonds because they are one sequence of eras. Requiem
+ * and Vanguard sit outside it, so they carry a silhouette of their own rather
+ * than a fifth and sixth diamond that would imply a rank they do not have.
+ */
+export const VanguardGlyph = glyph(
+  <>
+    <path d="M12 2.5 20 11 17.4 11 12 5.4 6.6 11 4 11Z" />
+    <path d="M12 11 20 19.5 17.4 19.5 12 13.9 6.6 19.5 4 19.5Z" />
+  </>,
+  "VanguardGlyph",
+);
+
 export const CommonGlyph = glyph(
   <path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2.2a5.8 5.8 0 1 1 0 11.6 5.8 5.8 0 0 1 0-11.6Z" />,
   "CommonGlyph",
@@ -96,6 +111,7 @@ export const TIER_GLYPH: Record<Tier, ComponentType<IconProps>> = {
   neo: NeoGlyph,
   axi: AxiGlyph,
   requiem: RequiemGlyph,
+  vanguard: VanguardGlyph,
 };
 
 export const RARITY_GLYPH: Record<Rarity, ComponentType<IconProps>> = {

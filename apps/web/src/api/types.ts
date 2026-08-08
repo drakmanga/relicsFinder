@@ -41,7 +41,7 @@ export interface WireRelicPrice {
    normalised on the way in.
    ---------------------------------------------------------------------- */
 
-export type Tier = "lith" | "meso" | "neo" | "axi" | "requiem";
+export type Tier = "lith" | "meso" | "neo" | "axi" | "requiem" | "vanguard";
 export type Refinement = "intact" | "exceptional" | "flawless" | "radiant";
 export type Rarity = "common" | "uncommon" | "rare";
 
@@ -139,13 +139,6 @@ export interface ItemPrice {
  */
 export type PriceMap = Map<string, ItemPrice>;
 
-/**
- * One row of the results table: a relic paired with one of its drops.
- *
- * The table is item-granular, not relic-granular — `Axi A2 / Odonata Prime
- * Systems` is a row, and the same relic appears once per drop it contains.
- * Price, wishlist and sorting all hang off this pairing.
- */
 /**
  * One relic, as the Relics table lists it.
  *

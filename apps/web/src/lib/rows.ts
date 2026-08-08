@@ -29,7 +29,7 @@ export interface Filters {
 
 export type VaultFilter = "all" | "farmable" | "vaulted";
 
-export const ALL_TIERS: Tier[] = ["lith", "meso", "neo", "axi", "requiem"];
+export const ALL_TIERS: Tier[] = ["lith", "meso", "neo", "axi", "requiem", "vanguard"];
 export const ALL_RARITIES: Rarity[] = ["common", "uncommon", "rare"];
 export const ALL_REFINEMENTS: Refinement[] = ["intact", "exceptional", "flawless", "radiant"];
 
