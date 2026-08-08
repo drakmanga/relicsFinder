@@ -48,9 +48,17 @@ const isCatalogue = (view: View) => view === "relics" || view === "items";
 export function App() {
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  /**
+   * Grouped by relic to start with, not ranked by drop chance.
+   *
+   * A row is a relic paired with one of its drops. Ranking by chance splits
+   * those six rows across four thousand others, so the relic the user searched
+   * for is never seen whole — which made the drops column look like a single
+   * arbitrary pick rather than one line of a list.
+   */
   const [sort, setSort] = useState<{ column: SortColumn; direction: SortDirection }>({
-    column: "chance",
-    direction: "desc",
+    column: "relic",
+    direction: "asc",
   });
   const [selected, setSelected] = useState<string | null>(null);
   /**
@@ -177,7 +185,9 @@ export function App() {
     setSort((current) =>
       current.column === column
         ? { column, direction: current.direction === "desc" ? "asc" : "desc" }
-        : { column, direction: "desc" },
+        : // A name starts at A, a number starts at its largest: nobody asks for
+          // the cheapest part or the rarest drop first.
+          { column, direction: column === "relic" ? "asc" : "desc" },
     );
 
   return (

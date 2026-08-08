@@ -26,6 +26,8 @@ export interface PrimeItemRow {
  * hardcoded to Intact: a part at 2% Intact is at 10% Radiant, and that changes
  * where it is worth farming.
  */
+const startsWithQuantity = (itemName: string) => /^\d/.test(itemName);
+
 export function buildItemRows(relics: Relic[], filters: Filters): PrimeItemRow[] {
   const refinement = filters.refinement;
   const byItem = new Map<string, PrimeItemRow>();
@@ -57,7 +59,19 @@ export function buildItemRows(relics: Relic[], filters: Filters): PrimeItemRow[]
   }
 
   const term = filters.term.trim().toLowerCase();
-  const rows = [...byItem.values()];
+
+  // Alphabetical, because this view is a catalogue and nothing here ranks the
+  // parts against each other. Insertion order was the order relics happened to
+  // be read in, which is no order at all to someone looking for one part.
+  //
+  // The quantity-prefixed rewards — "2X Forma Blueprint", "1200X Kuva" — sort
+  // to the end rather than ahead of the A's. They are the only rewards that are
+  // not Prime parts, and this is a list of Prime parts.
+  const rows = [...byItem.values()].sort(
+    (a, b) =>
+      Number(startsWithQuantity(a.itemName)) - Number(startsWithQuantity(b.itemName)) ||
+      a.itemName.localeCompare(b.itemName, "en", { numeric: true }),
+  );
 
   return term
     ? rows.filter(
