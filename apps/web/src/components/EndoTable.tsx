@@ -74,8 +74,8 @@ export function EndoTable({ active, quantityOf }: Props) {
 
   const footnote = (
     <p className="rf-text-caption rf-fg-muted">
-      Ayatan Chattraka and loose stars are left out: their Endo values are not in the reference
-      tables, and a guess here would rank a purchase.
+      All eleven sculptures, Chattraka included. Loose Cyan and Amber stars are not ranked: they
+      are bought to fill a sculpture, not to be dissolved.
     </p>
   );
 
