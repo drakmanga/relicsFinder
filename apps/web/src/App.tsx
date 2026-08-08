@@ -31,6 +31,7 @@ import { buildItemRows } from "./lib/items";
 import type { Refinement, RelicItemRow, Reward } from "./api/types";
 import {
   applyRelicPriceCeiling,
+  applyVaultFilter,
   buildRelicRows,
   emptyFilters,
   sortRelicRows,
@@ -92,10 +93,20 @@ export function App() {
     [rows, selected],
   );
 
-  const itemRows = useMemo(
-    () => (view === "items" ? buildItemRows(relics.data ?? [], filters) : []),
-    [view, relics.data, filters],
-  );
+  const itemRows = useMemo(() => {
+    if (view !== "items") return [];
+
+    const built = buildItemRows(relics.data ?? [], filters);
+    if (filters.vault === "all" || !unvaulted.data) return built;
+
+    // A part is farmable when any relic holding it is in rotation: one
+    // unvaulted source is enough, and the other five being vaulted changes
+    // nothing about whether it can be farmed tonight.
+    const names = unvaulted.data;
+    return built.filter(
+      (row) => row.relicNames.some((name) => names.has(name)) === (filters.vault === "farmable"),
+    );
+  }, [view, relics.data, filters, unvaulted.data]);
 
   // The row carries one item; the panel shows the whole relic, so the other
   // five rewards are looked up rather than re-fetched.
@@ -167,9 +178,10 @@ export function App() {
   const prices = useItemPrices(pricedNames);
 
   const visible = useMemo(() => {
-    const ceiled = applyRelicPriceCeiling(rows, filters.maxPrice, prices.data);
+    const farmable = applyVaultFilter(rows, filters.vault, unvaulted.data);
+    const ceiled = applyRelicPriceCeiling(farmable, filters.maxPrice, prices.data);
     return sortRelicRows(ceiled, sort.column, sort.direction, prices.data);
-  }, [rows, filters.maxPrice, prices.data, sort]);
+  }, [rows, filters.vault, unvaulted.data, filters.maxPrice, prices.data, sort]);
 
   /**
    * The part the search names, if it names one.
@@ -323,7 +335,10 @@ export function App() {
               endoOffers={endoOffers.data}
             />
           ) : (view === "items" ? itemRows.length : visible.length) === 0 ? (
-            filters.term || filters.tiers.size > 0 || filters.rarities.size > 0 ? (
+            filters.term ||
+            filters.tiers.size > 0 ||
+            filters.rarities.size > 0 ||
+            filters.vault !== "all" ? (
               <EmptyState
                 title="No results"
                 description="No item matches the search and the active filters."

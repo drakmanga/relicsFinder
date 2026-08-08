@@ -3,6 +3,7 @@ package relics.reliceApi.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import relics.reliceApi.model.Relic;
 import relics.reliceApi.model.Rewards;
@@ -16,7 +17,6 @@ import java.util.Map;
 @Service
 public class RelicLoadService {
 
-    private static final String LOCAL_FILE_PATH = "src/main/resources/relics.json";
 
     /**
      * Drop chance to rarity, per refinement state.
@@ -44,10 +44,16 @@ public class RelicLoadService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /** Same file the updater writes; one property so the two cannot diverge. */
+    private final File file;
+
+    public RelicLoadService(@Value("${relics.catalogue.path:src/main/resources/relics.json}") String path) {
+        this.file = new File(path);
+    }
+
     private JsonNode loadRelicsFromFile() throws IOException {
-        File file = new File(LOCAL_FILE_PATH);
         if (!file.exists()) {
-            throw new IOException("Relics file not found: " + LOCAL_FILE_PATH);
+            throw new IOException("Relics file not found: " + file.getPath());
         }
         return objectMapper.readTree(file);
     }

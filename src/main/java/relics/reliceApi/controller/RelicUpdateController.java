@@ -17,10 +17,8 @@ public class RelicUpdateController {
     @PostMapping("/update")
     public String updateRelics() {
         try {
-            // Scarica e aggiorna i relics
-            // Questo metodo scarica il file JSON da un URL e lo salva in un file locale
-            relicUpdateService.downloadAndUpdateRelics();
-            return ("Relics updated successfully.");
+            int relics = relicUpdateService.downloadAndUpdateRelics();
+            return "Relics updated successfully: " + relics + " entries.";
         } catch (Exception e) {
             return ("Error updating relics: " + e.getMessage());
         }

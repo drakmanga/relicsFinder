@@ -78,9 +78,27 @@ Senza `RELICS_STATIC_DIR` la build finisce in `apps/web/dist/`.
 | Pagina senza stili, testo illeggibile | Libreria non compilata: `npm run build:ui` |
 | Modifico `packages/ui` e non cambia niente | Nessun watch: ricompila con `npm run build:ui` |
 
+## I dati si aggiornano da soli
+
+Il catalogo delle reliquie (`src/main/resources/relics.json`) viene riscaricato
+dalle drop table **all'avvio e ogni giorno alle 04:20**. Se il download fallisce
+resta il file precedente, quindi al massimo si lavora su dati di ieri. Per
+forzarlo subito:
+
+```sh
+curl -X POST http://localhost:8080/api/relics/update
+```
+
+Il percorso del file è la property `relics.catalogue.path`. Il default punta
+dentro `src/main/resources/`, che esiste solo eseguendo da sorgente: se impacchetti
+in un jar, passa un percorso vero — `--relics.catalogue.path=data/relics.json`.
+
+Prezzi e drop table hanno cache proprie (30 minuti i primi, 6 ore le seconde) e
+non richiedono niente.
+
 ## Stato attuale
 
-`apps/web` è uno **scaffold**, non la schermata finale: ricerca, tabella
-raggruppata per reliquia, pannello dettaglio con le tab di raffinazione. Filtri,
-wishlist e vista Prime Items non ci sono ancora — vedi `BACKLOG.md`, che elenca
-anche le modifiche necessarie al backend.
+Cinque viste: **Relics** (una riga per reliquia, con stato vault, miglior drop e
+ducati), **Prime Items**, **Wishlist** (divisa per tipo: pezzi, ducati, Ayatan),
+**Ducanetor** (ducati per platino) ed **Endo** (Ayatan per endo/platino).
+Ricerca, filtri e wishlist lato server ci sono. Vedi `BACKLOG.md` per cosa resta.

@@ -4,7 +4,9 @@ import {
   ALL_RARITIES,
   ALL_REFINEMENTS,
   ALL_TIERS,
+  ALL_VAULT_FILTERS,
   REFINEMENT_LABEL,
+  VAULT_LABEL,
   type Filters,
 } from "../lib/rows";
 import type { Rarity, Tier } from "../api/types";
@@ -60,6 +62,36 @@ export function FilterBar({ filters, onChange }: Props) {
             onClick={() => onChange({ ...filters, rarities: toggle(filters.rarities, rarity) })}
           >
             <RarityTag rarity={rarity as Rarity} />
+          </Toggle>
+        ))}
+      </Group>
+
+      {/*
+        Three exclusive states rather than toggles, because "neither farmable
+        nor vaulted" is not a thing a relic can be — and a filter that can be
+        set to an empty result is a trap.
+      */}
+      <Group label="Vault">
+        {ALL_VAULT_FILTERS.map((vault) => (
+          <Toggle
+            key={vault}
+            on={filters.vault === vault}
+            label={`Show ${VAULT_LABEL[vault].toLowerCase()} relics`}
+            onClick={() => onChange({ ...filters, vault })}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color:
+                  filters.vault === vault && vault === "farmable"
+                    ? "var(--rf-success)"
+                    : "var(--rf-fg-secondary)",
+              }}
+            >
+              {VAULT_LABEL[vault]}
+            </span>
           </Toggle>
         ))}
       </Group>
