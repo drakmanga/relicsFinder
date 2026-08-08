@@ -173,3 +173,12 @@ export interface MarketStatus {
   fresh: number;
   queued: number;
 }
+
+/** One wishlist line as the server stores it. */
+export interface WireWishlistEntry {
+  itemName: string;
+  tier: string;
+  relicFullName: string;
+  refinement: string;
+  quantity: number;
+}

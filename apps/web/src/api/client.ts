@@ -10,6 +10,7 @@ import type {
   WireItemPrice,
   WireRelic,
   WireRelicPrice,
+  WireWishlistEntry,
 } from "./types";
 
 /** Relative on purpose: Vite proxies it in dev, Spring Boot serves it in prod. */
@@ -142,6 +143,30 @@ export const api = {
   /** How much of the price cache is filled — the UI says so while it warms. */
   async marketStatus(signal?: AbortSignal): Promise<MarketStatus> {
     return await get<MarketStatus>("/market/status", signal);
+  },
+
+  /** The wishlist, as stored on the server. */
+  async wishlist(signal?: AbortSignal): Promise<WireWishlistEntry[]> {
+    return await get<WireWishlistEntry[]>("/wishlist", signal);
+  },
+
+  /** Replaces the stored list with this one. */
+  async saveWishlist(entries: WireWishlistEntry[]): Promise<WireWishlistEntry[]> {
+    const url = `${BASE}/wishlist`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(entries),
+      });
+    } catch (cause) {
+      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
+    return (await res.json()) as WireWishlistEntry[];
   },
 
   async isVaulted(relicName: string, signal?: AbortSignal): Promise<boolean> {

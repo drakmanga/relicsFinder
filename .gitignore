@@ -43,3 +43,4 @@ ds-bundle/
 
 ### Claude Code — stato runtime
 .claude/scheduled_tasks.lock
+data/
