@@ -35,20 +35,24 @@ public class EndoService {
     private static final long SPACING_MS = 320;
 
     /**
-     * The ten sculptures whose Endo values are verified.
+     * Every sculpture, with its verified Endo values.
      *
      * <p>Endo = (B + 50C + 100A) × (1 + M(C + A) / S), checked against the
-     * published filled values for all ten.
+     * published filled value of each one.
      *
-     * <p>Ayatan Chattraka is tradeable but absent from the reference tables, so
-     * its base and multiplier are unknown and it is left out rather than
-     * guessed. Loose Cyan and Amber stars are likewise excluded: 50 and 100 are
-     * their contribution inside a socket, not a confirmed dissolve value.
+     * <p>Chattraka is the same shape as Hemakara and Zambuka — base 450, two
+     * cyan and one amber, 2600 filled — which pins its multiplier at 3.0 by the
+     * same arithmetic that fixes theirs.
+     *
+     * <p>Loose Cyan and Amber stars are not here and are not meant to be. They
+     * are bought to fill a sculpture, not to be dissolved, so ranking them by
+     * Endo per platinum would answer a question nobody asks.
      */
     private static final List<Sculpture> SCULPTURES = List.of(
             new Sculpture("Ayatan Anasa Sculpture", "ayatan_anasa_sculpture", 2000, 2, 2, 0.5),
             new Sculpture("Ayatan Kitha Sculpture", "ayatan_kitha_sculpture", 450, 4, 1, 3.0),
             new Sculpture("Ayatan Orta Sculpture", "ayatan_orta_sculpture", 650, 3, 1, 2.0),
+            new Sculpture("Ayatan Chattraka Sculpture", "ayatan_chattraka_sculpture", 450, 2, 1, 3.0),
             new Sculpture("Ayatan Hemakara Sculpture", "ayatan_hemakara_sculpture", 450, 2, 1, 3.0),
             new Sculpture("Ayatan Zambuka Sculpture", "ayatan_zambuka_sculpture", 450, 2, 1, 3.0),
             new Sculpture("Ayatan Vaya Sculpture", "ayatan_vaya_sculpture", 400, 2, 1, 2.0),

@@ -125,33 +125,35 @@ ragione per cui la vista è fatta così: **non si costruisce come il Ducanetor**
 
 Com'è finita:
 
-- `EndoService` tiene le dieci sculture con base, socket e moltiplicatore
-  verificati, legge gli ordini v2 e calcola l'endo reale offerta per offerta.
+- `EndoService` tiene tutte e **undici** le sculture con base, socket e
+  moltiplicatore verificati, legge gli ordini v2 e calcola l'endo reale offerta
+  per offerta.
 - `EndoController` espone `GET /api/endo/offers`, già ordinato per endo/platino.
 - `EndoTable` mostra una riga per **offerta**, non per scultura, con il filtro
   "solo già piene" e le prime tre in evidenza.
-- Chattraka e stelle sciolte restano fuori, e la vista lo dice in fondo alla
-  pagina invece di far finta di niente.
+- Le stelle sciolte restano fuori per scelta, non per ignoranza: si comprano per
+  riempire una scultura, non per scioglierle. La vista lo dice in fondo.
 
 ### Le sculture non hanno un prezzo, hanno un prezzo per stato
 
-Sono **10** commerciabili, non 6. Ognuna ha un numero fisso di socket per stelle
+Sono **11** commerciabili, non 6. Ognuna ha un numero fisso di socket per stelle
 Cyan e Amber, e il valore in endo dipende da **quante stelle sono montate**:
 
 ```
 Endo = (B + 50·C + 100·A) × (1 + M·(C + A) / S)
 
 B = valore base (scultura vuota)      C, A = stelle Cyan e Amber montate
-S = socket totali                     M = 0.5 Anasa · 3.0 Hemakara/Kitha/Zambuka · 2.0 le altre
+S = socket totali                     M = 0.5 Anasa · 3.0 Chattraka/Hemakara/Kitha/Zambuka · 2.0 le altre
 ```
 
-Verificata contro i valori della wiki su tutte e dieci: torna esatta.
+Verificata contro i valori della wiki su tutte e undici: torna esatta.
 
 | Scultura | Base | Socket | Piena | Moltiplicatore |
 |---|---|---|---|---|
 | Anasa | 2000 | 2C 2A | 3450 | 0.5 |
 | Kitha | 450 | 4C 1A | 3000 | 3.0 |
 | Orta | 650 | 3C 1A | 2700 | 2.0 |
+| Chattraka | 450 | 2C 1A | 2600 | 3.0 |
 | Hemakara | 450 | 2C 1A | 2600 | 3.0 |
 | Zambuka | 450 | 2C 1A | 2600 | 3.0 |
 | Vaya | 400 | 2C 1A | 1800 | 2.0 |
@@ -206,16 +208,21 @@ forma.
 3. **La riga è un ordine, non un item.** Va mostrato venditore, platino, stelle
    montate, endo risultante e il rapporto — più il comando `/w` da incollare in
    gioco, che è il modo in cui si compra davvero.
-4. **Anche le stelle sciolte** (`ayatan_cyan_star`, `ayatan_amber_star`) sono
-   commerciabili e valgono endo da sole: vanno nella stessa classifica, perché a
-   volte conviene comprare stelle e riempire una scultura che si ha già.
+4. ~~**Anche le stelle sciolte**~~ — **scartato**. Sono commerciabili, ma si
+   comprano per riempire una scultura che si ha già, non per scioglierle:
+   metterle nella stessa classifica risponderebbe a una domanda che nessuno fa.
 
-### Dubbi rimasti
+### ~~Dubbi rimasti~~ — chiusi il 2026-08-08
 
-- **Chattraka** compare fra gli item del market ma non nella tabella della wiki:
-  va capito se è commerciabile e con quali valori.
-- Il valore in endo delle **stelle sciolte** non l'ho verificato: dentro la
-  formula contano 50 e 100, ma sciolte da sole potrebbero valere altro.
+- **Chattraka**: risolta. La wiki la elenca fra le undici sculture — 2 Cyan,
+  1 Amber, base 450, piena 2600 — cioè esattamente la forma di Hemakara e
+  Zambuka, che fissa il moltiplicatore a 3.0: `(450 + 100 + 100) × 4 = 2600`.
+  È commerciabile solo su **v2** (`/v1/items/ayatan_chattraka_sculpture` dà 404,
+  l'item è stato aggiunto a ottobre 2025), e la vista usa già v2 per le stelle,
+  quindi è entrata senza toccare altro. Si compra da Nightcap, rango 3, 75
+  Fergolyte, una a settimana — per questo è più cara delle altre a parità di
+  endo.
+- **Stelle sciolte**: chiuso per scelta, vedi il punto 4 qui sopra.
 
 ---
 
