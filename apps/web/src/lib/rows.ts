@@ -29,6 +29,29 @@ export const emptyFilters = (): Filters => ({
 const allows = <T>(selected: Set<T>, value: T) => selected.size === 0 || selected.has(value);
 
 /**
+ * Matches a relic name without letting a code run into a longer one.
+ *
+ * Typing "Axi A1" has to mean Axi A1, not the sixty-six rows of Axi A1, A10,
+ * A11 … A19. A plain substring test cannot tell those apart, so when the term
+ * ends on a digit — a complete relic code — a digit right after the match
+ * disqualifies it.
+ *
+ * The check is limited to that case on purpose. "axi a" ends mid-code and is
+ * plainly someone still typing, so it has to keep matching everything; an
+ * earlier version applied the rule unconditionally and turned every Axi search
+ * into no results at all.
+ */
+export function matchesRelic(fullName: string, term: string): boolean {
+  const name = fullName.toLowerCase();
+  if (!/[0-9]$/.test(term)) return name.includes(term);
+
+  for (let at = name.indexOf(term); at !== -1; at = name.indexOf(term, at + 1)) {
+    if (!/[0-9]/.test(name.charAt(at + term.length))) return true;
+  }
+  return false;
+}
+
+/**
  * Flattens relics into one row per drop and applies every filter except price.
  *
  * Price is deliberately left out: it arrives asynchronously and only for the
@@ -43,7 +66,7 @@ export function buildRows(relics: Relic[], filters: Filters): RelicItemRow[] {
     if (!allows(filters.tiers, relic.tier)) continue;
     if (relic.refinement !== filters.refinement) continue;
 
-    const relicMatches = !term || relic.fullName.toLowerCase().includes(term);
+    const relicMatches = !term || matchesRelic(relic.fullName, term);
 
     for (const reward of relic.rewards) {
       if (!allows(filters.rarities, reward.rarity)) continue;
