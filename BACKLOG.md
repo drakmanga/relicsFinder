@@ -117,6 +117,96 @@ funzionalità sopra restano parziali o con dati finti.
 | Storico prezzi (delta `▲ +12%`) | **manca** — nessuna persistenza del prezzo precedente |
 | Persistenza wishlist | nessun endpoint |
 
+
+## 8. Tab Endo — analisi, non ancora implementata
+
+Studiata il 2026-08-08. Tutto quello che serve esiste; manca solo scrivere la
+vista. Ma **non si costruisce come il Ducanetor**, e questa è la ragione.
+
+### Le sculture non hanno un prezzo, hanno un prezzo per stato
+
+Sono **10** commerciabili, non 6. Ognuna ha un numero fisso di socket per stelle
+Cyan e Amber, e il valore in endo dipende da **quante stelle sono montate**:
+
+```
+Endo = (B + 50·C + 100·A) × (1 + M·(C + A) / S)
+
+B = valore base (scultura vuota)      C, A = stelle Cyan e Amber montate
+S = socket totali                     M = 0.5 Anasa · 3.0 Hemakara/Kitha/Zambuka · 2.0 le altre
+```
+
+Verificata contro i valori della wiki su tutte e dieci: torna esatta.
+
+| Scultura | Base | Socket | Piena | Moltiplicatore |
+|---|---|---|---|---|
+| Anasa | 2000 | 2C 2A | 3450 | 0.5 |
+| Kitha | 450 | 4C 1A | 3000 | 3.0 |
+| Orta | 650 | 3C 1A | 2700 | 2.0 |
+| Hemakara | 450 | 2C 1A | 2600 | 3.0 |
+| Zambuka | 450 | 2C 1A | 2600 | 3.0 |
+| Vaya | 400 | 2C 1A | 1800 | 2.0 |
+| Piv | 375 | 2C 1A | 1725 | 2.0 |
+| Valana | 325 | 2C 1A | 1575 | 2.0 |
+| Sah | 300 | 2C 1A | 1500 | 2.0 |
+| Ayr | 325 | 3C 0A | 1425 | 2.0 |
+
+Una Anasa vuota vale 2000, piena 3450. Sono due prodotti diversi allo stesso
+nome — ed è esattamente quello che si vede nelle due righe del market con 3450 e
+2000 accanto.
+
+### Conseguenza: serve un endpoint diverso
+
+`statistics` aggrega gli scambi **senza distinguere il riempimento**, quindi il
+prezzo medio di una Anasa mescola vuote e piene ed è inutilizzabile qui.
+
+Serve invece l'endpoint degli **ordini aperti**, che porta il dato per ordine:
+
+```
+GET https://api.warframe.market/v2/orders/item/{slug}
+→ { type, platinum, quantity, amberStars, cyanStars, visible, user:{ status, ingameName } }
+```
+
+`amberStars` e `cyanStars` sono i campi che risolvono tutto.
+
+### Verifica su dati veri
+
+Interrogando le 10 sculture e tenendo solo i venditori **in gioco** (`status:
+"ingame"` — un ordine di chi è offline non è comprabile ora):
+
+```
+135 venditori disponibili
+ 1. Valana  3p  2C/1A  1575 endo  →  525 endo/plat
+ 2. Orta    6p  3C/1A  2700 endo  →  450
+ 5. Vaya    4p  2C/1A  1800 endo  →  450
+ 6. Anasa   8p  2C/2A  3450 endo  →  431
+```
+
+Per confronto, il Ducanetor migliore rende ~21 ducati per platino. Le due
+classifiche non sono comparabili fra loro, ma internamente hanno la stessa
+forma.
+
+### Come va costruita, quando ci si mette
+
+1. **Backend**: un servizio che interroga i 10 slug degli ordini, con la stessa
+   cache e lo stesso rate limiter dei prezzi. Dieci richieste, non 550 — costa
+   pochissimo, ma va rinfrescato più spesso: gli ordini aperti cambiano in
+   continuazione, mentre i prezzi degli scambi conclusi no. Un TTL di 5 minuti.
+2. **Filtro sui venditori online**: senza, la classifica si riempie di offerte
+   ferme da mesi che non si possono comprare.
+3. **La riga è un ordine, non un item.** Va mostrato venditore, platino, stelle
+   montate, endo risultante e il rapporto — più il comando `/w` da incollare in
+   gioco, che è il modo in cui si compra davvero.
+4. **Anche le stelle sciolte** (`ayatan_cyan_star`, `ayatan_amber_star`) sono
+   commerciabili e valgono endo da sole: vanno nella stessa classifica, perché a
+   volte conviene comprare stelle e riempire una scultura che si ha già.
+
+### Dubbi rimasti
+
+- **Chattraka** compare fra gli item del market ma non nella tabella della wiki:
+  va capito se è commerciabile e con quali valori.
+- Il valore in endo delle **stelle sciolte** non l'ho verificato: dentro la
+  formula contano 50 e 100, ma sciolte da sole potrebbero valere altro.
+
 ---
 
 ## 6. Modifiche da fare al backend
