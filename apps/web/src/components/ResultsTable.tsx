@@ -84,7 +84,12 @@ export function ResultsTable({
           <tr>
             <TableHeaderCell>Tier</TableHeaderCell>
             <TableHeaderCell>Relic</TableHeaderCell>
-            <TableHeaderCell>Item</TableHeaderCell>
+            {/*
+              "Item" said nothing about the relationship between the two
+              columns, and a relic occupying six consecutive rows read as six
+              unrelated results. "Drops" names it: this relic drops this part.
+            */}
+            <TableHeaderCell>Drops</TableHeaderCell>
             <TableHeaderCell>Rarity</TableHeaderCell>
             <TableHeaderCell
               align="right"
@@ -127,6 +132,21 @@ export function ResultsTable({
             const row = rows[virtualRow.index];
             if (!row) return null;
 
+            /*
+              A relic fills six consecutive rows, one per drop. Marking where a
+              new one begins turns that block into an obvious group instead of
+              six results that happen to repeat a name.
+
+              Sorting by price scatters a relic's drops across the table, and
+              then every row is a group of one — which is exactly right, because
+              at that point the rows genuinely are unrelated.
+            */
+            const previous = rows[virtualRow.index - 1];
+            const startsGroup =
+              !previous ||
+              previous.relicFullName !== row.relicFullName ||
+              previous.refinement !== row.refinement;
+
             const seed = {
               itemName: row.itemName,
               kind: "part" as const,
@@ -140,18 +160,33 @@ export function ResultsTable({
                 key={row.id}
                 selected={row.id === selected}
                 onClick={() => onSelect(row.id, "relic")}
+                style={
+                  startsGroup ? { borderTop: "1px solid var(--rf-border-default)" } : undefined
+                }
+                title={`${row.relicFullName} — click for everything it drops`}
               >
                 <TableCell>
-                  <TierChip tier={row.tier} refinement={row.refinement} />
+                  {/* The chip belongs to the relic, so it appears once per relic. */}
+                  {startsGroup ? <TierChip tier={row.tier} refinement={row.refinement} /> : null}
                 </TableCell>
-                <TableCell>{row.relicFullName}</TableCell>
+                {/*
+                  The name stays on every row rather than being blanked out:
+                  with virtual scrolling the first row of a group is often above
+                  the viewport, and a row that names no relic is worse than a
+                  repeated one. Repeats recede instead.
+                */}
+                <TableCell>
+                  <span className={startsGroup ? undefined : "rf-fg-disabled"}>
+                    {row.relicFullName}
+                  </span>
+                </TableCell>
                 <TableCell
                   onClick={(event) => {
                     event.stopPropagation();
                     onSelect(row.id, "item");
                   }}
                   style={{ cursor: "pointer" }}
-                  title={`What drops ${row.itemName}`}
+                  title={`Where ${row.itemName} comes from`}
                 >
                   {row.itemName}
                 </TableCell>

@@ -1,6 +1,6 @@
 import type { Rarity, Relic, Tier } from "../api/types";
 import { setOf } from "./sets";
-import type { Filters } from "./rows";
+import { matchesRelic, type Filters } from "./rows";
 
 export interface PrimeItemRow {
   /** The item name is the identity: one row per part, however many relics hold it. */
@@ -63,7 +63,7 @@ export function buildItemRows(relics: Relic[], filters: Filters): PrimeItemRow[]
     ? rows.filter(
         (row) =>
           row.itemName.toLowerCase().includes(term) ||
-          row.relicNames.some((name) => name.toLowerCase().includes(term)),
+          row.relicNames.some((name) => matchesRelic(name, term)),
       )
     : rows;
 }
