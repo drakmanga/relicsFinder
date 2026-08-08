@@ -325,6 +325,22 @@ Una riga è identificata da **tipo + nome**, non dal solo nome: lo stesso pezzo
 voluto per completare un set e voluto per i ducati sono due righe diverse, e la
 wishlist le tiene in sezioni separate (`part`, `ducat`, `endo`).
 
+### 6.8 ~~Catalogo reliquie fermo~~ — FATTO il 2026-08-08
+
+`relics.json` era statico e nessuno lo aggiornava: 689 reliquie contro le 773
+pubblicate dalle drop table, e mancavano **esattamente quelle in rotazione**.
+Nessun errore, nessun log — la lista aveva solo un buco.
+
+`RelicCatalogueRefresher` lo riscarica all'avvio e ogni giorno alle 04:20, prima
+del warmer dei prezzi (`@Order(0)` contro `@Order(1)`), altrimenti i pezzi nuovi
+resterebbero senza prezzo fino al giro successivo. La scrittura passa da file
+temporaneo e `ATOMIC_MOVE`, e una risposta senza array `relics` non sovrascrive
+niente: il catalogo è l'unica fonte di cosa esiste, e mezzo catalogo è peggio di
+uno vecchio.
+
+Il percorso è la property `relics.catalogue.path`, condivisa da chi legge e da
+chi scrive, così i due non possono divergere.
+
 ### 6.6 Cose che il frontend nuovo rende non più necessarie
 
 - ~~**`relic-finder.html`**~~ — **rimosso**. Era il vecchio frontend statico;

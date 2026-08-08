@@ -17,8 +17,17 @@ export interface Filters {
   refinement: Refinement;
   /** Platinum ceiling. `null` means no ceiling. */
   maxPrice: number | null;
+  /**
+   * Whether the relic can still be farmed.
+   *
+   * Not a set like the others: the three options are exhaustive and mutually
+   * exclusive, so a set could hold the meaningless "neither".
+   */
+  vault: VaultFilter;
   term: string;
 }
+
+export type VaultFilter = "all" | "farmable" | "vaulted";
 
 export const ALL_TIERS: Tier[] = ["lith", "meso", "neo", "axi", "requiem"];
 export const ALL_RARITIES: Rarity[] = ["common", "uncommon", "rare"];
@@ -29,8 +38,35 @@ export const emptyFilters = (): Filters => ({
   rarities: new Set(),
   refinement: "intact",
   maxPrice: null,
+  vault: "all",
   term: "",
 });
+
+export const ALL_VAULT_FILTERS: VaultFilter[] = ["all", "farmable", "vaulted"];
+
+export const VAULT_LABEL: Record<VaultFilter, string> = {
+  all: "All",
+  farmable: "Farmable",
+  vaulted: "Vaulted",
+};
+
+/**
+ * Keeps relics by whether they are still dropping.
+ *
+ * Applied here rather than in `buildRelicRows` because the rotation arrives in
+ * its own request: rows must exist before it lands, or the table would be empty
+ * for as long as that request takes. Until it does, the filter passes
+ * everything — the honest answer to "which are farmable" is not yet known.
+ */
+export function applyVaultFilter(
+  rows: RelicRow[],
+  vault: VaultFilter,
+  unvaulted: Set<string> | undefined,
+): RelicRow[] {
+  if (vault === "all" || !unvaulted) return rows;
+
+  return rows.filter((row) => unvaulted.has(row.relicFullName) === (vault === "farmable"));
+}
 
 /** An empty set means "no restriction", which reads better than pre-selecting everything. */
 const allows = <T>(selected: Set<T>, value: T) => selected.size === 0 || selected.has(value);

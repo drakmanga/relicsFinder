@@ -2,6 +2,7 @@ package relics.reliceApi.service;
 
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import relics.reliceApi.model.Relic;
@@ -22,6 +23,8 @@ import java.util.Set;
  * own thread while the API is already serving.
  */
 @Component
+// After the catalogue refresh, so the warm list is the current one.
+@Order(1)
 public class PriceWarmupRunner implements ApplicationRunner {
 
     private final RelicLoadService relicLoadService;
