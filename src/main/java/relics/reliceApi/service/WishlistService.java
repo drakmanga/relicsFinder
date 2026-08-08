@@ -55,8 +55,11 @@ public class WishlistService {
             for (WishlistEntry entry : next == null ? List.<WishlistEntry>of() : next) {
                 if (entry == null || entry.getItemName() == null || entry.getItemName().isBlank()) continue;
                 if (entry.getQuantity() <= 0) continue;
-                // A duplicate line would double a total silently.
-                if (!seen.add(entry.getItemName())) continue;
+                if (entry.getKind() == null || entry.getKind().isBlank()) entry.setKind("part");
+                // Identity is kind plus name: the same part wanted for a set and
+                // for ducats is two lines. A true duplicate would double a total
+                // silently.
+                if (!seen.add(entry.getKind() + "|" + entry.getItemName())) continue;
                 cleaned.add(entry);
             }
 

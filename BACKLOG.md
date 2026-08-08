@@ -118,10 +118,20 @@ funzionalità sopra restano parziali o con dati finti.
 | Persistenza wishlist | nessun endpoint |
 
 
-## 8. Tab Endo — analisi, non ancora implementata
+## 8. ~~Tab Endo~~ — FATTA
 
-Studiata il 2026-08-08. Tutto quello che serve esiste; manca solo scrivere la
-vista. Ma **non si costruisce come il Ducanetor**, e questa è la ragione.
+Studiata e costruita il 2026-08-08. L'analisi qui sotto resta perché è la
+ragione per cui la vista è fatta così: **non si costruisce come il Ducanetor**.
+
+Com'è finita:
+
+- `EndoService` tiene le dieci sculture con base, socket e moltiplicatore
+  verificati, legge gli ordini v2 e calcola l'endo reale offerta per offerta.
+- `EndoController` espone `GET /api/endo/offers`, già ordinato per endo/platino.
+- `EndoTable` mostra una riga per **offerta**, non per scultura, con il filtro
+  "solo già piene" e le prime tre in evidenza.
+- Chattraka e stelle sciolte restano fuori, e la vista lo dice in fondo alla
+  pagina invece di far finta di niente.
 
 ### Le sculture non hanno un prezzo, hanno un prezzo per stato
 
@@ -297,11 +307,16 @@ Nella stessa occasione è emerso che **il prezzo era sbagliato**: veniva da
 Prime Neuroptics dava 22.58, mentre i compratori offrono ~15, i venditori
 chiedono ~30 e gli scambi si chiudono a 27.55.
 
-### 6.5 Persistenza della wishlist
+### 6.5 ~~Persistenza della wishlist~~ — FATTA
 
-Solo se si vuole che sopravviva al cambio di browser. Richiede anche un concetto
-di utente, che oggi non esiste. Fino ad allora `localStorage` va benissimo, ed è
-quello che prevede il §3.
+Sul server, senza utenti: il servizio è self-hosted e monoutente, quindi la lista
+è un file JSON (`data/wishlist.json`, scritto su file temporaneo e spostato).
+`localStorage` resta come specchio locale, così lo stepper è immediato e la lista
+si legge anche a backend spento.
+
+Una riga è identificata da **tipo + nome**, non dal solo nome: lo stesso pezzo
+voluto per completare un set e voluto per i ducati sono due righe diverse, e la
+wishlist le tiene in sezioni separate (`part`, `ducat`, `endo`).
 
 ### 6.6 Cose che il frontend nuovo rende non più necessarie
 

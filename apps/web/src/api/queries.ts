@@ -15,6 +15,7 @@ export const keys = {
   itemPrices: (names: string[]) => ["market", "items", names] as const,
   itemHistory: (name: string) => ["market", "history", name] as const,
   vaulted: (name: string) => ["relics", "vaulted", name] as const,
+  endo: ["endo", "offers"] as const,
 };
 
 /**
@@ -132,6 +133,22 @@ export function useItemHistory(itemName: string | null) {
     queryFn: ({ signal }) => api.itemHistory(itemName!, signal),
     enabled: !!itemName,
     ...PRICE_DATA,
+  });
+}
+
+/**
+ * Ayatan offers.
+ *
+ * Short-lived by nature: these are open orders from players currently online,
+ * so a stale list sends someone to message a seller who has logged off.
+ */
+export function useEndoOffers(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.endo,
+    queryFn: ({ signal }) => api.endoOffers(signal),
+    enabled,
+    staleTime: 4 * 60_000,
+    refetchInterval: enabled ? 5 * 60_000 : false,
   });
 }
 

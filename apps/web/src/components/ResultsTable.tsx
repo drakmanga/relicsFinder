@@ -129,6 +129,7 @@ export function ResultsTable({
 
             const seed = {
               itemName: row.itemName,
+              kind: "part" as const,
               tier: row.tier,
               relicFullName: row.relicFullName,
               refinement: row.refinement,

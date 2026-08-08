@@ -12,12 +12,13 @@ import {
 import { FilterBar } from "./components/FilterBar";
 import { ItemDetailPanel } from "./components/ItemDetailPanel";
 import { DucanetorTable } from "./components/DucanetorTable";
+import { EndoTable } from "./components/EndoTable";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
 import { WishlistTable } from "./components/WishlistTable";
 import { ItemsTable } from "./components/ItemsTable";
 import { ResultsTable } from "./components/ResultsTable";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
-import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
+import { useDropInfo, useEndoOffers, useItemPrices, useRelics } from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
 import { buildItemRows } from "./lib/items";
 import type { Refinement, RelicItemRow, Reward } from "./api/types";
@@ -31,6 +32,18 @@ import {
   type SortDirection,
 } from "./lib/rows";
 
+
+type View = "relics" | "items" | "wishlist" | "ducats" | "endo";
+
+/**
+ * Views that browse the relic catalogue.
+ *
+ * Only these get the search box, the filter bar and the detail panel: the other
+ * three are lists in their own right — a wishlist the user built, and two
+ * rankings of what the market is offering right now — and none of them has
+ * anything for a relic filter to act on.
+ */
+const isCatalogue = (view: View) => view === "relics" || view === "items";
 
 export function App() {
   const [filters, setFilters] = useState<Filters>(emptyFilters);
@@ -47,13 +60,21 @@ export function App() {
    */
   const [panel, setPanel] = useState<"relic" | "item">("relic");
   const [pickedItem, setPickedItem] = useState<string | null>(null);
-  const [view, setView] = useState<"relics" | "items" | "wishlist" | "ducats">("relics");
+  const [view, setView] = useState<View>("relics");
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
 
 
   const relics = useRelics();
   const wishlist = useWishlist();
+
+  /**
+   * The wishlist shows what a saved sculpture costs today, which needs the same
+   * offers the Endo view ranks. Fetched only when there is a sculpture to price:
+   * the query is shared, so opening the Endo tab afterwards costs nothing.
+   */
+  const wantsSculptures = wishlist.entries.some((entry) => entry.kind === "endo");
+  const endoOffers = useEndoOffers(view === "wishlist" && wantsSculptures);
 
   const rows = useMemo(
     () => buildRows(relics.data ?? [], filters),
@@ -194,13 +215,14 @@ export function App() {
             { id: "items", label: "Prime Items" },
             { id: "wishlist", label: `Wishlist · ${wishlist.totalItems}` },
             { id: "ducats", label: "Ducanetor" },
+            { id: "endo", label: "Endo" },
           ]}
         />
 
       </header>
 
       {/* Search and filters act on the catalogue, not on the list. */}
-      {view !== "wishlist" && view !== "ducats" && (
+      {isCatalogue(view) && (
       <div
         style={{
           flex: "none",
@@ -236,8 +258,7 @@ export function App() {
       </div>
       )}
 
-      {/* Filters act on the catalogue; the wishlist is a list the user built. */}
-      {filtersOpen && view !== "wishlist" && view !== "ducats" && (
+      {filtersOpen && isCatalogue(view) && (
         <FilterBar filters={filters} onChange={setFilters} />
       )}
 
@@ -253,7 +274,11 @@ export function App() {
         <main
           style={{ flex: 1, minWidth: 0, background: "var(--rf-surface-0)", overflow: "hidden" }}
         >
-          {relics.isPending ? (
+          {/* Ayatan offers come straight from the market: nothing here waits on
+              the relic catalogue, so it must not wait on its loading state. */}
+          {view === "endo" ? (
+            <EndoTable active quantityOf={wishlist.quantityOf} />
+          ) : relics.isPending ? (
             <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
               {Array.from({ length: 12 }, (_, i) => (
                 <Skeleton key={i} height={40} />
@@ -271,9 +296,18 @@ export function App() {
               }
             />
           ) : view === "ducats" ? (
-            <DucanetorTable prices={prices.data} onInfo={setInfoItem} />
+            <DucanetorTable
+              prices={prices.data}
+              onInfo={setInfoItem}
+              quantityOf={wishlist.quantityOf}
+            />
           ) : view === "wishlist" ? (
-            <WishlistTable entries={wishlist.entries} prices={prices.data} onInfo={setInfoItem} />
+            <WishlistTable
+              entries={wishlist.entries}
+              prices={prices.data}
+              onInfo={setInfoItem}
+              endoOffers={endoOffers.data}
+            />
           ) : (view === "items" ? itemRows.length : visible.length) === 0 ? (
             filters.term || filters.tiers.size > 0 || filters.rarities.size > 0 ? (
               <EmptyState
@@ -318,7 +352,7 @@ export function App() {
           )}
         </main>
 
-        {view === "wishlist" || view === "ducats" ? null : panel === "item" && itemPanelRow ? (
+        {!isCatalogue(view) ? null : panel === "item" && itemPanelRow ? (
           <ItemDetailPanel
             row={itemPanelRow}
             relics={relics.data ?? []}

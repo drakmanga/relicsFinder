@@ -14,8 +14,17 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WishlistEntry {
 
-    /** Identity of the line — one entry per part. */
+    /** Name of the thing wanted. */
     private String itemName;
+
+    /**
+     * What the line is for: "part", "ducat" or "endo".
+     *
+     * <p>Part of the identity, not decoration. The same Prime part can be
+     * wanted twice for different reasons — one to complete a set, one to
+     * dissolve at Baro — and those are two lines, not a conflict.
+     */
+    private String kind;
 
     /** Where the user found it, kept as context rather than as a key. */
     private String tier;
