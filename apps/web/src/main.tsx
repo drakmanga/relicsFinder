@@ -6,6 +6,7 @@ import { OrokinProvider } from "relic-finder-ui";
 import "relic-finder-ui/styles.css";
 import "./app.css";
 import { App } from "./App";
+import { syncFromServer } from "./lib/wishlist";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +23,11 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Pull the stored list before first paint tries to read it. Fire and forget:
+// the local mirror is already rendered, and the server copy replaces it when it
+// arrives.
+void syncFromServer();
 
 const container = document.getElementById("root");
 if (!container) throw new Error("#root non trovato in index.html");

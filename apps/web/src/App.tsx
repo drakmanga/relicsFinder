@@ -11,6 +11,7 @@ import {
 
 import { FilterBar } from "./components/FilterBar";
 import { ItemDetailPanel } from "./components/ItemDetailPanel";
+import { DucanetorTable } from "./components/DucanetorTable";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
 import { WishlistTable } from "./components/WishlistTable";
 import { ItemsTable } from "./components/ItemsTable";
@@ -19,7 +20,7 @@ import { RelicDetailPanel } from "./components/RelicDetailPanel";
 import { useDropInfo, useItemPrices, useRelics } from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
 import { buildItemRows } from "./lib/items";
-import type { RelicItemRow, Reward } from "./api/types";
+import type { Refinement, RelicItemRow, Reward } from "./api/types";
 import {
   applyPriceCeiling,
   buildRows,
@@ -46,7 +47,7 @@ export function App() {
    */
   const [panel, setPanel] = useState<"relic" | "item">("relic");
   const [pickedItem, setPickedItem] = useState<string | null>(null);
-  const [view, setView] = useState<"relics" | "items" | "wishlist">("relics");
+  const [view, setView] = useState<"relics" | "items" | "wishlist" | "ducats">("relics");
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
 
@@ -74,20 +75,19 @@ export function App() {
 
   // The row carries one item; the panel shows the whole relic, so the other
   // five rewards are looked up rather than re-fetched.
-  const rewardsByRelic = useMemo(() => {
-    const map = new Map<string, Reward[]>();
+  const statesByRelic = useMemo(() => {
+    const map = new Map<string, Partial<Record<Refinement, Reward[]>>>();
     for (const relic of relics.data ?? []) {
-      map.set(`${relic.fullName}|${relic.refinement}`, relic.rewards);
+      const entry = map.get(relic.fullName) ?? {};
+      entry[relic.refinement] = relic.rewards;
+      map.set(relic.fullName, entry);
     }
     return map;
   }, [relics.data]);
 
-  const selectedRewards = useMemo(
-    () =>
-      selectedRow
-        ? (rewardsByRelic.get(`${selectedRow.relicFullName}|${selectedRow.refinement}`) ?? [])
-        : [],
-    [rewardsByRelic, selectedRow],
+  const selectedStates = useMemo(
+    () => (selectedRow ? (statesByRelic.get(selectedRow.relicFullName) ?? {}) : {}),
+    [statesByRelic, selectedRow],
   );
 
   const selectedSites = useDropInfo(selectedRow?.relicFullName ?? null);
@@ -193,13 +193,14 @@ export function App() {
             { id: "relics", label: "Relics" },
             { id: "items", label: "Prime Items" },
             { id: "wishlist", label: `Wishlist · ${wishlist.totalItems}` },
+            { id: "ducats", label: "Ducanetor" },
           ]}
         />
 
       </header>
 
       {/* Search and filters act on the catalogue, not on the list. */}
-      {view !== "wishlist" && (
+      {view !== "wishlist" && view !== "ducats" && (
       <div
         style={{
           flex: "none",
@@ -236,7 +237,7 @@ export function App() {
       )}
 
       {/* Filters act on the catalogue; the wishlist is a list the user built. */}
-      {filtersOpen && view !== "wishlist" && (
+      {filtersOpen && view !== "wishlist" && view !== "ducats" && (
         <FilterBar filters={filters} onChange={setFilters} />
       )}
 
@@ -269,6 +270,8 @@ export function App() {
                 </Button>
               }
             />
+          ) : view === "ducats" ? (
+            <DucanetorTable prices={prices.data} onInfo={setInfoItem} />
           ) : view === "wishlist" ? (
             <WishlistTable entries={wishlist.entries} prices={prices.data} onInfo={setInfoItem} />
           ) : (view === "items" ? itemRows.length : visible.length) === 0 ? (
@@ -315,7 +318,7 @@ export function App() {
           )}
         </main>
 
-        {view === "wishlist" ? null : panel === "item" && itemPanelRow ? (
+        {view === "wishlist" || view === "ducats" ? null : panel === "item" && itemPanelRow ? (
           <ItemDetailPanel
             row={itemPanelRow}
             relics={relics.data ?? []}
@@ -325,7 +328,7 @@ export function App() {
         ) : (
           <RelicDetailPanel
             row={selectedRow}
-            rewards={selectedRewards}
+            states={selectedStates}
             prices={prices.data}
             sites={selectedSites.data ?? []}
             sitesPending={selectedSites.isPending}

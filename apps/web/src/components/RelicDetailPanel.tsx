@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Button,
   DetailPanel,
@@ -11,13 +12,20 @@ import {
 
 import { PlatPrice } from "./Plat";
 
-import type { DropInfo, PriceMap, RelicItemRow, Reward } from "../api/types";
+import type { DropInfo, PriceMap, Refinement, RelicItemRow, Reward } from "../api/types";
+import { ALL_REFINEMENTS, REFINEMENT_LABEL } from "../lib/rows";
 import { marketUrl, priceOf } from "../lib/format";
 
 interface Props {
   row: RelicItemRow | null;
-  /** Every reward of the relic in the row's refinement state. */
-  rewards: Reward[];
+  /**
+   * Rewards of the relic in every refinement state.
+   *
+   * All four are passed rather than one: the panel has its own slider, so a
+   * player can compare "what do I get if I refine this" without disturbing the
+   * filter that governs the table behind it.
+   */
+  states: Partial<Record<Refinement, Reward[]>>;
   prices: PriceMap | undefined;
   sites: DropInfo[];
   sitesPending: boolean;
@@ -33,23 +41,64 @@ const SITES_SHOWN = 4;
  * cracked a relic wants to know what else was in it — that question had no
  * answer anywhere in the interface until now.
  */
-export function RelicDetailPanel({ row, rewards, prices, sites, sitesPending }: Props) {
+export function RelicDetailPanel({ row, states, prices, sites, sitesPending }: Props) {
+  const [refinement, setRefinement] = useState<Refinement | null>(null);
+
   if (!row) return <DetailPanel empty />;
+
+  // Defaults to the row's own state and follows it when the user picks another
+  // row, but sticks once they have moved the slider for this relic.
+  const active = refinement ?? row.refinement;
+  const rewards = states[active] ?? [];
 
   return (
     <DetailPanel
       key={row.id}
-      badges={<TierChip tier={row.tier} refinement={row.refinement} />}
+      badges={<TierChip tier={row.tier} refinement={active} />}
       title={row.relicFullName}
-      meta={`${rewards.length} rewards · ${row.refinement}`}
+      meta={`${rewards.length} rewards`}
     >
       <Divider />
+
+      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
+        Refinement
+      </p>
+
+      <input
+        type="range"
+        min={0}
+        max={ALL_REFINEMENTS.length - 1}
+        step={1}
+        value={ALL_REFINEMENTS.indexOf(active)}
+        onChange={(event) =>
+          setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
+        }
+        aria-label="Refinement of this relic"
+        aria-valuetext={REFINEMENT_LABEL[active]}
+        style={{ width: "100%", accentColor: "var(--rf-gold-500)" }}
+      />
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        {ALL_REFINEMENTS.map((state) => (
+          <span
+            key={state}
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: state === active ? "var(--rf-fg-primary)" : "var(--rf-fg-muted)",
+            }}
+          >
+            {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
+          </span>
+        ))}
+      </div>
 
       <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
         Contents
       </p>
 
-      <DropList>
+      <DropList key={active}>
         {rewards.map((reward, index) => {
           const isSelected = reward.itemName === row.itemName;
 
