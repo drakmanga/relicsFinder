@@ -102,6 +102,7 @@ export function ItemsTable({
 
             const seed = {
               itemName: row.itemName,
+              kind: "part" as const,
               tier: firstTier ?? "lith",
               relicFullName: firstRelic ?? "",
               refinement: "intact" as const,

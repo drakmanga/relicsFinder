@@ -175,10 +175,27 @@ export interface MarketStatus {
 }
 
 /** One wishlist line as the server stores it. */
+/** What a wishlist line is for. Part of its identity, not a label. */
+export type WishlistKind = "part" | "ducat" | "endo";
+
 export interface WireWishlistEntry {
   itemName: string;
+  kind: WishlistKind;
   tier: string;
   relicFullName: string;
   refinement: string;
+  quantity: number;
+}
+
+/** One Ayatan sell order, with the Endo it yields. */
+export interface EndoOffer {
+  itemName: string;
+  slug: string;
+  platinum: number;
+  cyanStars: number;
+  amberStars: number;
+  endo: number;
+  ratio: number;
+  seller: string;
   quantity: number;
 }

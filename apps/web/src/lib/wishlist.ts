@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
-import type { PriceMap, Refinement, Tier, WireWishlistEntry } from "../api/types";
+import type { PriceMap, Refinement, Tier, WireWishlistEntry, WishlistKind } from "../api/types";
 
 /**
  * Local mirror of the list.
@@ -16,12 +16,21 @@ const SAVE_DELAY = 600;
 
 export interface WishlistEntry {
   itemName: string;
-  /** Where the user found it — context, not identity. */
+  /**
+   * What the line is for. Part of the identity: the same part wanted to finish
+   * a set and wanted to dissolve for ducats are two separate lines.
+   */
+  kind: WishlistKind;
+  /** Where the user found it — context, not identity. Empty outside "part". */
   tier: Tier;
   relicFullName: string;
   refinement: Refinement;
   qty: number;
 }
+
+/** Lines are identified by what they are for as well as by their name. */
+const idOf = (entry: { itemName: string; kind: WishlistKind }) =>
+  `${entry.kind}|${entry.itemName}`;
 
 type Listener = (entries: WishlistEntry[]) => void;
 
@@ -53,6 +62,11 @@ function loadLocal(): WishlistEntry[] {
         typeof (entry as WishlistEntry).itemName === "string" &&
         typeof (entry as WishlistEntry).qty === "number" &&
         (entry as WishlistEntry).qty > 0,
+    ).map((entry) => ({
+      // Lines written before kinds existed are all parts.
+      ...entry,
+      kind: (entry.kind as WishlistKind) ?? "part",
+    }),
     );
   } catch {
     return [];
@@ -61,6 +75,7 @@ function loadLocal(): WishlistEntry[] {
 
 const toWire = (entry: WishlistEntry): WireWishlistEntry => ({
   itemName: entry.itemName,
+  kind: entry.kind,
   tier: entry.tier,
   relicFullName: entry.relicFullName,
   refinement: entry.refinement,
@@ -69,6 +84,7 @@ const toWire = (entry: WishlistEntry): WireWishlistEntry => ({
 
 const fromWire = (entry: WireWishlistEntry): WishlistEntry => ({
   itemName: entry.itemName,
+  kind: entry.kind ?? "part",
   tier: (entry.tier as Tier) ?? "lith",
   relicFullName: entry.relicFullName ?? "",
   refinement: (entry.refinement as Refinement) ?? "intact",
@@ -121,7 +137,7 @@ export async function syncFromServer() {
 
 /** Adds `delta` to a line, creating or removing it as needed. */
 export function bump(seed: Omit<WishlistEntry, "qty">, delta: number) {
-  const index = entries.findIndex((entry) => entry.itemName === seed.itemName);
+  const index = entries.findIndex((entry) => idOf(entry) === idOf(seed));
 
   if (index === -1) {
     if (delta > 0) commit([...entries, { ...seed, qty: delta }]);
@@ -132,15 +148,15 @@ export function bump(seed: Omit<WishlistEntry, "qty">, delta: number) {
   const qty = existing.qty + delta;
 
   if (qty <= 0) {
-    commit(entries.filter((entry) => entry.itemName !== seed.itemName));
+    commit(entries.filter((entry) => idOf(entry) !== idOf(seed)));
     return;
   }
 
   commit(entries.map((entry, i) => (i === index ? { ...entry, qty } : entry)));
 }
 
-export function remove(itemName: string) {
-  commit(entries.filter((entry) => entry.itemName !== itemName));
+export function remove(itemName: string, kind: WishlistKind = "part") {
+  commit(entries.filter((entry) => idOf(entry) !== `${kind}|${itemName}`));
 }
 
 export function clear() {
@@ -168,7 +184,8 @@ export function useWishlist() {
   }, []);
 
   const quantityOf = useCallback(
-    (itemName: string) => snapshot.find((entry) => entry.itemName === itemName)?.qty ?? 0,
+    (itemName: string, kind: WishlistKind = "part") =>
+      snapshot.find((entry) => idOf(entry) === `${kind}|${itemName}`)?.qty ?? 0,
     [snapshot],
   );
 
