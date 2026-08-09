@@ -4,6 +4,7 @@ import type {
   Refinement,
   Relic,
   RelicRow,
+  Reward,
   Tier,
 } from "../api/types";
 
@@ -153,11 +154,93 @@ export function bestDropValue(row: RelicRow, prices: PriceMap | undefined): numb
   return best;
 }
 
-/** Ducats for the whole relic, if every drop were dissolved. */
-export function ducatTotal(row: RelicRow, prices: PriceMap | undefined): number {
+/**
+ * What one run of the relic pays on average, in platinum.
+ *
+ * The sum of each drop's price weighted by its chance. This is the number the
+ * decision to open a relic actually turns on, and it is close to unrelated to
+ * the most valuable drop: across the whole catalogue the top twenty by best
+ * drop and the top twenty by expected value share a single relic. A 60p rare at
+ * 2% contributes 1.2p; a 20p common at 25.33% contributes 5.
+ *
+ * Unpriced drops count as zero, which understates rather than invents.
+ */
+export function expectedValue(rewards: Reward[], prices: PriceMap | undefined): number {
   if (!prices) return 0;
-  return row.rewards.reduce((sum, reward) => sum + (prices.get(reward.itemName)?.ducats ?? 0), 0);
+
+  return rewards.reduce(
+    (sum, reward) => sum + (reward.chance / 100) * (prices.get(reward.itemName)?.averagePrice ?? 0),
+    0,
+  );
 }
+
+/**
+ * Expected value when `players` people crack the same relic together.
+ *
+ * Everyone opens their own copy, all four rewards are revealed, and the squad
+ * keeps one — so the payout is the best of `players` independent rolls, not the
+ * average of them. That is why radshare squads exist, and it is the single
+ * biggest lever on what a relic is worth: nothing else in this tool changes a
+ * number by a factor of three.
+ *
+ * P(best is reward i) = T(i)^n − T(i+1)^n, where T(i) is the chance of landing
+ * reward i or anything better once the rewards are sorted by value. Exact, and
+ * six terms long.
+ */
+export function squadValue(
+  rewards: Reward[],
+  prices: PriceMap | undefined,
+  players: number,
+): number {
+  if (!prices || players < 1) return 0;
+
+  const sorted = rewards
+    .map((reward) => ({
+      value: prices.get(reward.itemName)?.averagePrice ?? 0,
+      p: reward.chance / 100,
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  let total = 0;
+  let tailAbove = 1; // chance of landing this reward or a better one
+
+  for (const { value, p } of sorted) {
+    const tailBelow = Math.max(0, tailAbove - p);
+    total += value * (Math.pow(tailAbove, players) - Math.pow(tailBelow, players));
+    tailAbove = tailBelow;
+  }
+
+  return total;
+}
+
+/** Chance that at least one of `players` rolls lands the reward. */
+export const atLeastOnce = (chance: number, players: number) =>
+  (1 - Math.pow(1 - chance / 100, players)) * 100;
+
+/**
+ * Void traces to refine an Intact relic to each state.
+ *
+ * Fixed by the game. Combined with the expected values above, the difference
+ * between two states divided by its cost is platinum per trace — the only
+ * honest way to answer "is refining this one worth it", and sometimes the
+ * answer is no: a relic whose rare is cheap can be worth *less* Radiant,
+ * because refining takes chance away from the commons to give it to the rare.
+ */
+export const TRACE_COST: Record<Refinement, number> = {
+  intact: 0,
+  exceptional: 25,
+  flawless: 50,
+  radiant: 100,
+};
+
+/*
+ * There is deliberately no relic-level ducat total here.
+ *
+ * A relic is not a thing that dissolves — only the part that comes out of it
+ * is, and a run yields exactly one. Summing the ducats of all six drops named
+ * a quantity that does not exist, and it sorted relics by it. Ducats belong to
+ * the part: the Prime Items view and the drop rows inside the relic panel.
+ */
 
 /**
  * Applies the price ceiling to the number the table actually shows.
@@ -180,7 +263,7 @@ export function applyRelicPriceCeiling(
   });
 }
 
-export type RelicSortColumn = "relic" | "value" | "ducats";
+export type RelicSortColumn = "relic" | "expected" | "value";
 
 export function sortRelicRows(
   rows: RelicRow[],
@@ -197,7 +280,7 @@ export function sortRelicRows(
   }
 
   const valueOf = (row: RelicRow) =>
-    column === "value" ? bestDropValue(row, prices) : ducatTotal(row, prices);
+    column === "expected" ? expectedValue(row.rewards, prices) : bestDropValue(row, prices);
 
   return [...rows].sort((a, b) => {
     const av = valueOf(a);

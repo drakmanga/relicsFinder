@@ -2,7 +2,6 @@ import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Button,
-  DucatGlyph,
   ExternalLinkIcon,
   Skeleton,
   Table,
@@ -14,7 +13,7 @@ import {
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { relicMarketUrl } from "../lib/format";
-import { bestDropValue, ducatTotal } from "../lib/rows";
+import { bestDropValue, expectedValue } from "../lib/rows";
 import type { PriceMap, RelicRow } from "../api/types";
 import type { RelicSortColumn, SortDirection } from "../lib/rows";
 
@@ -91,27 +90,39 @@ export function ResultsTable({
               Relic
             </TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
+            {/*
+              Expected value first, because it is the number the decision turns
+              on. Best drop stays beside it — it answers a different question,
+              "what is the jackpot", and the two disagree almost always.
+            */}
+            <TableHeaderCell
+              align="right"
+              sortable
+              sortDirection={dir("expected")}
+              onSort={() => onSort("expected")}
+              title="Average payout of one run: every drop weighted by its chance"
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                Expected <PlatGlyph size={12} />
+              </span>
+            </TableHeaderCell>
             <TableHeaderCell
               align="right"
               sortable
               sortDirection={dir("value")}
               onSort={() => onSort("value")}
+              title="The most valuable single drop, however unlikely"
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 Best drop <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
-            <TableHeaderCell
-              align="right"
-              sortable
-              sortDirection={dir("ducats")}
-              onSort={() => onSort("ducats")}
-            >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                Ducats
-                <DucatGlyph style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }} />
-              </span>
-            </TableHeaderCell>
+            {/*
+              No ducat column here. Ducats are what a *part* dissolves into, and
+              a relic cannot be dissolved — so the sum of its six drops is a
+              number nobody can ever collect. It lives on Prime Items, where it
+              is a real trade, and per drop inside the relic panel.
+            */}
             <TableHeaderCell align="center">Market</TableHeaderCell>
           </tr>
         </thead>
@@ -128,7 +139,7 @@ export function ResultsTable({
             if (!row) return null;
 
             const best = bestDropValue(row, prices);
-            const ducats = ducatTotal(row, prices);
+            const expected = expectedValue(row.rewards, prices);
 
             return (
               <TableRow
@@ -161,15 +172,19 @@ export function ResultsTable({
                 <TableCell align="right" numeric>
                   {pricesPending && !prices ? (
                     <Skeleton width={44} height={14} />
+                  ) : expected === 0 ? (
+                    <span className="rf-fg-disabled">—</span>
                   ) : (
-                    <PlatPrice value={best} />
+                    <strong style={{ color: "var(--rf-gold-300)" }}>
+                      {expected.toFixed(1)}
+                    </strong>
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
-                  {ducats === 0 ? (
-                    <span className="rf-fg-disabled">—</span>
+                  {pricesPending && !prices ? (
+                    <Skeleton width={44} height={14} />
                   ) : (
-                    <span style={{ color: "var(--rf-currency-ducat)" }}>{ducats}</span>
+                    <PlatPrice value={best} />
                   )}
                 </TableCell>
                 <TableCell align="center">
@@ -195,7 +210,7 @@ export function ResultsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={6} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={7} style={{ height: paddingBottom, padding: 0, border: 0 }} />
             </tr>
           )}
         </tbody>
