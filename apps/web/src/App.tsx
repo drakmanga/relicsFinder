@@ -448,8 +448,14 @@ export function App() {
           background: "var(--rf-border-default)",
         }}
       >
+        {/*
+          Surface-1, the same ground the detail panel stands on. On surface-0
+          the area below the last row read as a hole punched in the layout
+          rather than as an empty table — obvious the moment a search returns
+          one result and the panel beside it is eight hundred pixels tall.
+        */}
         <main
-          style={{ flex: 1, minWidth: 0, background: "var(--rf-surface-0)", overflow: "hidden" }}
+          style={{ flex: 1, minWidth: 0, background: "var(--rf-surface-1)", overflow: "hidden" }}
         >
           {/* Ayatan offers come straight from the market: nothing here waits on
               the relic catalogue, so it must not wait on its loading state. */}
