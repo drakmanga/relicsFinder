@@ -57,7 +57,8 @@ Se giochi a Warframe, sai quanto può essere frustrante:
 
 Il catalogo delle reliquie si aggiorna da solo all'avvio e ogni giorno alle 04:20.
 Per farlo partire in locale vedi **[COME-AVVIARE.md](COME-AVVIARE.md)**; per cosa
-resta da fare, **[BACKLOG.md](BACKLOG.md)**.
+resta da fare, la [roadmap](#-roadmap) qui sotto e le
+[issue aperte](https://github.com/drakmanga/relicsFinder/issues).
 
 ## 📋 Prerequisiti
 

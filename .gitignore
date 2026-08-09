@@ -38,9 +38,23 @@ ds-bundle/
 /nbdist/
 /.nb-gradle/
 
-### Claude Code — impostazioni personali, non del progetto ###
-.claude/settings.local.json
+### Strumenti di lavoro personali, non del progetto ###
+# Configurazione di editor e assistenti, lockfile delle loro estensioni. Chi
+# clona il repo usa i propri, e un symlink verso una cartella che esiste solo
+# su questa macchina gli arriva rotto.
+.claude/
+.agents/
+skills-lock.json
 
-### Claude Code — stato runtime
-.claude/scheduled_tasks.lock
+### Materiale di lavoro sul design ###
+# Sorgente importato, screenshot di riferimento, stato del sync e note di
+# lavorazione. La specifica vera è design-system/, che resta versionata.
+.design-sync/
+design-imports/
+/wl3.png
+
+### Pianificazione interna ###
+BACKLOG.md
+
+### Stato runtime ###
 data/

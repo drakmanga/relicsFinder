@@ -98,7 +98,8 @@ non richiedono niente.
 
 ## Stato attuale
 
-Cinque viste: **Relics** (una riga per reliquia, con stato vault, miglior drop e
-ducati), **Prime Items**, **Wishlist** (divisa per tipo: pezzi, ducati, Ayatan),
+Cinque viste: **Relics** (una riga per reliquia, con stato vault, valore atteso e
+miglior drop), **Prime Items**, **Wishlist** (divisa per tipo: pezzi, ducati, Ayatan),
 **Ducanetor** (ducati per platino) ed **Endo** (Ayatan per endo/platino).
-Ricerca, filtri e wishlist lato server ci sono. Vedi `BACKLOG.md` per cosa resta.
+Ricerca, filtri e wishlist lato server ci sono. Per cosa resta, la roadmap nel
+README e le issue aperte.
