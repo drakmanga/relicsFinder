@@ -206,8 +206,8 @@ function Group({
 /**
  * Filter toggle.
  *
- * The design system has no toggle component — in the Claude Design template
- * this was hand-written CSS too. It stays local until a second screen needs it,
+ * The design system has no toggle component — in the design template this was
+ * hand-written CSS too. It stays local until a second screen needs it,
  * rather than being promoted to the library on a sample size of one.
  */
 function Toggle({
