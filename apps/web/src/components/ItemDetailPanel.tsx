@@ -39,9 +39,6 @@ interface Props {
   onClose: () => void;
 }
 
-/** Relics listed before the list collapses into a count. */
-const SOURCES_SHOWN = 6;
-
 /**
  * The item behind the clicked cell: where it comes from, and what set it
  * completes.
@@ -79,8 +76,13 @@ export function ItemDetailPanel({
   // chances — and the chances shown are the ones for the state selected below.
   const atRefinement = sources.filter((source) => source.refinement === refinement);
   const listed = atRefinement.length > 0 ? atRefinement : sources;
-  const shown = listed.slice(0, SOURCES_SHOWN);
-  const totalSources = listed.length;
+  /*
+    Every relic, not the first six. The list was capped and closed with "and 3
+    more relics" — which names the count of the thing the reader came here to
+    read, and hides the ones that might be unvaulted or cheaper. The panel
+    scrolls; a list of nine costs nothing that a list of six does not.
+  */
+  const shown = listed;
 
   /**
    * The refinement that gives this part its best odds.
@@ -286,12 +288,6 @@ export function ItemDetailPanel({
             </button>
           ))}
         </div>
-      )}
-
-      {totalSources > SOURCES_SHOWN && (
-        <p className="rf-text-caption rf-fg-muted" style={{ marginTop: 8 }}>
-          and {totalSources - SOURCES_SHOWN} more relics
-        </p>
       )}
 
       {setName && siblings.length > 0 && (

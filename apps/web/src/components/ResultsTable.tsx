@@ -100,18 +100,24 @@ export function ResultsTable({
         <thead>
           <tr>
             {/*
-              Fixed widths on everything except the relic name. Left to size
-              themselves the numeric columns took only what their contents
-              needed and handed the slack to Status, which sat alone in the
-              middle of the table with a hand's width of empty on either side.
-              The name is the one column whose content varies, so it is the one
-              that absorbs the remainder.
+              Proportional widths, so the slack is shared instead of pooling.
+              Sized to their contents the numeric columns took only what they
+              needed and left the remainder to whichever column came before
+              them — first Status, then the relic name — which put a hand's
+              width of empty in the middle of every row. Percentages spread the
+              same space across all seven, and the table stays even at any
+              window size.
             */}
-            <TableHeaderCell style={{ width: 76 }}>Tier</TableHeaderCell>
-            <TableHeaderCell sortable sortDirection={dir("relic")} onSort={() => onSort("relic")}>
+            <TableHeaderCell style={{ width: "8%" }}>Tier</TableHeaderCell>
+            <TableHeaderCell
+              style={{ width: "28%" }}
+              sortable
+              sortDirection={dir("relic")}
+              onSort={() => onSort("relic")}
+            >
               Relic
             </TableHeaderCell>
-            <TableHeaderCell style={{ width: 96 }}>Status</TableHeaderCell>
+            <TableHeaderCell style={{ width: "13%" }}>Status</TableHeaderCell>
             {/*
               Expected value first, because it is the number the decision turns
               on. Best drop stays beside it — it answers a different question,
@@ -124,7 +130,7 @@ export function ResultsTable({
             */}
             <TableHeaderCell
               align="right"
-              style={{ width: 112 }}
+              style={{ width: "14%" }}
               sortable
               sortDirection={dir("expected")}
               onSort={() => onSort("expected")}
@@ -136,7 +142,7 @@ export function ResultsTable({
             </TableHeaderCell>
             <TableHeaderCell
               align="right"
-              style={{ width: 118 }}
+              style={{ width: "14%" }}
               sortable
               sortDirection={dir("value")}
               onSort={() => onSort("value")}
@@ -153,7 +159,7 @@ export function ResultsTable({
             */}
             <TableHeaderCell
               align="right"
-              style={{ width: 104 }}
+              style={{ width: "13%" }}
               sortable
               sortDirection={dir("cost")}
               onSort={() => onSort("cost")}
@@ -169,7 +175,7 @@ export function ResultsTable({
               number nobody can ever collect. It lives on Prime Items, where it
               is a real trade, and per drop inside the relic panel.
             */}
-            <TableHeaderCell align="center" style={{ width: 88 }}>
+            <TableHeaderCell align="center" style={{ width: "10%" }}>
               Market
             </TableHeaderCell>
           </tr>
@@ -218,7 +224,7 @@ export function ResultsTable({
                       style={{ marginLeft: 8 }}
                       title={matched}
                     >
-                      holds {matched}
+                      · {matched}
                     </span>
                   )}
                 </TableCell>
