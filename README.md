@@ -1,275 +1,289 @@
 # 🔍 Warframe Relic Finder
 
-> *La ricerca delle reliquie Prime non è mai stata così semplice, Tenno!*
+> *Finding Prime parts has never been this simple, Tenno.*
 
-Un tool completo per trovare reliquie, parti Prime e prezzi di mercato in Warframe. Dimentica le ricerche infinite sul wiki: trova tutto ciò di cui hai bisogno in un unico posto.
+A complete tool for relics, Prime parts and market prices in Warframe. Forget endless wiki
+searches: everything you need in one place.
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
 ![Warframe](https://img.shields.io/badge/Warframe-0080FF?style=flat&logo=warframe&logoColor=white)
 
-## ✨ Caratteristiche
+## ✨ Features
 
-### 🎯 Cosa puoi fare ora
+### 🎯 What it does today
 
-Sei viste, ognuna con una domanda:
+Six views, each answering one question:
 
-- **Relics** — *quale reliquia apro?* Una riga per reliquia, con **valore atteso**
-  (ogni drop pesato per la sua probabilità), miglior drop, ducati totali e se è
-  ancora farmabile o in vault.
-- **Prime Items** — *dove trovo questo pezzo?* Una riga per parte, con set,
-  reliquie che la droppano, prezzo e ducati.
-- **Wishlist** — salvata sul server, divisa per scopo: pezzi da collezionare,
-  pezzi da sciogliere per ducati, sculture Ayatan.
-- **Ducanetor** — *cosa compro per Baro?* Parti in classifica per **ducati per
-  platino** speso.
-- **Sets** — *mi serve Volt Prime: cosa manca?* Un set per riga, con quanti pezzi
-  hai già, quanto costa comprare quelli che mancano, e per ognuno se conviene
-  **comprarlo o farmarlo**.
-- **Endo** — *quale Ayatan compro?* Offerte in classifica per **endo per
-  platino**, calcolate sulle stelle montate in quella specifica scultura.
+- **Relics** — *which relic should I open?* One row per relic, with **expected value**
+  (every drop weighted by its chance), the best drop, what the relic itself sells for, and
+  whether it is still farmable or vaulted.
+- **Prime Items** — *where do I get this piece?* One row per part, with its set, the relics
+  that drop it, its price and its ducat value.
+- **Sets** — *I want Volt Prime, what is left?* One row per set, with how many pieces you
+  already have, what the missing ones cost, and for each of them whether it is cheaper to
+  **buy it or farm it**.
+- **Wishlist** — stored on the server, split by what each line is for: pieces you are
+  collecting, pieces to dissolve for ducats, Ayatan sculptures.
+- **Ducanetor** — *what do I buy for Baro?* Parts ranked by **ducats per platinum** spent.
+- **Endo** — *which Ayatan should I buy?* Offers ranked by **Endo per platinum**, computed
+  from the stars actually socketed in that specific sculpture.
 
-Più: grafico prezzi a 90 giorni, probabilità e valore atteso per **squadra da 1
-a 4** (radshare), resa del raffinamento in **platino per traccia del vuoto**,
-filtri per tier / rarità / raffinazione / vault / prezzo massimo, e stato
-completo nella URL — una schermata si condivide con un link.
+Plus: ninety-day price charts, drop chances and expected value for a **squad of 1 to 4**
+(radshare), refinement return measured in **platinum per void trace**, filters by tier /
+rarity / refinement / vault state / maximum price, and the whole view in the URL — a screen
+is shared with a link.
 
-### 🚀 Coming Soon
+### 🚀 Coming soon
 
-- **🧾 Inventory tracking** - Verifica se possiedi già una reliquia o parte
-- **🔔 Notifications** - Alert quando il prezzo scende sotto una soglia
+- **🧾 Inventory tracking** — know whether you already own a relic
+- **🔔 Notifications** — alert when a price drops below a threshold
 
-## 🎮 Perché usarlo?
+## 🎮 Why use it?
 
-Se giochi a Warframe, sai quanto può essere frustrante:
-- Cercare quale reliquia contiene quella parte specifica
-- Controllare i prezzi su siti diversi
-- Ricordarsi dove farmare ogni reliquia
-- Capire se conviene comprare o farmare
+If you play Warframe you know the routine:
 
-**Relic Finder risolve tutti questi problemi in un'unica interfaccia.**
+- hunting for which relic holds one specific part
+- checking prices across several sites
+- remembering where each relic drops
+- working out whether to buy or to farm
 
-## 🛠️ Stack Tecnologico
+**Relic Finder answers all four in one interface.**
+
+## 🛠️ Stack
 
 - **Backend**: Spring Boot (Java 24)
 - **Frontend**: React + TypeScript + Vite (`apps/web`)
-- **Design system**: libreria React propria, tema Orokin (`packages/ui`, spec in `design-system/`)
-- **Dati**: warframe.market (prezzi e ordini), drops.warframestat.us (drop table), WFCD (ducati)
+- **Design system**: an in-house React library, Orokin theme (`packages/ui`, spec in
+  `design-system/`)
+- **Data**: warframe.market (prices and orders), drops.warframestat.us (drop tables), WFCD
+  (ducat values)
 - **Build**: Maven + npm workspaces
 
-Il catalogo delle reliquie si aggiorna da solo all'avvio e ogni giorno alle 04:20.
-Per farlo partire in locale vedi **[COME-AVVIARE.md](COME-AVVIARE.md)**; per cosa
-resta da fare, la [roadmap](#-roadmap) qui sotto e le
-[issue aperte](https://github.com/drakmanga/relicsFinder/issues).
+The relic catalogue refreshes itself on startup and daily at 04:20. To run it locally see
+**[COME-AVVIARE.md](COME-AVVIARE.md)**; for what is left to do, the [roadmap](#-roadmap)
+below and the [open issues](https://github.com/drakmanga/relicsFinder/issues).
 
-## 📋 Prerequisiti
+## 📋 Requirements
 
-- Java 24 o superiore
-- Node 20+ e npm (per il frontend)
-- Maven 3.8+ (o usa il wrapper incluso)
-- Connessione internet per le API di Warframe Market
+- Java 24 or later
+- Node 20+ and npm (for the frontend)
+- Maven 3.8+ (or the bundled wrapper)
+- An internet connection, for the Warframe Market API
 
-## 🚀 Installazione e Avvio
+## 🚀 Install and run
 
-### Metodo 1: Run diretto con Maven
+### Option 1: straight from Maven
 
 ```bash
-# Clona la repository
+# Clone the repository
 git clone https://github.com/drakmanga/relicsFinder.git
 cd relicsFinder
 
 chmod +x mvnw
 
-# Avvia l'applicazione
+# Start the backend
 ./mvnw spring-boot:run
 ```
 
-### Metodo 2: Build JAR ed esecuzione
+### Option 2: build a JAR and run it
 
 ```bash
-# Build del progetto
+# Build
 ./mvnw clean package
 
-# Oppure salta i test per build più veloce
+# Or skip the tests for a faster build
 ./mvnw clean package -DskipTests
 
-# Trova il JAR generato
+# Find the JAR
 ls target/
 # Output: relicsFinder-0.0.1-SNAPSHOT.jar
 
-# Esegui l'applicazione
+# Run it
 java -jar target/relicsFinder-0.0.1-SNAPSHOT.jar
 ```
 
-### Metodo 3: Con configurazione personalizzata
+### Option 3: with your own configuration
 
 ```bash
-# Con file di configurazione esterno
 java -jar target/relicsFinder.jar --spring.config.location=file:/path/to/application.properties
 ```
 
-✅ L'applicazione sarà disponibile su `http://localhost:8080`
+✅ The API is served on `http://localhost:8080`. The frontend is a second process — see
+**[COME-AVVIARE.md](COME-AVVIARE.md)**.
 
-## 🎯 Come si usa?
+## 🎯 How to use it
 
-### 1. Ricerca per oggetto Prime
-```
-Cerca: "Volt Prime"
-Risultato: Tutte le parti necessarie e le reliquie che le contengono
-```
-
-### 2. Ricerca per reliquia
-```
-Cerca: "Lith V9"
-Risultato: Tutte le parti contenute nella reliquia con rarità e prezzi
-```
-
-### 3. Controlla prezzi
-Ogni risultato mostra:
-- Prezzo medio attuale
-- Link diretto al Warframe Market
-- Trend del prezzo (se disponibile)
-
-## 🧪 Test con Postman
-
-Vuoi testare le API direttamente? Abbiamo incluso una collection Postman!
-
-**Passi:**
-1. Apri Postman
-2. Clicca su **Import**
-3. Seleziona `src/main/resources/warframeRelic.postman_collection.json`
-4. Testa tutti gli endpoint disponibili
-
-### Endpoint principali
+### 1. Search by Prime part
 
 ```
-GET  /api/relics                          tutte le reliquie, 4 stati ciascuna
-GET  /api/relics/relic/{Lith V9}          una reliquia (nome completo, tier incluso)
-GET  /api/relics/drop-info/{Lith V9}      missioni che la droppano
-GET  /api/relics/unvaulted                cosa è in rotazione adesso
-POST /api/relics/update                   riscarica il catalogo dalle drop table
-GET  /api/market/item/{Volt Prime Chassis}   prezzo di un pezzo
-POST /api/market/items                    prezzi in blocco (array di nomi nel body)
-GET  /api/market/status                   quanto della cache prezzi è pronta
-GET  /api/endo/offers                     Ayatan in classifica per endo/platino
-GET  /api/wishlist                        la wishlist salvata
-PUT  /api/wishlist                        la sostituisce
-GET  /api/owned                           i pezzi che possiedi già
-PUT  /api/owned                           li sostituisce
-POST /api/market/relics                   prezzi delle reliquie in blocco
+Search: "Volt Prime"
+Result: every relic holding one of its pieces, and which piece it holds
 ```
 
-Gli endpoint indirizzati per nome vogliono il **nome completo**: `/api/relics/relic/Lith%20V9`
-risponde 200, `/api/relics/relic/V9` risponde 404.
+### 2. Search by relic
 
-## 📁 Struttura del Progetto
+```
+Search: "Lith V9"
+Result: all six drops, with rarity, chance, price and ducat value
+```
+
+### 3. Decide
+
+Every row prices both routes: what a piece sells for, and what farming it would take —
+the relic with the best odds, the runs that needs on average, and what those runs cost
+once everything else the relic drops is subtracted.
+
+## 🧪 Testing with Postman
+
+A Postman collection is included.
+
+1. Open Postman
+2. Click **Import**
+3. Pick `src/main/resources/warframeRelic.postman_collection.json`
+4. Try every endpoint
+
+### Main endpoints
+
+```
+GET  /api/relics                             every relic, four states each
+GET  /api/relics/relic/{Lith V9}             one relic (full name, tier included)
+GET  /api/relics/drop-info/{Lith V9}         missions that drop it
+GET  /api/relics/unvaulted                   what is in rotation right now
+POST /api/relics/update                      re-read the catalogue from the drop tables
+GET  /api/market/item/{Volt Prime Chassis}   price of one part
+POST /api/market/items                       prices in bulk (array of names in the body)
+POST /api/market/relics                      prices of whole relics, in bulk
+GET  /api/market/status                      how much of the price cache is warm
+GET  /api/endo/offers                        Ayatan ranked by Endo per platinum
+GET  /api/wishlist                           the stored wishlist
+PUT  /api/wishlist                           replaces it
+GET  /api/owned                              the parts you already have
+PUT  /api/owned                              replaces them
+```
+
+Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
+200, `/api/relics/relic/V9` answers 404.
+
+## 📁 Project layout
 
 ```
 relicsFinder/
 ├── src/
 │   ├── main/
-│   │   ├── java/              # Backend Spring Boot
-│   │   ├── resources/         # Config e Postman collection
-│   │   └── webapp/            # File statici
-│   └── test/                  # Unit e integration tests
-├── apps/web/                  # Interfaccia utente (React + Vite)
-├── packages/ui/               # Design system Orokin (libreria React)
-├── design-system/             # Specifica del design
-├── pom.xml                    # Dipendenze Maven
-└── README.md                  # Questo file!
+│   │   ├── java/              # Spring Boot backend
+│   │   ├── resources/         # config and Postman collection
+│   │   └── webapp/            # static files
+│   └── test/                  # unit and integration tests
+├── apps/web/                  # the interface (React + Vite)
+├── packages/ui/               # Orokin design system (React library)
+├── design-system/             # the design specification
+├── data/                      # wishlist and owned parts, written at runtime
+├── pom.xml                    # Maven dependencies
+└── README.md                  # this file
 ```
 
-## 💡 Esempi di Utilizzo
+## 💡 Worked examples
 
-### Scenario 1: Vuoi craftare Volt Prime
-1. Cerca "Volt Prime"
-2. Vedi che ti servono: Systems, Chassis, Neuroptics, Blueprint
-3. Per ogni parte vedi quale reliquia contiene
-4. Controlla il prezzo se preferisci comprarla
-5. Segui i link per le farm locations
+### You want to build Volt Prime
 
-### Scenario 2: Hai una Meso V5 Radiant
-1. Cerca "Meso V5"
-2. Vedi tutte le 6 ricompense possibili
-3. Controlli i prezzi per decidere quale parte sperare
-4. La parte Rare vale 100p? Vale la pena runnare!
+1. Open **Sets** and search "Volt Prime"
+2. Tick the pieces you already have
+3. The panel lists what is left, and for each piece whether to buy or farm it
+4. Follow a relic through to see where it drops
 
-## 🔧 Configurazione
+### You have a Radiant Meso V5
 
-### Database (Opzionale)
-Per funzionalità future come inventory tracking:
+1. Search "Meso V5" in **Relics**
+2. Read all six rewards, with the chance each carries at Radiant
+3. **What it pays** gives the payout for a squad of 1 to 4 — a radshare is a best-of-four,
+   not an average
+4. **Refining** says whether spending the traces was worth it at all
+
+## 🔧 Configuration
+
+### Storage
+
+The wishlist and the list of owned parts are plain JSON files under `data/`. No database
+and no accounts: the service is self-hosted and single-tenant, so whoever runs it owns the
+only list.
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/warframe_db
-spring.datasource.username=your_username
-spring.datasource.password=your_password
+relics.wishlist.path=data/wishlist.json
+relics.owned.path=data/owned.json
+relics.catalogue.path=src/main/resources/relics.json
 ```
 
-### API Keys
-Attualmente usa API pubbliche, ma per rate limits migliori:
+### API keys
+
+Public endpoints are used throughout, but a key raises the rate limits:
 
 ```properties
 warframe.market.api.key=your_api_key
 ```
 
-## 🤝 Contribuire
+## 🤝 Contributing
 
-Questo progetto è open source e i contributi sono benvenuti!
+The project is open source and contributions are welcome.
 
-### Come contribuire
-1. Fork della repository
-2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit delle modifiche (`git commit -m 'Add some AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Apri una Pull Request
+### How
 
-### Idee per contributi
-- Aggiungere supporto per altre lingue
-- Migliorare l'interfaccia utente
-- Implementare il sistema di inventory
-- Migliorare le stime di farm: tempo per run, non solo numero di run
-- Ottimizzare le performance
+1. Fork the repository
+2. Branch for your feature (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 🐛 Bug e Feature Request
+### Ideas
 
-Hai trovato un bug? Hai un'idea per una nuova feature?
-[Apri una issue](https://github.com/drakmanga/relicsFinder/issues) e parliamone!
+- Translations of the interface
+- Inventory tracking
+- Better farm estimates: time per run, not only the number of runs
+- Performance work
+
+## 🐛 Bugs and feature requests
+
+Found a bug, or have an idea?
+[Open an issue](https://github.com/drakmanga/relicsFinder/issues) and let's talk about it.
 
 ## 📊 Roadmap
 
-- [x] Ricerca base per reliquie e parti Prime
-- [x] Integrazione prezzi Warframe Market
+- [x] Search by relic and by Prime part
+- [x] Warframe Market prices
 - [x] Farm locations
-- [x] Grafici storici dei prezzi (90 giorni)
-- [x] Wishlist (lato server, senza account)
-- [x] Interfaccia dark (design system Orokin)
-- [x] Valore atteso, radshare e resa del raffinamento
-- [x] Ducati per platino (Ducanetor) ed Endo per platino (Ayatan)
-- [x] Set completion: cosa manca di un set, e se conviene comprare o farmare
-- [ ] Sistema inventory personale
-- [ ] Notifiche prezzi
-- [ ] App mobile companion
+- [x] Ninety-day price history
+- [x] Wishlist (server-side, no account)
+- [x] Dark interface (Orokin design system)
+- [x] Expected value, radshare and refinement return
+- [x] Ducats per platinum (Ducanetor) and Endo per platinum (Ayatan)
+- [x] Set completion: what a set is missing, and whether to buy or farm it
+- [ ] Personal inventory
+- [ ] Price alerts
+- [ ] Mobile companion app
 
-## 🎖️ Crediti
+## 🎖️ Credits
 
-- Dati forniti da [Warframe Market API](https://warframe.market/)
-- Informazioni di gioco da [Warframe](https://www.warframe.com/)
-- Creato dalla community Tenno, per la community Tenno
+- Data from the [Warframe Market API](https://warframe.market/)
+- Game information from [Warframe](https://www.warframe.com/)
+- Built by the Tenno community, for the Tenno community
 
-## 📄 Licenza
+## 📄 License
 
-Distribuito sotto licenza MIT. Vedi `LICENSE` per maggiori informazioni.
+MIT. See `LICENSE` for details.
 
-## 🙏 Ringraziamenti
+## 🙏 Thanks
 
-- Digital Extremes per Warframe
-- La community di Warframe Market
-- Tutti i Tenno che contribuiscono ai dati di farm
+- Digital Extremes, for Warframe
+- The Warframe Market community
+- Every Tenno who contributes drop data
 
 ---
 
-**Sviluppato con ❤️ da [drakmanga](https://github.com/drakmanga) e [Outbox](https://github.com/Sblash)**
+**Built with ❤️ by [drakmanga](https://github.com/drakmanga) and
+[Outbox](https://github.com/Sblash)**
 
-*"Dream... not of what you are... but of what you want to be."* - Warframe
+*"Dream... not of what you are... but of what you want to be."* — Warframe
 
-🔴 **Note**: Questo progetto non è affiliato con Digital Extremes o Warframe Market. Tutti i marchi e proprietà intellettuali appartengono ai rispettivi proprietari.
+🔴 **Note**: this project is not affiliated with Digital Extremes or Warframe Market. All
+trademarks and intellectual property belong to their respective owners.
