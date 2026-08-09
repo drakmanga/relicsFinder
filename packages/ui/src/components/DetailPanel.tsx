@@ -5,6 +5,13 @@ import { VoidSigil } from "./icons";
 export interface DetailPanelProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   /** Chips shown above the title — tier, refinement, counters. */
   badges?: ReactNode;
+  /**
+   * Controls sitting opposite the badges: closing the panel, stepping back.
+   *
+   * On the badge row rather than below the title, so they stay in the same
+   * place whatever the panel is showing and never push the content down.
+   */
+  actions?: ReactNode;
   /** Relic name. Rendered in Cinzel at display-md. */
   title?: ReactNode;
   /** Drop location, rotation, per-run chance. */
@@ -31,6 +38,7 @@ export interface DetailPanelProps extends Omit<HTMLAttributes<HTMLElement>, "tit
  */
 export function DetailPanel({
   badges,
+  actions,
   title,
   meta,
   empty = false,
@@ -53,7 +61,22 @@ export function DetailPanel({
             </div>
           ) : (
             <>
-              {badges && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{badges}</div>}
+              {(badges || actions) && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    minHeight: 24,
+                  }}
+                >
+                  {badges}
+                  {actions && (
+                    <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>{actions}</span>
+                  )}
+                </div>
+              )}
               {title && <p className="rf-text-display-md rf-detail-title">{title}</p>}
               {meta && <p className="rf-detail-meta">{meta}</p>}
               {children}

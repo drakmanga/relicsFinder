@@ -99,11 +99,19 @@ export function ResultsTable({
       <Table interactive framed={false}>
         <thead>
           <tr>
-            <TableHeaderCell>Tier</TableHeaderCell>
+            {/*
+              Fixed widths on everything except the relic name. Left to size
+              themselves the numeric columns took only what their contents
+              needed and handed the slack to Status, which sat alone in the
+              middle of the table with a hand's width of empty on either side.
+              The name is the one column whose content varies, so it is the one
+              that absorbs the remainder.
+            */}
+            <TableHeaderCell style={{ width: 76 }}>Tier</TableHeaderCell>
             <TableHeaderCell sortable sortDirection={dir("relic")} onSort={() => onSort("relic")}>
               Relic
             </TableHeaderCell>
-            <TableHeaderCell>Status</TableHeaderCell>
+            <TableHeaderCell style={{ width: 96 }}>Status</TableHeaderCell>
             {/*
               Expected value first, because it is the number the decision turns
               on. Best drop stays beside it — it answers a different question,
@@ -116,6 +124,7 @@ export function ResultsTable({
             */}
             <TableHeaderCell
               align="right"
+              style={{ width: 112 }}
               sortable
               sortDirection={dir("expected")}
               onSort={() => onSort("expected")}
@@ -127,6 +136,7 @@ export function ResultsTable({
             </TableHeaderCell>
             <TableHeaderCell
               align="right"
+              style={{ width: 118 }}
               sortable
               sortDirection={dir("value")}
               onSort={() => onSort("value")}
@@ -143,6 +153,7 @@ export function ResultsTable({
             */}
             <TableHeaderCell
               align="right"
+              style={{ width: 104 }}
               sortable
               sortDirection={dir("cost")}
               onSort={() => onSort("cost")}
@@ -158,7 +169,9 @@ export function ResultsTable({
               number nobody can ever collect. It lives on Prime Items, where it
               is a real trade, and per drop inside the relic panel.
             */}
-            <TableHeaderCell align="center">Market</TableHeaderCell>
+            <TableHeaderCell align="center" style={{ width: 88 }}>
+              Market
+            </TableHeaderCell>
           </tr>
         </thead>
 

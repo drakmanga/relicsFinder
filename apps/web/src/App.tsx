@@ -73,6 +73,20 @@ export function App() {
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
 
+  /**
+   * Where the panel came from, one step per jump.
+   *
+   * Following a relic into one of its parts, then into a part of that part's
+   * set, then into a relic that drops it, is a chain someone walks while
+   * deciding what to farm — and the way back matters as much as the way in.
+   * The browser's own Back cannot serve: the whole view is written with
+   * replaceState so that typing in the search box does not bury the history
+   * under one entry per keystroke.
+   */
+  const [trail, setTrail] = useState<
+    { view: View; selected: string | null; pickedItem: string | null }[]
+  >([]);
+
 
   /**
    * Writes the state back into the address bar.
@@ -110,6 +124,7 @@ export function App() {
    * to be visible in the table first and the user's search survives the jump.
    */
   const openItem = (itemName: string) => {
+    setTrail((steps) => [...steps, { view, selected, pickedItem }]);
     setPickedItem(itemName);
     setView("items");
   };
@@ -122,8 +137,33 @@ export function App() {
    * it is that list the selection points into.
    */
   const openRelic = (relicFullName: string) => {
+    setTrail((steps) => [...steps, { view, selected, pickedItem }]);
     setSelected(`${relicFullName}|${filters.refinement}`);
     setView("relics");
+  };
+
+  /** One step back along the trail, never further. */
+  const goBack = () => {
+    const previous = trail[trail.length - 1];
+    if (!previous) return;
+
+    setTrail(trail.slice(0, -1));
+    setView(previous.view);
+    setSelected(previous.selected);
+    setPickedItem(previous.pickedItem);
+  };
+
+  /**
+   * Closes the panel and forgets how it was reached.
+   *
+   * The trail describes a walk through the panel; with the panel shut there is
+   * nothing to walk back to, and a Back button that reopened it would be a
+   * second, quieter way of undoing the close.
+   */
+  const closePanel = () => {
+    setTrail([]);
+    setSelected(null);
+    setPickedItem(null);
   };
 
   const relics = useRelics();
@@ -512,14 +552,18 @@ export function App() {
               row={itemPanelRow}
               relics={relics.data ?? []}
               prices={prices.data}
-              onPickItem={setPickedItem}
+              onPickItem={openItem}
               onPickRelic={openRelic}
+              onBack={trail.length > 0 ? goBack : undefined}
+              onClose={closePanel}
             />
           )
         ) : (
           <RelicDetailPanel
             row={selectedRow}
             onPickItem={openItem}
+            onBack={trail.length > 0 ? goBack : undefined}
+            onClose={closePanel}
             highlightItem={searchedItem}
             states={selectedStates}
             prices={prices.data}

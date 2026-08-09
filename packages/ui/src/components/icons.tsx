@@ -100,6 +100,19 @@ export const DucatGlyph = glyph(
   "DucatGlyph",
 );
 
+/**
+ * Marks the best option in a list — the refinement worth picking.
+ *
+ * A four-pointed Orokin star rather than a tick: the tick is the design
+ * system's confirmation mark and would read as "chosen" on a row nobody has
+ * chosen yet. This says "best", which is a claim about the value, not the
+ * state.
+ */
+export const OrokinStar = glyph(
+  <path d="M12 2 13.9 9.3 21 12 13.9 14.7 12 22 10.1 14.7 3 12 10.1 9.3Z" />,
+  "OrokinStar",
+);
+
 export const VoidSigil = glyph(
   <path d="M8.2 2h7.6L22 8.2v7.6L15.8 22H8.2L2 15.8V8.2L8.2 2Zm.9 2.2L4.2 9.1v5.8l4.9 4.9h5.8l4.9-4.9V9.1l-4.9-4.9H9.1Zm2.9 3.3 4.4 4.5-4.4 4.5-4.4-4.5 4.4-4.5Z" />,
   "VoidSigil",
@@ -201,6 +214,11 @@ export const ArrowUpDownIcon = strokeIcon(
     <path d="m17 20 0-16M17 20l3-3M17 20l-3-3" />
   </>,
   "ArrowUpDownIcon",
+);
+
+export const ArrowLeftIcon = strokeIcon(
+  <path d="M20 12H4M4 12l5-5M4 12l5 5" />,
+  "ArrowLeftIcon",
 );
 
 export const ArrowUpIcon = strokeIcon(<path d="M12 20V4M12 4l-5 5M12 4l5 5" />, "ArrowUpIcon");

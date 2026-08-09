@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import {
+  ArrowLeftIcon,
   Button,
   DetailPanel,
   Divider,
@@ -9,8 +10,10 @@ import {
   DucatGlyph,
   ExternalLinkIcon,
   InfoIcon,
+  OrokinStar,
   Skeleton,
   TierChip,
+  XIcon,
 } from "relic-finder-ui";
 
 import { PlatPrice } from "./Plat";
@@ -54,6 +57,10 @@ interface Props {
    * row is a way through to it rather than a dead label.
    */
   onPickItem: (itemName: string) => void;
+  /** Steps back to whatever the panel was showing before. Absent at the start. */
+  onBack?: () => void;
+  /** Shuts the panel and clears the selection. */
+  onClose: () => void;
 }
 
 /** How many missions to list before collapsing into a count. */
@@ -143,6 +150,8 @@ export function RelicDetailPanel({
   sites,
   sitesPending,
   onPickItem,
+  onBack,
+  onClose,
 }: Props) {
   const [refinement, setRefinement] = useState<Refinement | null>(null);
 
@@ -165,6 +174,29 @@ export function RelicDetailPanel({
   // in traces can be compared to.
   const baseValue = expectedValue(states.intact ?? [], prices);
 
+  /**
+   * The refinement that buys the most value per void trace.
+   *
+   * Not always Radiant, and that is the point: refining moves chance off the
+   * commons and onto the rare, so on a relic whose rare is cheap the hundred
+   * traces of a Radiant buy less than the twenty-five of an Exceptional, and
+   * sometimes buy nothing at all. Intact is excluded — it costs no traces, so
+   * it has no rate — and a relic where every trade is a loss gets no star
+   * rather than the least bad one.
+   */
+  const bestByTrace = ALL_REFINEMENTS.reduce<{ state: Refinement; rate: number } | null>(
+    (best, state) => {
+      const traces = TRACE_COST[state];
+      if (traces === 0) return best;
+
+      const rate = (expectedValue(states[state] ?? [], prices) - baseValue) / traces;
+      if (rate <= 0) return best;
+
+      return best === null || rate > best.rate ? { state, rate } : best;
+    },
+    null,
+  )?.state ?? null;
+
   // The rare is what a squad is actually chasing, so it is the drop whose odds
   // are worth restating per squad size.
   const rare = rewards.find((reward) => reward.rarity === "rare") ?? null;
@@ -173,14 +205,54 @@ export function RelicDetailPanel({
     <DetailPanel
       key={row.id}
       badges={<TierChip tier={row.tier} refinement={active} />}
+      actions={
+        <>
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
+              icon={<ArrowLeftIcon />}
+              aria-label="Back to where this was opened from"
+              title="Back"
+              onClick={onBack}
+            />
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<XIcon />}
+            aria-label="Close the panel"
+            title="Close"
+            onClick={onClose}
+          />
+        </>
+      }
       title={row.relicFullName}
       meta={`${rewards.length} rewards`}
     >
       <Divider />
 
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
+      <SectionLabel
+        hint={
+          <>
+            <p style={{ margin: 0 }}>
+              Refining a relic with void traces shifts the odds towards the rare and away
+              from the commons. Four states, from Intact at no cost to Radiant at 100
+              traces.
+            </p>
+            <p style={{ margin: "8px 0 0" }}>
+              The star marks the state that buys the most platinum per trace on{" "}
+              <em>this</em> relic — which is often not Radiant, and on a relic whose rare
+              is cheap is nothing at all, because the trade loses money. The full working
+              is under Refining below.
+            </p>
+          </>
+        }
+      >
         Refinement
-      </p>
+      </SectionLabel>
 
       <input
         type="range"
@@ -208,6 +280,13 @@ export function RelicDetailPanel({
             }}
           >
             {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
+            {state === bestByTrace && (
+              <OrokinStar
+                width={9}
+                height={9}
+                style={{ marginLeft: 3, color: "var(--rf-gold-500)", verticalAlign: "baseline" }}
+              />
+            )}
           </span>
         ))}
       </div>
@@ -381,7 +460,16 @@ export function RelicDetailPanel({
                 color: state === active ? "var(--rf-fg-primary)" : "var(--rf-fg-muted)",
               }}
             >
-              <span style={{ flex: 1, minWidth: 0 }}>{REFINEMENT_LABEL[state]}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                {REFINEMENT_LABEL[state]}
+                {state === bestByTrace && (
+                  <OrokinStar
+                    width={10}
+                    height={10}
+                    style={{ marginLeft: 5, color: "var(--rf-gold-500)" }}
+                  />
+                )}
+              </span>
               <span className="rf-text-caption rf-fg-muted" style={{ width: 62, textAlign: "right" }}>
                 {traces === 0 ? "free" : `${traces} traces`}
               </span>

@@ -1,11 +1,15 @@
 import { useState } from "react";
 import {
+  ArrowLeftIcon,
   Button,
   DetailPanel,
   Divider,
   ExternalLinkIcon,
+  InfoIcon,
+  OrokinStar,
   RarityTag,
   TierChip,
+  XIcon,
 } from "relic-finder-ui";
 
 import { PlatPrice } from "./Plat";
@@ -29,6 +33,10 @@ interface Props {
    * in the relic panel.
    */
   onPickRelic: (relicFullName: string) => void;
+  /** Steps back to whatever the panel was showing before. Absent at the start. */
+  onBack?: () => void;
+  /** Shuts the panel and clears the selection. */
+  onClose: () => void;
 }
 
 /** Relics listed before the list collapses into a count. */
@@ -41,7 +49,15 @@ const SOURCES_SHOWN = 6;
  * The mirror of the relic panel. Someone farming a specific part needs the
  * opposite lookup — not "what is in this relic" but "which relics give me this".
  */
-export function ItemDetailPanel({ row, relics, prices, onPickItem, onPickRelic }: Props) {
+export function ItemDetailPanel({
+  row,
+  relics,
+  prices,
+  onPickItem,
+  onPickRelic,
+  onBack,
+  onClose,
+}: Props) {
   /**
    * Which refinement the chances are quoted at.
    *
@@ -50,6 +66,7 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem, onPickRelic }
    * one part, and answering it should not rearrange the table behind it.
    */
   const [refinement, setRefinement] = useState<Refinement>("intact");
+  const [hintOpen, setHintOpen] = useState(false);
   const sources = sourcesFor(relics, row.itemName);
   const meta = prices?.get(row.itemName);
   // The server derives the set from the item database, which knows what a name
@@ -65,10 +82,59 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem, onPickRelic }
   const shown = listed.slice(0, SOURCES_SHOWN);
   const totalSources = listed.length;
 
+  /**
+   * The refinement that gives this part its best odds.
+   *
+   * Radiant for a rare and Intact for a common, because refining takes chance
+   * off the commons to give it to the rare — so "always go Radiant" is wrong
+   * for five drops out of six, and which way it falls is exactly what someone
+   * farming one specific part needs to know.
+   */
+  const bestRefinement = ALL_REFINEMENTS.reduce<Refinement | null>((best, state) => {
+    const at = Math.max(
+      0,
+      ...sources.filter((source) => source.refinement === state).map((source) => source.chance),
+    );
+    if (at === 0) return best;
+
+    const bestSoFar = best
+      ? Math.max(
+          0,
+          ...sources.filter((source) => source.refinement === best).map((source) => source.chance),
+        )
+      : 0;
+
+    return at > bestSoFar ? state : best;
+  }, null);
+
   return (
     <DetailPanel
       key={row.itemName}
       badges={<RarityTag rarity={row.rarity} />}
+      actions={
+        <>
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
+              icon={<ArrowLeftIcon />}
+              aria-label="Back to where this was opened from"
+              title="Back"
+              onClick={onBack}
+            />
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<XIcon />}
+            aria-label="Close the panel"
+            title="Close"
+            onClick={onClose}
+          />
+        </>
+      }
       title={row.itemName}
       meta={setName ?? "Belongs to no set"}
     >
@@ -104,6 +170,55 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem, onPickRelic }
         never stated — a reader comparing 11% here against 20% somewhere else
         was comparing an Intact relic with a Radiant one without being told.
       */}
+      <p
+        className="rf-text-overline rf-fg-muted"
+        style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}
+      >
+        Refinement
+        <button
+          type="button"
+          onClick={() => setHintOpen((was) => !was)}
+          aria-expanded={hintOpen}
+          aria-label={hintOpen ? "Hide the explanation" : "What refinement does to these odds"}
+          style={{
+            display: "inline-flex",
+            padding: 0,
+            border: 0,
+            background: "none",
+            cursor: "pointer",
+            color: hintOpen ? "var(--rf-gold-500)" : "inherit",
+          }}
+        >
+          <InfoIcon width={13} height={13} />
+        </button>
+      </p>
+
+      {hintOpen && (
+        <div
+          style={{
+            textTransform: "none",
+            letterSpacing: "normal",
+            fontSize: 12,
+            lineHeight: 1.55,
+            color: "var(--rf-fg-secondary)",
+            background: "var(--rf-surface-3)",
+            borderLeft: "2px solid var(--rf-gold-500)",
+            padding: "10px 12px",
+            marginBottom: 10,
+          }}
+        >
+          <p style={{ margin: 0 }}>
+            Refining moves chance towards the rare drop and away from the commons, so the
+            odds below change with the state the relic is opened in.
+          </p>
+          <p style={{ margin: "8px 0 0" }}>
+            The star marks the state where <em>this</em> part is likeliest — Radiant if it
+            is the rare, Intact if it is a common, because for five drops out of six
+            refining makes things worse.
+          </p>
+        </div>
+      )}
+
       <input
         type="range"
         min={0}
@@ -130,6 +245,13 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem, onPickRelic }
             }}
           >
             {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
+            {state === bestRefinement && (
+              <OrokinStar
+                width={9}
+                height={9}
+                style={{ marginLeft: 3, color: "var(--rf-gold-500)" }}
+              />
+            )}
           </span>
         ))}
       </div>
