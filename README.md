@@ -12,19 +12,30 @@ Un tool completo per trovare reliquie, parti Prime e prezzi di mercato in Warfra
 
 ### 🎯 Cosa puoi fare ora
 
-- **🔎 Ricerca intelligente** - Cerca per nome di reliquia (Lith V9) o direttamente per oggetto Prime (Volt Prime)
-- **📦 Contenuto completo** - Visualizza tutte le parti contenute in ogni reliquia
-- **💰 Prezzi di mercato** - Controlla il prezzo medio di ogni oggetto
-- **🛒 Link diretti** - Accesso rapido al marketplace per l'acquisto
-- **🌍 Farm locations** - Scopri dove droppano le reliquie che ti servono
-- **📊 Probabilità drop** - Vedi le percentuali di drop (Common, Uncommon, Rare)
+Cinque viste, ognuna con una domanda:
+
+- **Relics** — *quale reliquia apro?* Una riga per reliquia, con **valore atteso**
+  (ogni drop pesato per la sua probabilità), miglior drop, ducati totali e se è
+  ancora farmabile o in vault.
+- **Prime Items** — *dove trovo questo pezzo?* Una riga per parte, con set,
+  reliquie che la droppano, prezzo e ducati.
+- **Wishlist** — salvata sul server, divisa per scopo: pezzi da collezionare,
+  pezzi da sciogliere per ducati, sculture Ayatan.
+- **Ducanetor** — *cosa compro per Baro?* Parti in classifica per **ducati per
+  platino** speso.
+- **Endo** — *quale Ayatan compro?* Offerte in classifica per **endo per
+  platino**, calcolate sulle stelle montate in quella specifica scultura.
+
+Più: grafico prezzi a 90 giorni, probabilità e valore atteso per **squadra da 1
+a 4** (radshare), resa del raffinamento in **platino per traccia del vuoto**,
+filtri per tier / rarità / raffinazione / vault / prezzo massimo, e stato
+completo nella URL — una schermata si condivide con un link.
 
 ### 🚀 Coming Soon
 
 - **🧾 Inventory tracking** - Verifica se possiedi già una reliquia o parte
-- **📈 Price history** - Grafici dei prezzi nel tempo
+- **🎯 Set completion** - "mi serve Volt Prime": pezzi mancanti e se conviene comprare o farmare
 - **🔔 Notifications** - Alert quando il prezzo scende sotto una soglia
-- **💾 Wishlist** - Salva le parti che stai cercando
 
 ## 🎮 Perché usarlo?
 
@@ -38,14 +49,20 @@ Se giochi a Warframe, sai quanto può essere frustrante:
 
 ## 🛠️ Stack Tecnologico
 
-- **Backend**: Spring Boot (Java)
-- **API**: Warframe Market API integration
-- **Frontend**: HTML5 con interfaccia responsive
-- **Build**: Maven
+- **Backend**: Spring Boot (Java 24)
+- **Frontend**: React + TypeScript + Vite (`apps/web`)
+- **Design system**: libreria React propria, tema Orokin (`packages/ui`, spec in `design-system/`)
+- **Dati**: warframe.market (prezzi e ordini), drops.warframestat.us (drop table), WFCD (ducati)
+- **Build**: Maven + npm workspaces
+
+Il catalogo delle reliquie si aggiorna da solo all'avvio e ogni giorno alle 04:20.
+Per farlo partire in locale vedi **[COME-AVVIARE.md](COME-AVVIARE.md)**; per cosa
+resta da fare, **[BACKLOG.md](BACKLOG.md)**.
 
 ## 📋 Prerequisiti
 
-- Java 17 o superiore
+- Java 24 o superiore
+- Node 20+ e npm (per il frontend)
 - Maven 3.8+ (o usa il wrapper incluso)
 - Connessione internet per le API di Warframe Market
 
@@ -123,11 +140,21 @@ Vuoi testare le API direttamente? Abbiamo incluso una collection Postman!
 ### Endpoint principali
 
 ```
-GET /api/relics/search?query=Volt+Prime
-GET /api/relics/{relicName}
-GET /api/prime-parts/{partName}/price
-GET /api/relics/{relicName}/farm-locations
+GET  /api/relics                          tutte le reliquie, 4 stati ciascuna
+GET  /api/relics/relic/{Lith V9}          una reliquia (nome completo, tier incluso)
+GET  /api/relics/drop-info/{Lith V9}      missioni che la droppano
+GET  /api/relics/unvaulted                cosa è in rotazione adesso
+POST /api/relics/update                   riscarica il catalogo dalle drop table
+GET  /api/market/item/{Volt Prime Chassis}   prezzo di un pezzo
+POST /api/market/items                    prezzi in blocco (array di nomi nel body)
+GET  /api/market/status                   quanto della cache prezzi è pronta
+GET  /api/endo/offers                     Ayatan in classifica per endo/platino
+GET  /api/wishlist                        la wishlist salvata
+PUT  /api/wishlist                        la sostituisce
 ```
+
+Gli endpoint indirizzati per nome vogliono il **nome completo**: `/api/relics/relic/Lith%20V9`
+risponde 200, `/api/relics/relic/V9` risponde 404.
 
 ## 📁 Struttura del Progetto
 
@@ -194,7 +221,7 @@ Questo progetto è open source e i contributi sono benvenuti!
 - Aggiungere supporto per altre lingue
 - Migliorare l'interfaccia utente
 - Implementare il sistema di inventory
-- Aggiungere grafici dei prezzi
+- Set completion: dato un set, cosa manca e se conviene comprare o farmare
 - Ottimizzare le performance
 
 ## 🐛 Bug e Feature Request
@@ -207,11 +234,14 @@ Hai trovato un bug? Hai un'idea per una nuova feature?
 - [x] Ricerca base per reliquie e parti Prime
 - [x] Integrazione prezzi Warframe Market
 - [x] Farm locations
+- [x] Grafici storici dei prezzi (90 giorni)
+- [x] Wishlist (lato server, senza account)
+- [x] Interfaccia dark (design system Orokin)
+- [x] Valore atteso, radshare e resa del raffinamento
+- [x] Ducati per platino (Ducanetor) ed Endo per platino (Ayatan)
 - [ ] Sistema inventory personale
-- [ ] Grafici storici dei prezzi
+- [ ] Set completion: comprare o farmare
 - [ ] Notifiche prezzi
-- [ ] Wishlist con alert
-- [ ] Modalità dark mode
 - [ ] App mobile companion
 
 ## 🎖️ Crediti
