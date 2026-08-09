@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Chip,
@@ -28,6 +28,7 @@ import {
 } from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
 import { buildItemRows } from "./lib/items";
+import { fromSearch, toSearch } from "./lib/urlState";
 import type { Refinement, RelicItemRow, Reward } from "./api/types";
 import {
   applyRelicPriceCeiling,
@@ -54,19 +55,52 @@ type View = "relics" | "items" | "wishlist" | "ducats" | "endo";
 const isCatalogue = (view: View) => view === "relics" || view === "items";
 
 export function App() {
-  const [filters, setFilters] = useState<Filters>(emptyFilters);
+  // Read once, so a shared link opens on the state it describes rather than on
+  // the default and then jumping.
+  const initial = fromSearch(window.location.search, emptyFilters());
+
+  const [filters, setFilters] = useState<Filters>(initial.filters);
   const [filtersOpen, setFiltersOpen] = useState(true);
   /** Alphabetical: the Relics view is a catalogue, and A comes first. */
   const [sort, setSort] = useState<{ column: RelicSortColumn; direction: SortDirection }>({
     column: "relic",
     direction: "asc",
   });
-  const [selected, setSelected] = useState<string | null>(null);
-  const [pickedItem, setPickedItem] = useState<string | null>(null);
-  const [view, setView] = useState<View>("relics");
+  const [selected, setSelected] = useState<string | null>(initial.selected);
+  const [pickedItem, setPickedItem] = useState<string | null>(initial.pickedItem);
+  const [view, setView] = useState<View>(initial.view as View);
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
 
+
+  /**
+   * Writes the state back into the address bar.
+   *
+   * `replaceState`, not `pushState`: typing four letters into the search box
+   * would otherwise leave four history entries, and pressing Back would walk
+   * them one keystroke at a time. The URL stays shareable either way, and the
+   * popstate listener below keeps the Back button meaningful across the entries
+   * the browser does create.
+   */
+  useEffect(() => {
+    const search = toSearch({ view, filters, selected, pickedItem });
+    if (search !== window.location.search) {
+      window.history.replaceState(null, "", `${window.location.pathname}${search}`);
+    }
+  }, [view, filters, selected, pickedItem]);
+
+  useEffect(() => {
+    const onPop = () => {
+      const next = fromSearch(window.location.search, emptyFilters());
+      setView(next.view as View);
+      setFilters(next.filters);
+      setSelected(next.selected);
+      setPickedItem(next.pickedItem);
+    };
+
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   const relics = useRelics();
   const unvaulted = useUnvaultedNames();
