@@ -211,6 +211,22 @@ export function App() {
 
   const selectedSites = useDropInfo(selectedRow?.relicFullName ?? null);
 
+  /** Every filter currently narrowing the list, in words, for the empty state. */
+  const activeFilters = useMemo(() => {
+    const active: string[] = [];
+
+    if (filters.term.trim()) active.push(`the search "${filters.term.trim()}"`);
+    if (filters.tiers.size > 0) active.push(`tier ${[...filters.tiers].join(", ")}`);
+    if (view === "items" && filters.rarities.size > 0) {
+      active.push(`rarity ${[...filters.rarities].join(", ")}`);
+    }
+    if (filters.vault !== "all") active.push(filters.vault === "farmable" ? "farmable" : "vaulted");
+    if (filters.maxPrice !== null) active.push(`a ceiling of ${filters.maxPrice}p`);
+    if (filters.refinement !== "intact") active.push(filters.refinement);
+
+    return active;
+  }, [filters, view]);
+
   /**
    * What the item panel should show.
    *
@@ -430,13 +446,26 @@ export function App() {
               endoOffers={endoOffers.data}
             />
           ) : (view === "items" ? itemRows.length : visible.length) === 0 ? (
-            filters.term ||
-            filters.tiers.size > 0 ||
-            filters.rarities.size > 0 ||
-            filters.vault !== "all" ? (
+            activeFilters.length > 0 ? (
+              /*
+                The filters are named, not merely alluded to. A price ceiling
+                left at 5p empties the whole catalogue and the bar that set it
+                may well be collapsed — "no item matches the active filters" is
+                then a riddle. Saying which ones, and offering to drop them, is
+                the difference between a dead end and a wrong turn.
+              */
               <EmptyState
                 title="No results"
-                description="No item matches the search and the active filters."
+                description={`Nothing matches ${activeFilters.join(", ")}.`}
+                actions={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilters({ ...emptyFilters(), term: filters.term })}
+                  >
+                    Clear filters
+                  </Button>
+                }
               />
             ) : (
               <EmptyState
