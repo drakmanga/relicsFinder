@@ -103,6 +103,29 @@ export function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  /**
+   * Follows a part from a relic's contents into the view that is about parts.
+   *
+   * The row synthesises its own panel entry from the catalogue, so nothing has
+   * to be visible in the table first and the user's search survives the jump.
+   */
+  const openItem = (itemName: string) => {
+    setPickedItem(itemName);
+    setView("items");
+  };
+
+  /**
+   * The reverse: a relic named under "Dropped by" opens in the relics table.
+   *
+   * The id carries the refinement the table is filtered to, not the one the
+   * item panel was quoting — the row has to exist in the list being shown, and
+   * it is that list the selection points into.
+   */
+  const openRelic = (relicFullName: string) => {
+    setSelected(`${relicFullName}|${filters.refinement}`);
+    setView("relics");
+  };
+
   const relics = useRelics();
   const unvaulted = useUnvaultedNames();
   const wishlist = useWishlist();
@@ -120,13 +143,39 @@ export function App() {
     [relics.data, filters],
   );
 
-  // Resolved against the full row set rather than the visible page: sorting by
-  // price reorders the page, and a selection must not vanish because the row
-  // it points at moved past the cut.
-  const selectedRow = useMemo(
-    () => rows.find((row) => row.id === selected) ?? null,
-    [rows, selected],
-  );
+  /**
+   * The relic the panel is showing.
+   *
+   * Resolved against the full row set rather than the visible page: sorting by
+   * price reorders the page, and a selection must not vanish because the row it
+   * points at moved past the cut.
+   *
+   * When the selection names a relic the filters exclude, it is rebuilt from
+   * the catalogue instead of coming back empty. That happens on purpose:
+   * following a relic out of "Dropped by" lands on one that the search term
+   * behind it never matched, and answering with a blank panel would make the
+   * link look broken rather than the filter narrow.
+   */
+  const selectedRow = useMemo(() => {
+    if (!selected) return null;
+
+    const inView = rows.find((row) => row.id === selected);
+    if (inView) return inView;
+
+    const [fullName, refinement] = selected.split("|");
+    const relic = (relics.data ?? []).find(
+      (r) => r.fullName === fullName && r.refinement === refinement,
+    );
+    if (!relic) return null;
+
+    return {
+      id: selected,
+      tier: relic.tier,
+      relicFullName: relic.fullName,
+      refinement: relic.refinement,
+      rewards: relic.rewards,
+    };
+  }, [rows, selected, relics.data]);
 
   const itemRows = useMemo(() => {
     if (view !== "items") return [];
@@ -411,6 +460,7 @@ export function App() {
               prices={prices.data}
               pricesPending={prices.isPending}
               relicPrices={relicPrices.data}
+              term={filters.term}
               unvaulted={unvaulted.data}
               selected={selected}
               onSelect={setSelected}
@@ -434,11 +484,13 @@ export function App() {
               relics={relics.data ?? []}
               prices={prices.data}
               onPickItem={setPickedItem}
+              onPickRelic={openRelic}
             />
           )
         ) : (
           <RelicDetailPanel
             row={selectedRow}
+            onPickItem={openItem}
             highlightItem={searchedItem}
             states={selectedStates}
             prices={prices.data}

@@ -46,6 +46,14 @@ interface Props {
   prices: PriceMap | undefined;
   sites: DropInfo[];
   sitesPending: boolean;
+  /**
+   * Opens the part the user clicked, in the view that is about parts.
+   *
+   * The contents list answers "what is in here"; the obvious next question is
+   * "and where else do I get that one", which is the Prime Items view — so the
+   * row is a way through to it rather than a dead label.
+   */
+  onPickItem: (itemName: string) => void;
 }
 
 /** How many missions to list before collapsing into a count. */
@@ -134,6 +142,7 @@ export function RelicDetailPanel({
   prices,
   sites,
   sitesPending,
+  onPickItem,
 }: Props) {
   const [refinement, setRefinement] = useState<Refinement | null>(null);
 
@@ -242,11 +251,24 @@ export function RelicDetailPanel({
                 chance={reward.chance}
                 price={priceOf(prices, reward.itemName)}
                 index={index}
+                showImage={false}
+                className="rf-droprow-roomy"
+                interactive
+                role="button"
+                tabIndex={0}
+                title={`${reward.itemName} — open it in Prime Items`}
+                onClick={() => onPickItem(reward.itemName)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onPickItem(reward.itemName);
+                  }
+                }}
                 trailing={
                   <span
                     className="rf-text-data-sm rf-tabular"
                     style={{
-                      width: 46,
+                      width: 42,
                       flex: "none",
                       textAlign: "right",
                       display: "inline-flex",

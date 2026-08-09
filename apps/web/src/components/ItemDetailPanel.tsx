@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Button,
   DetailPanel,
@@ -9,8 +10,9 @@ import {
 
 import { PlatPrice } from "./Plat";
 
-import type { PriceMap, Relic, RelicItemRow } from "../api/types";
+import type { PriceMap, Refinement, Relic, RelicItemRow } from "../api/types";
 import { partsOfSet, setOf, sourcesFor } from "../lib/sets";
+import { ALL_REFINEMENTS, REFINEMENT_LABEL } from "../lib/rows";
 import { marketUrl, priceOf } from "../lib/format";
 
 interface Props {
@@ -19,6 +21,14 @@ interface Props {
   prices: PriceMap | undefined;
   /** Selecting a sibling part swaps the panel to it without touching the table. */
   onPickItem: (itemName: string) => void;
+  /**
+   * Opens one of the relics that drop this part, in the Relics view.
+   *
+   * "Dropped by" names four relics and then leaves the reader to go and find
+   * one by hand; this is the way through, and the mirror of the contents list
+   * in the relic panel.
+   */
+  onPickRelic: (relicFullName: string) => void;
 }
 
 /** Relics listed before the list collapses into a count. */
@@ -31,7 +41,15 @@ const SOURCES_SHOWN = 6;
  * The mirror of the relic panel. Someone farming a specific part needs the
  * opposite lookup — not "what is in this relic" but "which relics give me this".
  */
-export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
+export function ItemDetailPanel({ row, relics, prices, onPickItem, onPickRelic }: Props) {
+  /**
+   * Which refinement the chances are quoted at.
+   *
+   * Local to the panel rather than the global filter, exactly as in the relic
+   * panel: "would radshare make this worth farming" is a question asked about
+   * one part, and answering it should not rearrange the table behind it.
+   */
+  const [refinement, setRefinement] = useState<Refinement>("intact");
   const sources = sourcesFor(relics, row.itemName);
   const meta = prices?.get(row.itemName);
   // The server derives the set from the item database, which knows what a name
@@ -40,10 +58,12 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
   const setName = meta?.setName ?? setOf(row.itemName);
   const siblings = setName ? partsOfSet(relics, setName).filter((p) => p !== row.itemName) : [];
 
-  // Only Intact rows, so one relic is not listed four times at four chances.
-  const intactSources = sources.filter((source) => source.refinement === "intact");
-  const shown = (intactSources.length > 0 ? intactSources : sources).slice(0, SOURCES_SHOWN);
-  const totalSources = intactSources.length > 0 ? intactSources.length : sources.length;
+  // One refinement at a time, so a relic is not listed four times at four
+  // chances — and the chances shown are the ones for the state selected below.
+  const atRefinement = sources.filter((source) => source.refinement === refinement);
+  const listed = atRefinement.length > 0 ? atRefinement : sources;
+  const shown = listed.slice(0, SOURCES_SHOWN);
+  const totalSources = listed.length;
 
   return (
     <DetailPanel
@@ -79,19 +99,69 @@ export function ItemDetailPanel({ row, relics, prices, onPickItem }: Props) {
         Dropped by
       </p>
 
+      {/*
+        The chances below are only true of one refinement, and which one was
+        never stated — a reader comparing 11% here against 20% somewhere else
+        was comparing an Intact relic with a Radiant one without being told.
+      */}
+      <input
+        type="range"
+        min={0}
+        max={ALL_REFINEMENTS.length - 1}
+        step={1}
+        value={ALL_REFINEMENTS.indexOf(refinement)}
+        onChange={(event) =>
+          setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
+        }
+        aria-label="Refinement the drop chances are quoted at"
+        aria-valuetext={REFINEMENT_LABEL[refinement]}
+        style={{ width: "100%", accentColor: "var(--rf-gold-500)" }}
+      />
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+        {ALL_REFINEMENTS.map((state) => (
+          <span
+            key={state}
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: state === refinement ? "var(--rf-fg-primary)" : "var(--rf-fg-muted)",
+            }}
+          >
+            {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
+          </span>
+        ))}
+      </div>
+
       {shown.length === 0 ? (
         <p className="rf-text-body-sm rf-fg-muted">No relic in the dataset contains it.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {shown.map((source) => (
-            <div
+            <button
               key={`${source.relicFullName}-${source.refinement}`}
-              style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}
+              type="button"
+              className="rf-focus-ring"
+              onClick={() => onPickRelic(source.relicFullName)}
+              title={`${source.relicFullName} — open it in Relics`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 13,
+                padding: "2px 0",
+                background: "none",
+                border: 0,
+                cursor: "pointer",
+                textAlign: "left",
+                color: "var(--rf-fg-primary)",
+              }}
             >
-              <TierChip tier={source.tier} />
+              <TierChip tier={source.tier} refinement={source.refinement} />
               <span style={{ flex: 1, minWidth: 0 }}>{source.relicFullName}</span>
               <span className="rf-text-data-sm rf-fg-muted">{source.chance.toFixed(2)}%</span>
-            </div>
+            </button>
           ))}
         </div>
       )}

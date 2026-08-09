@@ -13,7 +13,7 @@ import {
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { relicMarketUrl } from "../lib/format";
-import { bestDropValue, expectedValue, rareChance } from "../lib/rows";
+import { bestDropValue, expectedValue } from "../lib/rows";
 import type { PriceMap, RelicPriceMap, RelicRow } from "../api/types";
 import type { RelicSortColumn, SortDirection } from "../lib/rows";
 
@@ -36,6 +36,14 @@ interface Props {
   pricesPending: boolean;
   /** What each relic itself sells for. Undefined while the batch is in flight. */
   relicPrices: RelicPriceMap | undefined;
+  /**
+   * What the user typed, so a row can show why it is in the list.
+   *
+   * Searching "volt" in a list of relics returns sixteen rows named Lith V9 and
+   * Meso N11, with nothing on any of them mentioning Volt — the match is inside
+   * the relic, and until it is named the search reads as broken.
+   */
+  term: string;
   /** Full names of the relics currently in rotation; undefined while loading. */
   unvaulted: Set<string> | undefined;
   selected: string | null;
@@ -58,6 +66,7 @@ export function ResultsTable({
   prices,
   pricesPending,
   relicPrices,
+  term,
   unvaulted,
   selected,
   onSelect,
@@ -74,6 +83,8 @@ export function ResultsTable({
   });
 
   const items = virtualizer.getVirtualItems();
+
+  const needle = term.trim().toLowerCase();
 
   const dir = (column: RelicSortColumn) => (sort.column === column ? sort.direction : null);
 
@@ -94,21 +105,14 @@ export function ResultsTable({
             </TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
             {/*
-              The rare's chance, which is the one number refinement moves: 2% at
-              Intact against 10% Radiant on most relics. Without it the
-              refinement control looked inert, because everything else on the row
-              either stays put or shifts by a fraction of a platinum.
-            */}
-            <TableHeaderCell
-              align="right"
-              title="Chance of the rare drop at the selected refinement"
-            >
-              Rare
-            </TableHeaderCell>
-            {/*
               Expected value first, because it is the number the decision turns
               on. Best drop stays beside it — it answers a different question,
               "what is the jackpot", and the two disagree almost always.
+
+              There is deliberately no rare-chance column: every relic shares the
+              same odds for its rare slot, 2% Intact and 10% Radiant, so it read
+              the same down all 772 rows. What refinement changes per relic is
+              the expected value.
             */}
             <TableHeaderCell
               align="right"
@@ -161,7 +165,7 @@ export function ResultsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={8} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={7} style={{ height: paddingTop, padding: 0, border: 0 }} />
             </tr>
           )}
 
@@ -171,7 +175,13 @@ export function ResultsTable({
 
             const best = bestDropValue(row, prices);
             const expected = expectedValue(row.rewards, prices);
-            const rare = rareChance(row);
+            // Only when the term is not simply the relic's own name: repeating
+            // "holds Lith V9" under "Lith V9" is noise.
+            const matched =
+              needle && !row.relicFullName.toLowerCase().includes(needle)
+                ? (row.rewards.find((r) => r.itemName.toLowerCase().includes(needle))?.itemName ??
+                  null)
+                : null;
             const cost = relicPrices?.get(row.relicFullName) ?? null;
 
             return (
@@ -184,7 +194,21 @@ export function ResultsTable({
                 <TableCell>
                   <TierChip tier={row.tier} refinement={row.refinement} />
                 </TableCell>
-                <TableCell>{row.relicFullName}</TableCell>
+                <TableCell>
+                  {row.relicFullName}
+                  {matched && (
+                    // Inline rather than a second line: the virtualizer is told
+                    // every row is 40px tall, and a row that grows past that
+                    // pushes the scroll position out of step with the content.
+                    <span
+                      className="rf-text-caption rf-fg-muted"
+                      style={{ marginLeft: 8 }}
+                      title={matched}
+                    >
+                      holds {matched}
+                    </span>
+                  )}
+                </TableCell>
                 {/*
                   Whether the relic can still be farmed. This was a breakdown of
                   the contents by rarity, which reads well until you notice every
@@ -200,13 +224,6 @@ export function ResultsTable({
                     </span>
                   ) : (
                     <span className="rf-text-caption rf-fg-muted">Vaulted</span>
-                  )}
-                </TableCell>
-                <TableCell align="right" numeric>
-                  {rare === null ? (
-                    <span className="rf-fg-disabled">—</span>
-                  ) : (
-                    <span className="rf-fg-secondary">{rare}%</span>
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
@@ -257,7 +274,7 @@ export function ResultsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={8} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={7} style={{ height: paddingBottom, padding: 0, border: 0 }} />
             </tr>
           )}
         </tbody>

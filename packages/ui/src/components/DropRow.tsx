@@ -15,6 +15,14 @@ export interface DropRowProps extends HTMLAttributes<HTMLDivElement> {
   price?: number | null;
   /** Item thumbnail URL. Falls back to the void sigil. */
   image?: string;
+  /**
+   * Whether to reserve the thumbnail column at all.
+   *
+   * In a narrow panel the 32px placeholder sigil is 40px of decoration taken
+   * straight out of the item name, which is the one thing on the row that
+   * cannot be guessed from the others.
+   */
+  showImage?: boolean;
   compact?: boolean;
   interactive?: boolean;
   /** Stagger index. Drives the 40ms cascade when inside a `rf-stagger` list. */
@@ -34,6 +42,7 @@ export function DropRow({
   chance,
   price,
   image,
+  showImage = true,
   compact = false,
   interactive = false,
   index,
@@ -53,9 +62,11 @@ export function DropRow({
       style={index === undefined ? style : ({ ...style, "--rf-i": index } as CSSProperties)}
       {...rest}
     >
-      <span className="rf-droprow-img rf-clip">
-        {image ? <img src={image} alt="" /> : <VoidSigil />}
-      </span>
+      {showImage && (
+        <span className="rf-droprow-img rf-clip">
+          {image ? <img src={image} alt="" /> : <VoidSigil />}
+        </span>
+      )}
 
       <span className="rf-droprow-name" title={name}>
         {name}

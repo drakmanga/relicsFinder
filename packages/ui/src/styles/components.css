@@ -434,7 +434,7 @@
 .rf-droprow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   height: 48px;
   padding: 0 var(--rf-space-2);
   border-bottom: 1px solid var(--rf-border-subtle);
@@ -483,20 +483,39 @@
   transition: color var(--rf-dur-fast) var(--rf-ease-standard);
 }
 
+/* Lets a long item name take a second line instead of an ellipsis. For panels,
+   where six rows are read rather than scanned and "Loki Prime Systems Bluep…"
+   is a name the reader has to already know to recognise. */
+.rf-droprow-roomy {
+  height: auto;
+  min-height: 48px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.rf-droprow-roomy .rf-droprow-name {
+  white-space: normal;
+  overflow: visible;
+  line-height: 1.35;
+}
+
+/* The three trailing columns are as narrow as their widest real value, not as
+   their label: "Uncommon" is abbreviated to "Unc.", a chance is five characters
+   and a price four. Every pixel they do not use goes to the item name. */
 .rf-droprow-rarity {
-  width: 64px;
+  width: 44px;
   flex: none;
 }
 
 .rf-droprow-rate {
-  width: 48px;
+  width: 52px;
   text-align: right;
   flex: none;
   color: var(--rf-fg-muted);
 }
 
 .rf-droprow-price {
-  width: 52px;
+  width: 46px;
   text-align: right;
   flex: none;
 }
@@ -525,8 +544,11 @@
 }
 
 /* ---------------------------------------------------------- DetailPanel - */
+/* Wide enough for the drop rows to spell out an item name. At 380 "Zylok Prime
+   Barrel" arrived as "Zylo…", which makes the panel a list of things the reader
+   has to already know. */
 .rf-detail {
-  width: 380px;
+  width: 440px;
   flex: none;
 }
 

@@ -265,16 +265,6 @@ export function applyRelicPriceCeiling(
   });
 }
 
-/**
- * The chance of the relic's rare drop, at whatever refinement it is showing.
- *
- * The one number refinement actually moves — 2% Intact against 10% Radiant on
- * most relics. Null for the handful that hold no rare at all.
- */
-export function rareChance(row: RelicRow): number | null {
-  return row.rewards.find((reward) => reward.rarity === "rare")?.chance ?? null;
-}
-
 export type RelicSortColumn = "relic" | "expected" | "value" | "cost";
 
 export function sortRelicRows(
