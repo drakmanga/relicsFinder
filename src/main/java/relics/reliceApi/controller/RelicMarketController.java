@@ -83,6 +83,27 @@ public class RelicMarketController {
         return ResponseEntity.ok(relicMarketService.cacheStatus());
     }
 
+    /**
+     * Prices for many relics in one call, e.g. every row of the relics table.
+     *
+     * <p>Separate from {@code /items} because a relic and a part of the same
+     * name are two different listings on the market, and the slug that reaches
+     * it differs — a relic's ends in {@code _relic}.
+     *
+     * <p>A relic with no listing comes back with a null price rather than being
+     * dropped, so the response lines up with the request.
+     */
+    @PostMapping("/relics")
+    public ResponseEntity<List<RelicPrice>> getRelicPrices(@RequestBody List<String> relicNames) {
+        if (relicNames == null || relicNames.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        if (relicNames.size() > MAX_BATCH) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(relicMarketService.getRelicPrices(relicNames));
+    }
+
     /** Average price of a whole relic, e.g. "Lith V9". */
     @GetMapping("/{relicName}")
     public ResponseEntity<RelicPrice> getAvaragePrice(@PathVariable String relicName) {

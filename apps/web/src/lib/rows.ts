@@ -3,6 +3,7 @@ import type {
   Rarity,
   Refinement,
   Relic,
+  RelicPriceMap,
   RelicRow,
   Reward,
   Tier,
@@ -112,9 +113,10 @@ export function buildRelicRows(relics: Relic[], filters: Filters): RelicRow[] {
     if (!allows(filters.tiers, relic.tier)) continue;
     if (relic.refinement !== filters.refinement) continue;
 
-    if (filters.rarities.size > 0 && !relic.rewards.some((r) => filters.rarities.has(r.rarity))) {
-      continue;
-    }
+    // Rarity is deliberately not consulted here. Every relic holds three
+    // commons, two uncommons and one rare, so "keep the relics that contain a
+    // Rare" keeps all of them — the filter belongs to Prime Items, where a row
+    // is a part and carries a rarity of its own.
 
     if (
       term &&
@@ -263,13 +265,24 @@ export function applyRelicPriceCeiling(
   });
 }
 
-export type RelicSortColumn = "relic" | "expected" | "value";
+/**
+ * The chance of the relic's rare drop, at whatever refinement it is showing.
+ *
+ * The one number refinement actually moves — 2% Intact against 10% Radiant on
+ * most relics. Null for the handful that hold no rare at all.
+ */
+export function rareChance(row: RelicRow): number | null {
+  return row.rewards.find((reward) => reward.rarity === "rare")?.chance ?? null;
+}
+
+export type RelicSortColumn = "relic" | "expected" | "value" | "cost";
 
 export function sortRelicRows(
   rows: RelicRow[],
   column: RelicSortColumn,
   direction: SortDirection,
   prices: PriceMap | undefined,
+  relicPrices?: RelicPriceMap,
 ): RelicRow[] {
   const sign = direction === "asc" ? 1 : -1;
 
@@ -279,8 +292,11 @@ export function sortRelicRows(
     );
   }
 
-  const valueOf = (row: RelicRow) =>
-    column === "expected" ? expectedValue(row.rewards, prices) : bestDropValue(row, prices);
+  const valueOf = (row: RelicRow) => {
+    if (column === "expected") return expectedValue(row.rewards, prices);
+    if (column === "cost") return relicPrices?.get(row.relicFullName) ?? null;
+    return bestDropValue(row, prices);
+  };
 
   return [...rows].sort((a, b) => {
     const av = valueOf(a);

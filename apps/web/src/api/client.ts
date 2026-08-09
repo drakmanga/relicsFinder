@@ -136,6 +136,33 @@ export const api = {
     return (await res.json()) as WireItemPrice[];
   },
 
+  /**
+   * Prices for many relics in one call.
+   *
+   * Same reason as the item batch, at a larger scale: the relics table lists
+   * the whole catalogue, so this is hundreds of prices rather than forty.
+   */
+  async relicPrices(relicNames: string[], signal?: AbortSignal): Promise<RelicPrice[]> {
+    if (relicNames.length === 0) return [];
+
+    const url = `${BASE}/market/relics`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        signal,
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(relicNames),
+      });
+    } catch (cause) {
+      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
+    return (await res.json()) as WireRelicPrice[];
+  },
+
   /** Ninety days of completed trades. */
   async itemHistory(itemName: string, signal?: AbortSignal): Promise<PricePoint[]> {
     return await get<PricePoint[]>(`/market/item/${seg(itemName)}/history`, signal);

@@ -23,6 +23,7 @@ import {
   useDropInfo,
   useEndoOffers,
   useItemPrices,
+  useRelicPrices,
   useRelics,
   useUnvaultedNames,
 } from "./api/queries";
@@ -211,11 +212,22 @@ export function App() {
   }, [relics.data]);
   const prices = useItemPrices(pricedNames);
 
+  /**
+   * What each relic itself sells for.
+   *
+   * Asked for the rows the filters left, not the whole catalogue: the batch is
+   * a server-side queue, and asking for six hundred relics when thirty are
+   * being looked at puts the ones on screen behind the rest.
+   */
+  const relicPrices = useRelicPrices(
+    view === "relics" ? rows.map((row) => row.relicFullName) : [],
+  );
+
   const visible = useMemo(() => {
     const farmable = applyVaultFilter(rows, filters.vault, unvaulted.data);
     const ceiled = applyRelicPriceCeiling(farmable, filters.maxPrice, prices.data);
-    return sortRelicRows(ceiled, sort.column, sort.direction, prices.data);
-  }, [rows, filters.vault, unvaulted.data, filters.maxPrice, prices.data, sort]);
+    return sortRelicRows(ceiled, sort.column, sort.direction, prices.data, relicPrices.data);
+  }, [rows, filters.vault, unvaulted.data, filters.maxPrice, prices.data, sort, relicPrices.data]);
 
   /**
    * The part the search names, if it names one.
@@ -319,7 +331,7 @@ export function App() {
       )}
 
       {filtersOpen && isCatalogue(view) && (
-        <FilterBar filters={filters} onChange={setFilters} />
+        <FilterBar filters={filters} onChange={setFilters} view={view} />
       )}
 
       <div
@@ -398,6 +410,7 @@ export function App() {
               rows={visible}
               prices={prices.data}
               pricesPending={prices.isPending}
+              relicPrices={relicPrices.data}
               unvaulted={unvaulted.data}
               selected={selected}
               onSelect={setSelected}

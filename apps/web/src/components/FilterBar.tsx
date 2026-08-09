@@ -14,6 +14,8 @@ import type { Rarity, Tier } from "../api/types";
 interface Props {
   filters: Filters;
   onChange: (next: Filters) => void;
+  /** Which catalogue view the bar is filtering. */
+  view: "relics" | "items";
 }
 
 /**
@@ -22,7 +24,7 @@ interface Props {
  * Horizontal rather than a sidebar: the results table is dense and wide, and a
  * 260px column would come straight out of the item names.
  */
-export function FilterBar({ filters, onChange }: Props) {
+export function FilterBar({ filters, onChange, view }: Props) {
   const toggle = <T,>(set: Set<T>, value: T): Set<T> => {
     const next = new Set(set);
     if (next.has(value)) next.delete(value);
@@ -53,6 +55,15 @@ export function FilterBar({ filters, onChange }: Props) {
         ))}
       </Group>
 
+      {/*
+        Rarity is a property of a drop, not of a relic. Every relic in the game
+        holds three commons, two uncommons and one rare, so on a list of relics
+        the filter can only ever keep all of them or, with all three off, keep
+        all of them again — a control that cannot change its own result. It
+        earns its place on Prime Items, where a row is a part and the rarity is
+        that part's own.
+      */}
+      {view === "items" && (
       <Group label="Rarity">
         {ALL_RARITIES.map((rarity) => (
           <Toggle
@@ -65,6 +76,7 @@ export function FilterBar({ filters, onChange }: Props) {
           </Toggle>
         ))}
       </Group>
+      )}
 
       {/*
         Three exclusive states rather than toggles, because "neither farmable

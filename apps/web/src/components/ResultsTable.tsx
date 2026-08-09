@@ -13,8 +13,8 @@ import {
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { relicMarketUrl } from "../lib/format";
-import { bestDropValue, expectedValue } from "../lib/rows";
-import type { PriceMap, RelicRow } from "../api/types";
+import { bestDropValue, expectedValue, rareChance } from "../lib/rows";
+import type { PriceMap, RelicPriceMap, RelicRow } from "../api/types";
 import type { RelicSortColumn, SortDirection } from "../lib/rows";
 
 /**
@@ -34,6 +34,8 @@ interface Props {
   rows: RelicRow[];
   prices: PriceMap | undefined;
   pricesPending: boolean;
+  /** What each relic itself sells for. Undefined while the batch is in flight. */
+  relicPrices: RelicPriceMap | undefined;
   /** Full names of the relics currently in rotation; undefined while loading. */
   unvaulted: Set<string> | undefined;
   selected: string | null;
@@ -55,6 +57,7 @@ export function ResultsTable({
   rows,
   prices,
   pricesPending,
+  relicPrices,
   unvaulted,
   selected,
   onSelect,
@@ -91,6 +94,18 @@ export function ResultsTable({
             </TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
             {/*
+              The rare's chance, which is the one number refinement moves: 2% at
+              Intact against 10% Radiant on most relics. Without it the
+              refinement control looked inert, because everything else on the row
+              either stays put or shifts by a fraction of a platinum.
+            */}
+            <TableHeaderCell
+              align="right"
+              title="Chance of the rare drop at the selected refinement"
+            >
+              Rare
+            </TableHeaderCell>
+            {/*
               Expected value first, because it is the number the decision turns
               on. Best drop stays beside it — it answers a different question,
               "what is the jackpot", and the two disagree almost always.
@@ -118,6 +133,22 @@ export function ResultsTable({
               </span>
             </TableHeaderCell>
             {/*
+              What the relic itself costs, against what opening it is worth.
+              Buying one is the alternative to farming it, and that comparison
+              cannot be made from a row that only prices the contents.
+            */}
+            <TableHeaderCell
+              align="right"
+              sortable
+              sortDirection={dir("cost")}
+              onSort={() => onSort("cost")}
+              title="What the relic itself sells for on the market"
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                Cost <PlatGlyph size={12} />
+              </span>
+            </TableHeaderCell>
+            {/*
               No ducat column here. Ducats are what a *part* dissolves into, and
               a relic cannot be dissolved — so the sum of its six drops is a
               number nobody can ever collect. It lives on Prime Items, where it
@@ -130,7 +161,7 @@ export function ResultsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={6} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={8} style={{ height: paddingTop, padding: 0, border: 0 }} />
             </tr>
           )}
 
@@ -140,6 +171,8 @@ export function ResultsTable({
 
             const best = bestDropValue(row, prices);
             const expected = expectedValue(row.rewards, prices);
+            const rare = rareChance(row);
+            const cost = relicPrices?.get(row.relicFullName) ?? null;
 
             return (
               <TableRow
@@ -170,6 +203,13 @@ export function ResultsTable({
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
+                  {rare === null ? (
+                    <span className="rf-fg-disabled">—</span>
+                  ) : (
+                    <span className="rf-fg-secondary">{rare}%</span>
+                  )}
+                </TableCell>
+                <TableCell align="right" numeric>
                   {pricesPending && !prices ? (
                     <Skeleton width={44} height={14} />
                   ) : expected === 0 ? (
@@ -185,6 +225,13 @@ export function ResultsTable({
                     <Skeleton width={44} height={14} />
                   ) : (
                     <PlatPrice value={best} />
+                  )}
+                </TableCell>
+                <TableCell align="right" numeric>
+                  {relicPrices === undefined ? (
+                    <Skeleton width={44} height={14} />
+                  ) : (
+                    <PlatPrice value={cost} />
                   )}
                 </TableCell>
                 <TableCell align="center">
@@ -210,7 +257,7 @@ export function ResultsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={7} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={8} style={{ height: paddingBottom, padding: 0, border: 0 }} />
             </tr>
           )}
         </tbody>

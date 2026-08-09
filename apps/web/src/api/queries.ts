@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ApiError, api } from "./client";
+import type { RelicPriceMap } from "./types";
 
 /**
  * Query keys in one place so an invalidation can never miss a cache entry
@@ -13,6 +14,7 @@ export const keys = {
   search: (term: string) => ["search", term] as const,
   price: (name: string) => ["market", name] as const,
   itemPrices: (names: string[]) => ["market", "items", names] as const,
+  relicPrices: (names: string[]) => ["market", "relics", names] as const,
   itemHistory: (name: string) => ["market", "history", name] as const,
   vaulted: (name: string) => ["relics", "vaulted", name] as const,
   endo: ["endo", "offers"] as const,
@@ -123,6 +125,37 @@ export function useItemPrices(itemNames: string[]) {
       return missing > data.length * 0.05 ? 15_000 : false;
     },
     select: (prices) => new Map(prices.map((p) => [p.itemName, p])),
+  });
+}
+
+/**
+ * What each relic itself sells for.
+ *
+ * A relic is tradeable in its own right, and buying one is the alternative to
+ * farming it — so the price belongs on every row of the table, next to what
+ * opening it is worth. Fetched for the whole list in one request, like the item
+ * prices and for the same reason: sorting is only correct when every row has a
+ * price, and a scroll window reorders the table under the user's hands.
+ */
+export function useRelicPrices(relicNames: string[]) {
+  const names = [...new Set(relicNames)].sort();
+
+  return useQuery({
+    queryKey: keys.relicPrices(names),
+    queryFn: ({ signal }) => api.relicPrices(names, signal),
+    enabled: names.length > 0,
+    ...PRICE_DATA,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      // Relics are queued rather than waited on server-side, so the first
+      // response is mostly nulls and fills in as the warmer works through
+      // them. Some are genuinely never listed, so a residue is the stop.
+      const missing = data.filter((p) => p.averagePrice === null).length;
+      return missing > data.length * 0.05 ? 15_000 : false;
+    },
+    select: (prices) =>
+      new Map(prices.map((p) => [p.relicName, p.averagePrice])) as RelicPriceMap,
   });
 }
 

@@ -30,7 +30,8 @@ export interface WireDropInfo {
 
 export interface WireRelicPrice {
   relicName: string;
-  averagePrice: number;
+  /** Null when the market has no listing for the relic. */
+  averagePrice: number | null;
 }
 
 /* -------------------------------------------------------------------------
@@ -94,8 +95,12 @@ export interface DropInfo {
 
 export interface RelicPrice {
   relicName: string;
-  averagePrice: number;
+  /** Platinum the relic itself trades for. Null when nobody is selling it. */
+  averagePrice: number | null;
 }
+
+/** Relic name to its own market price. Empty while the batch is in flight. */
+export type RelicPriceMap = Map<string, number | null>;
 
 /* ------------------------------------------------------------------------- */
 

@@ -6,6 +6,7 @@ import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 import relics.reliceApi.model.ItemPrice;
 import relics.reliceApi.model.PricePoint;
+import relics.reliceApi.model.RelicPrice;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -163,6 +164,40 @@ public class RelicMarketService {
             if (cached == null) cached = awaitBriefly(slug);
         }
         return cached == null || cached.avg() == null ? -1 : cached.avg();
+    }
+
+    /**
+     * Prices for many relics in one call.
+     *
+     * <p>The relics table lists the whole catalogue, and buying a relic is the
+     * alternative to farming it — so the price belongs on every row, not on the
+     * one that happens to be open. Asked for one at a time that is hundreds of
+     * requests against a market that allows about three a second.
+     *
+     * <p>Unlike {@link #getAveragePrice}, a relic with no listings comes back
+     * with a null price rather than -1: the response is a lookup table the
+     * caller joins on, and a sentinel number in it would be indistinguishable
+     * from a real one.
+     */
+    public List<RelicPrice> getRelicPrices(List<String> relicNames) {
+        List<RelicPrice> out = new ArrayList<>(relicNames.size());
+
+        for (String name : relicNames) {
+            if (name == null || name.isBlank()) continue;
+
+            String relicName = name.trim();
+            String slug = relicSlug(relicName);
+            Cached cached = cache.get(slug);
+
+            // Queued, not waited on. One slow relic must not hold up the other
+            // thirty on screen — the warmer fills it in and the next poll from
+            // the client picks it up.
+            if (cached == null || !cached.isFresh()) enqueue(slug);
+
+            out.add(new RelicPrice(relicName, cached == null ? null : cached.avg()));
+        }
+
+        return out;
     }
 
     /** How much of the catalogue is priced. Drives the "warming" hint in the UI. */

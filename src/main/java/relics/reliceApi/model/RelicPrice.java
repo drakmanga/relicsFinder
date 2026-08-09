@@ -9,5 +9,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RelicPrice {
     String relicName;
-    double averagePrice;
+    /**
+     * Platinum, or null when the market has no listing for this relic — which
+     * is a fact about the relic, not a failure, and has to survive the batch
+     * response as itself rather than as a stand-in number.
+     */
+    Double averagePrice;
 }
