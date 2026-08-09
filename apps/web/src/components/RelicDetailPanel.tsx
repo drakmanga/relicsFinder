@@ -4,6 +4,7 @@ import {
   ArrowLeftIcon,
   Button,
   DetailPanel,
+  Dialog,
   Divider,
   DropList,
   DropRow,
@@ -154,6 +155,8 @@ export function RelicDetailPanel({
   onClose,
 }: Props) {
   const [refinement, setRefinement] = useState<Refinement | null>(null);
+  /** Whether the full mission list is open. */
+  const [allSites, setAllSites] = useState(false);
 
   if (!row) return <DetailPanel empty />;
 
@@ -529,9 +532,31 @@ export function RelicDetailPanel({
           </div>
 
           {sites.length > SITES_SHOWN && (
-            <p className="rf-text-caption rf-fg-muted" style={{ marginTop: 8 }}>
+            /*
+              The four best are the answer most of the time — a relic worth
+              farming has one or two places worth farming it — so the list stays
+              short and the rest is a click away rather than a scroll away. The
+              ones underneath still matter: a mission four rotations deep can be
+              the only one somebody has unlocked.
+            */
+            <button
+              type="button"
+              className="rf-focus-ring"
+              onClick={() => setAllSites(true)}
+              style={{
+                marginTop: 8,
+                padding: 0,
+                background: "none",
+                border: 0,
+                cursor: "pointer",
+                font: "inherit",
+                color: "var(--rf-fg-accent, var(--rf-gold-500))",
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+              }}
+            >
               and {sites.length - SITES_SHOWN} more missions
-            </p>
+            </button>
           )}
         </>
       )}
@@ -560,6 +585,45 @@ export function RelicDetailPanel({
           <PlatPrice value={best} />
         </span>
       </div>
+
+      {/*
+        A dialog rather than an expanding section: the panel is a column of
+        short blocks read top to bottom, and dropping forty rows into the middle
+        of it pushes everything below out of reach. This is a detour, and it
+        hands the panel back exactly as it was.
+      */}
+      <Dialog
+        open={allSites}
+        onClose={() => setAllSites(false)}
+        title={`Where ${row.relicFullName} drops`}
+        description={`${sites.length} missions, best chance first`}
+        footer={
+          <Button variant="ghost" onClick={() => setAllSites(false)}>
+            Close
+          </Button>
+        }
+      >
+        <div style={{ maxHeight: "60vh", overflowY: "auto", display: "grid", gap: 6 }}>
+          {sites.map((site, index) => (
+            <div
+              key={`${site.location}-${site.rotation}-${index}`}
+              style={{ display: "flex", alignItems: "baseline", gap: 10, fontSize: 13 }}
+            >
+              <span style={{ flex: 1, minWidth: 0 }}>{site.location}</span>
+              <span className="rf-text-caption rf-fg-muted">{site.mission}</span>
+              {site.rotation && (
+                <span className="rf-text-caption rf-fg-muted">rot {site.rotation}</span>
+              )}
+              <span
+                className="rf-text-data-sm rf-tabular rf-fg-muted"
+                style={{ width: 56, textAlign: "right" }}
+              >
+                {site.chance.toFixed(2)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </Dialog>
     </DetailPanel>
   );
 }
