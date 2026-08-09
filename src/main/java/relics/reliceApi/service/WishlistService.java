@@ -78,7 +78,7 @@ public class WishlistService {
         } catch (Exception e) {
             // A corrupt file must not stop the application from starting; the
             // list is a convenience, not the point of the service.
-            System.err.println("wishlist: file illeggibile, riparto vuoto — " + e.getMessage());
+            System.err.println("wishlist: unreadable file, starting empty — " + e.getMessage());
             entries = new ArrayList<>();
         }
     }
@@ -95,7 +95,7 @@ public class WishlistService {
             Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 
         } catch (IOException e) {
-            System.err.println("wishlist: salvataggio fallito — " + e.getMessage());
+            System.err.println("wishlist: save failed — " + e.getMessage());
         }
     }
 }

@@ -57,7 +57,7 @@ function commit(next: Set<string>) {
     api.saveOwned([...owned]).catch((error) => {
       // The local copy already holds the change, so a failed sync degrades to
       // "this browser only" rather than losing the edit.
-      console.warn("owned: salvataggio sul server fallito", error);
+      console.warn("owned: saving to the server failed", error);
     });
   }, SAVE_DELAY);
 }

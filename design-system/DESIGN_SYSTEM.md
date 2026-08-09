@@ -1,197 +1,198 @@
 # Relic Finder — Orokin Design System
 
-Specifica tecnica completa. Dark-only, desktop-first, React + Tailwind + shadcn/ui.
-Versione 1.0 — 2026-08-06.
+Complete technical specification. Dark-only, desktop-first, React + Tailwind + shadcn/ui.
+Version 1.0 — 2026-08-06.
 
-**File del sistema**
+**Files of the system**
 
-| File | Ruolo |
+| File | Role |
 |---|---|
-| `DESIGN_SYSTEM.md` | Questo documento. Fonte di verità per ogni regola. |
-| `tokens.json` | Token in formato W3C DTCG. Sorgente per Style Dictionary / sync. |
-| `globals.css` | Tema Tailwind v4 (`@theme`) + primitive di geometria Orokin. |
-| `tailwind.config.ts` | Tema Tailwind v3 / shadcn + plugin utility di clipping. |
-| `preview.html` | Pagina standalone con ogni token e componente renderizzato. |
+| `DESIGN_SYSTEM.md` | This document. The source of truth for every rule. |
+| `tokens.json` | Tokens in W3C DTCG format. The source for Style Dictionary / sync. |
+| `globals.css` | Tailwind v4 theme (`@theme`) + the Orokin geometry primitives. |
+| `tailwind.config.ts` | Tailwind v3 / shadcn theme + the clipping utility plugin. |
+| `preview.html` | Standalone page rendering every token and component. |
 
 ---
 
-## 0. Decisioni fondanti
+## 0. Founding decisions
 
-| Ambito | Decisione | Conseguenza |
+| Area | Decision | Consequence |
 |---|---|---|
-| Identità | Orokin / lore Warframe | Nero void, oro, geometria tagliata |
-| Temi | Solo dark | Nessun token light. `color-scheme: dark` fisso |
-| Priorità layout | Desktop-first | Tabella densa + detail panel 380px |
-| Stack | React + Tailwind + shadcn | Token come CSS custom properties |
-| Accento UI | Void purple, **non** oro | L'oro resta al brand e alla rarità Rare |
-| Geometria | Full Orokin, ma **solo sui contenitori** | Righe e celle mai clippate |
-| Rarità | Metalli fedeli al gioco | Bronzo / argento / oro |
-| Tier | Colore proprio per era | Refinement = intensità dello stesso colore |
-| Motion | Funzionale + 3 firme Orokin | Sweep, radiant-pulse, stagger |
-| Accessibilità | WCAG 2.2 AA stretto | Ogni coppia colore verificata, tabella §2.5 |
+| Identity | Orokin / Warframe lore | Void black, gold, cut geometry |
+| Themes | Dark only | No light tokens. `color-scheme: dark`, fixed |
+| Layout priority | Desktop-first | Dense table + 380px detail panel |
+| Stack | React + Tailwind + shadcn | Tokens as CSS custom properties |
+| UI accent | Void purple, **not** gold | Gold stays with the brand and with Rare |
+| Geometry | Full Orokin, but **on containers only** | Rows and cells are never clipped |
+| Rarity | Metals faithful to the game | Bronze / silver / gold |
+| Tier | A colour per era | Refinement = intensity of that same colour |
+| Motion | Functional + three Orokin signatures | Sweep, radiant-pulse, stagger |
+| Accessibility | Strict WCAG 2.2 AA | Every colour pair verified, table §2.5 |
 
-### 0.1 Deviazioni dalle scelte iniziali (e perché)
+### 0.1 Departures from the first draft (and why)
 
-Tre scelte sono state corrette in fase di verifica. Sono deviazioni consapevoli, non refusi.
+Three choices were corrected during verification. They are deliberate departures, not typos.
 
-1. **Font display: `Cinzel` invece di `Marcellus`.** Marcellus ha un solo peso (400). Con un H1 e un H2 sulla stessa pagina la gerarchia sarebbe affidata solo alla dimensione, e un serif 400 a 22px su fondo `#0B0A08` risulta anemico. Cinzel ha 400–700, è un romano lapidario — lettura Orokin ancora più letterale. Marcellus non compare più nemmeno come fallback: da quando Cinzel è self-hosted non può fallire il caricamento, quindi il fallback successivo deve essere un font già presente sulla macchina (`Georgia`).
-2. **Axi ritarato da `#B45FD4` a `#DE8CE8`.** Il valore originale distava troppo poco dall'accento `#7C5CE6` (stessa famiglia, luminanza vicina): a chip e link adiacenti sembravano lo stesso colore.
-3. **`#7C5CE6` non è mai un fill con testo sopra.** Verificato: 4.27:1 con ink, 3.97:1 con bone-50 — fallisce AA in entrambe le direzioni. Il bottone accento solido usa `void-700 #4E2FBF` + `bone-50` (7.25:1). Il `void-500` resta per fill decorativi, barre di selezione e stati senza testo.
+1. **Display font: `Cinzel` instead of `Marcellus`.** Marcellus has a single weight (400). With an H1 and an H2 on the same page the hierarchy would rest on size alone, and a 400-weight serif at 22px on `#0B0A08` reads anaemic. Cinzel carries 400–700 and is a lapidary roman — an even more literal Orokin reading. Marcellus is gone even as a fallback: now that Cinzel is self-hosted it cannot fail to load, so the next fallback has to be a font already on the machine (`Georgia`).
+2. **Axi retuned from `#B45FD4` to `#DE8CE8`.** The original sat too close to the `#7C5CE6` accent — same family, similar luminance — so an adjacent chip and link read as the same colour.
+3. **`#7C5CE6` is never a fill with text on it.** Verified: 4.27:1 against ink, 3.97:1 against bone-50 — it fails AA in both directions. The solid accent button uses `void-700 #4E2FBF` with `bone-50` (7.25:1). `void-500` stays for decorative fills, selection bars and states without text.
 
 ---
 
-## 1. Principi
+## 1. Principles
 
-1. **Il dato viene prima dell'ornamento.** Un giocatore cerca "dove droppa Lith V9" e "quanto costa". Prezzi, percentuali e nomi devono essere leggibili al primo colpo d'occhio. L'oro non decora mai qualcosa che ostacola la lettura.
-2. **Un colore = un significato.** L'oro significa Rare/Radiant/brand. Il viola significa "azione o selezione dell'utente". Nessun colore ha due lavori.
-3. **La geometria fa l'identità, non il colore delle superfici.** Le superfici sono neri caldi quasi indistinguibili; il carattere lo danno gli angoli tagliati e le cornici.
-4. **Densità.** Il desktop mostra molte righe. Ogni pixel verticale in più su una riga costa una reliquia in meno a schermo.
-5. **Niente ombre.** Con `clip-path` le `box-shadow` vengono ritagliate. La profondità è superficie + bordo.
+1. **The data comes before the ornament.** A player is looking for "where does Lith V9 drop" and "what does it cost". Prices, percentages and names have to be readable at a glance. Gold never decorates anything that gets in the way of reading.
+2. **One colour, one meaning.** Gold means Rare / Radiant / brand. Purple means "user action or selection". No colour holds two jobs.
+3. **The geometry carries the identity, not the colour of the surfaces.** The surfaces are warm blacks, nearly indistinguishable; the character comes from cut corners and frames.
+4. **Density.** The desktop shows many rows. Every extra vertical pixel on a row costs one relic off the screen.
+5. **No shadows.** `clip-path` cuts `box-shadow` away. Depth is surface plus border.
 
 ---
 
-## 2. Colore
+## 2. Colour
 
-### 2.1 Scale primitive
+### 2.1 Primitive scales
 
-Nomi da usare in codice: `ink`, `bone`, `gold`, `void`.
+Names to use in code: `ink`, `bone`, `gold`, `void`.
 
-**ink** — neri void, canvas e superfici
+**ink** — void blacks, canvas and surfaces
 
-| Token | Hex | Uso |
+| Token | Hex | Use |
 |---|---|---|
-| `ink-950` | `#0B0A08` | Canvas dell'app |
-| `ink-900` | `#131210` | Pannelli, corpo tabella |
-| `ink-800` | `#1A1815` | Card, header tabella, input |
-| `ink-700` | `#23201A` | Hover fill, popover |
-| `ink-600` | `#2B2720` | Dialog, dropdown |
-| `ink-500` | `#3A3529` | Superficie massima / divider forte |
+| `ink-950` | `#0B0A08` | App canvas |
+| `ink-900` | `#131210` | Panels, table body |
+| `ink-800` | `#1A1815` | Cards, table header, inputs |
+| `ink-700` | `#23201A` | Hover fill, popovers |
+| `ink-600` | `#2B2720` | Dialogs, dropdowns |
+| `ink-500` | `#3A3529` | Highest surface / strong divider |
 
-**bone** — neutri caldi, testo
+**bone** — warm neutrals, text
 
-| Token | Hex | Uso |
+| Token | Hex | Use |
 |---|---|---|
-| `bone-50` | `#F2EDE3` | Testo primario |
-| `bone-200` | `#D6CFC2` | Testo su fill scuri saturi |
-| `bone-300` | `#B9B1A2` | Testo secondario |
-| `bone-400` | `#9A9280` | Testo muted, label, placeholder |
-| `bone-500` | `#6E6757` | Icone decorative |
-| `bone-600` | `#5C5648` | Disabilitato |
+| `bone-50` | `#F2EDE3` | Primary text |
+| `bone-200` | `#D6CFC2` | Text on saturated dark fills |
+| `bone-300` | `#B9B1A2` | Secondary text |
+| `bone-400` | `#9A9280` | Muted text, labels, placeholders |
+| `bone-500` | `#6E6757` | Decorative icons |
+| `bone-600` | `#5C5648` | Disabled |
 
-**gold** — brand, azione primaria, Rare, Radiant
+**gold** — brand, primary action, Rare, Radiant
 
-| Token | Hex | Uso |
+| Token | Hex | Use |
 |---|---|---|
-| `gold-50` | `#FBF3D9` | Testo su fill oro pieno saturo |
-| `gold-100` | `#F5E4AF` | Hover di testo brand |
-| `gold-200` | `#F0CC66` | Testo brand su superfici alte |
-| `gold-300` | `#E3B341` | **Testo brand / rarità Rare** |
-| `gold-400` | `#D4A32F` | Hover del fill primario |
-| `gold-500` | `#C9A227` | **Fill primario / brand** |
-| `gold-600` | `#A08428` | Active del fill, bordo enfasi |
-| `gold-700` | `#8A7423` | Bordo interattivo (3:1 verificato) |
-| `gold-800` | `#5E4A13` | Bordo decorativo forte, scrollbar hover |
-| `gold-900` | `#3A2D0C` | Fill oro spentissimo |
+| `gold-50` | `#FBF3D9` | Text on a saturated solid gold fill |
+| `gold-100` | `#F5E4AF` | Brand text hover |
+| `gold-200` | `#F0CC66` | Brand text on high surfaces |
+| `gold-300` | `#E3B341` | **Brand text / Rare rarity** |
+| `gold-400` | `#D4A32F` | Primary fill hover |
+| `gold-500` | `#C9A227` | **Primary fill / brand** |
+| `gold-600` | `#A08428` | Fill active, emphasis border |
+| `gold-700` | `#8A7423` | Interactive border (3:1 verified) |
+| `gold-800` | `#5E4A13` | Strong decorative border, scrollbar hover |
+| `gold-900` | `#3A2D0C` | Deepest muted gold fill |
 
-**void** — accento UI
+**void** — UI accent
 
-| Token | Hex | Uso |
+| Token | Hex | Use |
 |---|---|---|
-| `void-100` | `#DCD2FD` | Testo su fill viola scuro |
+| `void-100` | `#DCD2FD` | Text on a dark purple fill |
 | `void-200` | `#C4B4FA` | — |
 | `void-300` | `#B7A3F7` | Link hover |
-| `void-400` | `#9B82F0` | **Link, focus ring, testo accento, marker selezione** |
-| `void-500` | `#7C5CE6` | Fill decorativi, barre, veli di selezione. **Mai con testo sopra** |
-| `void-600` | `#6647D6` | Hover del bottone accento |
-| `void-700` | `#4E2FBF` | **Fill bottone accento** (con `bone-50`) |
-| `void-800` | `#3D24A0` | Active del bottone accento |
-| `void-900` | `#2B1970` | Fill piatto molto scuro |
+| `void-400` | `#9B82F0` | **Links, focus ring, accent text, selection marker** |
+| `void-500` | `#7C5CE6` | Decorative fills, bars, selection veils. **Never with text on it** |
+| `void-600` | `#6647D6` | Accent button hover |
+| `void-700` | `#4E2FBF` | **Accent button fill** (with `bone-50`) |
+| `void-800` | `#3D24A0` | Accent button active |
+| `void-900` | `#2B1970` | Very dark flat fill |
 
-### 2.2 Colori di dominio
+### 2.2 Domain colours
 
-**Tier reliquia** — resi **solo come chip a fondo pieno con testo `ink-950`**. Mai come colore di testo su fondo scuro: sono tarati per il contrasto in negativo.
+**Relic tier** — rendered **only as a solid chip with `ink-950` text**. Never as text colour on a dark background: they are tuned for contrast in reverse.
 
-| Tier | Hex | Contrasto con `ink-950` |
+| Tier | Hex | Contrast against `ink-950` |
 |---|---|---|
 | Lith | `#6BBEE0` | 9.49:1 |
 | Meso | `#7FBF6A` | 9.01:1 |
 | Neo | `#DB9463` | 7.94:1 |
 | Axi | `#DE8CE8` | 8.50:1 |
 | Requiem | `#B9B1A2` | 8.36:1 |
+| Vanguard | `#9AA6EE` | 8.54:1 |
 
-**Refinement** — non ha colori propri: modula il chip del tier.
+**Refinement** — has no colours of its own: it modulates the tier chip.
 
-| Refinement | Opacità chip | Cornice | Extra |
+| Refinement | Chip opacity | Frame | Extra |
 |---|---|---|---|
-| Intact | 55% | nessuna | — |
+| Intact | 55% | none | — |
 | Exceptional | 70% | 1px `gold-800` | — |
 | Flawless | 85% | 1px `gold-700` | — |
 | Radiant | 100% | 1px `gold-500` | `animation: radiant 2400ms infinite` |
 
-Il refinement è sempre accompagnato dal testo (`Intact`, `Radiant`, …) o dall'`aria-label`: l'opacità da sola non è un canale accessibile.
+Refinement always travels with its text (`Intact`, `Radiant`, …) or with an `aria-label`: opacity on its own is not an accessible channel.
 
-**Rarità drop** — usate **solo nella colonna drop**, come pallino 8px + testo colorato.
+**Drop rarity** — used **only in the drop column**, as an 8px dot plus coloured text.
 
-| Rarità | Hex | Contrasto su `surface-1` |
+| Rarity | Hex | Contrast on `surface-1` |
 |---|---|---|
 | Common | `#C97F3E` | 5.87:1 |
 | Uncommon | `#B8BFC7` | 10.09:1 |
 | Rare | `#E3B341` | 9.62:1 |
 
-**Perché tier e rarità non si confondono anche se Neo e Common sono entrambi arancioni**: occupano canali visivi diversi e non appaiono mai nello stesso slot. Il tier è un chip pieno rettangolare-notched a inizio riga; la rarità è un pallino tondo + testo nella colonna drop. Forma, posizione e trattamento sono distinti prima ancora del colore.
+**Why tier and rarity never blur together even though Neo and Common are both orange**: they occupy different visual channels and never appear in the same slot. A tier is a solid notched chip at the start of the row; a rarity is a round dot plus text in the drop column. Shape, position and treatment are distinct before colour is even considered.
 
-**Valute**
+**Currencies**
 
-| Token | Hex | Uso |
+| Token | Hex | Use |
 |---|---|---|
-| `currency-platinum` | `#B8C9D9` | Prezzi in platinum |
-| `currency-ducat` | `#D9B87A` | Valore in ducati |
-| `currency-credit` | `#9A9280` | Crediti |
+| `currency-platinum` | `#B8C9D9` | Platinum prices |
+| `currency-ducat` | `#D9B87A` | Ducat value |
+| `currency-credit` | `#9A9280` | Credits |
 
-### 2.3 Token semantici
+### 2.3 Semantic tokens
 
-Da usare nei componenti. Non referenziare mai le primitive direttamente in un componente.
+These are what components use. Never reference a primitive directly from a component.
 
-**Superfici**
+**Surfaces**
 
-| Token | Valore | Uso |
+| Token | Value | Use |
 |---|---|---|
 | `surface-0` | `ink-950` | Canvas |
-| `surface-1` | `ink-900` | Pannelli, corpo tabella |
-| `surface-2` | `ink-800` | Card, header tabella, input |
-| `surface-3` | `ink-700` | Popover, hover di superfici |
-| `surface-4` | `ink-600` | Dialog, dropdown |
-| `scrim` | `#0B0A08CC` | Velo dietro i modali |
+| `surface-1` | `ink-900` | Panels, table body |
+| `surface-2` | `ink-800` | Cards, table header, inputs |
+| `surface-3` | `ink-700` | Popovers, surface hover |
+| `surface-4` | `ink-600` | Dialogs, dropdowns |
+| `scrim` | `#0B0A08CC` | The veil behind modals |
 
 **Foreground**
 
-| Token | Valore | AA su `surface-0` → `surface-4` |
+| Token | Value | AA on `surface-0` → `surface-4` |
 |---|---|---|
 | `fg-primary` | `#F2EDE3` | 16.96 → 12.73 |
 | `fg-secondary` | `#B9B1A2` | 9.30 → 6.98 |
 | `fg-muted` | `#9A9280` | 6.41 → 4.81 |
-| `fg-disabled` | `#5C5648` | 2.71 → 2.04 (esente: elemento disabilitato) |
+| `fg-disabled` | `#5C5648` | 2.71 → 2.04 (exempt: disabled element) |
 | `fg-brand` | `#E3B341` | 10.17 → 7.63 |
 | `fg-accent` | `#9B82F0` | 6.45 → 4.84 |
-| `fg-on-gold` | `#0B0A08` | 8.18 su `gold-500` |
-| `fg-on-void` | `#F2EDE3` | 7.25 su `void-700` |
+| `fg-on-gold` | `#0B0A08` | 8.18 on `gold-500` |
+| `fg-on-void` | `#F2EDE3` | 7.25 on `void-700` |
 
-**Bordi**
+**Borders**
 
-| Token | Valore | Uso | Contrasto |
+| Token | Value | Use | Contrast |
 |---|---|---|---|
-| `border-subtle` | `#221F19` | Divider di riga, hairline decorative | decorativo |
-| `border-default` | `#2E2920` | Cornice standard dei pannelli | decorativo |
-| `border-strong` | `#4A4030` | Separatori di sezione, scrollbar | decorativo |
-| `border-interactive` | `#8A7423` | **Boundary di ogni controllo** | 3.26:1 min ✓ |
-| `border-emphasis` | `#A08428` | Hover di controllo, cornice gilded | 4.12:1 min ✓ |
-| `border-focus` | `#9B82F0` | Anello di focus | 4.84:1 min ✓ |
+| `border-subtle` | `#221F19` | Row dividers, decorative hairlines | decorative |
+| `border-default` | `#2E2920` | Standard panel frame | decorative |
+| `border-strong` | `#4A4030` | Section separators, scrollbar | decorative |
+| `border-interactive` | `#8A7423` | **The boundary of every control** | 3.26:1 min ✓ |
+| `border-emphasis` | `#A08428` | Control hover, gilded frame | 4.12:1 min ✓ |
+| `border-focus` | `#9B82F0` | Focus ring | 4.84:1 min ✓ |
 
-> **Regola vincolante.** Un bordo che è l'unico segnale della presenza di un controllo (input, select, bottone ghost/outline, checkbox) deve usare `border-interactive` o superiore. I bordi in alpha oro (`gold-500` all'8–34%) arrivano al massimo a 1.93:1: sono ammessi solo come ornamento, mai come confine funzionale.
+> **Binding rule.** A border that is the only signal a control is there — input, select, ghost or outline button, checkbox — must use `border-interactive` or stronger. Gold alpha borders (`gold-500` at 8–34%) reach 1.93:1 at best: they are allowed as ornament, never as a functional boundary.
 
-**Azione**
+**Action**
 
-| Token | Valore |
+| Token | Value |
 |---|---|
 | `action-primary-bg` / `hover` / `active` | `gold-500` / `gold-400` / `gold-600` |
 | `action-primary-fg` | `ink-950` |
@@ -201,123 +202,123 @@ Da usare nei componenti. Non referenziare mai le primitive direttamente in un co
 | `action-danger-bg` / `fg` | `#A32B27` / `bone-50` |
 | `action-disabled-bg` / `fg` | `ink-700` / `bone-600` |
 
-**Stati di riga**
+**Row states**
 
-| Token | Valore |
+| Token | Value |
 |---|---|
-| `state-row-hover` | `#C9A2270D` (oro 5%) |
-| `state-row-selected` | `#7C5CE61A` (viola 10%) |
-| `state-row-marker-hover` | `gold-500`, inset 2px a sinistra |
-| `state-row-marker-selected` | `void-400`, inset 2px a sinistra |
+| `state-row-hover` | `#C9A2270D` (gold 5%) |
+| `state-row-selected` | `#7C5CE61A` (purple 10%) |
+| `state-row-marker-hover` | `gold-500`, inset 2px on the left |
+| `state-row-marker-selected` | `void-400`, inset 2px on the left |
 
 **Feedback**
 
-| Token | Hex | Uso testo | Fill |
+| Token | Hex | As text | Fill |
 |---|---|---|---|
 | `success` | `#5FBF7F` | 8.71:1 ✓ | `success-dim #2E6B45` |
 | `warning` | `#E0A63C` | 9.13:1 ✓ | `warning-dim #6B4E14` |
 | `danger` | `#F07A75` | 7.30:1 ✓ | `danger-solid #A32B27` |
 | `info` | `#6BBEE0` | 9.49:1 ✓ | `info-dim #22505F` |
 
-### 2.4 Regole d'uso del colore
+### 2.4 Rules for using colour
 
-- **L'oro non è mai il colore di un link.** I link sono `void-400`. L'oro su testo significa "questo è Rare / Radiant / brand".
-- **Un solo bottone `gold-500` per vista.** L'azione primaria è unica (tipicamente "Cerca" o "Apri su Warframe Market").
-- **Il rosso non compare mai su un prezzo.** Un prezzo alto non è un errore. Le variazioni di prezzo usano `success`/`danger` solo sulla freccia delta, non sul numero.
-- **Nessuna informazione affidata al solo colore.** Rarità = pallino + testo; refinement = opacità + testo; delta prezzo = colore + freccia + segno.
-- **Alpha solo su nero.** I veli (`#C9A2270D`, `#7C5CE61A`) sono calibrati su `surface-0/1`. Su `surface-3/4` usare il token di superficie superiore, non sovrapporre altro velo.
+- **Gold is never the colour of a link.** Links are `void-400`. Gold on text means "this is Rare / Radiant / brand".
+- **One `gold-500` button per view.** The primary action is singular — typically "Search" or "Open on Warframe Market".
+- **Red never appears on a price.** A high price is not an error. Price movement uses `success`/`danger` on the delta arrow only, never on the number.
+- **No information carried by colour alone.** Rarity = dot + text; refinement = opacity + text; price delta = colour + arrow + sign.
+- **Alpha only over black.** The veils (`#C9A2270D`, `#7C5CE61A`) are calibrated against `surface-0/1`. On `surface-3/4` use the next surface token instead of stacking another veil.
 
-### 2.5 Tabella dei contrasti verificati
+### 2.5 Verified contrast table
 
-Calcolati con la formula WCAG 2.x relative luminance. `s0…s4` = `surface-0…surface-4`.
+Computed with the WCAG 2.x relative luminance formula. `s0…s4` = `surface-0…surface-4`.
 
-| Colore | Hex | s0 | s1 | s2 | s3 | s4 | Verdetto |
+| Colour | Hex | s0 | s1 | s2 | s3 | s4 | Verdict |
 |---|---|---|---|---|---|---|---|
-| fg-primary | `#F2EDE3` | 16.96 | 16.05 | 15.18 | 13.92 | 12.73 | AAA ovunque |
-| fg-secondary | `#B9B1A2` | 9.30 | 8.80 | 8.33 | 7.64 | 6.98 | AAA ovunque |
-| fg-muted | `#9A9280` | 6.41 | 6.06 | 5.73 | 5.26 | 4.81 | AA ovunque |
-| fg-brand `gold-300` | `#E3B341` | 10.17 | 9.62 | 9.10 | 8.35 | 7.63 | AAA ovunque |
-| gold-500 | `#C9A227` | 8.18 | 7.74 | 7.32 | 6.71 | 6.14 | AAA ovunque |
-| fg-accent `void-400` | `#9B82F0` | 6.45 | 6.10 | 5.77 | 5.29 | 4.84 | AA ovunque |
-| void-500 | `#7C5CE6` | 4.27 | 4.04 | 3.82 | 3.50 | 3.20 | **solo non-testo** |
-| rarity-common | `#C97F3E` | 6.21 | 5.87 | 5.56 | 5.10 | 4.66 | AA ovunque |
-| rarity-uncommon | `#B8BFC7` | 10.66 | 10.09 | 9.55 | 8.75 | 8.00 | AAA ovunque |
-| rarity-rare | `#E3B341` | 10.17 | 9.62 | 9.10 | 8.35 | 7.63 | AAA ovunque |
-| success | `#5FBF7F` | 8.71 | 8.24 | 7.80 | 7.15 | 6.54 | AAA ovunque |
-| warning | `#E0A63C` | 9.13 | 8.64 | 8.17 | 7.49 | 6.85 | AAA ovunque |
-| danger | `#F07A75` | 7.30 | 6.91 | 6.53 | 5.99 | 5.48 | AA ovunque |
-| info | `#6BBEE0` | 9.49 | 8.97 | 8.49 | 7.79 | 7.12 | AAA ovunque |
-| platinum | `#B8C9D9` | 11.68 | 11.05 | 10.46 | 9.59 | 8.77 | AAA ovunque |
-| ducat | `#D9B87A` | 10.45 | 9.88 | 9.35 | 8.58 | 7.84 | AAA ovunque |
-| border-interactive | `#8A7423` | 4.34 | 4.10 | 3.88 | 3.56 | 3.26 | ≥3:1 non-testo ✓ |
-| border-emphasis | `#A08428` | 5.49 | 5.19 | 4.91 | 4.51 | 4.12 | ≥3:1 non-testo ✓ |
+| fg-primary | `#F2EDE3` | 16.96 | 16.05 | 15.18 | 13.92 | 12.73 | AAA everywhere |
+| fg-secondary | `#B9B1A2` | 9.30 | 8.80 | 8.33 | 7.64 | 6.98 | AAA everywhere |
+| fg-muted | `#9A9280` | 6.41 | 6.06 | 5.73 | 5.26 | 4.81 | AA everywhere |
+| fg-brand `gold-300` | `#E3B341` | 10.17 | 9.62 | 9.10 | 8.35 | 7.63 | AAA everywhere |
+| gold-500 | `#C9A227` | 8.18 | 7.74 | 7.32 | 6.71 | 6.14 | AAA everywhere |
+| fg-accent `void-400` | `#9B82F0` | 6.45 | 6.10 | 5.77 | 5.29 | 4.84 | AA everywhere |
+| void-500 | `#7C5CE6` | 4.27 | 4.04 | 3.82 | 3.50 | 3.20 | **non-text only** |
+| rarity-common | `#C97F3E` | 6.21 | 5.87 | 5.56 | 5.10 | 4.66 | AA everywhere |
+| rarity-uncommon | `#B8BFC7` | 10.66 | 10.09 | 9.55 | 8.75 | 8.00 | AAA everywhere |
+| rarity-rare | `#E3B341` | 10.17 | 9.62 | 9.10 | 8.35 | 7.63 | AAA everywhere |
+| success | `#5FBF7F` | 8.71 | 8.24 | 7.80 | 7.15 | 6.54 | AAA everywhere |
+| warning | `#E0A63C` | 9.13 | 8.64 | 8.17 | 7.49 | 6.85 | AAA everywhere |
+| danger | `#F07A75` | 7.30 | 6.91 | 6.53 | 5.99 | 5.48 | AA everywhere |
+| info | `#6BBEE0` | 9.49 | 8.97 | 8.49 | 7.79 | 7.12 | AAA everywhere |
+| platinum | `#B8C9D9` | 11.68 | 11.05 | 10.46 | 9.59 | 8.77 | AAA everywhere |
+| ducat | `#D9B87A` | 10.45 | 9.88 | 9.35 | 8.58 | 7.84 | AAA everywhere |
+| border-interactive | `#8A7423` | 4.34 | 4.10 | 3.88 | 3.56 | 3.26 | ≥3:1 non-text ✓ |
+| border-emphasis | `#A08428` | 5.49 | 5.19 | 4.91 | 4.51 | 4.12 | ≥3:1 non-text ✓ |
 
-**Testo su fill**
+**Text on fills**
 
-| Fill | Testo | Ratio | Verdetto |
+| Fill | Text | Ratio | Verdict |
 |---|---|---|---|
 | `gold-500 #C9A227` | `ink-950` | 8.18 | AAA |
 | `gold-300 #E3B341` | `ink-950` | 10.17 | AAA |
 | `void-700 #4E2FBF` | `bone-50` | 7.25 | AAA |
-| `void-500 #7C5CE6` | `ink-950` | 4.27 | ✗ vietato |
-| `void-500 #7C5CE6` | `bone-50` | 3.97 | ✗ vietato |
-| tier chip (tutti) | `ink-950` | 7.94–9.49 | AAA |
+| `void-500 #7C5CE6` | `ink-950` | 4.27 | ✗ forbidden |
+| `void-500 #7C5CE6` | `bone-50` | 3.97 | ✗ forbidden |
+| tier chips (all) | `ink-950` | 7.94–9.49 | AAA |
 
-**Valori sotto soglia da non usare mai come testo**: `void-500`, `#A6642E` (bronzo originale, 4.23), `#8A8271` (muted originale, 3.90 su s4), `#E5544F` (danger originale, 4.04 su s4).
+**Values below threshold, never to be used as text**: `void-500`, `#A6642E` (the original bronze, 4.23), `#8A8271` (the original muted, 3.90 on s4), `#E5544F` (the original danger, 4.04 on s4).
 
 ---
 
-## 3. Elevazione
+## 3. Elevation
 
-Cinque livelli. Nessuna `box-shadow`: con `clip-path` verrebbe ritagliata. La profondità è **superficie + intensità del bordo**.
+Five levels. No `box-shadow`: `clip-path` would cut it away. Depth is **surface plus border intensity**.
 
-| Livello | Superficie | Bordo | Uso |
+| Level | Surface | Border | Use |
 |---|---|---|---|
-| `e0` | `surface-0` | nessuno | Canvas |
-| `e1` | `surface-1` | `border-subtle` | Pannelli, corpo tabella, sidebar |
-| `e2` | `surface-2` | `border-default` | Card, header tabella, input |
-| `e3` | `surface-3` | `border-strong` | Popover, tooltip, hover di card |
-| `e4` | `surface-4` | `border-emphasis` + scrim sul contenuto sottostante | Dialog, dropdown, command palette |
+| `e0` | `surface-0` | none | Canvas |
+| `e1` | `surface-1` | `border-subtle` | Panels, table body, sidebar |
+| `e2` | `surface-2` | `border-default` | Cards, table header, inputs |
+| `e3` | `surface-3` | `border-strong` | Popovers, tooltips, card hover |
+| `e4` | `surface-4` | `border-emphasis` + a scrim over what is underneath | Dialogs, dropdowns, command palette |
 
-**Unica eccezione ammessa**: i layer flottanti `e3` e `e4` possono aggiungere `filter: drop-shadow(0 2px 6px rgb(0 0 0 / .5)) drop-shadow(0 8px 24px rgb(0 0 0 / .4))`. `drop-shadow` segue il `clip-path`, `box-shadow` no. Va applicato al wrapper `.o-frame`, non all'elemento clippato interno, altrimenti l'ombra viene disegnata due volte.
+**The one permitted exception**: the floating layers `e3` and `e4` may add `filter: drop-shadow(0 2px 6px rgb(0 0 0 / .5)) drop-shadow(0 8px 24px rgb(0 0 0 / .4))`. `drop-shadow` follows the `clip-path`; `box-shadow` does not. Apply it to the `.o-frame` wrapper, not to the clipped child, or the shadow is drawn twice.
 
 ---
 
-## 4. Geometria Orokin
+## 4. Orokin geometry
 
-### 4.1 Regola di scoping (vincolante)
+### 4.1 Scoping rule (binding)
 
-`border-radius` è **0 ovunque**, tranne pallini/avatar/spinner (`9999px`). La silhouette la fa il `clip-path`.
+`border-radius` is **0 everywhere**, except dots, avatars and spinners (`9999px`). The silhouette comes from `clip-path`.
 
-| Elemento | Clip |
+| Element | Clip |
 |---|---|
 | Panel, card, dialog, drawer, sheet | ✅ `clip-orokin`, notch `lg` |
 | Button, input, select, textarea | ✅ `clip-orokin`, notch `sm` |
 | Chip, badge, tag, tier chip | ✅ `clip-octagon`, notch `xs` |
 | Tooltip, popover, dropdown | ✅ `clip-orokin`, notch `sm` |
-| Tab attivo, toast | ✅ `clip-orokin`, notch `sm` |
-| **`tr`, `td`, `li`, divider, avatar, skeleton di riga** | ❌ **mai** |
-| Immagini, icone | ❌ mai |
+| Active tab, toast | ✅ `clip-orokin`, notch `sm` |
+| **`tr`, `td`, `li`, dividers, avatars, row skeletons** | ❌ **never** |
+| Images, icons | ❌ never |
 
-**Perché.** Clippare 200 righe di tabella significa 200 layer compositati con cornice a pseudo-elemento: repaint costoso, virtualizzazione a scatti e — peggio — l'anello di focus tagliato via sulla riga selezionata. Il wrapper della tabella porta il clip; le righe restano rettangolari e si distinguono con divider e fill.
+**Why.** Clipping 200 table rows means 200 composited layers with pseudo-element frames: expensive repaints, stuttering virtualization and — worse — the focus ring cut away on the selected row. The table wrapper carries the clip; rows stay rectangular and are told apart by dividers and fills.
 
-### 4.2 Scala del notch
+### 4.2 The notch scale
 
-| Token | Valore | Applicazione |
+| Token | Value | Applied to |
 |---|---|---|
-| `notch-xs` | 4px | Chip, badge, tag |
-| `notch-sm` | 6px | Bottoni, input, tab, tooltip, toast |
-| `notch-md` | 10px | Card, popover, pannelli piccoli |
-| `notch-lg` | 16px | Pannello dettaglio, sidebar, sezioni |
-| `notch-xl` | 24px | Hero, dialog grandi, empty state a piena pagina |
+| `notch-xs` | 4px | Chips, badges, tags |
+| `notch-sm` | 6px | Buttons, inputs, tabs, tooltips, toasts |
+| `notch-md` | 10px | Cards, popovers, small panels |
+| `notch-lg` | 16px | Detail panel, sidebar, sections |
+| `notch-xl` | 24px | Hero, large dialogs, full-page empty states |
 
-Regola: il notch non supera mai **1/3 del lato corto** dell'elemento. Su un bottone alto 32px il massimo è `notch-md`; oltre, l'angolo mangia il testo.
+Rule: the notch never exceeds **one third of the element's short side**. On a 32px-tall button the maximum is `notch-md`; beyond that the corner eats the text.
 
-### 4.3 Le tre forme
+### 4.3 The three shapes
 
 ```
 clip-orokin           clip-orokin-inverse       clip-octagon
-(TL + BR tagliati)    (TR + BL tagliati)        (4 angoli tagliati)
+(TL + BR cut)         (TR + BL cut)             (all four cut)
 
   ╱────────────┐        ┌────────────╲            ╱──────────╲
  │             │        │             │          │            │
@@ -325,19 +326,19 @@ clip-orokin           clip-orokin-inverse       clip-octagon
  └────────────╱         ╲────────────┘            ╲──────────╱
 ```
 
-- `clip-orokin` è la silhouette **di default**. Direzione della diagonale sempre la stessa in tutta l'app: alto-sinistra e basso-destra.
-- `clip-orokin-inverse` solo per la metà speculare di un layout diviso (es. pannello dettaglio a destra affiancato alla tabella), così le due diagonali si guardano.
-- `clip-octagon` solo per elementi piccoli e autonomi (chip, badge).
+- `clip-orokin` is the **default** silhouette. The diagonal always runs the same way across the app: top-left and bottom-right.
+- `clip-orokin-inverse` only for the mirrored half of a split layout — a detail panel on the right beside the table — so the two diagonals face each other.
+- `clip-octagon` only for small self-contained elements: chips, badges.
 
-Implementazione in `globals.css`, utility `.clip-orokin`, `.clip-orokin-inverse`, `.clip-octagon`, profondità via `.notch-xs … .notch-xl`.
+Implemented in `globals.css` as the utilities `.clip-orokin`, `.clip-orokin-inverse`, `.clip-octagon`, with depth from `.notch-xs … .notch-xl`.
 
-### 4.4 Bordi su superfici clippate
+### 4.4 Borders on clipped surfaces
 
-`border` e `outline` vengono ritagliati dal `clip-path`. L'unica tecnica corretta è la **doppia superficie**: un wrapper che *è* il bordo, e un figlio inset di 1px che porta la superficie reale.
+`border` and `outline` are cut away by `clip-path`. The only correct technique is the **double surface**: a wrapper that *is* the border, and a child inset by 1px carrying the real surface.
 
 ```html
 <div class="o-frame notch-lg">
-  <div class="o-frame-inner">…contenuto…</div>
+  <div class="o-frame-inner">…content…</div>
 </div>
 ```
 
@@ -346,320 +347,322 @@ Implementazione in `globals.css`, utility `.clip-orokin`, `.clip-orokin-inverse`
 .o-frame-inner  { background: var(--color-surface-1); clip-path: …notch − 1px…; }
 ```
 
-Il notch interno è `notch − frame-width`: senza questa sottrazione lo spessore del bordo lungo la diagonale risulta ~1.41× più sottile che sui lati dritti.
+The inner notch is `notch − frame-width`: without that subtraction the border along the diagonal comes out about 1.41× thinner than on the straight sides.
 
-**Cornice gilded** (`.o-frame--gilded`): il bordo è un gradiente a 135° che concentra l'oro sui due angoli tagliati e sfuma a `border-default` al centro. È l'inlay Orokin. Usarla su: pannello dettaglio, dialog, card di reliquia Radiant. Non su input o bottoni.
+**Gilded frame** (`.o-frame--gilded`): the border is a 135° gradient concentrating gold on the two cut corners and fading to `border-default` in the middle. This is the Orokin inlay. Use it on the detail panel, dialogs and Radiant relic cards. Not on inputs or buttons.
 
-### 4.5 Ornamenti
+### 4.5 Ornaments
 
-- **Divider Orokin**: linea 1px `border-strong` con un rombo 6×6 `gold-700` centrato, interrotta di 12px per lato attorno al rombo. Solo tra sezioni maggiori, max 2 per vista.
-- **Angolo inciso**: sui pannelli `e1` un tratto 1px `gold-800` lungo 24px che segue il taglio del notch, in alto a sinistra. Puramente decorativo.
-- Nessun altro ornamento. Niente pattern di sfondo, niente texture: competono con le tabelle.
+- **Orokin divider**: a 1px `border-strong` line with a 6×6 `gold-700` diamond centred on it, broken for 12px on each side of the diamond. Between major sections only, at most two per view.
+- **Engraved corner**: on `e1` panels, a 1px `gold-800` stroke 24px long following the notch cut, top left. Purely decorative.
+- Nothing else. No background patterns, no textures: they compete with the tables.
 
 ---
 
-## 5. Tipografia
+## 5. Typography
 
-### 5.1 Famiglie
+### 5.1 Families
 
-| Ruolo | Famiglia | Pesi | Note |
+| Role | Family | Weights | Notes |
 |---|---|---|---|
-| Display | `Cinzel` | 400, 600, 700 | Titoli, nomi di reliquia in dettaglio, numeri hero. Fallback `Georgia`, `Times New Roman`, `serif` |
-| UI | `Inter` (variable) | 400, 500, 600, 700 | Tutto il resto |
-| Dati | `Inter` + `tabular-nums` | 400, 500, 600 | Prezzi, percentuali, quantità |
+| Display | `Cinzel` | 400, 600, 700 | Titles, relic names in the detail panel, hero numbers. Fallback `Georgia`, `Times New Roman`, `serif` |
+| UI | `Inter` (variable) | 400, 500, 600, 700 | Everything else |
+| Data | `Inter` + `tabular-nums` | 400, 500, 600 | Prices, percentages, quantities |
 
-Caricamento: `woff2` self-hosted, `font-display: swap`. Nessuna richiesta di rete: niente CDN di font, quindi il sistema rende identico offline, dietro un proxy che blocca, e in giurisdizioni dove servire font da terze parti è un problema di privacy.
+Loading: self-hosted `woff2`, `font-display: swap`. No network request: no font CDN, so the system renders identically offline, behind a proxy that blocks, and in jurisdictions where serving third-party fonts is a privacy problem.
 
-| Famiglia | Pesi | Subset | Peso file |
+| Family | Weights | Subset | File size |
 |---|---|---|---|
-| Cinzel | 400, 600, 700 (tre file statici) | `latin` | 3 × 25 KB |
-| Inter | variable 400–700 (un file) | `latin`, `latin-ext` | 47 + 83 KB |
+| Cinzel | 400, 600, 700 (three static files) | `latin` | 3 × 25 KB |
+| Inter | variable 400–700 (one file) | `latin`, `latin-ext` | 47 + 83 KB |
 
-Cinzel non carica `latin-ext`: imposta solo i titoli, e i nomi delle reliquie sono ASCII. Inter lo carica perché rende tutto il resto, incluso quello che l'utente digita. Non caricare la variable completa di Cinzel — sono 4 pesi inutilizzati.
+Cinzel does not load `latin-ext`: it sets titles only, and relic names are ASCII. Inter does, because it renders everything else, including whatever the user types. Do not load the full Cinzel variable — that is four unused weights.
 
-I font restano file separati, **mai inlinati in base64**: 206 KB di data URI dentro un foglio di stile render-blocking ritarderebbero il primo paint di ogni pagina. Come file si scaricano in parallelo e `font-display: swap` dipinge subito con il fallback.
+The fonts stay separate files and are **never inlined as base64**: 206 KB of data URI inside a render-blocking stylesheet would delay the first paint of every page. As files they download in parallel and `font-display: swap` paints immediately with the fallback.
 
-Cinzel è tutto-maiuscolo per costruzione: **non applicare mai `text-transform: uppercase`** sopra (raddoppierebbe la spaziatura ottica) e non usarlo mai sotto i 18px.
+Cinzel is all-caps by construction: **never apply `text-transform: uppercase`** on top of it — that would double the optical spacing — and never use it below 18px.
 
-### 5.2 Scala
+### 5.2 Scale
 
-| Token | Size / LH | Famiglia | Peso | Tracking | Uso |
+| Token | Size / LH | Family | Weight | Tracking | Use |
 |---|---|---|---|---|---|
-| `display-xl` | 48 / 1.05 | Cinzel | 600 | +0.01em | Hero, titolo landing |
-| `display-lg` | 36 / 1.10 | Cinzel | 600 | +0.01em | Titolo di pagina |
-| `display-md` | 28 / 1.15 | Cinzel | 600 | +0.01em | Nome reliquia nel detail panel |
-| `display-sm` | 22 / 1.20 | Cinzel | 600 | +0.01em | Titolo di dialog, titolo di sezione |
-| `heading-lg` | 18 / 1.30 | Inter | 600 | 0 | Titolo di card |
-| `heading-md` | 16 / 1.40 | Inter | 600 | 0 | Sottosezione |
-| `heading-sm` | 14 / 1.40 | Inter | 600 | 0 | Titolo inline, label forte |
-| `body-lg` | 16 / 1.60 | Inter | 400 | 0 | Testo introduttivo |
-| `body-md` | 15 / 1.55 | Inter | 400 | 0 | **Default del corpo** |
-| `body-sm` | 13 / 1.50 | Inter | 400 | 0 | **Celle di tabella**, testo secondario |
-| `caption` | 12 / 1.40 | Inter | 400 | 0 | Nota, timestamp, helper |
-| `overline` | 11 / 1.20 | Inter | 600 | +0.12em | Header di colonna, eyebrow. `uppercase` |
-| `data-lg` | 20 / 1.20 | Inter tnum | 600 | 0 | Prezzo in evidenza |
-| `data-md` | 14 / 1.20 | Inter tnum | 500 | 0 | Prezzo in tabella |
-| `data-sm` | 13 / 1.20 | Inter tnum | 400 | 0 | Percentuale di drop |
+| `display-xl` | 48 / 1.05 | Cinzel | 600 | +0.01em | Hero, landing title |
+| `display-lg` | 36 / 1.10 | Cinzel | 600 | +0.01em | Page title |
+| `display-md` | 28 / 1.15 | Cinzel | 600 | +0.01em | Relic name in the detail panel |
+| `display-sm` | 22 / 1.20 | Cinzel | 600 | +0.01em | Dialog title, section title |
+| `heading-lg` | 18 / 1.30 | Inter | 600 | 0 | Card title |
+| `heading-md` | 16 / 1.40 | Inter | 600 | 0 | Subsection |
+| `heading-sm` | 14 / 1.40 | Inter | 600 | 0 | Inline title, strong label |
+| `body-lg` | 16 / 1.60 | Inter | 400 | 0 | Lead paragraph |
+| `body-md` | 15 / 1.55 | Inter | 400 | 0 | **Body default** |
+| `body-sm` | 13 / 1.50 | Inter | 400 | 0 | **Table cells**, secondary text |
+| `caption` | 12 / 1.40 | Inter | 400 | 0 | Notes, timestamps, helper text |
+| `overline` | 11 / 1.20 | Inter | 600 | +0.12em | Column headers, eyebrows. `uppercase` |
+| `data-lg` | 20 / 1.20 | Inter tnum | 600 | 0 | Featured price |
+| `data-md` | 14 / 1.20 | Inter tnum | 500 | 0 | Price in a table |
+| `data-sm` | 13 / 1.20 | Inter tnum | 400 | 0 | Drop percentage |
 
-Massimo 3 livelli tipografici distinti per vista, oltre a corpo e dati.
+At most three distinct typographic levels per view, on top of body and data.
 
-### 5.3 Regole sui numeri
+### 5.3 Rules for numbers
 
-- Ogni numero allineato in colonna usa `font-variant-numeric: tabular-nums` e `text-align: right`. Senza tabular-nums le cifre di larghezza diversa fanno ballare la colonna dei prezzi.
-- Prezzi platinum: intero, nessun decimale, suffisso `p` in `fg-muted` a `caption`, spazio sottile prima → `45 p`.
-- Percentuali di drop: due decimali, sempre — `25.33%`, `11.00%`, `2.00%`. Warframe pubblica questi valori con 2 decimali; troncarli fa perdere la corrispondenza con la tabella ufficiale.
-- Quantità e conteggi: separatore migliaia `.` (locale IT) via `Intl.NumberFormat`.
-- Delta prezzo: segno esplicito + freccia + colore → `▲ +12%` in `success`, `▼ −8%` in `danger`.
-- Mai numeri in Cinzel sotto i 20px: i numerali lapidari a corpo piccolo sono illeggibili.
+- Every number aligned in a column uses `font-variant-numeric: tabular-nums` and `text-align: right`. Without tabular numerals, digits of different widths make the price column wobble.
+- Platinum prices: whole numbers, no decimals, a `p` suffix in `fg-muted` at `caption`, hair space before → `45 p`.
+- Drop percentages: two decimals, always — `25.33%`, `11.00%`, `2.00%`. Warframe publishes these with two decimals; truncating breaks the match with the official table.
+- Quantities and counts: thousands separator via `Intl.NumberFormat`.
+- Price delta: explicit sign + arrow + colour → `▲ +12%` in `success`, `▼ −8%` in `danger`.
+- Never set numbers in Cinzel below 20px: lapidary numerals at small sizes are unreadable.
 
-### 5.4 Testo
+### 5.4 Text
 
-- Lunghezza massima di riga per prosa: `72ch`.
-- Nomi di item (`Volt Prime Neuroptics`) non vanno mai troncati a metà parola: `text-overflow: ellipsis` sull'ultima parola intera, con `title` attributo per il valore completo.
-- Nessun `text-transform: uppercase` fuori da `overline` e chip tier.
+- Maximum line length for prose: `72ch`.
+- Item names (`Volt Prime Neuroptics`) are never truncated mid-word: `text-overflow: ellipsis` on the last whole word, with a `title` attribute carrying the full value.
+- No `text-transform: uppercase` outside `overline` and tier chips.
 
 ---
 
-## 6. Spazio e layout
+## 6. Space and layout
 
-### 6.1 Scala di spaziatura
+### 6.1 Spacing scale
 
-Base 4px. Non usare valori fuori scala.
+Base 4px. Do not use off-scale values.
 
-| Token | px | Uso tipico |
+| Token | px | Typical use |
 |---|---|---|
-| `1` | 4 | Gap icona↔testo dentro un chip |
-| `2` | 8 | Gap icona↔testo, padding verticale chip |
-| `3` | 12 | Padding orizzontale di cella, gap tra chip |
-| `4` | 16 | Padding di card, gap tra campi |
+| `1` | 4 | Icon↔text gap inside a chip |
+| `2` | 8 | Icon↔text gap, chip vertical padding |
+| `3` | 12 | Cell horizontal padding, gap between chips |
+| `4` | 16 | Card padding, gap between fields |
 | `5` | 20 | — |
-| `6` | 24 | Padding di pannello, gap tra gruppi |
-| `8` | 32 | Gap tra sezioni |
+| `6` | 24 | Panel padding, gap between groups |
+| `8` | 32 | Gap between sections |
 | `10` | 40 | — |
-| `12` | 48 | Margine di sezione maggiore |
-| `16` | 64 | Padding verticale di pagina |
-| `20` / `24` | 80 / 96 | Empty state, hero |
+| `12` | 48 | Major section margin |
+| `16` | 64 | Page vertical padding |
+| `20` / `24` | 80 / 96 | Empty states, hero |
 
-### 6.2 Griglia e layout
+### 6.2 Grid and layout
 
-- Container max: **1600px**, centrato, padding laterale 24px (≥1280px) / 16px (sotto).
-- Griglia interna: 12 colonne, gutter 24px.
-- Shell desktop a tre zone:
+- Container max: **1600px**, centred, 24px side padding (≥1280px) / 16px below that.
+- Inner grid: 12 columns, 24px gutter.
+- Three-zone desktop shell:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Topbar 56px — logo · search · azioni                         │
+│ Topbar 56px — logo · search · actions                        │
 ├────────────┬────────────────────────────┬────────────────────┤
-│ Sidebar    │ Risultati (flex, min 640)  │ Detail panel       │
-│ 260px      │ tabella densa              │ 380px  ← sticky    │
-│ filtri     │ righe 40px                 │ clip-orokin-inverse│
+│ Sidebar    │ Results (flex, min 640)    │ Detail panel       │
+│ 260px      │ dense table                │ 380px  ← sticky    │
+│ filters    │ 40px rows                  │ clip-orokin-inverse│
 └────────────┴────────────────────────────┴────────────────────┘
 ```
 
-- Sidebar `260px`, collassabile a `56px` (solo icone) sotto 1440px.
-- Detail panel `380px` fisso, `position: sticky; top: 56px`, altezza `calc(100dvh - 56px)`, scroll interno indipendente.
-- Gap tra le zone: 1px di `border-subtle`, non spazio bianco. La densità è il punto.
+- Sidebar `260px`, collapsing to `56px` (icons only) below 1440px.
+- Detail panel fixed at `380px`, `position: sticky; top: 56px`, height `calc(100dvh - 56px)`, scrolling independently.
+- The gap between zones is 1px of `border-subtle`, not whitespace. Density is the point.
 
-### 6.3 Breakpoint e degradazione
+### 6.3 Breakpoints and degradation
 
-| BP | Larghezza | Comportamento |
+| BP | Width | Behaviour |
 |---|---|---|
-| `2xl` | ≥1536 | Layout pieno, sidebar espansa |
-| `xl` | ≥1280 | Layout pieno, sidebar collassata a icone |
-| `lg` | ≥1024 | Detail panel diventa **overlay drawer** da destra (`420px`), tabella a piena larghezza |
-| `md` | ≥768 | Tabella riduce a 4 colonne: tier, reliquia, drop migliore, prezzo |
-| `sm` | <768 | Tabella → **lista di card**. Una card per reliquia: header tier + nome, 6 righe drop, footer prezzo |
+| `2xl` | ≥1536 | Full layout, sidebar expanded |
+| `xl` | ≥1280 | Full layout, sidebar collapsed to icons |
+| `lg` | ≥1024 | Detail panel becomes an **overlay drawer** from the right (`420px`), table full width |
+| `md` | ≥768 | Table drops to four columns: tier, relic, best drop, price |
+| `sm` | <768 | Table → **list of cards**. One card per relic: tier + name header, six drop rows, price footer |
 
-Sotto `lg` i target touch salgono a 44×44px minimi; le righe passano a `row-comfortable` 48px.
+Below `lg`, touch targets rise to a 44×44px minimum and rows switch to `row-comfortable` 48px.
 
 ---
 
-## 7. Dimensioni dei controlli
+## 7. Control sizes
 
-| Token | Altezza | Padding X | Font | Icona | Notch |
+| Token | Height | Padding X | Font | Icon | Notch |
 |---|---|---|---|---|---|
 | `control-xs` | 24px | 8px | `caption` | 16px | `xs` |
 | `control-sm` | 32px | 12px | `body-sm` | 16px | `sm` |
 | `control-md` | 40px | 16px | `body-md` | 20px | `sm` |
 | `control-lg` | 48px | 20px | `body-lg` | 24px | `md` |
 
-Default: `control-md`. Nelle toolbar dense: `control-sm`. Icon-button: quadrato della stessa altezza.
+Default: `control-md`. In dense toolbars: `control-sm`. Icon buttons: square, same height.
 
-Righe tabella: `row-compact` 32px, `row` 40px (**default**), `row-comfortable` 48px.
+Table rows: `row-compact` 32px, `row` 40px (**default**), `row-comfortable` 48px.
 
 ---
 
 ## 8. Motion
 
-### 8.1 Token
+### 8.1 Tokens
 
-| Token | Valore | Uso |
+| Token | Value | Use |
 |---|---|---|
-| `dur-instant` | 80ms | Cambio colore di icona, pressed |
-| `dur-fast` | 120ms | Hover, focus, fill di riga |
-| `dur-base` | 180ms | Enter/exit di popover, tab, accordion |
-| `dur-slow` | 280ms | Drawer, dialog |
-| `dur-sweep` | 420ms | Firma: apertura del detail panel |
-| `dur-pulse` | 2400ms | Firma: pulsazione Radiant |
-| `stagger` | 40ms | Firma: cascata sulle righe di drop |
+| `dur-instant` | 80ms | Icon colour change, pressed |
+| `dur-fast` | 120ms | Hover, focus, row fill |
+| `dur-base` | 180ms | Popover, tab and accordion enter/exit |
+| `dur-slow` | 280ms | Drawers, dialogs |
+| `dur-sweep` | 420ms | Signature: the detail panel opening |
+| `dur-pulse` | 2400ms | Signature: the Radiant pulse |
+| `stagger` | 40ms | Signature: the cascade down the drop rows |
 
-| Easing | Curva | Uso |
+| Easing | Curve | Use |
 |---|---|---|
-| `standard` | `cubic-bezier(.2,.8,.2,1)` | Default per transizioni di stato |
-| `enter` | `cubic-bezier(0,.6,.3,1)` | Elementi che entrano |
-| `exit` | `cubic-bezier(.4,0,1,1)` | Elementi che escono |
-| `orokin` | `cubic-bezier(.16,1,.3,1)` | Solo per le tre firme |
+| `standard` | `cubic-bezier(.2,.8,.2,1)` | Default for state transitions |
+| `enter` | `cubic-bezier(0,.6,.3,1)` | Entering elements |
+| `exit` | `cubic-bezier(.4,0,1,1)` | Leaving elements |
+| `orokin` | `cubic-bezier(.16,1,.3,1)` | The three signatures only |
 
-### 8.2 Le tre firme
+### 8.2 The three signatures
 
-1. **Sweep del detail panel** — all'apertura il pannello si rivela da sinistra a destra con `clip-path: inset(0 100% 0 0)` → `inset(0)`, traslazione 16px, 420ms `orokin`. Effetto: il contenuto sembra "materializzarsi" nel telaio, non scivolarci dentro.
-2. **Radiant pulse** — solo il chip di una reliquia Radiant: `drop-shadow(0 0 6px #C9A22766)` che va e viene su 2400ms. Mai più di un elemento pulsante per vista. Se la lista contiene 30 reliquie Radiant, la pulsazione va **solo** sulla riga selezionata.
-3. **Stagger dei drop** — le 6 righe di drop di una reliquia entrano con `o-rise` (6px + fade, 180ms) sfalsate di 40ms. Cap a 6: l'ultima parte a 200ms, ancora percepita come simultanea. Non applicare mai a liste di lunghezza variabile — su 40 righe l'ultima arriverebbe a 1.6s.
+1. **Detail panel sweep** — on opening, the panel reveals left to right with `clip-path: inset(0 100% 0 0)` → `inset(0)`, a 16px translation, 420ms `orokin`. The effect is content materialising inside a frame that is already there, rather than sliding into it.
+2. **Radiant pulse** — on the chip of a Radiant relic only: `drop-shadow(0 0 6px #C9A22766)` coming and going over 2400ms. Never more than one pulsing element per view. If the list holds thirty Radiant relics, the pulse goes on the selected row **only**.
+3. **Drop stagger** — the six drop rows of a relic enter with `o-rise` (6px + fade, 180ms), offset by 40ms. Capped at six: the last starts at 200ms, still read as simultaneous. Never apply it to lists of variable length — over forty rows the last would arrive at 1.6s.
 
-### 8.3 Regole
+### 8.3 Rules
 
-- Nessuna transizione su `width`, `height`, `top/left`. Solo `opacity`, `transform`, `background-color`, `clip-path`, `filter`.
-- Nessuna animazione infinita oltre a `radiant` e agli skeleton.
-- Skeleton: shimmer 1400ms lineare, mai più di 2s totali prima di mostrare uno stato di errore o vuoto.
-- `prefers-reduced-motion: reduce` → sweep, radiant, stagger e shimmer **disattivati** (non solo accorciati); ogni altra transizione forzata a 120ms. Già implementato in `globals.css`.
+- No transitions on `width`, `height`, `top/left`. Only `opacity`, `transform`, `background-color`, `clip-path`, `filter`.
+- No infinite animation beyond `radiant` and the skeletons.
+- Skeletons: linear 1400ms shimmer, never more than two seconds total before showing an error or empty state.
+- `prefers-reduced-motion: reduce` → sweep, radiant, stagger and shimmer are **switched off**, not merely shortened; every other transition is forced to 120ms. Already implemented in `globals.css`.
 
 ---
 
-## 9. Iconografia
+## 9. Iconography
 
-### 9.1 Set UI — Lucide
+### 9.1 UI set — Lucide
 
 - `lucide-react`, `stroke-width: 1.5`, `currentColor`, viewBox 24.
-- Dimensioni: `16` (inline nel testo), **`20` (default)**, `24` (azioni primarie, empty state).
-- Allineamento: icona e testo su baseline ottica, gap `space-2` (8px).
-- Un'icona da sola è un controllo solo se ha `aria-label`.
+- Sizes: `16` (inline in text), **`20` (default)**, `24` (primary actions, empty states).
+- Alignment: icon and text on the optical baseline, gap `space-2` (8px).
+- An icon on its own is a control only if it carries an `aria-label`.
 
-Mappa canonica:
+Canonical map:
 
-| Concetto | Icona |
+| Concept | Icon |
 |---|---|
-| Cerca | `search` |
-| Filtra | `sliders-horizontal` |
-| Ordina | `arrow-up-down` |
-| Link esterno / Market | `external-link` |
-| Preferito / wishlist | `star` |
-| Inventario | `package` |
-| Storico prezzi | `trending-up` |
-| Notifica prezzo | `bell` |
-| Copia | `copy` |
-| Chiudi | `x` |
+| Search | `search` |
+| Filter | `sliders-horizontal` |
+| Sort | `arrow-up-down` |
+| External link / Market | `external-link` |
+| Favourite / wishlist | `star` |
+| Inventory | `package` |
+| Price history | `trending-up` |
+| Price alert | `bell` |
+| Copy | `copy` |
+| Close | `x` |
 | Info | `info` |
-| Errore | `alert-triangle` |
-| Nessun risultato | `search-x` |
+| Error | `alert-triangle` |
+| No results | `search-x` |
 
-### 9.2 Glifi custom
+### 9.2 Custom glyphs
 
-10 SVG proprietari, viewBox 24, `fill: currentColor`, nessuno stroke, ottimizzati per 16–24px.
+Proprietary SVGs, viewBox 24, `fill: currentColor`, no stroke, optimised for 16–24px.
 
-| Glifo | Forma | Uso |
+| Glyph | Shape | Use |
 |---|---|---|
-| `tier-lith` | Rombo singolo | Chip Lith |
-| `tier-meso` | Rombo doppio verticale | Chip Meso |
-| `tier-neo` | Rombo triplo a triangolo | Chip Neo |
-| `tier-axi` | Rombo quadruplo a losanga | Chip Axi |
-| `rarity-common` | Cerchio vuoto | Colonna drop |
-| `rarity-uncommon` | Cerchio semipieno | Colonna drop |
-| `rarity-rare` | Cerchio pieno con alone | Colonna drop |
-| `platinum` | Sfaccettatura a 6 lati | Prezzi |
-| `ducat` | Toroide Orokin | Valore ducati |
-| `void-sigil` | Sigillo ottagonale | Logo, empty state, loader |
+| `tier-lith` | Single diamond | Lith chip |
+| `tier-meso` | Two stacked diamonds | Meso chip |
+| `tier-neo` | Three diamonds in a triangle | Neo chip |
+| `tier-axi` | Four diamonds in a lozenge | Axi chip |
+| `tier-vanguard` | Double chevron | Vanguard chip |
+| `rarity-common` | Hollow circle | Drop column |
+| `rarity-uncommon` | Half-filled circle | Drop column |
+| `rarity-rare` | Filled circle with a halo | Drop column |
+| `platinum` | Six-sided facet | Prices |
+| `ducat` | Orokin toroid | Ducat value |
+| `orokin-star` | Four-pointed star | Marks the best option in a list |
+| `void-sigil` | Octagonal sigil | Logo, empty states, loader |
 
-I glifi tier crescono in numero di rombi con l'era: il conteggio è un secondo canale, indipendente dal colore.
+The tier glyphs gain a diamond with each era: the count is a second channel, independent of colour. Requiem and Vanguard sit outside that sequence and carry marks of their own rather than a sixth diamond, which would assert a rank they do not hold.
 
-### 9.3 Immagini
+### 9.3 Images
 
-- Le immagini di item da Warframe Market/wiki: contenitore `clip-orokin notch-sm`, `object-fit: contain`, sfondo `surface-2`.
-- Placeholder durante il caricamento: `o-skeleton`, stesse dimensioni, nessun layout shift (`aspect-ratio` sempre dichiarato).
-- Nessuna arte a piena bleed dietro il testo.
+- Item images from Warframe Market or the wiki: container `clip-orokin notch-sm`, `object-fit: contain`, `surface-2` background.
+- Placeholder while loading: `o-skeleton`, same dimensions, no layout shift (`aspect-ratio` always declared).
+- No full-bleed art behind text.
 
 ---
 
-## 10. Componenti
+## 10. Components
 
-Ogni componente elenca: anatomia, dimensioni, stati. Gli stati non elencati non esistono.
+Every component lists anatomy, sizes and states. States not listed do not exist.
 
 ### 10.1 Button
 
-Varianti: `primary`, `accent`, `outline`, `ghost`, `danger`.
+Variants: `primary`, `accent`, `outline`, `ghost`, `danger`.
 
-| Variante | Fill | Testo | Bordo |
+| Variant | Fill | Text | Border |
 |---|---|---|---|
-| `primary` | `gold-500` → hover `gold-400` → active `gold-600` | `ink-950` | nessuno |
-| `accent` | `void-700` → `void-600` → `void-800` | `bone-50` | nessuno |
-| `outline` | trasparente → hover `#C9A2270F` | `fg-primary` | 1px `border-interactive` → hover `border-emphasis` |
-| `ghost` | trasparente → hover `#C9A2270F` | `fg-secondary` → hover `fg-primary` | nessuno |
-| `danger` | `#A32B27` → hover `#C0332E` | `bone-50` | nessuno |
+| `primary` | `gold-500` → hover `gold-400` → active `gold-600` | `ink-950` | none |
+| `accent` | `void-700` → `void-600` → `void-800` | `bone-50` | none |
+| `outline` | transparent → hover `#C9A2270F` | `fg-primary` | 1px `border-interactive` → hover `border-emphasis` |
+| `ghost` | transparent → hover `#C9A2270F` | `fg-secondary` → hover `fg-primary` | none |
+| `danger` | `#A32B27` → hover `#C0332E` | `bone-50` | none |
 
-- Geometria: `clip-orokin`, `notch-sm` (`notch-xs` su `control-xs`).
-- Tipografia: `body-md` peso 600. Nessun uppercase.
-- Icona a sinistra del testo, gap 8px. Icon-only: quadrato, `aria-label` obbligatorio.
-- **Disabled**: `action-disabled-bg` + `action-disabled-fg`, `cursor: not-allowed`, `aria-disabled="true"`. Mai `opacity` sull'intero bottone (spegne anche il bordo sotto soglia).
-- **Loading**: spinner 16px al posto dell'icona, testo invariato, `aria-busy="true"`, larghezza congelata.
-- **Focus**: frame a 2px `border-focus` (vedi §12).
-- Un solo `primary` per vista.
+- Geometry: `clip-orokin`, `notch-sm` (`notch-xs` on `control-xs`).
+- Typography: `body-md` weight 600. No uppercase.
+- Icon to the left of the text, 8px gap. Icon-only: square, `aria-label` mandatory.
+- **Disabled**: `action-disabled-bg` + `action-disabled-fg`, `cursor: not-allowed`, `aria-disabled="true"`. Never `opacity` on the whole button — that drops the border below threshold too.
+- **Loading**: a 16px spinner in place of the icon, text unchanged, `aria-busy="true"`, width frozen.
+- **Focus**: a 2px `border-focus` frame (see §12).
+- One `primary` per view.
 
 ### 10.2 Input / Search
 
-- Altezza `control-md` 40px (`control-lg` 48px per la search principale).
-- Superficie `surface-2`, bordo 1px `border-interactive`, `clip-orokin notch-sm`.
-- Placeholder `fg-muted`. Testo `fg-primary` `body-md`.
-- Icona leading 20px `fg-muted`; clear-button trailing quando c'è valore.
-- Hover: bordo `border-emphasis`. Focus: frame 2px `border-focus`.
-- Errore: bordo `danger`, messaggio sotto in `caption` `danger`, `aria-invalid="true"`, `aria-describedby` al messaggio.
-- La search principale è larga `640px` max, centrata nella topbar, con `⌘K` come hint in un chip `fg-muted` a destra.
+- Height `control-md` 40px (`control-lg` 48px for the main search).
+- Surface `surface-2`, 1px `border-interactive` border, `clip-orokin notch-sm`.
+- Placeholder `fg-muted`. Text `fg-primary` `body-md`.
+- Leading icon 20px `fg-muted`; a trailing clear button once there is a value.
+- Hover: `border-emphasis`. Focus: 2px `border-focus` frame.
+- Error: `danger` border, message below in `caption` `danger`, `aria-invalid="true"`, `aria-describedby` pointing at the message.
+- The main search is `640px` at most, centred in the topbar, with `⌘K` as a hint in an `fg-muted` chip on the right.
 
 ### 10.3 Chip / Badge
 
-| Tipo | Geometria | Fill | Testo | Altezza |
+| Type | Geometry | Fill | Text | Height |
 |---|---|---|---|---|
-| Tier | `clip-octagon notch-xs` | colore tier (opacità da refinement) | `ink-950` | 20px |
-| Rarità | nessuna (pallino 8px + testo) | — | colore rarità | inline |
-| Filtro attivo | `clip-octagon notch-xs` | `#7C5CE61A` | `void-400` | 24px |
-| Conteggio | `clip-octagon notch-xs` | `surface-3` | `fg-secondary` | 20px |
+| Tier | `clip-octagon notch-xs` | tier colour (opacity from refinement) | `ink-950` | 20px |
+| Rarity | none (8px dot + text) | — | rarity colour | inline |
+| Active filter | `clip-octagon notch-xs` | `#7C5CE61A` | `void-400` | 24px |
+| Count | `clip-octagon notch-xs` | `surface-3` | `fg-secondary` | 20px |
 
-Chip tier: padding X 8px, `overline` 11px 600 uppercase tracking 0.12em, glifo tier 12px a sinistra.
+Tier chip: 8px padding X, `overline` 11px 600 uppercase tracking 0.12em, 12px tier glyph on the left.
 
-### 10.4 Table (densa)
+### 10.4 Table (dense)
 
-Struttura di colonna canonica per i risultati di ricerca:
+Canonical column structure for search results:
 
-| Colonna | Larghezza | Allineamento | Tipografia |
+| Column | Width | Alignment | Typography |
 |---|---|---|---|
 | Tier | 88px | left | chip |
-| Reliquia | 160px | left | `body-sm` 500 |
+| Relic | 160px | left | `body-sm` 500 |
 | Item | `1fr` (min 200px) | left | `body-sm` |
-| Rarità | 110px | left | pallino + `body-sm` |
+| Rarity | 110px | left | dot + `body-sm` |
 | Drop % | 72px | right | `data-sm` tnum |
-| Prezzo | 96px | right | `data-md` tnum, `currency-platinum` |
-| Azione | 40px | center | icon-button ghost |
+| Price | 96px | right | `data-md` tnum, `currency-platinum` |
+| Action | 40px | center | ghost icon button |
 
-- Header: 36px, sticky **`top: 0`**, `surface-2`, `overline`, bordo inferiore 1px `border-default`.
+- Header: 36px, sticky at **`top: 0`**, `surface-2`, `overline`, 1px `border-default` bottom border.
 
-> **Trappola.** Il wrapper della tabella ha `overflow-x: auto`, e questo lo rende un contenitore di scroll: lo sticky degli header si ancora a *quel* contenitore, non al viewport. Un offset diverso da `0` (per esempio `56px` per "scendere sotto la topbar") spinge l'header dentro il contenitore e lo fa sovrapporre alle prime righe. L'offset della topbar va gestito dal layout della shell, mai dal `top` degli header.
-- Riga: 40px, `body-sm`, divider 1px `border-subtle`, padding X 12px.
-- Hover: fill `#C9A2270D` + marker `inset 2px 0 0 gold-500` sulla prima cella.
-- Selected: fill `#7C5CE61A` + marker `void-400`, `aria-selected="true"`.
-- Zebra: **no**. Con 7 colonne e divider a 1px è rumore.
-- Sort: header cliccabile, freccia 14px a destra del label, `aria-sort` corretto.
-- Il wrapper porta `clip-orokin notch-lg` + `.o-frame`. Le righe non sono mai clippate.
-- Oltre 100 righe: virtualizzazione, altezza di riga fissa a 40px obbligatoria.
+> **Trap.** The table wrapper carries `overflow-x: auto`, which makes it a scroll container: sticky headers anchor to *that* container, not to the viewport. Any offset other than `0` — say `56px`, to "sit below the topbar" — pushes the header down inside the container and over the first rows. The topbar offset belongs to the shell layout, never to the headers' `top`.
+- Row: 40px, `body-sm`, 1px `border-subtle` divider, 12px padding X.
+- Hover: `#C9A2270D` fill + `inset 2px 0 0 gold-500` marker on the first cell.
+- Selected: `#7C5CE61A` fill + `void-400` marker, `aria-selected="true"`.
+- Zebra striping: **no**. With seven columns and 1px dividers it is noise.
+- Sort: clickable header, 14px arrow to the right of the label, correct `aria-sort`.
+- The wrapper carries `clip-orokin notch-lg` + `.o-frame`. Rows are never clipped.
+- Past a hundred rows: virtualization, with a fixed 40px row height as a requirement.
 
 ### 10.5 Detail panel
 
-- Larghezza `380px`, `surface-1`, `.o-frame--gilded`, `clip-orokin-inverse notch-lg` (specchia la tabella).
-- Sticky sotto la topbar, scroll interno.
-- Anatomia: chip tier + refinement → nome reliquia `display-md` Cinzel → meta (drop location, rotation) in `caption fg-muted` → divider Orokin → lista dei 6 drop → divider → blocco prezzi → CTA `Apri su Warframe Market` (`primary`, full width).
-- Ingresso: firma sweep 420ms. Le 6 righe drop entrano con stagger 40ms.
-- Vuoto (nessuna reliquia selezionata): `void-sigil` 48px `bone-500`, testo `body-sm fg-muted`, centrato.
+- Width `380px`, `surface-1`, `.o-frame--gilded`, `clip-orokin-inverse notch-lg` (mirroring the table).
+- Sticky below the topbar, scrolling internally.
+- Anatomy: tier + refinement chip → relic name in `display-md` Cinzel → meta (drop location, rotation) in `caption fg-muted` → Orokin divider → the six drops → divider → price block → `Open on Warframe Market` CTA (`primary`, full width).
+- Entrance: the 420ms sweep signature. The six drop rows enter on a 40ms stagger.
+- Empty (no relic selected): `void-sigil` 48px `bone-500`, `body-sm fg-muted` text, centred.
 
 ### 10.6 Drop row
 
-Riga interna al detail panel, 48px:
+A row inside the detail panel, 48px:
 
 ```
 [img 32px] Volt Prime Neuroptics          ● Rare      25.33%     45 p
@@ -667,104 +670,104 @@ Riga interna al detail panel, 48px:
                                                      fg-muted    platinum
 ```
 
-- Il pallino di rarità è 8px, `border-radius: full`, colore rarità.
-- Hover: fill `#C9A2270D`, il nome diventa link `void-400`.
+- The rarity dot is 8px, `border-radius: full`, in the rarity colour.
+- Hover: `#C9A2270D` fill, the name turns into a `void-400` link.
 
-### 10.7 Card reliquia (sotto `lg`)
+### 10.7 Relic card (below `lg`)
 
-- `surface-2`, `.o-frame`, `clip-orokin notch-md`, padding 16px.
-- Header: chip tier + nome `heading-md` + prezzo `data-lg` a destra.
-- Corpo: 6 drop row compatte (36px).
-- Footer: `border-subtle` sopra, link Market + valore ducati.
-- Radiant: `.o-frame--gilded` + pulse solo se è la card espansa.
+- `surface-2`, `.o-frame`, `clip-orokin notch-md`, 16px padding.
+- Header: tier chip + `heading-md` name + `data-lg` price on the right.
+- Body: six compact drop rows (36px).
+- Footer: `border-subtle` above, Market link + ducat value.
+- Radiant: `.o-frame--gilded` plus the pulse, only on the expanded card.
 
 ### 10.8 Dialog
 
 - `surface-4`, `.o-frame--gilded`, `clip-orokin notch-xl`, max-width 560px.
 - Scrim `#0B0A08CC`, `backdrop-filter: blur(2px)`.
-- Titolo `display-sm` Cinzel, corpo `body-md`, footer con azioni allineate a destra, gap 12px.
-- Enter: `o-rise` 280ms `enter` + fade dello scrim 180ms. Exit: 180ms `exit`.
-- Focus trap, `Esc` chiude, focus torna al trigger.
+- Title `display-sm` Cinzel, body `body-md`, footer with right-aligned actions, 12px gap.
+- Enter: `o-rise` 280ms `enter` plus a 180ms scrim fade. Exit: 180ms `exit`.
+- Focus trap, `Esc` closes, focus returns to the trigger.
 
 ### 10.9 Tooltip / Popover
 
-- Tooltip: `surface-4`, `clip-orokin notch-sm`, `caption`, padding 6px 10px, delay 400ms in / 0ms out, max-width 280px. Mai interattivo.
-- Popover: `surface-3`, `.o-frame`, `clip-orokin notch-md`, padding 16px, `drop-shadow` float.
+- Tooltip: `surface-4`, `clip-orokin notch-sm`, `caption`, 6px 10px padding, 400ms in / 0ms out, max-width 280px. Never interactive.
+- Popover: `surface-3`, `.o-frame`, `clip-orokin notch-md`, 16px padding, floating `drop-shadow`.
 
 ### 10.10 Toast
 
-- `surface-4`, `.o-frame`, `clip-orokin notch-sm`, barra 2px a sinistra col colore semantico.
-- Larghezza 360px, in basso a destra, stack di max 3, auto-dismiss 5s (errori: mai auto-dismiss).
-- `role="status"` per info/success, `role="alert"` per warning/danger.
+- `surface-4`, `.o-frame`, `clip-orokin notch-sm`, a 2px bar on the left in the semantic colour.
+- 360px wide, bottom right, stack of at most three, auto-dismiss after 5s (errors: never auto-dismiss).
+- `role="status"` for info and success, `role="alert"` for warning and danger.
 
 ### 10.11 Tabs
 
-- Altezza 36px, testo `body-sm` 500, `fg-muted` → attivo `fg-primary`.
-- Attivo: fill `surface-2` + `clip-orokin notch-sm` + barra 2px `gold-500` in basso.
-- Transizione della barra: 180ms `standard`.
+- Height 36px, `body-sm` 500 text, `fg-muted` → active `fg-primary`.
+- Active: `surface-2` fill + `clip-orokin notch-sm` + a 2px `gold-500` bar underneath.
+- Bar transition: 180ms `standard`.
 
 ### 10.12 Skeleton / Empty / Error
 
-| Stato | Trattamento |
+| State | Treatment |
 |---|---|
-| Skeleton | Blocchi `surface-2`→`surface-3` shimmer 1400ms. Stessa altezza del contenuto reale. Righe di tabella: 40px, **non clippate**. Max 2s |
-| Empty (nessun risultato) | `search-x` 48px `bone-500`, titolo `heading-md`, testo `body-sm fg-muted`, CTA `outline` con un suggerimento di ricerca |
-| Empty (stato iniziale) | `void-sigil` 64px `gold-800`, titolo `display-sm` Cinzel, tre chip di ricerca-esempio (`Lith V9`, `Volt Prime`, `Meso B4`) |
-| Error | `alert-triangle` 48px `danger`, titolo `heading-md`, messaggio tecnico in `caption fg-muted`, CTA `Riprova` `outline` |
-| Offline / API down | Toast `warning` persistente + banner `warning-dim` sotto la topbar |
+| Skeleton | `surface-2`→`surface-3` blocks, 1400ms shimmer. Same height as the real content. Table rows: 40px, **unclipped**. Two seconds maximum |
+| Empty (no results) | `search-x` 48px `bone-500`, `heading-md` title, `body-sm fg-muted` text, `outline` CTA with a search suggestion |
+| Empty (initial state) | `void-sigil` 64px `gold-800`, `display-sm` Cinzel title, three example-search chips (`Lith V9`, `Volt Prime`, `Meso B4`) |
+| Error | `alert-triangle` 48px `danger`, `heading-md` title, technical message in `caption fg-muted`, `Retry` CTA in `outline` |
+| Offline / API down | A persistent `warning` toast plus a `warning-dim` banner below the topbar |
 
 ---
 
-## 11. Pattern di prezzo
+## 11. Price patterns
 
-Warframe Market è la fonte. Il prezzo è il secondo motivo per cui l'app esiste: ha regole proprie.
+Warframe Market is the source. Price is the second reason the app exists, and it has rules of its own.
 
-- Prezzo principale: `data-md` 500 `currency-platinum`, suffisso `p` in `caption fg-muted`.
-- Prezzo in evidenza (detail panel): `data-lg` 600.
-- Un prezzo assente non è `0`: si mostra `—` in `fg-disabled`, mai zero.
-- Freschezza: se il dato ha più di 15 minuti, timestamp in `caption fg-muted` sotto il prezzo (`aggiornato 22 min fa`). Oltre 1 ora, icona `info` con tooltip.
-- Range: `12 – 18 p` con en-dash, spazi sottili.
-- Delta: `▲ +12%` / `▼ −8%`, colore su freccia e percentuale, mai sul prezzo.
-- Il link a Warframe Market è sempre `external-link` + `rel="noopener noreferrer"` + `target="_blank"`, con `aria-label` esplicito (`Apri Volt Prime Neuroptics su Warframe Market`).
+- Main price: `data-md` 500 `currency-platinum`, `p` suffix in `caption fg-muted`.
+- Featured price (detail panel): `data-lg` 600.
+- A missing price is not `0`: show `—` in `fg-disabled`, never a zero.
+- Freshness: past fifteen minutes, a timestamp in `caption fg-muted` under the price (`updated 22 min ago`). Past an hour, an `info` icon with a tooltip.
+- Range: `12 – 18 p` with an en dash and hair spaces.
+- Delta: `▲ +12%` / `▼ −8%`, colour on the arrow and the percentage, never on the price.
+- The Warframe Market link is always `external-link` + `rel="noopener noreferrer"` + `target="_blank"`, with an explicit `aria-label` (`Open Volt Prime Neuroptics on Warframe Market`).
 
 ---
 
-## 12. Focus, stati, accessibilità
+## 12. Focus, states, accessibility
 
 ### 12.1 Focus
 
-`outline` viene ritagliato da `clip-path`. Due meccanismi:
+`outline` is cut away by `clip-path`. Two mechanisms:
 
-- **Elementi clippati** (bottoni, input, card cliccabili): stanno dentro un `.o-frame`. Su `:focus-visible` il frame passa a `padding: 2px` e `background: border-focus`. L'anello segue esattamente la silhouette notchata.
-- **Elementi non clippati** (link, righe di tabella, tab): `.o-focus-ring` → `outline: 2px solid #9B82F0; outline-offset: 2px`.
+- **Clipped elements** (buttons, inputs, clickable cards): they sit inside an `.o-frame`. On `:focus-visible` the frame switches to `padding: 2px` and `background: border-focus`. The ring follows the notched silhouette exactly.
+- **Unclipped elements** (links, table rows, tabs): `.o-focus-ring` → `outline: 2px solid #9B82F0; outline-offset: 2px`.
 
-L'anello è sempre `void-400` (4.84:1 minimo contro ogni superficie). Mai oro: si confonderebbe con lo stato hover.
+The ring is always `void-400` (4.84:1 minimum against every surface). Never gold: it would read as the hover state.
 
-### 12.2 Requisiti
+### 12.2 Requirements
 
-- Contrasto testo ≥ 4.5:1 (§2.5 verifica ogni token).
-- Contrasto di boundary di controlli e icone informative ≥ 3:1 → `border-interactive` in su.
-- Target: 40×40px desktop, **44×44px sotto `lg`**. Icon-button in toolbar densa: 32px con area cliccabile estesa a 40px via padding.
-- Nessuna informazione veicolata dal solo colore (§2.4).
-- `prefers-reduced-motion` rispettato (§8.3).
-- Zoom 200% senza scroll orizzontale: sotto `lg` la tabella diventa card.
-- Ordine di tabulazione: topbar → search → sidebar → tabella → detail panel.
-- Righe della tabella: `role="row"` navigabili con frecce ↑↓, `Enter` apre il detail panel, `Esc` deseleziona.
-- Ogni aggiornamento asincrono di risultati annunciato in una live region `aria-live="polite"` (`23 reliquie trovate`).
+- Text contrast ≥ 4.5:1 (§2.5 verifies every token).
+- Boundary contrast for controls and informative icons ≥ 3:1 → `border-interactive` and up.
+- Targets: 40×40px on desktop, **44×44px below `lg`**. Icon buttons in a dense toolbar: 32px with the clickable area extended to 40px through padding.
+- No information carried by colour alone (§2.4).
+- `prefers-reduced-motion` respected (§8.3).
+- 200% zoom without horizontal scrolling: below `lg` the table becomes cards.
+- Tab order: topbar → search → sidebar → table → detail panel.
+- Table rows: `role="row"`, navigable with ↑↓, `Enter` opens the detail panel, `Esc` clears the selection.
+- Every asynchronous result update announced in an `aria-live="polite"` region (`23 relics found`).
 
-### 12.3 Stati canonici
+### 12.3 Canonical states
 
-Ogni componente interattivo implementa esattamente: `default`, `hover`, `focus-visible`, `active`, `disabled`, e dove pertinente `loading`, `selected`, `error`.
+Every interactive component implements exactly: `default`, `hover`, `focus-visible`, `active`, `disabled`, and where relevant `loading`, `selected`, `error`.
 
 ---
 
-## 13. Convenzioni dei token
+## 13. Token conventions
 
-- Formato: `{categoria}-{scala|ruolo}-{variante}` → `gold-500`, `fg-muted`, `action-primary-bg-hover`.
-- Nei componenti si usano **solo token semantici**. `bg-gold-500` in un componente è un errore di review; il token corretto è `bg-action-primary`.
-- I token di dominio (`tier-*`, `rarity-*`, `currency-*`) sono l'eccezione: mappano concetti di gioco, non ruoli UI, e si usano direttamente.
-- Nuovo colore = prima si verifica il contrasto contro `surface-0…4`, poi si aggiunge a `tokens.json`, poi a `globals.css`, poi alla tabella §2.5. In quest'ordine.
-- `tokens.json` è la sorgente. `globals.css` e `tailwind.config.ts` sono generabili da lì con Style Dictionary.
+- Format: `{category}-{scale|role}-{variant}` → `gold-500`, `fg-muted`, `action-primary-bg-hover`.
+- Components use **semantic tokens only**. `bg-gold-500` inside a component is a review error; the correct token is `bg-action-primary`.
+- Domain tokens (`tier-*`, `rarity-*`, `currency-*`) are the exception: they map game concepts rather than UI roles, and are used directly.
+- A new colour is verified against `surface-0…4` first, then added to `tokens.json`, then to `globals.css`, then to the table in §2.5. In that order.
+- `tokens.json` is the source. `globals.css` and `tailwind.config.ts` can be generated from it with Style Dictionary.
 
 ---
 
@@ -772,15 +775,15 @@ Ogni componente interattivo implementa esattamente: `default`, `hover`, `focus-v
 
 | ✅ | ❌ |
 |---|---|
-| `clip-path` su pannelli, card, bottoni, chip | `clip-path` su `tr`, `td`, `li`, avatar |
-| Bordo con la tecnica `.o-frame` a doppia superficie | `border` o `outline` diretti su elemento clippato |
-| Elevazione con superficie + bordo | `box-shadow` (viene ritagliata) |
-| Oro per Rare, Radiant, brand, azione primaria | Oro per i link |
-| `void-700` come fill con testo | `void-500` come fill con testo (3.97:1) |
-| Rarità = pallino + testo | Rarità = solo colore |
-| `tabular-nums` su ogni colonna numerica | Cifre proporzionali nei prezzi |
-| Cinzel ≥18px, mai uppercase sopra | Cinzel a 13px in una cella |
-| Un `primary` per vista | Tre bottoni oro affiancati |
-| Un elemento Radiant pulsante per vista | 30 righe che pulsano insieme |
-| `—` per prezzo mancante | `0 p` per prezzo mancante |
-| Sotto `lg`: tabella → card | Scroll orizzontale della tabella su mobile |
+| `clip-path` on panels, cards, buttons, chips | `clip-path` on `tr`, `td`, `li`, avatars |
+| Borders through the double-surface `.o-frame` technique | `border` or `outline` directly on a clipped element |
+| Elevation from surface + border | `box-shadow` (it gets clipped away) |
+| Gold for Rare, Radiant, brand, primary action | Gold for links |
+| `void-700` as a fill with text | `void-500` as a fill with text (3.97:1) |
+| Rarity as dot + text | Rarity as colour alone |
+| `tabular-nums` on every numeric column | Proportional digits in prices |
+| Cinzel ≥18px, never uppercased on top | Cinzel at 13px inside a cell |
+| One `primary` per view | Three gold buttons side by side |
+| One pulsing Radiant element per view | Thirty rows pulsing together |
+| `—` for a missing price | `0 p` for a missing price |
+| Below `lg`: table → cards | Horizontal table scrolling on mobile |

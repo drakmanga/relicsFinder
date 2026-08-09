@@ -109,7 +109,7 @@ function commit(next: WishlistEntry[]) {
     api.saveWishlist(entries.map(toWire)).catch((error) => {
       // The local copy already holds the change, so a failed sync degrades to
       // "this browser only" rather than losing the edit.
-      console.warn("wishlist: salvataggio sul server fallito", error);
+      console.warn("wishlist: saving to the server failed", error);
     });
   }, SAVE_DELAY);
 }

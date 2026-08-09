@@ -42,7 +42,7 @@ async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   } catch (cause) {
     // Network-level failure: the backend is down, or the dev proxy has nothing
     // to talk to. Surfaced as status 0 so callers can tell it from an HTTP error.
-    throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+    throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
   }
 
   if (!res.ok) {
@@ -129,7 +129,7 @@ export const api = {
         body: JSON.stringify(itemNames),
       });
     } catch (cause) {
-      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
     }
 
     if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
@@ -156,7 +156,7 @@ export const api = {
         body: JSON.stringify(relicNames),
       });
     } catch (cause) {
-      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
     }
 
     if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
@@ -190,7 +190,7 @@ export const api = {
         body: JSON.stringify(entries),
       });
     } catch (cause) {
-      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
     }
 
     if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
@@ -214,7 +214,7 @@ export const api = {
         body: JSON.stringify(itemNames),
       });
     } catch (cause) {
-      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
     }
 
     if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);

@@ -10,8 +10,13 @@ import { ALL_RARITIES, ALL_REFINEMENTS, ALL_TIERS, type Filters, type VaultFilte
  * is a set of clicks to describe rather than a link to send, and the browser's
  * back button does nothing at all.
  */
+/** Every view the app can show. A link naming anything else opens on the first. */
+export const ALL_VIEWS = ["relics", "items", "sets", "wishlist", "ducats", "endo"] as const;
+
+export type UrlView = (typeof ALL_VIEWS)[number];
+
 export interface UrlState {
-  view: string;
+  view: UrlView;
   filters: Filters;
   selected: string | null;
   pickedItem: string | null;
@@ -52,7 +57,9 @@ export function fromSearch(search: string, base: Filters): UrlState {
   const max = Number(params.get("max"));
 
   return {
-    view: params.get("view") ?? "relics",
+    // Checked like every other value: an unknown view left the app with no
+    // search bar, no tab highlighted and a table nothing said belonged to it.
+    view: pickOne<UrlView>(params.get("view"), ALL_VIEWS, "relics"),
     selected: params.get("relic"),
     pickedItem: params.get("item"),
     filters: {

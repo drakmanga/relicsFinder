@@ -42,7 +42,7 @@ public class RelicCatalogueRefresher implements ApplicationRunner {
     public void refresh() {
         try {
             int relics = updateService.downloadAndUpdateRelics();
-            System.out.println("relics: catalogo aggiornato — " + relics + " voci");
+            System.out.println("relics: catalogue refreshed — " + relics + " entries");
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -50,7 +50,7 @@ public class RelicCatalogueRefresher implements ApplicationRunner {
         } catch (Exception e) {
             // The existing file is still there and still readable, so a failed
             // refresh degrades to yesterday's data rather than to no data.
-            System.err.println("relics: aggiornamento catalogo fallito — " + e.getMessage());
+            System.err.println("relics: catalogue refresh failed — " + e.getMessage());
         }
     }
 }

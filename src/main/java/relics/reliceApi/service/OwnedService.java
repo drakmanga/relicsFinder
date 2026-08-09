@@ -79,7 +79,7 @@ public class OwnedService {
             owned = mapper.readValue(Files.readString(file), new TypeReference<List<String>>() {});
         } catch (Exception e) {
             // A corrupt file must not stop the application from starting.
-            System.err.println("owned: file illeggibile, riparto vuoto — " + e.getMessage());
+            System.err.println("owned: unreadable file, starting empty — " + e.getMessage());
             owned = new ArrayList<>();
         }
     }
@@ -96,7 +96,7 @@ public class OwnedService {
             Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 
         } catch (IOException e) {
-            System.err.println("owned: salvataggio fallito — " + e.getMessage());
+            System.err.println("owned: save failed — " + e.getMessage());
         }
     }
 }

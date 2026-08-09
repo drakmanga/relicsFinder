@@ -65,8 +65,8 @@ const checks: Check[] = [
   },
   {
     name: "Button/primary",
-    element: <Button variant="primary">Cerca</Button>,
-    expect: ["rf-btn", "rf-btn-primary", "rf-btn-md", "rf-clip", "Cerca"],
+    element: <Button variant="primary">Search</Button>,
+    expect: ["rf-btn", "rf-btn-primary", "rf-btn-md", "rf-clip", "Search"],
   },
   {
     name: "Button/accent",
@@ -85,8 +85,8 @@ const checks: Check[] = [
   },
   {
     name: "Button/danger",
-    element: <Button variant="danger">Rimuovi</Button>,
-    expect: ["rf-btn-danger", "Rimuovi"],
+    element: <Button variant="danger">Remove</Button>,
+    expect: ["rf-btn-danger", "Remove"],
   },
   {
     name: "Button/loading",
@@ -105,12 +105,12 @@ const checks: Check[] = [
   },
   {
     name: "Input",
-    element: <Input label="Ricerca" placeholder="Lith V9" shortcut="⌘K" />,
-    expect: ["rf-field", "rf-frame-interactive", "rf-field-input", "rf-kbd", "Lith V9", "Ricerca"],
+    element: <Input label="Search" placeholder="Lith V9" shortcut="⌘K" />,
+    expect: ["rf-field", "rf-frame-interactive", "rf-field-input", "rf-kbd", "Lith V9", "Search"],
   },
   {
     name: "Input/error",
-    element: <Input error="Nessuna reliquia" defaultValue="Xyz" />,
+    element: <Input error="No such relic" defaultValue="Xyz" />,
     expect: ["rf-frame-danger", 'aria-invalid="true"', "aria-describedby", "rf-field-helper-error"],
   },
   {
@@ -140,10 +140,10 @@ const checks: Check[] = [
     name: "Chip/filter",
     element: (
       <Chip variant="filter" onDismiss={() => {}}>
-        Solo Axi
+        Axi only
       </Chip>
     ),
-    expect: ["rf-chip-filter", "rf-chip-dismiss", "Solo Axi"],
+    expect: ["rf-chip-filter", "rf-chip-dismiss", "Axi only"],
   },
   {
     name: "RarityTag",
@@ -201,7 +201,7 @@ const checks: Check[] = [
           <tr>
             <TableHeaderCell>Tier</TableHeaderCell>
             <TableHeaderCell sortable sortDirection="asc" onSort={() => {}}>
-              Prezzo
+              Price
             </TableHeaderCell>
           </tr>
         </thead>
@@ -225,7 +225,7 @@ const checks: Check[] = [
       'aria-sort="ascending"',
       "rf-align-right",
       "rf-tabular",
-      "Prezzo",
+      "Price",
     ],
   },
   {
@@ -293,12 +293,12 @@ const checks: Check[] = [
     element: (
       <>
         <Tabs
-          label="Sezioni"
+          label="Sections"
           value="drops"
           onChange={() => {}}
           items={[
-            { id: "drops", label: "Contenuto" },
-            { id: "prices", label: "Prezzi" },
+            { id: "drops", label: "Contents" },
+            { id: "prices", label: "Prices" },
           ]}
         />
         <TabPanel id="drops" value="drops">
@@ -311,7 +311,7 @@ const checks: Check[] = [
   {
     name: "Tooltip",
     element: (
-      <Tooltip content="Prezzo medio 24h">
+      <Tooltip content="24h average price">
         <span>hover</span>
       </Tooltip>
     ),
@@ -320,7 +320,7 @@ const checks: Check[] = [
   {
     name: "Dialog",
     element: (
-      <Dialog open onClose={() => {}} title="Aggiungi" description="Quante copie?" footer={<Button>Ok</Button>}>
+      <Dialog open onClose={() => {}} title="Add" description="How many copies?" footer={<Button>Ok</Button>}>
         content
       </Dialog>
     ),
@@ -329,7 +329,7 @@ const checks: Check[] = [
       'role="dialog"',
       'aria-modal="true"',
       "rf-frame-gilded",
-      "Aggiungi",
+      "Add",
       "rf-dialog-footer",
     ],
   },
@@ -347,7 +347,7 @@ const checks: Check[] = [
     element: (
       <ToastRegion>
         <Toast tone="success" title="Aggiunta" description="Volt Prime" onDismiss={() => {}} />
-        <Toast tone="danger" title="Errore" />
+        <Toast tone="danger" title="Error" />
       </ToastRegion>
     ),
     expect: ["rf-toast-region", "rf-toast-success", "rf-toast-danger", 'role="alert"', 'role="status"'],
@@ -364,18 +364,18 @@ const checks: Check[] = [
   },
   {
     name: "EmptyState/initial",
-    element: <EmptyState tone="initial" title="Cerca una reliquia" description="Nome o item" />,
-    expect: ["rf-empty", "rf-empty-icon-initial", "rf-text-display-sm", "Cerca una reliquia"],
+    element: <EmptyState tone="initial" title="Search for a relic" description="By name or by part" />,
+    expect: ["rf-empty", "rf-empty-icon-initial", "rf-text-display-sm", "Search for a relic"],
   },
   {
     name: "EmptyState/error",
-    element: <EmptyState tone="error" title="Errore" description="HTTP 503" />,
+    element: <EmptyState tone="error" title="Error" description="HTTP 503" />,
     expect: ["rf-empty-icon-error", 'role="alert"', "HTTP 503"],
   },
   {
     name: "EmptyState/empty",
-    element: <EmptyState title="Nessun risultato" />,
-    expect: ["rf-empty-icon", "Nessun risultato"],
+    element: <EmptyState title="No results" />,
+    expect: ["rf-empty-icon", "No results"],
   },
 ];
 

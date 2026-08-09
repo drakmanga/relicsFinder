@@ -263,9 +263,9 @@ section{padding:64px 0;border-bottom:1px solid var(--border-subtle)}
    TABLE
    ========================================================================== */
 .o-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
-/* top:0 — lo sticky si ancora al contenitore di scroll della tabella,
+/* top:0 — sticky anchors to the table's own scroll container, so any other
    non al viewport. Con overflow-x:auto sul wrapper, un offset >0 spingerebbe
-   l'header dentro il contenitore, sovrapponendolo alle prime righe. */
+   offset pushes the header inside it and over the first rows. */
 .o-table thead th{position:sticky;top:0;z-index:10;height:36px;padding:0 12px;
   background:var(--surface-2);border-bottom:1px solid var(--border-default);
   font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
@@ -376,9 +376,9 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     RELIC FINDER
   </div>
   <nav class="navlinks">
-    <a href="#colore">Colore</a><a href="#elevazione">Elevazione</a><a href="#geometria">Geometria</a>
-    <a href="#tipografia">Tipografia</a><a href="#spazio">Spazio</a><a href="#motion">Motion</a>
-    <a href="#icone">Icone</a><a href="#componenti">Componenti</a><a href="#app">App</a><a href="#stati">Stati</a>
+    <a href="#colour">Colour</a><a href="#elevation">Elevation</a><a href="#geometry">Geometry</a>
+    <a href="#typography">Typography</a><a href="#space">Space</a><a href="#motion">Motion</a>
+    <a href="#icons">Icons</a><a href="#components">Components</a><a href="#app">App</a><a href="#states">States</a>
   </nav>
 </header>
 
@@ -406,7 +406,7 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
   <h1 class="t-display-xl brand" style="margin:12px 0">Orokin</h1>
   <p class="t-body-lg secondary" style="max-width:72ch">
     Sistema di design per Relic Finder. Dark-only, desktop-first, React + Tailwind + shadcn/ui.
-    Ogni valore in questa pagina è il valore reale del token: la pagina è la verifica visiva di
+    Every value on this page is the real token value: the page is the visual check of
     <code>DESIGN_SYSTEM.md</code>.
   </p>
   <div class="row" style="margin-top:24px">
@@ -416,13 +416,13 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
   </div>
 </section>
 
-<!-- ======================= COLORE ======================= -->
-<section id="colore">
-  <div class="sec-head"><span class="sec-num">01</span><h2 class="t-display-sm">Colore</h2></div>
-  <p class="sec-desc">Quattro scale primitive. L'oro è brand / Rare / Radiant / azione primaria.
-    Il void purple è l'accento UI: link, focus, selezione. Nessun colore ha due lavori.</p>
+<!-- ======================= COLOUR ======================= -->
+<section id="colour">
+  <div class="sec-head"><span class="sec-num">01</span><h2 class="t-display-sm">Colour</h2></div>
+  <p class="sec-desc">Four primitive scales. Gold is brand / Rare / Radiant / primary action.
+    Void purple is the UI accent: links, focus, selection. No colour holds two jobs.</p>
 
-  <h3 class="t-heading-sm sub">Ink — superfici</h3>
+  <h3 class="t-heading-sm sub">Ink — surfaces</h3>
   <div class="grid g6">
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#0B0A08"></div><div class="sw-meta"><span class="sw-name">ink-950</span><span class="sw-hex">#0B0A08</span><span class="sw-cr">surface-0</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#131210"></div><div class="sw-meta"><span class="sw-name">ink-900</span><span class="sw-hex">#131210</span><span class="sw-cr">surface-1</span></div></div>
@@ -432,7 +432,7 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#3A3529"></div><div class="sw-meta"><span class="sw-name">ink-500</span><span class="sw-hex">#3A3529</span><span class="sw-cr">divider forte</span></div></div>
   </div>
 
-  <h3 class="t-heading-sm sub">Bone — testo</h3>
+  <h3 class="t-heading-sm sub">Bone — text</h3>
   <div class="grid g6">
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#F2EDE3"></div><div class="sw-meta"><span class="sw-name">bone-50</span><span class="sw-hex">#F2EDE3</span><span class="sw-cr"><b>16.96</b> su s0</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#D6CFC2"></div><div class="sw-meta"><span class="sw-name">bone-200</span><span class="sw-hex">#D6CFC2</span><span class="sw-cr"><b>13.3</b> su s0</span></div></div>
@@ -447,11 +447,11 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#FBF3D9"></div><div class="sw-meta"><span class="sw-name">gold-50</span><span class="sw-hex">#FBF3D9</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#F5E4AF"></div><div class="sw-meta"><span class="sw-name">gold-100</span><span class="sw-hex">#F5E4AF</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#F0CC66"></div><div class="sw-meta"><span class="sw-name">gold-200</span><span class="sw-hex">#F0CC66</span></div></div>
-    <div class="sw clip-orokin"><div class="sw-chip" style="background:#E3B341"></div><div class="sw-meta"><span class="sw-name">gold-300</span><span class="sw-hex">#E3B341</span><span class="sw-cr"><b>10.17</b> testo brand</span></div></div>
+    <div class="sw clip-orokin"><div class="sw-chip" style="background:#E3B341"></div><div class="sw-meta"><span class="sw-name">gold-300</span><span class="sw-hex">#E3B341</span><span class="sw-cr"><b>10.17</b> brand text</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#D4A32F"></div><div class="sw-meta"><span class="sw-name">gold-400</span><span class="sw-hex">#D4A32F</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#C9A227"></div><div class="sw-meta"><span class="sw-name">gold-500</span><span class="sw-hex">#C9A227</span><span class="sw-cr"><b>8.18</b> fill primario</span></div></div>
-    <div class="sw clip-orokin"><div class="sw-chip" style="background:#A08428"></div><div class="sw-meta"><span class="sw-name">gold-600</span><span class="sw-hex">#A08428</span><span class="sw-cr"><b>4.12</b> bordo enfasi</span></div></div>
-    <div class="sw clip-orokin"><div class="sw-chip" style="background:#8A7423"></div><div class="sw-meta"><span class="sw-name">gold-700</span><span class="sw-hex">#8A7423</span><span class="sw-cr"><b>3.26</b> bordo interattivo</span></div></div>
+    <div class="sw clip-orokin"><div class="sw-chip" style="background:#A08428"></div><div class="sw-meta"><span class="sw-name">gold-600</span><span class="sw-hex">#A08428</span><span class="sw-cr"><b>4.12</b> emphasis border</span></div></div>
+    <div class="sw clip-orokin"><div class="sw-chip" style="background:#8A7423"></div><div class="sw-meta"><span class="sw-name">gold-700</span><span class="sw-hex">#8A7423</span><span class="sw-cr"><b>3.26</b> interactive border</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#5E4A13"></div><div class="sw-meta"><span class="sw-name">gold-800</span><span class="sw-hex">#5E4A13</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#3A2D0C"></div><div class="sw-meta"><span class="sw-name">gold-900</span><span class="sw-hex">#3A2D0C</span></div></div>
   </div>
@@ -462,7 +462,7 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#C4B4FA"></div><div class="sw-meta"><span class="sw-name">void-200</span><span class="sw-hex">#C4B4FA</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#B7A3F7"></div><div class="sw-meta"><span class="sw-name">void-300</span><span class="sw-hex">#B7A3F7</span><span class="sw-cr">link hover</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#9B82F0"></div><div class="sw-meta"><span class="sw-name">void-400</span><span class="sw-hex">#9B82F0</span><span class="sw-cr"><b>6.45</b> link / focus</span></div></div>
-    <div class="sw clip-orokin"><div class="sw-chip" style="background:#7C5CE6"></div><div class="sw-meta"><span class="sw-name">void-500</span><span class="sw-hex">#7C5CE6</span><span class="sw-cr"><b class="bad">4.27</b> mai testo</span></div></div>
+    <div class="sw clip-orokin"><div class="sw-chip" style="background:#7C5CE6"></div><div class="sw-meta"><span class="sw-name">void-500</span><span class="sw-hex">#7C5CE6</span><span class="sw-cr"><b class="bad">4.27</b> never text</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#6647D6"></div><div class="sw-meta"><span class="sw-name">void-600</span><span class="sw-hex">#6647D6</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#4E2FBF"></div><div class="sw-meta"><span class="sw-name">void-700</span><span class="sw-hex">#4E2FBF</span><span class="sw-cr"><b>7.25</b> fill accento</span></div></div>
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#3D24A0"></div><div class="sw-meta"><span class="sw-name">void-800</span><span class="sw-hex">#3D24A0</span></div></div>
@@ -487,7 +487,7 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <div class="sw clip-orokin"><div class="sw-chip" style="background:#F07A75"></div><div class="sw-meta"><span class="sw-name">danger</span><span class="sw-hex">#F07A75</span><span class="sw-cr"><b>6.91</b> su s1</span></div></div>
   </div>
 
-  <h3 class="t-heading-sm sub">Testo su fill — verifiche</h3>
+  <h3 class="t-heading-sm sub">Text on fills — checks</h3>
   <div class="row">
     <div class="clip-orokin notch-sm" style="background:#C9A227;color:#0B0A08;padding:10px 16px;font-weight:600">gold-500 + ink · 8.18 ✓</div>
     <div class="clip-orokin notch-sm" style="background:#4E2FBF;color:#F2EDE3;padding:10px 16px;font-weight:600">void-700 + bone · 7.25 ✓</div>
@@ -497,13 +497,13 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 </section>
 
 <!-- ======================= ELEVAZIONE ======================= -->
-<section id="elevazione">
-  <div class="sec-head"><span class="sec-num">02</span><h2 class="t-display-sm">Elevazione</h2></div>
-  <p class="sec-desc">Nessuna <code>box-shadow</code>: con <code>clip-path</code> verrebbe ritagliata.
-    La profondità è superficie + intensità del bordo. Solo i layer flottanti (e3, e4) possono aggiungere <code>drop-shadow</code>.</p>
+<section id="elevation">
+  <div class="sec-head"><span class="sec-num">02</span><h2 class="t-display-sm">Elevation</h2></div>
+  <p class="sec-desc">No <code>box-shadow</code>: <code>clip-path</code> would cut it away.
+    Depth is surface + border intensity. Only the floating layers (e3, e4) may add <code>drop-shadow</code>.</p>
   <div class="grid g5">
     <div class="elev e0"><span class="t-overline muted">e0</span><span class="t-body-sm">Canvas</span><span class="sw-hex">#0B0A08</span></div>
-    <div class="elev e1"><span class="t-overline muted">e1</span><span class="t-body-sm">Pannelli, tabella</span><span class="sw-hex">#131210</span></div>
+    <div class="elev e1"><span class="t-overline muted">e1</span><span class="t-body-sm">Panels, table body</span><span class="sw-hex">#131210</span></div>
     <div class="elev e2"><span class="t-overline muted">e2</span><span class="t-body-sm">Card, input, header</span><span class="sw-hex">#1A1815</span></div>
     <div class="elev e3"><span class="t-overline muted">e3</span><span class="t-body-sm">Popover, tooltip</span><span class="sw-hex">#23201A</span></div>
     <div class="elev e4"><span class="t-overline muted">e4</span><span class="t-body-sm">Dialog, dropdown</span><span class="sw-hex">#2B2720</span></div>
@@ -511,65 +511,65 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 </section>
 
 <!-- ======================= GEOMETRIA ======================= -->
-<section id="geometria">
-  <div class="sec-head"><span class="sec-num">03</span><h2 class="t-display-sm">Geometria Orokin</h2></div>
-  <p class="sec-desc"><code>border-radius: 0</code> ovunque tranne pallini e spinner.
-    La silhouette è <code>clip-path</code>. Clip solo sui contenitori — mai su <code>tr</code>, <code>td</code>, <code>li</code>, avatar.</p>
+<section id="geometry">
+  <div class="sec-head"><span class="sec-num">03</span><h2 class="t-display-sm">Orokin geometry</h2></div>
+  <p class="sec-desc"><code>border-radius: 0</code> everywhere except dots and spinners.
+    The silhouette is <code>clip-path</code>. Clip containers only — never <code>tr</code>, <code>td</code>, <code>li</code>, avatars.</p>
 
   <h3 class="t-heading-sm sub">Le tre forme</h3>
   <div class="grid g3">
     <div>
       <div class="demo-box clip-orokin notch-lg">clip-orokin</div>
-      <p class="t-caption muted" style="margin-top:8px">Default. Taglia alto-sx e basso-dx.</p>
+      <p class="t-caption muted" style="margin-top:8px">Default. Cuts top-left and bottom-right.</p>
     </div>
     <div>
       <div class="demo-box clip-orokin-inverse notch-lg">clip-orokin-inverse</div>
-      <p class="t-caption muted" style="margin-top:8px">Metà speculare del layout. Detail panel.</p>
+      <p class="t-caption muted" style="margin-top:8px">The mirrored half of the layout. Detail panel.</p>
     </div>
     <div>
       <div class="demo-box clip-octagon notch-lg">clip-octagon</div>
-      <p class="t-caption muted" style="margin-top:8px">Solo chip e badge.</p>
+      <p class="t-caption muted" style="margin-top:8px">Chips and badges only.</p>
     </div>
   </div>
 
   <h3 class="t-heading-sm sub">Scala del notch</h3>
   <div class="grid g5">
     <div><div class="demo-box clip-orokin notch-xs">4px</div><p class="t-caption muted" style="margin-top:8px">notch-xs · chip</p></div>
-    <div><div class="demo-box clip-orokin notch-sm">6px</div><p class="t-caption muted" style="margin-top:8px">notch-sm · bottoni, input</p></div>
+    <div><div class="demo-box clip-orokin notch-sm">6px</div><p class="t-caption muted" style="margin-top:8px">notch-sm · buttons, inputs</p></div>
     <div><div class="demo-box clip-orokin notch-md">10px</div><p class="t-caption muted" style="margin-top:8px">notch-md · card</p></div>
-    <div><div class="demo-box clip-orokin notch-lg">16px</div><p class="t-caption muted" style="margin-top:8px">notch-lg · pannelli</p></div>
+    <div><div class="demo-box clip-orokin notch-lg">16px</div><p class="t-caption muted" style="margin-top:8px">notch-lg · panels</p></div>
     <div><div class="demo-box clip-orokin notch-xl">24px</div><p class="t-caption muted" style="margin-top:8px">notch-xl · dialog, hero</p></div>
   </div>
 
-  <h3 class="t-heading-sm sub">Cornici — tecnica a doppia superficie</h3>
+  <h3 class="t-heading-sm sub">Frames — the double-surface technique</h3>
   <div class="grid g3">
     <div class="o-frame notch-md"><div class="o-frame-inner" style="padding:16px;background:var(--surface-2)">
-      <p class="t-heading-sm">.o-frame</p><p class="t-caption muted">Bordo 1px <code>border-default</code>. Il wrapper <em>è</em> il bordo.</p>
+      <p class="t-heading-sm">.o-frame</p><p class="t-caption muted">1px <code>border-default</code>. The wrapper <em>is</em> the border.</p>
     </div></div>
     <div class="o-frame o-frame--interactive notch-md"><div class="o-frame-inner" style="padding:16px;background:var(--surface-2)">
-      <p class="t-heading-sm">.o-frame--interactive</p><p class="t-caption muted">Bordo <code>#8A7423</code> — 3:1 verificato, obbligatorio sui controlli.</p>
+      <p class="t-heading-sm">.o-frame--interactive</p><p class="t-caption muted"><code>#8A7423</code> border — 3:1 verified, mandatory on controls.</p>
     </div></div>
     <div class="o-frame o-frame--gilded notch-md"><div class="o-frame-inner" style="padding:16px;background:var(--surface-2)">
-      <p class="t-heading-sm brand">.o-frame--gilded</p><p class="t-caption muted">Inlay Orokin: gradiente 135°, oro sui due tagli.</p>
+      <p class="t-heading-sm brand">.o-frame--gilded</p><p class="t-caption muted">Orokin inlay: a 135° gradient, gold on the two cuts.</p>
     </div></div>
   </div>
   <p class="t-caption muted" style="margin-top:12px">
-    Il notch interno è <code>notch − 1px</code>: senza la sottrazione il bordo lungo la diagonale risulta ~1.41× più sottile.
+    The inner notch is <code>notch − 1px</code>: without the subtraction the border along the diagonal comes out about 1.41× thinner.
   </p>
 
   <h3 class="t-heading-sm sub">Focus — l'anello segue la silhouette</h3>
   <div class="row">
     <div class="btn-outline-wrap o-frame o-frame--interactive notch-sm"><div class="o-frame-inner">
       <button class="btn btn-outline">Tab qui per vedere il ring</button></div></div>
-    <a href="#geometria" class="o-focus-ring" style="padding:8px 4px">Link non clippato → outline reale</a>
+    <a href="#geometry" class="o-focus-ring" style="padding:8px 4px">Link non clippato → outline reale</a>
   </div>
 </section>
 
 <!-- ======================= TIPOGRAFIA ======================= -->
-<section id="tipografia">
-  <div class="sec-head"><span class="sec-num">04</span><h2 class="t-display-sm">Tipografia</h2></div>
-  <p class="sec-desc">Cinzel per il display (mai sotto 18px, mai <code>uppercase</code> sopra: è già maiuscolo).
-    Inter per UI e dati, sempre <code>tabular-nums</code> sui numeri in colonna.</p>
+<section id="typography">
+  <div class="sec-head"><span class="sec-num">04</span><h2 class="t-display-sm">Typography</h2></div>
+  <p class="sec-desc">Cinzel for display (never below 18px, never <code>uppercase</code> on top: it is already caps).
+    Inter for UI and data, always <code>tabular-nums</code> on numbers in a column.</p>
 
   <div class="o-frame notch-md"><div class="o-frame-inner" style="padding:24px;background:var(--surface-1)">
     <p class="t-display-xl">Lith V9</p>
@@ -577,21 +577,21 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <p class="t-display-lg">Volt Prime</p>
     <p class="t-caption muted" style="margin:4px 0 20px">display-lg · Cinzel 600 · 36/1.10</p>
     <p class="t-display-md">Meso B4 Radiant</p>
-    <p class="t-caption muted" style="margin:4px 0 20px">display-md · Cinzel 600 · 28/1.15 — nome reliquia nel detail panel</p>
-    <p class="t-display-sm">Contenuto della reliquia</p>
+    <p class="t-caption muted" style="margin:4px 0 20px">display-md · Cinzel 600 · 28/1.15 — relic name in the detail panel</p>
+    <p class="t-display-sm">What the relic holds</p>
     <p class="t-caption muted" style="margin:4px 0 20px">display-sm · Cinzel 600 · 22/1.20</p>
     <div class="o-divider"><span></span></div>
-    <p class="t-heading-lg">Heading large — titolo di card</p>
+    <p class="t-heading-lg">Heading large — card title</p>
     <p class="t-caption muted" style="margin:4px 0 16px">heading-lg · Inter 600 · 18/1.30</p>
     <p class="t-heading-md">Heading medium — sottosezione</p>
     <p class="t-caption muted" style="margin:4px 0 16px">heading-md · Inter 600 · 16/1.40</p>
     <p class="t-heading-sm">Heading small — label forte</p>
     <p class="t-caption muted" style="margin:4px 0 16px">heading-sm · Inter 600 · 14/1.40</p>
-    <p class="t-body-lg" style="max-width:72ch">Body large. Testo introduttivo, massimo 72 caratteri per riga.</p>
+    <p class="t-body-lg" style="max-width:72ch">Body large. Lead paragraph, 72 characters per line at most.</p>
     <p class="t-caption muted" style="margin:4px 0 16px">body-lg · Inter 400 · 16/1.60</p>
-    <p class="t-body-md" style="max-width:72ch">Body medium — default del corpo. La reliquia Lith V9 droppa su Hepit, Void, rotation A.</p>
+    <p class="t-body-md" style="max-width:72ch">Body medium — the body default. Lith V9 drops on Hepit, Void, rotation A.</p>
     <p class="t-caption muted" style="margin:4px 0 16px">body-md · Inter 400 · 15/1.55</p>
-    <p class="t-body-sm">Body small — celle di tabella e testo secondario.</p>
+    <p class="t-body-sm">Body small — table cells and secondary text.</p>
     <p class="t-caption muted" style="margin:4px 0 16px">body-sm · Inter 400 · 13/1.50</p>
     <p class="t-caption">Caption — nota, timestamp, helper text.</p>
     <p class="t-caption muted" style="margin:4px 0 16px">caption · Inter 400 · 12/1.40</p>
@@ -599,14 +599,14 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <p class="t-caption muted" style="margin:4px 0 0">overline · Inter 600 · 11/1.20 · +0.12em · uppercase</p>
   </div></div>
 
-  <h3 class="t-heading-sm sub">Numeri</h3>
+  <h3 class="t-heading-sm sub">Numbers</h3>
   <div class="grid g3">
     <div class="o-frame notch-md"><div class="o-frame-inner" style="padding:16px;background:var(--surface-2)">
-      <p class="t-overline muted">data-lg · prezzo in evidenza</p>
+      <p class="t-overline muted">data-lg · featured price</p>
       <p class="t-data-lg price price-lg" style="margin-top:8px">145 <span class="suffix">p</span></p>
     </div></div>
     <div class="o-frame notch-md"><div class="o-frame-inner" style="padding:16px;background:var(--surface-2)">
-      <p class="t-overline muted">data-md · prezzo in tabella</p>
+      <p class="t-overline muted">data-md · price in a table</p>
       <p class="price" style="margin-top:8px">45 <span class="suffix">p</span> &nbsp; <span class="delta-up">▲ +12%</span></p>
     </div></div>
     <div class="o-frame notch-md"><div class="o-frame-inner" style="padding:16px;background:var(--surface-2)">
@@ -614,14 +614,14 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
       <p class="t-data-sm muted" style="margin-top:8px">25.33% · 11.00% · 2.00%</p>
     </div></div>
   </div>
-  <p class="t-caption muted" style="margin-top:12px">Prezzo assente = <code style="color:var(--fg-disabled)">—</code>, mai <code>0 p</code>.
-    Percentuali sempre a 2 decimali (corrispondenza con la tabella drop ufficiale).</p>
+  <p class="t-caption muted" style="margin-top:12px">A missing price is <code style="color:var(--fg-disabled)">—</code>, never <code>0 p</code>.
+    Percentages always to two decimals, matching the official drop table.</p>
 </section>
 
 <!-- ======================= SPAZIO ======================= -->
-<section id="spazio">
-  <div class="sec-head"><span class="sec-num">05</span><h2 class="t-display-sm">Spazio e dimensioni</h2></div>
-  <p class="sec-desc">Base 4px. Nessun valore fuori scala.</p>
+<section id="space">
+  <div class="sec-head"><span class="sec-num">05</span><h2 class="t-display-sm">Space and sizing</h2></div>
+  <p class="sec-desc">Base 4px. No off-scale values.</p>
   <div class="row" style="align-items:flex-end;gap:16px">
     <div><div style="width:4px;height:4px;background:var(--gold-600)"></div><p class="t-caption muted" style="margin-top:6px">1 · 4</p></div>
     <div><div style="width:8px;height:8px;background:var(--gold-600)"></div><p class="t-caption muted" style="margin-top:6px">2 · 8</p></div>
@@ -634,9 +634,9 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <div><div style="width:64px;height:64px;background:var(--gold-600)"></div><p class="t-caption muted" style="margin-top:6px">16 · 64</p></div>
   </div>
 
-  <h3 class="t-heading-sm sub">Controlli e righe</h3>
+  <h3 class="t-heading-sm sub">Controls and rows</h3>
   <table class="spec">
-    <thead><tr><th>Token</th><th>Altezza</th><th>Padding X</th><th>Font</th><th>Icona</th><th>Notch</th></tr></thead>
+    <thead><tr><th>Token</th><th>Height</th><th>Padding X</th><th>Font</th><th>Icon</th><th>Notch</th></tr></thead>
     <tbody>
       <tr><td class="mono">control-xs</td><td>24px</td><td>8px</td><td>caption</td><td>16px</td><td>xs</td></tr>
       <tr><td class="mono">control-sm</td><td>32px</td><td>12px</td><td>body-sm</td><td>16px</td><td>sm</td></tr>
@@ -650,13 +650,13 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 
   <h3 class="t-heading-sm sub">Breakpoint</h3>
   <table class="spec">
-    <thead><tr><th>BP</th><th>Larghezza</th><th>Comportamento</th></tr></thead>
+    <thead><tr><th>BP</th><th>Width</th><th>Behaviour</th></tr></thead>
     <tbody>
-      <tr><td class="mono">2xl</td><td>≥1536</td><td>Layout pieno, sidebar espansa 260px</td></tr>
-      <tr><td class="mono">xl</td><td>≥1280</td><td>Layout pieno, sidebar collassata a icone 56px</td></tr>
+      <tr><td class="mono">2xl</td><td>≥1536</td><td>Full layout, sidebar expanded to 260px</td></tr>
+      <tr><td class="mono">xl</td><td>≥1280</td><td>Full layout, sidebar collapsed to 56px icons</td></tr>
       <tr><td class="mono">lg</td><td>≥1024</td><td>Detail panel → overlay drawer 420px da destra</td></tr>
-      <tr><td class="mono">md</td><td>≥768</td><td>Tabella a 4 colonne: tier, reliquia, drop migliore, prezzo</td></tr>
-      <tr><td class="mono">sm</td><td>&lt;768</td><td>Tabella → lista di card. Target touch 44px, righe 48px</td></tr>
+      <tr><td class="mono">md</td><td>≥768</td><td>Table down to four columns: tier, relic, best drop, price</td></tr>
+      <tr><td class="mono">sm</td><td>&lt;768</td><td>Table → list of cards. 44px touch targets, 48px rows</td></tr>
     </tbody>
   </table>
 </section>
@@ -664,16 +664,16 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 <!-- ======================= MOTION ======================= -->
 <section id="motion">
   <div class="sec-head"><span class="sec-num">06</span><h2 class="t-display-sm">Motion</h2></div>
-  <p class="sec-desc">Base funzionale 120–280ms + tre firme Orokin. Tutto disattivato sotto <code>prefers-reduced-motion</code>.</p>
+  <p class="sec-desc">A functional base of 120–280ms plus three Orokin signatures. All disabled under <code>prefers-reduced-motion</code>.</p>
   <div class="row" style="gap:12px;margin-bottom:24px">
-    <button class="btn btn-primary" onclick="replay()">Riproduci le firme</button>
+    <button class="btn btn-primary" onclick="replay()">Replay the signatures</button>
     <span class="t-caption muted">sweep 420ms · stagger 40ms · radiant 2400ms</span>
   </div>
   <div class="grid g3">
     <div class="o-frame o-frame--gilded notch-md" id="sweepDemo"><div class="o-frame-inner o-anim-sweep" style="padding:16px;background:var(--surface-1)">
       <p class="t-overline muted">Firma 1 — sweep</p>
       <p class="t-heading-sm" style="margin-top:6px">Detail panel</p>
-      <p class="t-caption muted">420ms · ease-orokin · clip-path inset da destra. Il contenuto si materializza nel telaio.</p>
+      <p class="t-caption muted">420ms · ease-orokin · clip-path inset from the right. The content materialises inside the frame.</p>
     </div></div>
     <div class="o-frame notch-md"><div class="o-frame-inner" style="padding:16px;background:var(--surface-1)">
       <p class="t-overline muted">Firma 2 — radiant pulse</p>
@@ -692,30 +692,30 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
         <p class="t-body-sm" style="--i:4">Lex Prime Barrel</p>
         <p class="t-body-sm" style="--i:5">Nyx Prime Chassis</p>
       </div>
-      <p class="t-caption muted" style="margin-top:10px">40ms per riga, cap a 6.</p>
+      <p class="t-caption muted" style="margin-top:10px">40ms per row, capped at six.</p>
     </div></div>
   </div>
 
   <table class="spec" style="margin-top:24px">
-    <thead><tr><th>Token</th><th>Valore</th><th>Uso</th></tr></thead>
+    <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
     <tbody>
-      <tr><td class="mono">dur-instant</td><td>80ms</td><td>Colore di icona, pressed</td></tr>
-      <tr><td class="mono">dur-fast</td><td>120ms</td><td>Hover, focus, fill di riga</td></tr>
+      <tr><td class="mono">dur-instant</td><td>80ms</td><td>Icon colour, pressed</td></tr>
+      <tr><td class="mono">dur-fast</td><td>120ms</td><td>Hover, focus, row fill</td></tr>
       <tr><td class="mono">dur-base</td><td>180ms</td><td>Popover, tab, accordion</td></tr>
       <tr><td class="mono">dur-slow</td><td>280ms</td><td>Drawer, dialog</td></tr>
       <tr><td class="mono">dur-sweep</td><td>420ms</td><td>Firma — detail panel</td></tr>
       <tr><td class="mono">dur-pulse</td><td>2400ms</td><td>Firma — Radiant</td></tr>
       <tr><td class="mono">ease-standard</td><td>cubic-bezier(.2,.8,.2,1)</td><td>Default</td></tr>
-      <tr><td class="mono">ease-orokin</td><td>cubic-bezier(.16,1,.3,1)</td><td>Solo le tre firme</td></tr>
+      <tr><td class="mono">ease-orokin</td><td>cubic-bezier(.16,1,.3,1)</td><td>The three signatures only</td></tr>
     </tbody>
   </table>
 </section>
 
 <!-- ======================= ICONE ======================= -->
-<section id="icone">
-  <div class="sec-head"><span class="sec-num">07</span><h2 class="t-display-sm">Iconografia</h2></div>
-  <p class="sec-desc">Lucide per l'UI (stroke 1.5, 20px default). Dieci glifi custom per tier, rarità e valute:
-    i rombi dei tier crescono di numero con l'era, così il conteggio è un canale indipendente dal colore.</p>
+<section id="icons">
+  <div class="sec-head"><span class="sec-num">07</span><h2 class="t-display-sm">Iconography</h2></div>
+  <p class="sec-desc">Lucide for the UI (stroke 1.5, 20px default). Custom glyphs for tiers, rarities and currencies:
+    the tier diamonds grow in number with the era, so the count is a channel independent of colour.</p>
   <div class="grid g5">
     <div class="o-frame notch-sm"><div class="o-frame-inner" style="padding:16px;text-align:center;background:var(--surface-2)">
       <svg viewBox="0 0 24 24" width="28" height="28" fill="var(--tier-lith)"><use href="#g-lith"/></svg>
@@ -751,21 +751,21 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 </section>
 
 <!-- ======================= COMPONENTI ======================= -->
-<section id="componenti">
-  <div class="sec-head"><span class="sec-num">08</span><h2 class="t-display-sm">Componenti</h2></div>
-  <p class="sec-desc">Ogni componente implementa esattamente: default, hover, focus-visible, active, disabled,
+<section id="components">
+  <div class="sec-head"><span class="sec-num">08</span><h2 class="t-display-sm">Components</h2></div>
+  <p class="sec-desc">Every component implements exactly: default, hover, focus-visible, active, disabled,
     e dove pertinente loading, selected, error.</p>
 
   <h3 class="t-heading-sm sub">Button</h3>
   <div class="row">
     <button class="btn btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      Cerca
+      Search
     </button>
-    <button class="btn btn-accent">Aggiungi alla wishlist</button>
+    <button class="btn btn-accent">Add to wishlist</button>
     <span class="btn-outline-wrap o-frame o-frame--interactive notch-sm"><span class="o-frame-inner"><button class="btn btn-outline">Outline</button></span></span>
     <button class="btn btn-ghost">Ghost</button>
-    <button class="btn btn-danger">Rimuovi</button>
+    <button class="btn btn-danger">Remove</button>
     <button class="btn btn-primary" disabled>Disabled</button>
     <button class="btn btn-accent"><span class="spinner"></span>Caricamento</button>
     <button class="btn btn-ghost btn-icon" aria-label="Copia">
@@ -786,7 +786,7 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
         <input type="text" placeholder="Lith V9 o Volt Prime…" />
         <span class="kbd">⌘K</span>
       </span></span></label>
-      <p class="helper">Default — bordo <code>border-interactive</code></p>
+      <p class="helper">Default — <code>border-interactive</code></p>
     </div>
     <div>
       <label class="field o-frame notch-sm" style="--frame-width:2px;--frame-color:var(--border-focus)"><span class="o-frame-inner"><span class="field-row">
@@ -800,7 +800,7 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="text" value="Xyz 99" aria-invalid="true" />
       </span></span></label>
-      <p class="helper err">Nessuna reliquia corrisponde a "Xyz 99"</p>
+      <p class="helper err">No relic matches "Xyz 99"</p>
     </div>
   </div>
 
@@ -844,8 +844,8 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
         </div>
       </div>
     </div>
-    <p class="t-caption muted" style="margin-top:16px">Il refinement non ha colori propri: modula opacità e cornice del chip del tier.
-      Il testo è sempre presente — l'opacità da sola non è un canale accessibile.</p>
+    <p class="t-caption muted" style="margin-top:16px">Refinement has no colours of its own: it modulates the opacity and frame of the tier chip.
+      The text is always there — opacity alone is not an accessible channel.</p>
   </div></div>
 
   <h3 class="t-heading-sm sub">Rarità e altri chip</h3>
@@ -854,52 +854,52 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
     <span class="rar rar-uncommon"><span class="dot"></span>Uncommon</span>
     <span class="rar rar-rare"><span class="dot"></span>Rare</span>
     <span style="width:24px"></span>
-    <span class="chip chip-filter">Solo Axi ×</span>
-    <span class="chip chip-filter">Prezzo &lt; 50p ×</span>
+    <span class="chip chip-filter">Axi only ×</span>
+    <span class="chip chip-filter">Price &lt; 50p ×</span>
     <span class="chip chip-count">23 risultati</span>
   </div>
-  <p class="t-caption muted" style="margin-top:12px">Tier e rarità non si confondono anche se Neo e Common sono entrambi arancioni:
-    canali visivi diversi (chip pieno a inizio riga vs pallino tondo nella colonna drop) e slot che non si incrociano mai.</p>
+  <p class="t-caption muted" style="margin-top:12px">Tier and rarity never blur together even though Neo and Common are both orange:
+    they occupy different visual channels — a solid chip at the start of the row against a round dot in the drop column — and slots that never cross.</p>
 
   <h3 class="t-heading-sm sub">Tabs · Tooltip · Toast</h3>
   <div class="grid g2">
     <div>
       <div class="tabs">
-        <button class="tab" aria-selected="true">Contenuto</button>
-        <button class="tab">Prezzi</button>
+        <button class="tab" aria-selected="true">Contents</button>
+        <button class="tab">Prices</button>
         <button class="tab">Farm</button>
-        <button class="tab">Storico</button>
+        <button class="tab">History</button>
       </div>
       <div class="row" style="margin-top:24px">
-        <span class="tooltip">Prezzo medio delle ultime 24h · 47 ordini</span>
+        <span class="tooltip">24h average price · 47 orders</span>
       </div>
     </div>
     <div class="row" style="flex-direction:column;align-items:stretch;gap:10px">
-      <div class="toast toast-success clip-orokin notch-sm"><span class="bar"></span><div><p class="toast-title">Aggiunta alla wishlist</p><p class="toast-body">Volt Prime Neuroptics</p></div></div>
-      <div class="toast toast-warning clip-orokin notch-sm"><span class="bar"></span><div><p class="toast-title">Dati non aggiornati</p><p class="toast-body">Ultimo aggiornamento 47 minuti fa</p></div></div>
+      <div class="toast toast-success clip-orokin notch-sm"><span class="bar"></span><div><p class="toast-title">Added to wishlist</p><p class="toast-body">Volt Prime Neuroptics</p></div></div>
+      <div class="toast toast-warning clip-orokin notch-sm"><span class="bar"></span><div><p class="toast-title">Stale data</p><p class="toast-body">Last updated 47 minutes ago</p></div></div>
       <div class="toast toast-danger clip-orokin notch-sm"><span class="bar"></span><div><p class="toast-title">Warframe Market non raggiungibile</p><p class="toast-body">HTTP 503 — riprovo tra 30s</p></div></div>
     </div>
   </div>
 
   <h3 class="t-heading-sm sub">Dialog</h3>
   <div class="dialog-demo o-frame o-frame--gilded notch-xl"><div class="o-frame-inner">
-    <p class="t-display-sm">Aggiungi all'inventario</p>
-    <p class="t-body-md secondary" style="margin:12px 0 20px">Quante copie di <span class="brand">Lith V9</span> vuoi registrare?
-      Il conteggio verrà usato per stimare il valore totale.</p>
+    <p class="t-display-sm">Add to inventory</p>
+    <p class="t-body-md secondary" style="margin:12px 0 20px">How many copies of <span class="brand">Lith V9</span> do you want to record?
+      The count is used to estimate the total value.</p>
     <label class="field o-frame o-frame--interactive notch-sm" style="max-width:200px"><span class="o-frame-inner"><span class="field-row">
       <input type="text" value="3" class="num" /></span></span></label>
     <div class="row" style="justify-content:flex-end;margin-top:24px">
       <button class="btn btn-ghost">Annulla</button>
-      <button class="btn btn-primary">Aggiungi</button>
+      <button class="btn btn-primary">Add</button>
     </div>
   </div></div>
 </section>
 
 <!-- ======================= APP ======================= -->
 <section id="app">
-  <div class="sec-head"><span class="sec-num">09</span><h2 class="t-display-sm">Shell applicativa</h2></div>
-  <p class="sec-desc">Il pattern principale: tabella densa (righe 40px, mai clippate) + detail panel 380px
-    con <code>clip-orokin-inverse</code>, così le due diagonali si guardano.</p>
+  <div class="sec-head"><span class="sec-num">09</span><h2 class="t-display-sm">Application shell</h2></div>
+  <p class="sec-desc">The main pattern: a dense table (40px rows, never clipped) plus a 380px detail panel
+    with <code>clip-orokin-inverse</code>, so the two diagonals face each other.</p>
 
   <div class="shell">
     <!-- RESULTS -->
@@ -908,11 +908,11 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
         <table class="o-table" style="min-width:640px">
           <thead><tr>
             <th style="width:88px">Tier</th>
-            <th style="width:120px">Reliquia</th>
+            <th style="width:120px">Relic</th>
             <th>Item</th>
             <th style="width:110px">Rarità</th>
             <th class="r" style="width:72px">Drop</th>
-            <th class="r" style="width:96px">Prezzo</th>
+            <th class="r" style="width:96px">Price</th>
             <th style="width:44px"></th>
           </tr></thead>
           <tbody>
@@ -921,42 +921,42 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
               <td>Lith V9</td><td>Volt Prime Neuroptics</td>
               <td><span class="rar rar-rare"><span class="dot"></span>Rare</span></td>
               <td class="r muted">2.00%</td><td class="r"><span class="price">45 <span class="suffix">p</span></span></td>
-              <td><button class="iconbtn" aria-label="Apri su Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
+              <td><button class="iconbtn" aria-label="Open on Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
             </tr>
             <tr>
               <td><span class="chip chip-meso ref-flawless"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#g-meso"/></svg>Meso</span></td>
               <td>Meso B4</td><td>Braton Prime Receiver</td>
               <td><span class="rar rar-uncommon"><span class="dot"></span>Uncommon</span></td>
               <td class="r muted">11.00%</td><td class="r"><span class="price">12 <span class="suffix">p</span></span></td>
-              <td><button class="iconbtn" aria-label="Apri su Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
+              <td><button class="iconbtn" aria-label="Open on Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
             </tr>
             <tr>
               <td><span class="chip chip-neo ref-exceptional"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#g-neo"/></svg>Neo</span></td>
               <td>Neo Z5</td><td>Forma Blueprint</td>
               <td><span class="rar rar-common"><span class="dot"></span>Common</span></td>
               <td class="r muted">25.33%</td><td class="r muted">—</td>
-              <td><button class="iconbtn" aria-label="Apri su Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
+              <td><button class="iconbtn" aria-label="Open on Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
             </tr>
             <tr>
               <td><span class="chip chip-axi ref-radiant"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#g-axi"/></svg>Axi</span></td>
               <td>Axi A2</td><td>Odonata Prime Systems</td>
               <td><span class="rar rar-rare"><span class="dot"></span>Rare</span></td>
               <td class="r muted">10.00%</td><td class="r"><span class="price">145 <span class="suffix">p</span></span></td>
-              <td><button class="iconbtn" aria-label="Apri su Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
+              <td><button class="iconbtn" aria-label="Open on Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
             </tr>
             <tr>
               <td><span class="chip chip-lith ref-intact"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#g-lith"/></svg>Lith</span></td>
               <td>Lith K3</td><td>Lex Prime Barrel</td>
               <td><span class="rar rar-uncommon"><span class="dot"></span>Uncommon</span></td>
               <td class="r muted">11.00%</td><td class="r"><span class="price">8 <span class="suffix">p</span></span></td>
-              <td><button class="iconbtn" aria-label="Apri su Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
+              <td><button class="iconbtn" aria-label="Open on Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
             </tr>
             <tr>
               <td><span class="chip chip-meso ref-intact"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#g-meso"/></svg>Meso</span></td>
               <td>Meso N6</td><td>Nyx Prime Chassis</td>
               <td><span class="rar rar-common"><span class="dot"></span>Common</span></td>
               <td class="r muted">25.33%</td><td class="r"><span class="price">6 <span class="suffix">p</span></span></td>
-              <td><button class="iconbtn" aria-label="Apri su Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
+              <td><button class="iconbtn" aria-label="Open on Warframe Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></td>
             </tr>
           </tbody>
         </table>
@@ -975,7 +975,7 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 
         <div class="o-divider"><span></span></div>
 
-        <p class="t-overline muted" style="margin-bottom:8px">Contenuto</p>
+        <p class="t-overline muted" style="margin-bottom:8px">Contents</p>
         <div class="o-stagger" id="dropsDemo">
           <div class="droprow" style="--i:0">
             <span class="drop-img"><svg viewBox="0 0 24 24" fill="currentColor"><use href="#g-sigil"/></svg></span>
@@ -1025,10 +1025,10 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 
         <div class="row" style="justify-content:space-between;align-items:flex-end">
           <div>
-            <p class="t-overline muted">Valore medio</p>
+            <p class="t-overline muted">Average value</p>
             <p class="price price-lg" style="margin-top:4px">13 <span class="suffix">p</span>
               <span class="delta-up" style="margin-left:6px">▲ +12%</span></p>
-            <p class="t-caption muted" style="margin-top:2px">aggiornato 4 min fa</p>
+            <p class="t-caption muted" style="margin-top:2px">updated 4 min ago</p>
           </div>
           <div style="text-align:right">
             <p class="t-overline muted">Ducati</p>
@@ -1038,13 +1038,13 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
 
         <button class="btn btn-primary" style="width:100%;margin-top:20px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
-          Apri su Warframe Market
+          Open on Warframe Market
         </button>
       </div></div>
     </div>
   </div>
 
-  <h3 class="t-heading-sm sub">Card reliquia — fallback sotto lg</h3>
+  <h3 class="t-heading-sm sub">Relic card — the fallback below lg</h3>
   <div class="grid g3">
     <div class="card o-frame o-frame--gilded notch-md"><div class="o-frame-inner">
       <div class="row" style="justify-content:space-between">
@@ -1081,36 +1081,36 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
         <div class="o-skeleton skel"></div>
         <div class="o-skeleton skel" style="width:60%"></div>
       </div>
-      <p class="t-caption muted" style="margin-top:14px">Blocchi mai clippati. Max 2s prima di uno stato di errore o vuoto.</p>
+      <p class="t-caption muted" style="margin-top:14px">Blocks are never clipped. Two seconds at most before an error or empty state.</p>
     </div></div>
   </div>
 </section>
 
 <!-- ======================= STATI ======================= -->
-<section id="stati">
-  <div class="sec-head"><span class="sec-num">10</span><h2 class="t-display-sm">Stati</h2></div>
-  <p class="sec-desc">Skeleton, vuoto iniziale, nessun risultato, errore. Ogni aggiornamento asincrono
-    è annunciato in una live region <code>aria-live="polite"</code>.</p>
+<section id="states">
+  <div class="sec-head"><span class="sec-num">10</span><h2 class="t-display-sm">States</h2></div>
+  <p class="sec-desc">Skeleton, initial empty, no results, error. Every asynchronous update
+    is announced in an <code>aria-live="polite"</code> region.</p>
   <div class="grid g3">
     <div class="o-frame notch-md"><div class="o-frame-inner state" style="background:var(--surface-1)">
       <svg viewBox="0 0 24 24" fill="var(--gold-800)"><use href="#g-sigil"/></svg>
-      <p class="t-display-sm">Cerca una reliquia</p>
-      <p class="t-body-sm muted">Nome della reliquia o dell'item Prime.</p>
+      <p class="t-display-sm">Search for a relic</p>
+      <p class="t-body-sm muted">By relic name or by Prime part.</p>
       <div class="row" style="justify-content:center;margin-top:6px">
         <span class="chip chip-count">Lith V9</span><span class="chip chip-count">Volt Prime</span><span class="chip chip-count">Meso B4</span>
       </div>
     </div></div>
     <div class="o-frame notch-md"><div class="o-frame-inner state" style="background:var(--surface-1)">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--bone-500)" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="m8.5 8.5 5 5m0-5-5 5"/></svg>
-      <p class="t-heading-md">Nessun risultato</p>
-      <p class="t-body-sm muted">Nessuna reliquia contiene "Xyz Prime".</p>
+      <p class="t-heading-md">No results</p>
+      <p class="t-body-sm muted">No relic contains "Xyz Prime".</p>
       <span class="btn-outline-wrap o-frame o-frame--interactive notch-sm" style="margin-top:6px"><span class="o-frame-inner"><button class="btn btn-outline btn-sm">Prova "Volt Prime"</button></span></span>
     </div></div>
     <div class="o-frame notch-md"><div class="o-frame-inner state" style="background:var(--surface-1)">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5" stroke-linecap="round"><path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>
-      <p class="t-heading-md">Impossibile caricare i prezzi</p>
+      <p class="t-heading-md">Could not load prices</p>
       <p class="t-caption muted">warframe.market — HTTP 503 Service Unavailable</p>
-      <span class="btn-outline-wrap o-frame o-frame--interactive notch-sm" style="margin-top:6px"><span class="o-frame-inner"><button class="btn btn-outline btn-sm">Riprova</button></span></span>
+      <span class="btn-outline-wrap o-frame o-frame--interactive notch-sm" style="margin-top:6px"><span class="o-frame-inner"><button class="btn btn-outline btn-sm">Retry</button></span></span>
     </div></div>
   </div>
 </section>
@@ -1121,30 +1121,30 @@ table.spec td.mono{font-family:ui-monospace,monospace;font-size:12px;color:var(-
   <p class="sec-desc">Le regole che una code review deve far rispettare.</p>
   <div class="o-frame notch-md"><div class="o-frame-inner" style="background:var(--surface-1)">
     <div class="do-dont">
-      <div class="yes">✅ <code>clip-path</code> su pannelli, card, bottoni, chip</div>
-      <div class="no">❌ <code>clip-path</code> su <code>tr</code>, <code>td</code>, <code>li</code>, avatar</div>
-      <div class="yes">✅ Bordo con la tecnica <code>.o-frame</code> a doppia superficie</div>
-      <div class="no">❌ <code>border</code> o <code>outline</code> diretti su elemento clippato</div>
-      <div class="yes">✅ Elevazione con superficie + bordo</div>
-      <div class="no">❌ <code>box-shadow</code> — viene ritagliata dal clip</div>
-      <div class="yes">✅ Oro per Rare, Radiant, brand, azione primaria</div>
-      <div class="no">❌ Oro per i link — i link sono <code>void-400</code></div>
-      <div class="yes">✅ <code>void-700</code> come fill con testo</div>
-      <div class="no">❌ <code>void-500</code> come fill con testo — 3.97:1</div>
-      <div class="yes">✅ Rarità = pallino + testo</div>
-      <div class="no">❌ Rarità = solo colore</div>
-      <div class="yes">✅ <code>tabular-nums</code> su ogni colonna numerica</div>
-      <div class="no">❌ Cifre proporzionali nei prezzi</div>
-      <div class="yes">✅ Cinzel ≥18px, mai <code>uppercase</code> sopra</div>
-      <div class="no">❌ Cinzel a 13px in una cella di tabella</div>
-      <div class="yes">✅ Un <code>primary</code> per vista</div>
-      <div class="no">❌ Tre bottoni oro affiancati</div>
-      <div class="yes">✅ Un elemento Radiant pulsante per vista</div>
-      <div class="no">❌ 30 righe che pulsano insieme</div>
-      <div class="yes">✅ <code>—</code> per prezzo mancante</div>
-      <div class="no">❌ <code>0 p</code> per prezzo mancante</div>
-      <div class="yes" style="border-bottom:0">✅ Sotto <code>lg</code>: tabella → card</div>
-      <div class="no" style="border-bottom:0">❌ Scroll orizzontale della tabella su mobile</div>
+      <div class="yes">✅ <code>clip-path</code> on panels, cards, buttons, chips</div>
+      <div class="no">❌ <code>clip-path</code> on <code>tr</code>, <code>td</code>, <code>li</code>, avatars</div>
+      <div class="yes">✅ Borders through the double-surface <code>.o-frame</code> technique</div>
+      <div class="no">❌ <code>border</code> or <code>outline</code> directly on a clipped element</div>
+      <div class="yes">✅ Elevation from surface + border</div>
+      <div class="no">❌ <code>box-shadow</code> — the clip cuts it away</div>
+      <div class="yes">✅ Gold for Rare, Radiant, brand, primary action</div>
+      <div class="no">❌ Gold for links — links are <code>void-400</code></div>
+      <div class="yes">✅ <code>void-700</code> as a fill with text</div>
+      <div class="no">❌ <code>void-500</code> as a fill with text — 3.97:1</div>
+      <div class="yes">✅ Rarity = dot + text</div>
+      <div class="no">❌ Rarity = colour alone</div>
+      <div class="yes">✅ <code>tabular-nums</code> on every numeric column</div>
+      <div class="no">❌ Proportional digits in prices</div>
+      <div class="yes">✅ Cinzel ≥18px, never <code>uppercase</code> on top</div>
+      <div class="no">❌ Cinzel at 13px inside a table cell</div>
+      <div class="yes">✅ One <code>primary</code> per view</div>
+      <div class="no">❌ Three gold buttons side by side</div>
+      <div class="yes">✅ One pulsing Radiant element per view</div>
+      <div class="no">❌ Thirty rows pulsing together</div>
+      <div class="yes">✅ <code>—</code> for a missing price</div>
+      <div class="no">❌ <code>0 p</code> for a missing price</div>
+      <div class="yes" style="border-bottom:0">✅ Below <code>lg</code>: table → cards</div>
+      <div class="no" style="border-bottom:0">❌ Horizontal table scrolling on mobile</div>
     </div>
   </div></div>
 </section>

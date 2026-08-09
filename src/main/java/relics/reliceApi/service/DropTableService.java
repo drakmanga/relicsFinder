@@ -118,7 +118,7 @@ public class DropTableService {
             snapshot = fetched;
             return fetched;
         } catch (Exception e) {
-            System.err.println("DropTableService: refresh fallito — " + e.getMessage());
+            System.err.println("DropTableService: refresh failed — " + e.getMessage());
             // Stale data beats no data: a failed refresh must not turn every
             // relic into "vaulted with no drop sites".
             if (cached != null) return cached;

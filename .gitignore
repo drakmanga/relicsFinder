@@ -11,7 +11,7 @@ dist/
 apps/web/dist/
 .vite/
 
-### design-sync — script staged, output rigenerato, stato macchina ###
+### design-sync — staged scripts, regenerated output, machine state ###
 .ds-sync/
 .ds-verify/
 ds-bundle/
@@ -38,23 +38,23 @@ ds-bundle/
 /nbdist/
 /.nb-gradle/
 
-### Strumenti di lavoro personali, non del progetto ###
-# Configurazione di editor e assistenti, lockfile delle loro estensioni. Chi
-# clona il repo usa i propri, e un symlink verso una cartella che esiste solo
-# su questa macchina gli arriva rotto.
+### Personal tooling, not part of the project ###
+# Editor and assistant configuration, and the lockfile for their extensions.
+# Anyone cloning the repository uses their own, and a symlink to a directory
+# that exists only on this machine arrives broken.
 .claude/
 .agents/
 skills-lock.json
 
-### Materiale di lavoro sul design ###
-# Sorgente importato, screenshot di riferimento, stato del sync e note di
-# lavorazione. La specifica vera è design-system/, che resta versionata.
+### Design working material ###
+# Imported source, reference screenshots, sync state and working notes. The
+# specification itself is design-system/, which stays versioned.
 .design-sync/
 design-imports/
 /wl3.png
 
-### Pianificazione interna ###
+### Internal planning ###
 BACKLOG.md
 
-### Stato runtime ###
+### Runtime state ###
 data/

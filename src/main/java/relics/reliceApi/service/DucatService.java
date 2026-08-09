@@ -105,7 +105,7 @@ public class DucatService {
             snapshot = fetched;
             return fetched;
         } catch (Exception e) {
-            System.err.println("DucatService: refresh fallito — " + e.getMessage());
+            System.err.println("DucatService: refresh failed — " + e.getMessage());
             // Stale beats empty: without this every part would suddenly report
             // no ducats and no set.
             return cached != null ? cached : new Snapshot(Map.of(), Instant.now());

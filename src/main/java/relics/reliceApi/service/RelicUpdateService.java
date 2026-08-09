@@ -48,7 +48,7 @@ public class RelicUpdateService {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
-            throw new IOException("Errore HTTP: " + response.statusCode() + "\nRisposta: " + response.body());
+            throw new IOException("HTTP error: " + response.statusCode() + "\nBody: " + response.body());
         }
 
         JsonNode root = objectMapper.readTree(response.body());
@@ -56,7 +56,7 @@ public class RelicUpdateService {
         if (relics == null || !relics.isArray() || relics.isEmpty()) {
             // A truncated or reshaped response must not overwrite a good file:
             // the catalogue is the app's only source of what exists.
-            throw new IOException("Risposta senza array 'relics': catalogo non aggiornato");
+            throw new IOException("Response carried no 'relics' array: catalogue left untouched");
         }
 
         Path parent = file.toAbsolutePath().getParent();

@@ -75,11 +75,11 @@ public class PriceWarmupRunner implements ApplicationRunner {
             marketService.enqueueAll(itemNames);
             marketService.enqueueAllRelics(relicNames);
 
-            System.out.println("price-warmup: " + itemNames.size() + " item e "
-                    + relicNames.size() + " reliquie in coda");
+            System.out.println("price-warmup: " + itemNames.size() + " items and "
+                    + relicNames.size() + " relics queued");
 
         } catch (Exception e) {
-            System.err.println("price-warmup fallito: " + e.getMessage());
+            System.err.println("price-warmup failed: " + e.getMessage());
         }
     }
 }

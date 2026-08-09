@@ -112,7 +112,7 @@ public class EndoService {
             Thread.currentThread().interrupt();
             return cached;
         } catch (Exception e) {
-            System.err.println("endo: aggiornamento fallito — " + e.getMessage());
+            System.err.println("endo: refresh failed — " + e.getMessage());
             return cached;
         } finally {
             lock.unlock();

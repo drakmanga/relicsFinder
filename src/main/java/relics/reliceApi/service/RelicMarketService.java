@@ -351,7 +351,7 @@ public class RelicMarketService {
             // 404 means the item is not traded — an answer, not a fault.
             if (response.statusCode() != 200) {
                 if (response.statusCode() != 404) {
-                    System.err.println("market: HTTP " + response.statusCode() + " per " + slug);
+                    System.err.println("market: HTTP " + response.statusCode() + " for " + slug);
                 }
                 return new Cached(null, null, null, null, List.of(), Instant.now());
             }
@@ -373,7 +373,7 @@ public class RelicMarketService {
                     trend(recent.avg(), history), history, Instant.now());
 
         } catch (Exception e) {
-            System.err.println("market: errore su " + slug + " — " + e.getMessage());
+            System.err.println("market: error on " + slug + " — " + e.getMessage());
             return new Cached(null, null, null, null, List.of(), Instant.now());
         }
     }

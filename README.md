@@ -62,7 +62,7 @@ If you play Warframe you know the routine:
 - **Build**: Maven + npm workspaces
 
 The relic catalogue refreshes itself on startup and daily at 04:20. To run it locally see
-**[COME-AVVIARE.md](COME-AVVIARE.md)**; for what is left to do, the [roadmap](#-roadmap)
+**[RUNNING.md](RUNNING.md)**; for what is left to do, the [roadmap](#-roadmap)
 below and the [open issues](https://github.com/drakmanga/relicsFinder/issues).
 
 ## 📋 Requirements
@@ -111,7 +111,7 @@ java -jar target/relicsFinder.jar --spring.config.location=file:/path/to/applica
 ```
 
 ✅ The API is served on `http://localhost:8080`. The frontend is a second process — see
-**[COME-AVVIARE.md](COME-AVVIARE.md)**.
+**[RUNNING.md](RUNNING.md)**.
 
 ## 🎯 How to use it
 
