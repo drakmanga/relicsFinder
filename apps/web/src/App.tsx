@@ -19,6 +19,8 @@ import { WishlistTable } from "./components/WishlistTable";
 import { ItemsTable } from "./components/ItemsTable";
 import { ResultsTable } from "./components/ResultsTable";
 import { RelicDetailPanel } from "./components/RelicDetailPanel";
+import { SetsTable } from "./components/SetsTable";
+import { SetDetailPanel } from "./components/SetDetailPanel";
 import {
   useDropInfo,
   useEndoOffers,
@@ -28,6 +30,8 @@ import {
   useUnvaultedNames,
 } from "./api/queries";
 import { useWishlist } from "./lib/wishlist";
+import { useOwned } from "./lib/owned";
+import { buildSets } from "./lib/setCompletion";
 import { buildItemRows } from "./lib/items";
 import { fromSearch, toSearch } from "./lib/urlState";
 import type { Refinement, RelicItemRow, Reward } from "./api/types";
@@ -43,7 +47,7 @@ import {
 } from "./lib/rows";
 
 
-type View = "relics" | "items" | "wishlist" | "ducats" | "endo";
+type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
 
 /**
  * Views that browse the relic catalogue.
@@ -54,6 +58,9 @@ type View = "relics" | "items" | "wishlist" | "ducats" | "endo";
  * anything for a relic filter to act on.
  */
 const isCatalogue = (view: View) => view === "relics" || view === "items";
+
+/** Views with a detail panel beside the list. */
+const hasPanel = (view: View) => isCatalogue(view) || view === "sets";
 
 export function App() {
   // Read once, so a shared link opens on the state it describes rather than on
@@ -72,6 +79,16 @@ export function App() {
   const [view, setView] = useState<View>(initial.view as View);
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
+  /** Set the panel is showing, by name. */
+  const [selectedSet, setSelectedSet] = useState<string | null>(null);
+  /**
+   * Refinement the farming route assumes, for the Sets view only.
+   *
+   * Its own state rather than the shared filter: the filter decides which rows
+   * the relics table lists, and asking "how many Radiant runs would this take"
+   * should not empty the table behind another tab.
+   */
+  const [setRefinement, setSetRefinement] = useState<Refinement>("intact");
 
   /**
    * Where the panel came from, one step per jump.
@@ -164,11 +181,13 @@ export function App() {
     setTrail([]);
     setSelected(null);
     setPickedItem(null);
+    setSelectedSet(null);
   };
 
   const relics = useRelics();
   const unvaulted = useUnvaultedNames();
   const wishlist = useWishlist();
+  const ownedParts = useOwned();
 
   /**
    * The wishlist shows what a saved sculpture costs today, which needs the same
@@ -325,8 +344,54 @@ export function App() {
    * being looked at puts the ones on screen behind the rest.
    */
   const relicPrices = useRelicPrices(
-    view === "relics" ? rows.map((row) => row.relicFullName) : [],
+    // The Sets view prices relics too — the farming route is quoted in the
+    // cost of the relics it takes — and there the whole catalogue is in play.
+    view === "relics" || view === "sets"
+      ? (relics.data ?? [])
+          .filter((relic) => relic.refinement === "intact")
+          .map((relic) => relic.fullName)
+      : [],
   );
+
+  /**
+   * Every Prime set, with what each one still needs.
+   *
+   * Built only for the view that shows it: the pass walks the whole catalogue
+   * and the result changes with every tick of a checkbox, so paying for it
+   * behind another tab would be a re-render nobody sees.
+   */
+  const sets = useMemo(
+    () =>
+      view === "sets"
+        ? buildSets(
+            relics.data ?? [],
+            ownedParts.owned,
+            prices.data,
+            relicPrices.data,
+            setRefinement,
+          )
+        : [],
+    [view, relics.data, ownedParts.owned, prices.data, relicPrices.data, setRefinement],
+  );
+
+  const visibleSets = useMemo(() => {
+    const term = filters.term.trim().toLowerCase();
+    if (!term) return sets;
+
+    // The set name or any piece in it: someone who remembers "Akbolto" should
+    // not have to know it is the set and not the part.
+    return sets.filter(
+      (set) =>
+        set.setName.toLowerCase().includes(term) ||
+        set.parts.some((part) => part.itemName.toLowerCase().includes(term)),
+    );
+  }, [sets, filters.term]);
+
+  const selectedSetRow = useMemo(
+    () => sets.find((set) => set.setName === selectedSet) ?? null,
+    [sets, selectedSet],
+  );
+
 
   const visible = useMemo(() => {
     const farmable = applyVaultFilter(rows, filters.vault, unvaulted.data);
@@ -390,6 +455,7 @@ export function App() {
           items={[
             { id: "relics", label: "Relics" },
             { id: "items", label: "Prime Items" },
+            { id: "sets", label: "Sets" },
             { id: "wishlist", label: `Wishlist · ${wishlist.totalItems}` },
             { id: "ducats", label: "Ducanetor" },
             { id: "endo", label: "Endo" },
@@ -399,7 +465,7 @@ export function App() {
       </header>
 
       {/* Search and filters act on the catalogue, not on the list. */}
-      {isCatalogue(view) && (
+      {(isCatalogue(view) || view === "sets") && (
       <div
         style={{
           flex: "none",
@@ -430,7 +496,14 @@ export function App() {
           />
         </div>
         {relics.data && (
-          <Chip>{view === "items" ? itemRows.length : visible.length} results</Chip>
+          <Chip>
+            {view === "items"
+              ? itemRows.length
+              : view === "sets"
+                ? visibleSets.length
+                : visible.length}{" "}
+            results
+          </Chip>
         )}
       </div>
       )}
@@ -483,6 +556,13 @@ export function App() {
               prices={prices.data}
               onInfo={setInfoItem}
               quantityOf={wishlist.quantityOf}
+            />
+          ) : view === "sets" ? (
+            <SetsTable
+              sets={visibleSets}
+              pricesPending={prices.isPending}
+              selected={selectedSet}
+              onSelect={setSelectedSet}
             />
           ) : view === "wishlist" ? (
             <WishlistTable
@@ -550,7 +630,20 @@ export function App() {
           shows relics and the Prime Items view shows parts, so which panel to
           draw is no longer a question about the clicked cell.
         */}
-        {!isCatalogue(view) ? null : view === "items" ? (
+        {!hasPanel(view) ? null : view === "sets" ? (
+          <SetDetailPanel
+            set={selectedSetRow}
+            pricesPending={prices.isPending}
+            refinement={setRefinement}
+            onRefinement={setSetRefinement}
+            onToggle={ownedParts.toggle}
+            onToggleAll={ownedParts.setAll}
+            onPickItem={openItem}
+            onPickRelic={openRelic}
+            onBack={trail.length > 0 ? goBack : undefined}
+            onClose={closePanel}
+          />
+        ) : view === "items" ? (
           itemPanelRow === null ? (
             <DetailPanel empty />
           ) : (

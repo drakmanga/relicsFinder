@@ -197,6 +197,30 @@ export const api = {
     return (await res.json()) as WireWishlistEntry[];
   },
 
+  /** The parts the player already has, as stored on the server. */
+  async owned(signal?: AbortSignal): Promise<string[]> {
+    return await get<string[]>("/owned", signal);
+  },
+
+  /** Replaces the stored list with this one. */
+  async saveOwned(itemNames: string[]): Promise<string[]> {
+    const url = `${BASE}/owned`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(itemNames),
+      });
+    } catch (cause) {
+      throw new ApiError(0, url, `Impossibile raggiungere il server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
+    return (await res.json()) as string[];
+  },
+
   /** Ayatan offers ranked by Endo per platinum. */
   async endoOffers(signal?: AbortSignal): Promise<EndoOffer[]> {
     return await get<EndoOffer[]>("/endo/offers", signal);

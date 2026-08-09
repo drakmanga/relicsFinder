@@ -12,7 +12,7 @@ Un tool completo per trovare reliquie, parti Prime e prezzi di mercato in Warfra
 
 ### 🎯 Cosa puoi fare ora
 
-Cinque viste, ognuna con una domanda:
+Sei viste, ognuna con una domanda:
 
 - **Relics** — *quale reliquia apro?* Una riga per reliquia, con **valore atteso**
   (ogni drop pesato per la sua probabilità), miglior drop, ducati totali e se è
@@ -23,6 +23,9 @@ Cinque viste, ognuna con una domanda:
   pezzi da sciogliere per ducati, sculture Ayatan.
 - **Ducanetor** — *cosa compro per Baro?* Parti in classifica per **ducati per
   platino** speso.
+- **Sets** — *mi serve Volt Prime: cosa manca?* Un set per riga, con quanti pezzi
+  hai già, quanto costa comprare quelli che mancano, e per ognuno se conviene
+  **comprarlo o farmarlo**.
 - **Endo** — *quale Ayatan compro?* Offerte in classifica per **endo per
   platino**, calcolate sulle stelle montate in quella specifica scultura.
 
@@ -34,7 +37,6 @@ completo nella URL — una schermata si condivide con un link.
 ### 🚀 Coming Soon
 
 - **🧾 Inventory tracking** - Verifica se possiedi già una reliquia o parte
-- **🎯 Set completion** - "mi serve Volt Prime": pezzi mancanti e se conviene comprare o farmare
 - **🔔 Notifications** - Alert quando il prezzo scende sotto una soglia
 
 ## 🎮 Perché usarlo?
@@ -152,6 +154,9 @@ GET  /api/market/status                   quanto della cache prezzi è pronta
 GET  /api/endo/offers                     Ayatan in classifica per endo/platino
 GET  /api/wishlist                        la wishlist salvata
 PUT  /api/wishlist                        la sostituisce
+GET  /api/owned                           i pezzi che possiedi già
+PUT  /api/owned                           li sostituisce
+POST /api/market/relics                   prezzi delle reliquie in blocco
 ```
 
 Gli endpoint indirizzati per nome vogliono il **nome completo**: `/api/relics/relic/Lith%20V9`
@@ -222,7 +227,7 @@ Questo progetto è open source e i contributi sono benvenuti!
 - Aggiungere supporto per altre lingue
 - Migliorare l'interfaccia utente
 - Implementare il sistema di inventory
-- Set completion: dato un set, cosa manca e se conviene comprare o farmare
+- Migliorare le stime di farm: tempo per run, non solo numero di run
 - Ottimizzare le performance
 
 ## 🐛 Bug e Feature Request
@@ -240,8 +245,8 @@ Hai trovato un bug? Hai un'idea per una nuova feature?
 - [x] Interfaccia dark (design system Orokin)
 - [x] Valore atteso, radshare e resa del raffinamento
 - [x] Ducati per platino (Ducanetor) ed Endo per platino (Ayatan)
+- [x] Set completion: cosa manca di un set, e se conviene comprare o farmare
 - [ ] Sistema inventory personale
-- [ ] Set completion: comprare o farmare
 - [ ] Notifiche prezzi
 - [ ] App mobile companion
 
