@@ -69,6 +69,12 @@ public class RelicLoadService {
                 .readerFor(new TypeReference<List<Relic>>() {})
                 .readValue(relicsArray);
 
+        // One Requiem entry in the drop tables carries no relicName. Without one
+        // it cannot be addressed by any endpoint and it reached the interface as
+        // the row "Requiem undefined", so it is dropped rather than displayed:
+        // a relic nobody can look up or open is not a relic.
+        relics.removeIf(relic -> relic.getRelicName() == null || relic.getRelicName().isBlank());
+
         relics.forEach(RelicLoadService::correctRarities);
         return relics;
     }
