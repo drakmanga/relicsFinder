@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 /**
  * Prices from warframe.market.
@@ -47,9 +48,9 @@ public class RelicMarketService {
     /**
      * One request every 320ms — about three a second, the documented ceiling.
      *
-     * <p>Serialised rather than parallel-with-a-cap: a single queue makes the
-     * rate exact instead of approximate, and nothing here is latency-sensitive
-     * because callers read the cache.
+     * <p>Enforced on the start of each call rather than by sleeping after it,
+     * so the rate stays exact while several fetches are in flight. See
+     * {@link #WARMERS}.
      */
     private static final long SPACING_MS = 320;
 
@@ -67,17 +68,60 @@ public class RelicMarketService {
     private final LinkedBlockingDeque<String> queue = new LinkedBlockingDeque<>();
     private final Set<String> queued = ConcurrentHashMap.newKeySet();
 
-    private final ExecutorService warmer = Executors.newSingleThreadExecutor(runnable -> {
+    /**
+     * How many fetches are in flight at once.
+     *
+     * <p>One was not enough, and not because of the rate limit. A single worker
+     * spends the whole round trip waiting — the ceiling it hit was the latency
+     * of warframe.market, about five seconds a call, so the queue drained at
+     * ten an hour's worth of items rather than the three a second we are
+     * allowed. A catalogue of six hundred parts and as many relics took over an
+     * hour to price, which is to say the newest column on the table stayed
+     * empty for anyone who did not leave the app open.
+     *
+     * <p>The rate limit is still exact: workers take numbered slots from
+     * {@link #awaitSlot}, so requests start {@value #SPACING_MS}ms apart no
+     * matter how many threads are asking. Six is enough to keep a slot always
+     * ready at that latency, and small enough that a slow market does not turn
+     * into a pile of sockets.
+     */
+    private static final int WARMERS = 6;
+
+    private final ExecutorService warmer = Executors.newFixedThreadPool(WARMERS, runnable -> {
         Thread thread = new Thread(runnable, "market-warmer");
         thread.setDaemon(true);
         return thread;
     });
 
+    /** Guards the next free request slot, so the spacing is global. */
+    private final Object rateLock = new Object();
+    private long nextSlotAt = 0;
+
     private volatile boolean running = true;
 
     public RelicMarketService(DucatService ducatService) {
         this.ducatService = ducatService;
-        warmer.submit(this::warmLoop);
+        for (int i = 0; i < WARMERS; i++) warmer.submit(this::warmLoop);
+    }
+
+    /**
+     * Waits for this worker's turn to call the market.
+     *
+     * <p>Slots are handed out in advance rather than measured after the fact:
+     * every caller books the next one and sleeps until it arrives, so the
+     * interval holds even when a fetch takes ten times longer than the spacing.
+     */
+    private void awaitSlot() throws InterruptedException {
+        long wait;
+
+        synchronized (rateLock) {
+            long now = System.currentTimeMillis();
+            long slot = Math.max(now, nextSlotAt);
+            nextSlotAt = slot + SPACING_MS;
+            wait = slot - now;
+        }
+
+        if (wait > 0) Thread.sleep(wait);
     }
 
     @PreDestroy
@@ -227,9 +271,25 @@ public class RelicMarketService {
 
     /** Warms a whole catalogue, e.g. every Prime part in the drop tables. */
     public void enqueueAll(Collection<String> itemNames) {
-        for (String name : itemNames) {
+        enqueueAllSlugs(itemNames, RelicMarketService::itemSlug);
+    }
+
+    /**
+     * Same, for whole relics.
+     *
+     * <p>Separate because a relic and a part reach the market through different
+     * slugs. Without this the relics table showed no price at all until someone
+     * opened it and then waited for the queue to reach the back — every restart
+     * of the server, for every user.
+     */
+    public void enqueueAllRelics(Collection<String> relicNames) {
+        enqueueAllSlugs(relicNames, RelicMarketService::relicSlug);
+    }
+
+    private void enqueueAllSlugs(Collection<String> names, Function<String, String> toSlug) {
+        for (String name : names) {
             if (name == null || name.isBlank()) continue;
-            String slug = itemSlug(name.trim());
+            String slug = toSlug.apply(name.trim());
             Cached cached = cache.get(slug);
             if (cached == null || !cached.isFresh()) enqueue(slug);
         }
@@ -246,8 +306,11 @@ public class RelicMarketService {
                 Cached existing = cache.get(slug);
                 if (existing != null && existing.isFresh()) continue;
 
+                // The slot is taken before the call, not after: the spacing has
+                // to sit between the starts of two requests, and a worker that
+                // slept afterwards would let five others fire at once.
+                awaitSlot();
                 cache.put(slug, fetch(slug));
-                Thread.sleep(SPACING_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
@@ -379,33 +442,34 @@ public class RelicMarketService {
     }
 
     /**
-     * "Volt Prime Neuroptics Blueprint" → "volt_prime_neuroptics".
+     * "Volt Prime Neuroptics Blueprint" → "volt_prime_neuroptics_blueprint".
      *
-     * <p>The drop tables append "Blueprint" to most part names while
-     * warframe.market does not, so the suffix is dropped — but only when
-     * something sits between "Prime" and it. "Volt Prime Blueprint" is a part in
-     * its own right, the main blueprint, and "Forma Blueprint" is not a Prime
-     * part at all; both must survive intact.
+     * <p>The name is kept whole. This used to strip a trailing "Blueprint" from
+     * part names, on the belief that warframe.market did not carry it — and the
+     * shortened slug did answer, but with a 301 to the full one, which the HTTP
+     * client follows silently. That worked for as long as every part had a
+     * redirect behind it. Warframes released since Hildryn have none, so
+     * Revenant, Wisp, Caliban, Lavos and the rest came back 404 and were
+     * displayed as parts nobody is selling, which is a different and much
+     * quieter kind of wrong.
      */
     static String itemSlug(String itemName) {
-        String cleaned = itemName == null ? "" : itemName.trim();
-        String lower = cleaned.toLowerCase(Locale.ROOT);
-
-        if (lower.endsWith(" blueprint")) {
-            String withoutSuffix = cleaned.substring(0, cleaned.length() - " blueprint".length());
-            String remainder = withoutSuffix.toLowerCase(Locale.ROOT).trim();
-
-            if (remainder.contains("prime") && !remainder.endsWith("prime")) {
-                cleaned = withoutSuffix;
-            }
-        }
-
-        return baseSlug(cleaned);
+        return baseSlug(itemName);
     }
 
+    /**
+     * A name as warframe.market spells it in a URL.
+     *
+     * <p>"&" becomes "and" rather than a separator: the market writes "Cobra &
+     * Crane Prime Hilt" as {@code cobra_and_crane_prime_hilt}, and collapsing
+     * the ampersand into an underscore produced a slug for a weapon that does
+     * not exist. Every dual weapon in the game was priced at nothing because of
+     * it.
+     */
     private static String baseSlug(String value) {
         return value == null ? "" : value.trim()
                 .toLowerCase(Locale.ROOT)
+                .replace("&", " and ")
                 .replaceAll("[^a-z0-9]+", "_")
                 .replaceAll("^_+|_+$", "");
     }

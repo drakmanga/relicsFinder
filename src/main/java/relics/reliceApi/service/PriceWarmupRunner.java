@@ -12,15 +12,16 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Fills the price cache with every Prime part in the drop tables.
+ * Fills the price cache with everything the interface prices: every Prime part
+ * in the drop tables, and every relic that holds them.
  *
- * <p>There are about 550 distinct parts and the market allows roughly three
- * requests a second, so a full pass takes around three minutes. Doing it here,
+ * <p>About 600 parts and 690 relics, against a market that allows roughly three
+ * requests a second — so a full pass takes around seven minutes. Doing it here,
  * once, in the background, is the difference between a table that shows prices
  * immediately and one where every user pays fifteen seconds per screenful.
  *
- * <p>Startup is not blocked: the queue is filled and the warmer drains it on its
- * own thread while the API is already serving.
+ * <p>Startup is not blocked: the queue is filled and the warmers drain it on
+ * their own threads while the API is already serving.
  */
 @Component
 // After the catalogue refresh, so the warm list is the current one.
@@ -51,10 +52,17 @@ public class PriceWarmupRunner implements ApplicationRunner {
     public void warm() {
         try {
             Set<String> itemNames = new LinkedHashSet<>();
+            Set<String> relicNames = new LinkedHashSet<>();
 
             for (Relic relic : relicLoadService.loadRelicsWithCheckData()) {
-                // One refinement is enough: the four states share an item list.
+                // One refinement is enough: the four states share an item list,
+                // and a relic is one listing whatever state it is in.
                 if (!"Intact".equalsIgnoreCase(relic.getState())) continue;
+
+                if (relic.getTier() != null && relic.getRelicName() != null) {
+                    relicNames.add(relic.getTier() + " " + relic.getRelicName());
+                }
+
                 if (relic.getRewards() == null) continue;
 
                 for (Rewards reward : relic.getRewards()) {
@@ -62,8 +70,13 @@ public class PriceWarmupRunner implements ApplicationRunner {
                 }
             }
 
+            // Parts first: they price the columns the table leads with, and the
+            // relic's own price sits at the end of the row.
             marketService.enqueueAll(itemNames);
-            System.out.println("price-warmup: " + itemNames.size() + " item in coda");
+            marketService.enqueueAllRelics(relicNames);
+
+            System.out.println("price-warmup: " + itemNames.size() + " item e "
+                    + relicNames.size() + " reliquie in coda");
 
         } catch (Exception e) {
             System.err.println("price-warmup fallito: " + e.getMessage());
