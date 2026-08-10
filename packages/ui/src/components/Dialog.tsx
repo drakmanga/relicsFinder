@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import { cx } from "../lib/cx";
+import { useFocusTrap } from "../lib/useFocusTrap";
 
 export interface DialogProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   open: boolean;
@@ -35,24 +36,13 @@ export function Dialog({
   const titleId = useId();
   const descId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-
-    returnFocusRef.current = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && dismissible) onClose();
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      returnFocusRef.current?.focus();
-    };
-  }, [open, dismissible, onClose]);
+  /*
+    Escape, focus in, focus back — and Tab held inside. The dialog had the
+    first three and not the fourth, so a keyboard could tab out of it onto the
+    page behind the scrim, where the pointer could not follow.
+  */
+  useFocusTrap(panelRef, open && dismissible, onClose);
 
   if (!open) return null;
 

@@ -1,17 +1,21 @@
-import { DetailPanel } from "relic-finder-ui";
+/**
+ * Over 150 lines (rule 4), most of it the prop list three different panels
+ * need. The alternative is three prop types saying the same thing.
+ */
+import { DetailPanel, Drawer } from "relic-finder-ui";
 
 import { ItemDetailPanel } from "./ItemDetailPanel";
 import { RelicDetailPanel } from "./RelicDetailPanel";
 import { SetDetailPanel } from "./SetDetailPanel";
 import type { PaneView } from "./ResultsPane";
 import type {
+  DropInfo,
   PriceMap,
   Refinement,
   Relic,
   RelicItemRow,
   RelicRow,
   Reward,
-  DropInfo,
 } from "../api/types";
 import type { PrimeSet } from "../lib/setCompletion";
 
@@ -42,6 +46,12 @@ interface Props {
   onPickRelic: (relicFullName: string) => void;
   onBack: (() => void) | undefined;
   onClose: () => void;
+
+  /**
+   * Below `lg` the panel is a modal drawer over the table rather than a column
+   * beside it, and it exists only while something is selected.
+   */
+  asDrawer: boolean;
 }
 
 /**
@@ -52,7 +62,36 @@ interface Props {
  * no panel — Wishlist, Ducanetor, Endo — are lists in their own right and have
  * nothing to open beside them.
  */
-export function DetailPane({
+export function DetailPane(props: Props) {
+  const { view, asDrawer, onClose } = props;
+
+  if (view === "wishlist" || view === "ducats" || view === "endo") return null;
+
+  const panel = <Panel {...props} />;
+
+  if (!asDrawer) return panel;
+
+  /*
+    As a drawer the panel is not a permanent column, so an empty one has nothing
+    to say and should not be sitting over the table. What the view is currently
+    pointing at decides whether there is a drawer at all.
+  */
+  const pointingAtSomething =
+    view === "sets"
+      ? props.set !== null
+      : view === "items"
+        ? props.itemRow !== null
+        : props.relicRow !== null;
+
+  return (
+    <Drawer open={pointingAtSomething} onClose={onClose} label="Details">
+      {panel}
+    </Drawer>
+  );
+}
+
+/** The panel itself, the same whether it stands in a column or inside a drawer. */
+function Panel({
   view,
   relics,
   prices,
@@ -73,8 +112,6 @@ export function DetailPane({
   onBack,
   onClose,
 }: Props) {
-  if (view === "wishlist" || view === "ducats" || view === "endo") return null;
-
   if (view === "sets") {
     return (
       <SetDetailPanel

@@ -56,6 +56,8 @@ export type { TabsProps, TabPanelProps, TabItem } from "./components/Tabs";
 export { Tooltip } from "./components/Tooltip";
 export type { TooltipProps, TooltipPlacement } from "./components/Tooltip";
 
+export { Drawer } from "./components/Drawer";
+export type { DrawerProps } from "./components/Drawer";
 export { Dialog } from "./components/Dialog";
 export type { DialogProps } from "./components/Dialog";
 
