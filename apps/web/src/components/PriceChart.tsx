@@ -86,7 +86,7 @@ export function PriceChart({ points, height = 170 }: Props) {
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
-          style={{ width: "100%", height: "100%", display: "block" }}
+          className="rf-fill-block"
           role="img"
           aria-label={`Price over 90 days, from ${geometry.first} to ${geometry.last} platinum`}
         >
@@ -150,9 +150,7 @@ export function PriceChart({ points, height = 170 }: Props) {
             }}
           >
             <div className="rf-text-caption rf-fg-muted">{active.date}</div>
-            <div className="rf-text-data-md" style={{ color: "var(--rf-currency-platinum)" }}>
-              {active.avgPrice} p
-            </div>
+            <div className="rf-text-data-md rf-plat">{active.avgPrice} p</div>
             <div className="rf-text-caption rf-fg-muted rf-tabular">
               {active.minPrice}–{active.maxPrice} · {active.volume} trades
             </div>

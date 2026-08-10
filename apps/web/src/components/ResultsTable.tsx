@@ -253,9 +253,7 @@ export function ResultsTable({
                   {unvaulted === undefined ? (
                     <Skeleton width={64} height={14} />
                   ) : unvaulted.has(row.relicFullName) ? (
-                    <span className="rf-text-caption" style={{ color: "var(--rf-success)" }}>
-                      Droppable
-                    </span>
+                    <span className="rf-text-caption rf-success">Droppable</span>
                   ) : (
                     <span className="rf-text-caption rf-fg-muted">Vaulted</span>
                   )}

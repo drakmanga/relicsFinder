@@ -877,3 +877,84 @@ body {
 .rf-mb-3 {
   margin-bottom: var(--rf-space-3);
 }
+
+/* ------------------------------------------------------------- Figures ----
+   The panels put a name on the left and columns of numbers on the right. The
+   columns have to be the same width down a block or the digits do not line up,
+   and they are named for what they hold rather than for how wide they are.
+   ----------------------------------------------------------------------- */
+
+.rf-num {
+  width: 50px;
+  text-align: right;
+}
+
+.rf-num-rate {
+  width: 56px;
+}
+
+.rf-num-cost {
+  width: 62px;
+}
+
+.rf-num-wide {
+  width: 96px;
+}
+
+.rf-row {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-2);
+}
+
+/* Baseline, not centre: a 20px figure beside 12px words sits right only when
+   they stand on the same line. */
+.rf-row-baseline {
+  display: flex;
+  align-items: baseline;
+  gap: var(--rf-space-2);
+}
+
+.rf-success {
+  color: var(--rf-success);
+}
+
+/* Marks the refinement that buys the most per void trace. */
+.rf-star {
+  margin-left: 3px;
+  color: var(--rf-gold-500);
+}
+
+.rf-row-baseline-wide {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.rf-plat {
+  color: var(--rf-currency-platinum);
+}
+
+/* An SVG filling its box. `display: block` because an inline SVG leaves
+   descender space under itself, which shows as a gap the chart did not draw. */
+.rf-fill-block {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.rf-mb-1 {
+  margin-bottom: var(--rf-space-1);
+}
+
+.rf-mt-1 {
+  margin-top: var(--rf-space-1);
+}
+
+.rf-mt-2 {
+  margin-top: var(--rf-space-2);
+}
+
+.rf-mt-4 {
+  margin-top: var(--rf-space-4);
+}

@@ -105,7 +105,7 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
                     the bar is the one that can be read while scrolling, which is
                     how a list of two hundred sets is actually used.
                   */}
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className="rf-row">
                     <span
                       style={{
                         flex: 1,
@@ -131,13 +131,7 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
                 </TableCell>
 
                 <TableCell align="right" numeric>
-                  {done ? (
-                    <span className="rf-text-caption" style={{ color: "var(--rf-success)" }}>
-                      Complete
-                    </span>
-                  ) : (
-                    missing
-                  )}
+                  {done ? <span className="rf-text-caption rf-success">Complete</span> : missing}
                 </TableCell>
 
                 <TableCell align="right" numeric>

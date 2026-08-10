@@ -149,13 +149,7 @@ export function ItemDroppedBy({ sources, onPickRelic }: Props) {
             }}
           >
             {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
-            {state === bestRefinement && (
-              <OrokinStar
-                width={9}
-                height={9}
-                style={{ marginLeft: 3, color: "var(--rf-gold-500)" }}
-              />
-            )}
+            {state === bestRefinement && <OrokinStar width={9} height={9} className="rf-star" />}
           </span>
         ))}
       </div>

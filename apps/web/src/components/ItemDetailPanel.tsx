@@ -97,7 +97,7 @@ export function ItemDetailPanel({
     >
       <Divider />
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+      <div className="rf-row-baseline-wide">
         <span className="rf-text-overline rf-fg-muted">Market price</span>
         <span className="rf-push">
           <PlatPrice value={priceOf(prices, row.itemName)} size="lg" />
@@ -107,12 +107,7 @@ export function ItemDetailPanel({
       {meta?.ducats != null && (
         <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 6 }}>
           <span className="rf-text-overline rf-fg-muted">Ducats</span>
-          <span
-            className="rf-text-data-md"
-            style={{ marginLeft: "auto", color: "var(--rf-currency-ducat)" }}
-          >
-            {meta.ducats}
-          </span>
+          <span className="rf-text-data-md rf-push rf-ducat">{meta.ducats}</span>
         </div>
       )}
 

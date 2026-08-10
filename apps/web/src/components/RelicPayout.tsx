@@ -83,10 +83,10 @@ export function RelicPayout({ rewards, states, prices, refinement }: Props) {
             <span className="rf-fill rf-fg-secondary">
               {players === 1 ? "Solo" : `Squad of ${players}`}
             </span>
-            <span className="rf-text-caption rf-fg-muted" style={{ width: 96, textAlign: "right" }}>
+            <span className="rf-text-caption rf-fg-muted rf-num rf-num-wide">
               {rare ? `rare ${atLeastOnce(rare.chance, players).toFixed(1)}%` : ""}
             </span>
-            <span className="rf-text-data-sm" style={{ width: 60, textAlign: "right" }}>
+            <span className="rf-text-data-sm rf-num rf-num-cost">
               <PlatPrice value={Math.round(squadValue(rewards, prices, players))} />
             </span>
           </div>
@@ -134,26 +134,12 @@ export function RelicPayout({ rewards, states, prices, refinement }: Props) {
             >
               <span className="rf-fill">
                 {REFINEMENT_LABEL[state]}
-                {state === bestByTrace && (
-                  <OrokinStar
-                    width={10}
-                    height={10}
-                    style={{ marginLeft: 5, color: "var(--rf-gold-500)" }}
-                  />
-                )}
+                {state === bestByTrace && <OrokinStar width={10} height={10} className="rf-star" />}
               </span>
-              <span
-                className="rf-text-caption rf-fg-muted"
-                style={{ width: 62, textAlign: "right" }}
-              >
+              <span className="rf-text-caption rf-fg-muted rf-num rf-num-cost">
                 {traces === 0 ? "free" : `${traces} traces`}
               </span>
-              <span
-                className="rf-text-data-sm rf-tabular"
-                style={{ width: 50, textAlign: "right" }}
-              >
-                {value.toFixed(1)} p
-              </span>
+              <span className="rf-text-data-sm rf-tabular rf-num">{value.toFixed(1)} p</span>
               <span
                 className="rf-text-caption rf-tabular"
                 style={{

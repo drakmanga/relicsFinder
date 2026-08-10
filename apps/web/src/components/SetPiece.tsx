@@ -33,7 +33,7 @@ export function Piece({
 
   return (
     <div style={{ opacity: part.owned ? 0.55 : 1 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="rf-row">
         <input
           type="checkbox"
           checked={part.owned}

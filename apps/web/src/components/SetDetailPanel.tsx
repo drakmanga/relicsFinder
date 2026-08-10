@@ -220,7 +220,7 @@ export function SetDetailPanel({
         <>
           <Divider />
 
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <div className="rf-row-baseline">
             <span className="rf-text-caption rf-fg-muted">
               Buy everything missing
               {set.costIncomplete && " (some unlisted)"}

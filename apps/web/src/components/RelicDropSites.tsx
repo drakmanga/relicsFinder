@@ -49,10 +49,7 @@ export function RelicDropSites({ relicFullName, sites, sitesPending, best }: Pro
                 {site.rotation && (
                   <span className="rf-text-caption rf-fg-muted">rot {site.rotation}</span>
                 )}
-                <span
-                  className="rf-text-data-sm rf-fg-muted"
-                  style={{ width: 48, textAlign: "right" }}
-                >
+                <span className="rf-text-data-sm rf-fg-muted rf-num">
                   {site.chance.toFixed(2)}%
                 </span>
               </div>
@@ -139,10 +136,7 @@ export function RelicDropSites({ relicFullName, sites, sitesPending, best }: Pro
               {site.rotation && (
                 <span className="rf-text-caption rf-fg-muted">rot {site.rotation}</span>
               )}
-              <span
-                className="rf-text-data-sm rf-tabular rf-fg-muted"
-                style={{ width: 56, textAlign: "right" }}
-              >
+              <span className="rf-text-data-sm rf-tabular rf-fg-muted rf-num rf-num-rate">
                 {site.chance.toFixed(2)}%
               </span>
             </div>

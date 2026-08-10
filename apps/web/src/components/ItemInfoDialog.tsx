@@ -103,9 +103,7 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 4 }}>
-        {label}
-      </p>
+      <p className="rf-text-overline rf-fg-muted rf-mb-1">{label}</p>
       {children}
     </div>
   );
