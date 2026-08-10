@@ -23,9 +23,10 @@
   ],
   "scripts": {
     "prepare": "npm run build",
-    "build": "node build.mjs && tsc -p tsconfig.build.json",
+    "build": "npm run build:tokens && node build.mjs && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/verify-render.mjs"
+    "verify": "node scripts/verify-render.mjs",
+    "build:tokens": "node scripts/build-tokens.mjs"
   },
   "peerDependencies": {
     "react": ">=18",

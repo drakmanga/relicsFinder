@@ -58,3 +58,6 @@ BACKLOG.md
 
 ### Runtime state ###
 data/
+
+### Generated from design-system/tokens.json by packages/ui/scripts/build-tokens.mjs ###
+packages/ui/src/styles/tokens.css
