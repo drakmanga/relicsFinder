@@ -22,6 +22,7 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "npm run build",
     "build": "node build.mjs && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify-render.mjs"

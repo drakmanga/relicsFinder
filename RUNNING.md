@@ -18,9 +18,13 @@ works in place of a system `mvn`.
 ## First time
 
 ```sh
-npm install        # installs the whole workspace
-npm run build:ui   # builds the library — without it the page has no styles
+npm install        # installs the whole workspace, and builds the library
 ```
+
+`npm install` builds `packages/ui` for you through its `prepare` script. The
+library has to exist before anything else: `apps/web` imports it by name, and
+its entry point is `dist/index.js`, which is not committed. Build it by hand
+with `npm run build:ui` after changing it.
 
 ## Every time — two terminals
 
@@ -77,6 +81,7 @@ Without `RELICS_STATIC_DIR` the build lands in `apps/web/dist/`.
 | `release version 24 not supported` | Java too old: 24+ is required |
 | Page with no styles, text unreadable | Library not built: `npm run build:ui` |
 | Changes in `packages/ui` do nothing | No watcher: rebuild with `npm run build:ui` |
+| `Failed to resolve entry for package "relic-finder-ui"` | Library never built, so `packages/ui/dist/` is missing. `npm install` (which runs `prepare`) or `npm run build:ui` |
 
 ## The data refreshes itself
 
