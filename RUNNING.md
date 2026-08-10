@@ -74,13 +74,13 @@ Without `RELICS_STATIC_DIR` the build lands in `apps/web/dist/`.
 
 ## When something will not start
 
-| Symptom | Cause |
-|---|---|
-| Blank page, console full of 500s on `/api/...` | Backend is down. Terminal 1. |
-| `Port 8080 was already in use` | `ss -ltnp \| grep 8080`, then close the process |
-| `release version 25 not supported` | Java too old: 25+ is required |
-| Page with no styles, text unreadable | Library not built: `npm run build:ui` |
-| Changes in `packages/ui` do nothing | No watcher: rebuild with `npm run build:ui` |
+| Symptom                                                 | Cause                                                                                                              |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Blank page, console full of 500s on `/api/...`          | Backend is down. Terminal 1.                                                                                       |
+| `Port 8080 was already in use`                          | `ss -ltnp \| grep 8080`, then close the process                                                                    |
+| `release version 25 not supported`                      | Java too old: 25+ is required                                                                                      |
+| Page with no styles, text unreadable                    | Library not built: `npm run build:ui`                                                                              |
+| Changes in `packages/ui` do nothing                     | No watcher: rebuild with `npm run build:ui`                                                                        |
 | `Failed to resolve entry for package "relic-finder-ui"` | Library never built, so `packages/ui/dist/` is missing. `npm install` (which runs `prepare`) or `npm run build:ui` |
 
 ## The data refreshes itself

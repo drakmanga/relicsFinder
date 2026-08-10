@@ -1,6 +1,6 @@
 # 🔍 Warframe Relic Finder
 
-> *Finding Prime parts has never been this simple, Tenno.*
+> _Finding Prime parts has never been this simple, Tenno._
 
 A complete tool for relics, Prime parts and market prices in Warframe. Forget endless wiki
 searches: everything you need in one place.
@@ -16,18 +16,18 @@ searches: everything you need in one place.
 
 Six views, each answering one question:
 
-- **Relics** — *which relic should I open?* One row per relic, with **expected value**
+- **Relics** — _which relic should I open?_ One row per relic, with **expected value**
   (every drop weighted by its chance), the best drop, what the relic itself sells for, and
   whether it is still farmable or vaulted.
-- **Prime Items** — *where do I get this piece?* One row per part, with its set, the relics
+- **Prime Items** — _where do I get this piece?_ One row per part, with its set, the relics
   that drop it, its price and its ducat value.
-- **Sets** — *I want Volt Prime, what is left?* One row per set, with how many pieces you
+- **Sets** — _I want Volt Prime, what is left?_ One row per set, with how many pieces you
   already have, what the missing ones cost, and for each of them whether it is cheaper to
   **buy it or farm it**.
 - **Wishlist** — stored on the server, split by what each line is for: pieces you are
   collecting, pieces to dissolve for ducats, Ayatan sculptures.
-- **Ducanetor** — *what do I buy for Baro?* Parts ranked by **ducats per platinum** spent.
-- **Endo** — *which Ayatan should I buy?* Offers ranked by **Endo per platinum**, computed
+- **Ducanetor** — _what do I buy for Baro?_ Parts ranked by **ducats per platinum** spent.
+- **Endo** — _which Ayatan should I buy?_ Offers ranked by **Endo per platinum**, computed
   from the stars actually socketed in that specific sculpture.
 
 Plus: ninety-day price charts, drop chances and expected value for a **squad of 1 to 4**
@@ -283,7 +283,7 @@ MIT. See `LICENSE` for details.
 **Built with ❤️ by [drakmanga](https://github.com/drakmanga) and
 [Outbox](https://github.com/Sblash)**
 
-*"Dream... not of what you are... but of what you want to be."* — Warframe
+_"Dream... not of what you are... but of what you want to be."_ — Warframe
 
 🔴 **Note**: this project is not affiliated with Digital Extremes or Warframe Market. All
 trademarks and intellectual property belong to their respective owners.

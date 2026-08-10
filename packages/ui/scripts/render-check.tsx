@@ -231,7 +231,14 @@ const checks: Check[] = [
   {
     name: "DropRow",
     element: (
-      <DropRow name="Volt Prime Neuroptics" rarity="rare" chance={2} price={45} index={0} interactive />
+      <DropRow
+        name="Volt Prime Neuroptics"
+        rarity="rare"
+        chance={2}
+        price={45}
+        index={0}
+        interactive
+      />
     ),
     expect: [
       "rf-droprow",
@@ -320,7 +327,13 @@ const checks: Check[] = [
   {
     name: "Dialog",
     element: (
-      <Dialog open onClose={() => {}} title="Add" description="How many copies?" footer={<Button>Ok</Button>}>
+      <Dialog
+        open
+        onClose={() => {}}
+        title="Add"
+        description="How many copies?"
+        footer={<Button>Ok</Button>}
+      >
         content
       </Dialog>
     ),
@@ -350,7 +363,13 @@ const checks: Check[] = [
         <Toast tone="danger" title="Error" />
       </ToastRegion>
     ),
-    expect: ["rf-toast-region", "rf-toast-success", "rf-toast-danger", 'role="alert"', 'role="status"'],
+    expect: [
+      "rf-toast-region",
+      "rf-toast-success",
+      "rf-toast-danger",
+      'role="alert"',
+      'role="status"',
+    ],
   },
   {
     name: "Skeleton",
@@ -364,7 +383,9 @@ const checks: Check[] = [
   },
   {
     name: "EmptyState/initial",
-    element: <EmptyState tone="initial" title="Search for a relic" description="By name or by part" />,
+    element: (
+      <EmptyState tone="initial" title="Search for a relic" description="By name or by part" />
+    ),
     expect: ["rf-empty", "rf-empty-icon-initial", "rf-text-display-sm", "Search for a relic"],
   },
   {

@@ -2,8 +2,10 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 import { useId } from "react";
 import { cx } from "../lib/cx";
 
-export interface CheckboxProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "children"> {
+export interface CheckboxProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "type" | "children"
+> {
   /** The visible label. Also the control's accessible name. */
   children: ReactNode;
 }

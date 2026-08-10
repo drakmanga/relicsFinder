@@ -29,8 +29,7 @@ export interface WishlistEntry {
 }
 
 /** Lines are identified by what they are for as well as by their name. */
-const idOf = (entry: { itemName: string; kind: WishlistKind }) =>
-  `${entry.kind}|${entry.itemName}`;
+const idOf = (entry: { itemName: string; kind: WishlistKind }) => `${entry.kind}|${entry.itemName}`;
 
 type Listener = (entries: WishlistEntry[]) => void;
 
@@ -55,19 +54,20 @@ function loadLocal(): WishlistEntry[] {
     if (!Array.isArray(parsed)) return [];
 
     // Hand-edited or half-migrated storage must not take the app down.
-    return parsed.filter(
-      (entry): entry is WishlistEntry =>
-        !!entry &&
-        typeof entry === "object" &&
-        typeof (entry as WishlistEntry).itemName === "string" &&
-        typeof (entry as WishlistEntry).qty === "number" &&
-        (entry as WishlistEntry).qty > 0,
-    ).map((entry) => ({
-      // Lines written before kinds existed are all parts.
-      ...entry,
-      kind: (entry.kind as WishlistKind) ?? "part",
-    }),
-    );
+    return parsed
+      .filter(
+        (entry): entry is WishlistEntry =>
+          !!entry &&
+          typeof entry === "object" &&
+          typeof (entry as WishlistEntry).itemName === "string" &&
+          typeof (entry as WishlistEntry).qty === "number" &&
+          (entry as WishlistEntry).qty > 0,
+      )
+      .map((entry) => ({
+        // Lines written before kinds existed are all parts.
+        ...entry,
+        kind: (entry.kind as WishlistKind) ?? "part",
+      }));
   } catch {
     return [];
   }

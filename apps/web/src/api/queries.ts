@@ -154,8 +154,7 @@ export function useRelicPrices(relicNames: string[]) {
       const missing = data.filter((p) => p.averagePrice === null).length;
       return missing > data.length * 0.05 ? 15_000 : false;
     },
-    select: (prices) =>
-      new Map(prices.map((p) => [p.relicName, p.averagePrice])) as RelicPriceMap,
+    select: (prices) => new Map(prices.map((p) => [p.relicName, p.averagePrice])) as RelicPriceMap,
   });
 }
 

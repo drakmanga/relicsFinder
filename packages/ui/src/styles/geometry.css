@@ -4,11 +4,21 @@
    Clip containers only — never table rows, cells, list items or avatars.
    ========================================================================= */
 
-.rf-notch-xs { --rf-notch: var(--rf-notch-xs); }
-.rf-notch-sm { --rf-notch: var(--rf-notch-sm); }
-.rf-notch-md { --rf-notch: var(--rf-notch-md); }
-.rf-notch-lg { --rf-notch: var(--rf-notch-lg); }
-.rf-notch-xl { --rf-notch: var(--rf-notch-xl); }
+.rf-notch-xs {
+  --rf-notch: var(--rf-notch-xs);
+}
+.rf-notch-sm {
+  --rf-notch: var(--rf-notch-sm);
+}
+.rf-notch-md {
+  --rf-notch: var(--rf-notch-md);
+}
+.rf-notch-lg {
+  --rf-notch: var(--rf-notch-lg);
+}
+.rf-notch-xl {
+  --rf-notch: var(--rf-notch-xl);
+}
 
 /* Default silhouette: cuts top-left and bottom-right. */
 .rf-clip {
@@ -189,11 +199,21 @@
 /* ----------------------------------------------------------------------------
    Elevation — surface + border intensity. Never box-shadow: clip-path cuts it.
 -------------------------------------------------------------------------- */
-.rf-e0 { background: var(--rf-surface-0); }
-.rf-e1 { background: var(--rf-surface-1); }
-.rf-e2 { background: var(--rf-surface-2); }
-.rf-e3 { background: var(--rf-surface-3); }
-.rf-e4 { background: var(--rf-surface-4); }
+.rf-e0 {
+  background: var(--rf-surface-0);
+}
+.rf-e1 {
+  background: var(--rf-surface-1);
+}
+.rf-e2 {
+  background: var(--rf-surface-2);
+}
+.rf-e3 {
+  background: var(--rf-surface-3);
+}
+.rf-e4 {
+  background: var(--rf-surface-4);
+}
 
 /* drop-shadow follows clip-path; box-shadow does not. Floating layers only. */
 .rf-float {

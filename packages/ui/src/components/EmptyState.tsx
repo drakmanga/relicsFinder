@@ -53,7 +53,9 @@ export function EmptyState({
       {icon ?? defaultIcon}
       <p className={tone === "initial" ? "rf-text-display-sm" : "rf-text-heading-md"}>{title}</p>
       {description && (
-        <p className={cx(tone === "error" ? "rf-text-caption" : "rf-text-body-sm", "rf-empty-desc")}>
+        <p
+          className={cx(tone === "error" ? "rf-text-caption" : "rf-text-body-sm", "rf-empty-desc")}
+        >
           {description}
         </p>
       )}

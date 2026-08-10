@@ -93,7 +93,12 @@ export function Chip({
     <span className={cx("rf-chip", `rf-chip-${variant}`, "rf-clip-octagon", className)} {...rest}>
       {children}
       {onDismiss && (
-        <button type="button" className="rf-chip-dismiss" onClick={onDismiss} aria-label={dismissLabel}>
+        <button
+          type="button"
+          className="rf-chip-dismiss"
+          onClick={onDismiss}
+          aria-label={dismissLabel}
+        >
           ×
         </button>
       )}

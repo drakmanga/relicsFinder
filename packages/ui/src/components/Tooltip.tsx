@@ -68,7 +68,11 @@ export function Tooltip({
     >
       {children}
       {open && (
-        <span id={id} role="tooltip" className={cx("rf-tooltip", "rf-clip", `rf-tooltip-${placement}`)}>
+        <span
+          id={id}
+          role="tooltip"
+          className={cx("rf-tooltip", "rf-clip", `rf-tooltip-${placement}`)}
+        >
           {content}
         </span>
       )}

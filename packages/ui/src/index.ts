@@ -71,17 +71,5 @@ export type { EmptyStateProps, EmptyStateTone } from "./components/EmptyState";
 export * from "./components/icons";
 
 export { cx } from "./lib/cx";
-export {
-  TIER_LABEL,
-  REFINEMENT_LABEL,
-  RARITY_LABEL,
-} from "./lib/types";
-export type {
-  Tier,
-  Refinement,
-  Rarity,
-  Currency,
-  Notch,
-  ControlSize,
-  Density,
-} from "./lib/types";
+export { TIER_LABEL, REFINEMENT_LABEL, RARITY_LABEL } from "./lib/types";
+export type { Tier, Refinement, Rarity, Currency, Notch, ControlSize, Density } from "./lib/types";

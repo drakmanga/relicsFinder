@@ -15,7 +15,13 @@ export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
  * Two seconds is the ceiling. Past that the interface should be showing an
  * error or an empty state, not a shimmer.
  */
-export function Skeleton({ width = "100%", height = 12, className, style, ...rest }: SkeletonProps) {
+export function Skeleton({
+  width = "100%",
+  height = 12,
+  className,
+  style,
+  ...rest
+}: SkeletonProps) {
   return (
     <div
       className={cx("rf-skeleton", className)}
@@ -43,11 +49,7 @@ export function SkeletonStack({
   return (
     <div className={cx("rf-skeleton-stack", className)} aria-busy="true" {...rest}>
       {Array.from({ length: lines }, (_, index) => (
-        <Skeleton
-          key={index}
-          height={lineHeight}
-          width={index === lines - 1 ? "60%" : "100%"}
-        />
+        <Skeleton key={index} height={lineHeight} width={index === lines - 1 ? "60%" : "100%"} />
       ))}
     </div>
   );

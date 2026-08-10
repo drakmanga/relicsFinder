@@ -55,9 +55,9 @@ const NAMING = [
 
 const variableName = (path) => {
   const joined = path.join(".");
-  const rule =
-    NAMING.find((candidate) => joined === candidate.prefix || joined.startsWith(`${candidate.prefix}.`)) ??
-    { drop: 0, as: "" };
+  const rule = NAMING.find(
+    (candidate) => joined === candidate.prefix || joined.startsWith(`${candidate.prefix}.`),
+  ) ?? { drop: 0, as: "" };
 
   const tail = path.slice(rule.drop);
   const parts = rule.as ? [rule.as, ...tail] : tail;
@@ -118,7 +118,9 @@ for (const [path, value] of entries) {
   const formatted = formatValue(path, value, byPath);
 
   if (seen.has(name) && seen.get(name) !== formatted) {
-    throw new Error(`two tokens claim ${name}: ${seen.get(name)} and ${formatted} (${path.join(".")})`);
+    throw new Error(
+      `two tokens claim ${name}: ${seen.get(name)} and ${formatted} (${path.join(".")})`,
+    );
   }
   if (seen.has(name)) continue;
 
@@ -154,7 +156,9 @@ ${lines.join("\n")}
 // Proof that generation did not rename or drop anything the stylesheets use.
 const previous = await readFile(CSS_PATH, "utf8").catch(() => "");
 const declared = (text) =>
-  new Map([...text.matchAll(/^\s*(--rf-[a-z0-9-]+):\s*([^;]+);/gim)].map((m) => [m[1], m[2].trim()]));
+  new Map(
+    [...text.matchAll(/^\s*(--rf-[a-z0-9-]+):\s*([^;]+);/gim)].map((m) => [m[1], m[2].trim()]),
+  );
 
 /*
   Compared with quotes stripped: `"Cinzel", Georgia` and `Cinzel, Georgia` name
@@ -172,7 +176,8 @@ const changed = [...before].filter(
 
 if (process.argv.includes("--verify") && (lost.length || changed.length)) {
   for (const [name] of lost) console.error(`lost: ${name}`);
-  for (const [name, value] of changed) console.error(`changed: ${name}: ${value} -> ${after.get(name)}`);
+  for (const [name, value] of changed)
+    console.error(`changed: ${name}: ${value} -> ${after.get(name)}`);
   console.error(`\n${lost.length} lost, ${changed.length} changed — refusing to overwrite.`);
   process.exit(1);
 }
@@ -180,5 +185,7 @@ if (process.argv.includes("--verify") && (lost.length || changed.length)) {
 await writeFile(CSS_PATH, css);
 console.log(
   `tokens: ${after.size} variables from ${entries.length} tokens` +
-    (lost.length || changed.length ? ` (${lost.length} lost, ${changed.length} changed)` : " — no variable lost or changed"),
+    (lost.length || changed.length
+      ? ` (${lost.length} lost, ${changed.length} changed)`
+      : " — no variable lost or changed"),
 );

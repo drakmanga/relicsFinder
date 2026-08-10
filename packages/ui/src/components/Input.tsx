@@ -79,7 +79,10 @@ export function Input({
       </div>
 
       {message && (
-        <p id={messageId} className={cx("rf-field-helper", error ? "rf-field-helper-error" : undefined)}>
+        <p
+          id={messageId}
+          className={cx("rf-field-helper", error ? "rf-field-helper-error" : undefined)}
+        >
           {message}
         </p>
       )}

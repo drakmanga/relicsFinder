@@ -75,7 +75,8 @@ function ButtonBase({
  */
 export function Button({ variant = "primary", ...props }: ButtonProps) {
   if (variant === "outline") {
-    const notch = props.size === "lg" ? "rf-notch-md" : props.size === "xs" ? "rf-notch-xs" : "rf-notch-sm";
+    const notch =
+      props.size === "lg" ? "rf-notch-md" : props.size === "xs" ? "rf-notch-xs" : "rf-notch-sm";
     return (
       <span className={cx("rf-btn-outline-wrap", "rf-frame", "rf-frame-interactive", notch)}>
         <span className="rf-frame-inner rf-frame-inner-plain">

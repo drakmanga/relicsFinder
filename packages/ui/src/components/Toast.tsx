@@ -45,7 +45,12 @@ export function Toast({
         {description && <p className="rf-toast-desc">{description}</p>}
       </div>
       {onDismiss && (
-        <button type="button" className="rf-toast-close rf-focus-ring" onClick={onDismiss} aria-label={dismissLabel}>
+        <button
+          type="button"
+          className="rf-toast-close rf-focus-ring"
+          onClick={onDismiss}
+          aria-label={dismissLabel}
+        >
           <XIcon width={16} height={16} />
         </button>
       )}
