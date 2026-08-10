@@ -29,7 +29,9 @@ export type { RarityTagProps } from "./components/RarityTag";
 export { Price, PriceDelta, DropRate } from "./components/Price";
 export type { PriceProps, PriceDeltaProps, DropRateProps } from "./components/Price";
 
-export { Table, TableRow, TableCell, TableHeaderCell } from "./components/Table";
+export { Checkbox } from "./components/Checkbox";
+export type { CheckboxProps } from "./components/Checkbox";
+export { Table, TableCols, TableRow, TableCell, TableHeaderCell } from "./components/Table";
 export type {
   TableProps,
   TableRowProps,

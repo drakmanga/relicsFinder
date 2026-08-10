@@ -75,6 +75,26 @@ export function Table({
   );
 }
 
+/**
+ * Column definitions for a fixed-layout table.
+ *
+ * The widths themselves belong in a stylesheet, keyed off a class on the table:
+ * `table-layout: fixed` makes them a property of the table rather than of any
+ * one row, and putting a size on every header cell scatters the same decision
+ * across ten JSX attributes. `<colgroup>` is what the platform provides for it.
+ *
+ * Render it as the first child of `Table`.
+ */
+export function TableCols({ count }: { count: number }) {
+  return (
+    <colgroup>
+      {Array.from({ length: count }, (_, index) => (
+        <col key={index} />
+      ))}
+    </colgroup>
+  );
+}
+
 export interface TableRowProps extends HTMLAttributes<HTMLTableRowElement> {
   selected?: boolean;
   children?: ReactNode;

@@ -5,6 +5,7 @@ import {
   ALL_REFINEMENTS,
   ALL_TIERS,
   ALL_VAULT_FILTERS,
+  MAX_PRICE_CEILING,
   REFINEMENT_LABEL,
   VAULT_LABEL,
   type Filters,
@@ -12,6 +13,8 @@ import {
 import type { Rarity, Tier } from "../api/types";
 
 interface Props {
+  /** Target of the toggle's `aria-controls`, so the two are tied together. */
+  id?: string;
   filters: Filters;
   onChange: (next: Filters) => void;
   /** Which catalogue view the bar is filtering. */
@@ -24,7 +27,7 @@ interface Props {
  * Horizontal rather than a sidebar: the results table is dense and wide, and a
  * 260px column would come straight out of the item names.
  */
-export function FilterBar({ filters, onChange, view }: Props) {
+export function FilterBar({ id, filters, onChange, view }: Props) {
   const toggle = <T,>(set: Set<T>, value: T): Set<T> => {
     const next = new Set(set);
     if (next.has(value)) next.delete(value);
@@ -33,15 +36,7 @@ export function FilterBar({ filters, onChange, view }: Props) {
   };
 
   return (
-    <div
-      style={{
-        flex: "none",
-        display: "flex",
-        flexWrap: "wrap",
-        background: "var(--rf-surface-2)",
-        borderBottom: "1px solid var(--rf-border-default)",
-      }}
-    >
+    <div id={id} className="rf-filters">
       <Group label="Tier">
         {ALL_TIERS.map((tier) => (
           <Toggle
@@ -92,15 +87,11 @@ export function FilterBar({ filters, onChange, view }: Props) {
             onClick={() => onChange({ ...filters, vault })}
           >
             <span
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                color:
-                  filters.vault === vault && vault === "farmable"
-                    ? "var(--rf-success)"
-                    : "var(--rf-fg-secondary)",
-              }}
+              className={
+                filters.vault === vault && vault === "farmable"
+                  ? "rf-filter-vault rf-filter-vault-on"
+                  : "rf-filter-vault"
+              }
             >
               {VAULT_LABEL[vault]}
             </span>
@@ -109,7 +100,7 @@ export function FilterBar({ filters, onChange, view }: Props) {
       </Group>
 
       <Group label="Refinement">
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 210 }}>
+        <div className="rf-slider">
           <input
             type="range"
             min={0}
@@ -124,56 +115,74 @@ export function FilterBar({ filters, onChange, view }: Props) {
             }
             aria-label="Refinement level"
             aria-valuetext={REFINEMENT_LABEL[filters.refinement]}
-            style={{ width: "100%", accentColor: "var(--rf-gold-500)" }}
+            className="rf-range"
           />
           {/* Labelled ticks rather than a single readout: the slider is also a
               legend for what the four positions are. */}
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="rf-slider-scale">
             {ALL_REFINEMENTS.map((refinement) => (
-              <span
-                key={refinement}
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color:
-                    refinement === filters.refinement
-                      ? "var(--rf-fg-primary)"
-                      : "var(--rf-fg-muted)",
-                }}
-              >
+              <End key={refinement} on={refinement === filters.refinement}>
                 {refinement === "exceptional" ? "Except." : REFINEMENT_LABEL[refinement]}
-              </span>
+              </End>
             ))}
           </div>
         </div>
       </Group>
 
+      {/*
+        Built like Refinement above — slider, then a row of labels under it —
+        so the two tracks sit on the same line. With the readout beside the
+        slider instead, this group was one row tall against the other's two,
+        and centring each group in the bar left the two sliders at different
+        heights.
+      */}
       <Group label="Max price" last>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="rf-slider">
           <input
             type="range"
             min={0}
-            max={500}
+            max={MAX_PRICE_CEILING}
             step={5}
-            value={filters.maxPrice ?? 500}
+            value={filters.maxPrice ?? MAX_PRICE_CEILING}
             onChange={(event) => {
               const value = Number(event.target.value);
-              onChange({ ...filters, maxPrice: value >= 500 ? null : value });
+              onChange({ ...filters, maxPrice: value >= MAX_PRICE_CEILING ? null : value });
             }}
             aria-label="Maximum price in platinum"
-            style={{ width: 160, accentColor: "var(--rf-gold-500)" }}
+            aria-valuetext={
+              filters.maxPrice === null
+                ? "All prices"
+                : filters.maxPrice === 0
+                  ? "No price"
+                  : `${filters.maxPrice} platinum`
+            }
+            className="rf-range"
           />
-          <span
-            className="rf-tabular"
-            style={{ fontSize: 13, color: "var(--rf-fg-secondary)", minWidth: 76 }}
-          >
-            {filters.maxPrice === null ? "none" : `${filters.maxPrice} p`}
-          </span>
+          {/*
+            The ends are named. "None" used to sit at the far right, where the
+            slider stops filtering — the one position that keeps everything was
+            labelled as if it kept nothing. Left is the tightest ceiling and
+            right is no ceiling at all, so they read None and All.
+          */}
+          <div className="rf-slider-scale">
+            <End on={filters.maxPrice === 0}>None</End>
+            <span
+              className="rf-tabular rf-slider-value"
+              hidden={filters.maxPrice === null || filters.maxPrice === 0}
+            >
+              {filters.maxPrice ?? 0} p
+            </span>
+            <End on={filters.maxPrice === null}>All</End>
+          </div>
         </div>
       </Group>
     </div>
   );
+}
+
+/** One end of a slider's scale, lit when the slider is sitting on it. */
+function End({ on, children }: { on: boolean; children: React.ReactNode }) {
+  return <span className={on ? "rf-slider-tick rf-slider-tick-on" : "rf-slider-tick"}>{children}</span>;
 }
 
 function Group({
@@ -186,19 +195,9 @@ function Group({
   last?: boolean;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "12px 18px",
-        borderRight: last ? "none" : "1px solid var(--rf-border-subtle)",
-      }}
-    >
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        {label}
-      </p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{children}</div>
+    <div className={last ? "rf-filter-group rf-filter-group-last" : "rf-filter-group"}>
+      <p className="rf-text-overline rf-fg-muted rf-filter-group-label">{label}</p>
+      <div className="rf-filter-group-body">{children}</div>
     </div>
   );
 }
@@ -227,18 +226,7 @@ function Toggle({
       onClick={onClick}
       aria-pressed={on}
       aria-label={label}
-      className="rf-focus-ring"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "5px 8px",
-        cursor: "pointer",
-        background: on ? "var(--rf-surface-3)" : "var(--rf-surface-2)",
-        border: `1px solid ${on ? "var(--rf-border-interactive)" : "var(--rf-border-subtle)"}`,
-        opacity: on ? 1 : 0.5,
-        transition: "opacity var(--rf-dur-fast) var(--rf-ease-standard)",
-      }}
+      className="rf-focus-ring rf-filter-toggle"
     >
       {children}
     </button>

@@ -14,3 +14,515 @@
 .rf-virtual-scroll .rf-table-wrap {
   overflow: visible;
 }
+
+/* The user agent puts an 8px margin on the body, and nothing in the design
+   system resets it: the system is scoped to .rf-root so that it can be dropped
+   into a host page without reaching out into it. That margin was leaving an
+   8px strip of bare page down both edges, so the full-bleed bands were not
+   full-bleed and every gutter measured 8px short. */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--rf-surface-0);
+}
+
+/* ---------------------------------------------------------------- Shell --
+   Every band below is full-bleed and owns its own background and border; the
+   `.rf-shell` inside it caps and centres the content. See packages/ui
+   layout.css for why the two levels are separate.
+   ----------------------------------------------------------------------- */
+
+.rf-app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+/* ---- Topbar ---- */
+
+.rf-topbar {
+  flex: none;
+  background: var(--rf-surface-2);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
+}
+
+.rf-topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-6);
+  min-height: var(--rf-size-topbar, 56px);
+}
+
+/* The masthead is the way home, so it is a real button: a click handler on a
+   span is unreachable by keyboard. */
+.rf-brand {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--rf-font-display);
+  font-size: var(--rf-text-heading-md);
+  letter-spacing: 0.14em;
+  color: var(--rf-gold-300);
+  white-space: nowrap;
+}
+
+/* Below --rf-bp-md (768px) the brand and the six tabs stop fitting on one
+   line. The tabs keep the full width and scroll sideways rather than wrapping
+   into a second row that pushes the table off the screen. */
+@media (max-width: 767.98px) {
+  .rf-topbar-inner {
+    gap: var(--rf-space-3);
+    overflow-x: auto;
+  }
+}
+
+/* ---- Search band ---- */
+
+.rf-searchbar {
+  flex: none;
+  background: var(--rf-surface-1);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
+}
+
+/* Roomier above than below: the tabs are a different kind of control and sat
+   straight on the search box, so the two read as one crowded strip. */
+.rf-searchbar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-3);
+  padding-block: var(--rf-space-5) var(--rf-space-3);
+}
+
+/* Capped independently of the shell: a search field as wide as an eight-column
+   table is a field whose text starts nowhere near its own label. */
+.rf-search-field {
+  flex: 1;
+  min-width: 0;
+  max-width: 720px;
+}
+
+/* ---- Filter toggle strip ---- */
+
+.rf-filterstrip {
+  flex: none;
+  background: var(--rf-surface-2);
+}
+
+/* The border is the seam between the strip and whatever follows. With the bar
+   open the bar itself draws it, so drawing it here too would double it. */
+.rf-filterstrip-closed {
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
+}
+
+.rf-filterstrip-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-2);
+  padding-block: var(--rf-space-2);
+}
+
+/* ---- Filter bar band ---- */
+
+.rf-filterband {
+  flex: none;
+  background: var(--rf-surface-2);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
+}
+
+/* ---- Results band ---- */
+
+/* The band takes the page ground, not the divider colour. The divider is one
+   hairline between the table and the panel; painting the whole band with it
+   made the gutters either side of the shell read as two pale margins once the
+   content was capped. */
+.rf-resultsband {
+  flex: 1;
+  min-height: 0;
+  background: var(--rf-surface-0);
+}
+
+/* The 1px gap is the divider: the design is dense on purpose, so the zones are
+   told apart by a hairline of the band's own background rather than by
+   whitespace. */
+.rf-results {
+  display: flex;
+  gap: var(--rf-hairline);
+  height: 100%;
+  background: var(--rf-border-default);
+}
+
+/*
+  Surface-1, the same ground the detail panel stands on. On surface-0 the area
+  below the last row read as a hole punched in the layout rather than as an
+  empty table — obvious the moment a search returns one result and the panel
+  beside it is eight hundred pixels tall.
+*/
+.rf-results-main {
+  flex: 1;
+  min-width: 0;
+  background: var(--rf-surface-1);
+  overflow: hidden;
+}
+
+/* Below --rf-bp-lg the panel stops being a column and stacks under the table;
+   see the matching rule on .rf-detail in packages/ui. */
+@media (max-width: 1023.98px) {
+  /* Stacked, and the band scrolls. Without the scroll the two rows fight over
+     a height that the filter bar has already spent: the panel keeps `flex:
+     none` from its own rule and the table is squeezed to nothing, which is how
+     a phone ended up showing filters and an empty panel and no results. */
+  .rf-results {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .rf-results-main {
+    flex: 1 0 auto;
+    min-height: 320px;
+  }
+
+  .rf-detail {
+    flex: 0 0 auto;
+  }
+}
+
+/* ---- Loading placeholder ---- */
+
+.rf-skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-2);
+  padding: var(--rf-space-3);
+}
+
+/* ---------------------------------------------------------- Table widths --
+   Column widths live here rather than on each `style={{ width }}` because the
+   table's fixed layout makes them a property of the table, and because thirty
+   inline sizes are thirty places to drift. `<colgroup>` is the element the
+   platform provides for exactly this.
+
+   Percentages, not pixels: they divide whatever width the pane has. The floor
+   is `.rf-table`'s own 640px min-width — under that the pane scrolls sideways
+   rather than crushing eight columns into a phone.
+   ----------------------------------------------------------------------- */
+
+.rf-cols-relics col:nth-child(1) { width: 13%; }  /* Tier — fits the Vanguard chip */
+.rf-cols-relics col:nth-child(2) { width: 23%; }  /* Relic */
+.rf-cols-relics col:nth-child(3) { width: 13%; }  /* Status */
+.rf-cols-relics col:nth-child(4) { width: 14%; }  /* Expected */
+.rf-cols-relics col:nth-child(5) { width: 14%; }  /* Best drop */
+.rf-cols-relics col:nth-child(6) { width: 13%; }  /* Cost */
+.rf-cols-relics col:nth-child(7) { width: 10%; }  /* Market */
+
+.rf-cols-items col:nth-child(1) { width: 17%; }   /* Item */
+.rf-cols-items col:nth-child(2) { width: 10%; }   /* Set */
+.rf-cols-items col:nth-child(3) { width: 10%; }   /* Rarity — fits "Uncommon" */
+.rf-cols-items col:nth-child(4) { width: 22%; }   /* Relics — three tier chips and the count */
+.rf-cols-items col:nth-child(5) { width: 8%; }    /* Best drop */
+.rf-cols-items col:nth-child(6) { width: 7%; }    /* Ducats */
+.rf-cols-items col:nth-child(7) { width: 8%; }    /* Price */
+.rf-cols-items col:nth-child(8) { width: 8%; }    /* Wishlist */
+.rf-cols-items col:nth-child(9) { width: 4%; }    /* Info */
+.rf-cols-items col:nth-child(10) { width: 6%; }   /* Market */
+
+.rf-cols-sets col:nth-child(1) { width: 34%; }
+.rf-cols-sets col:nth-child(2) { width: 26%; }
+.rf-cols-sets col:nth-child(3) { width: 14%; }
+.rf-cols-sets col:nth-child(4) { width: 26%; }
+
+.rf-cols-ducats col:nth-child(1) { width: 5%; }
+.rf-cols-ducats col:nth-child(2) { width: 24%; }
+.rf-cols-ducats col:nth-child(3) { width: 14%; }
+.rf-cols-ducats col:nth-child(4) { width: 9%; }
+.rf-cols-ducats col:nth-child(5) { width: 9%; }
+.rf-cols-ducats col:nth-child(6) { width: 13%; }
+.rf-cols-ducats col:nth-child(7) { width: 9%; }
+.rf-cols-ducats col:nth-child(8) { width: 9%; }
+.rf-cols-ducats col:nth-child(9) { width: 4%; }
+.rf-cols-ducats col:nth-child(10) { width: 4%; }
+
+.rf-cols-endo col:nth-child(1) { width: 5%; }
+.rf-cols-endo col:nth-child(2) { width: 22%; }
+.rf-cols-endo col:nth-child(3) { width: 13%; }
+.rf-cols-endo col:nth-child(4) { width: 9%; }
+.rf-cols-endo col:nth-child(5) { width: 9%; }
+.rf-cols-endo col:nth-child(6) { width: 12%; }
+.rf-cols-endo col:nth-child(7) { width: 18%; }
+.rf-cols-endo col:nth-child(8) { width: 8%; }
+.rf-cols-endo col:nth-child(9) { width: 4%; }
+
+/* WishlistTable keeps its widths inline for now: it is three tables in one
+   517-line file, and splitting it is its own task (see the repair order in the
+   rules). Its columns were already sized before fixed layout arrived. */
+
+/* ------------------------------------------------------------ Filter bar --
+   The band above owns the background and the border; this owns the content.
+   ----------------------------------------------------------------------- */
+
+.rf-filters {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* The groups grow to fill the row they land on. Sized to their contents they
+   wrapped ragged — at 1280 the tier chips take most of the first row and Max
+   price dropped alone onto a second one with a hand's width of nothing beside
+   it. */
+.rf-filter-group {
+  flex: 1 1 auto;
+  min-width: 210px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: var(--rf-space-3);
+  padding-inline: var(--rf-space-4);
+  border-right: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+/* The last group has nothing to its right to be divided from. */
+.rf-filter-group-last {
+  border-right: none;
+}
+
+.rf-filter-group-label {
+  margin-bottom: var(--rf-space-2);
+}
+
+.rf-filter-group-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rf-space-1);
+}
+
+/* Dimmed rather than hidden when off: the set of filters available has to stay
+   readable, or turning one on becomes a memory game. */
+.rf-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-1);
+  padding: 5px var(--rf-space-2);
+  cursor: pointer;
+  background: var(--rf-surface-2);
+  border: var(--rf-hairline) solid var(--rf-border-subtle);
+  opacity: 0.5;
+  transition: opacity var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-filter-toggle[aria-pressed="true"] {
+  background: var(--rf-surface-3);
+  border-color: var(--rf-border-interactive);
+  opacity: 1;
+}
+
+.rf-filter-vault {
+  font-size: var(--rf-text-overline);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rf-fg-secondary);
+}
+
+.rf-filter-vault-on {
+  color: var(--rf-success);
+}
+
+/* Both sliders are built the same way — track, then a scale under it — so the
+   two tracks land on the same line. With the readout beside the track instead,
+   one group was a row taller than the other and centring each in the bar left
+   the two sliders at visibly different heights. */
+.rf-slider {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-1);
+  min-width: 210px;
+  /* Capped: a group that grew to fill a row must not stretch its track to
+     match. A 900px slider makes 5p and 10p the same gesture. */
+  max-width: 320px;
+}
+
+.rf-range {
+  width: 100%;
+  accent-color: var(--rf-gold-500);
+}
+
+/* Wraps. At 200% text zoom the four refinement labels are wider than any track
+   this bar can give them, and `space-between` with no wrapping pushed them
+   straight out of the viewport — a horizontal scrollbar on the whole document,
+   which is the one thing the layout must never produce. */
+.rf-slider-scale {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--rf-space-2);
+}
+
+/* The scale doubles as the legend for what the positions mean, so the ticks
+   are readable at rest and only the current one is lit. */
+.rf-slider-tick,
+.rf-slider-value {
+  font-size: var(--rf-text-caption);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rf-fg-muted);
+}
+
+.rf-slider-tick-on,
+.rf-slider-value {
+  color: var(--rf-fg-primary);
+}
+
+/* `hidden` keeps the value out of the accessibility tree as well as off the
+   screen, but the row must not reflow when it goes: the ends have to stay put. */
+.rf-slider-value[hidden] {
+  display: block;
+  visibility: hidden;
+}
+
+/* Below --rf-bp-md the groups stop dividing usefully: five vertical rules on a
+   phone are five lines of noise across a stack of one-per-row controls. */
+@media (max-width: 767.98px) {
+  .rf-filter-group {
+    border-right: none;
+    border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+    width: 100%;
+  }
+}
+
+/* The virtual scroller owns both axes: vertically it is the element the
+   virtualiser measures, horizontally it is where a table wider than its pane
+   scrolls instead of pushing the document sideways. `role="region"` with a
+   name and `tabindex="0"` are what make that scroll reachable without a
+   mouse. */
+.rf-virtual-scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+.rf-virtual-scroll-flex {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+/* Each table declares the width below which it stops fitting and starts
+   scrolling sideways inside its pane. Percentages divide whatever is there;
+   they do not decide when there is not enough, and without a floor a
+   ten-column table answers a narrow pane by truncating every column at once.
+   In rem so the floor rises with the reader's font size, same as .rf-table's
+   own minimum. */
+.rf-cols-items { min-width: 74rem; }
+.rf-cols-ducats { min-width: 66rem; }
+.rf-cols-endo { min-width: 62rem; }
+
+/* ------------------------------------------------------------ Ranked page -
+   Shell shared by Ducanetor and Endo: they answer the same shape of question,
+   so they have to look like they belong to the same tool.
+   ----------------------------------------------------------------------- */
+
+.rf-ranked {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rf-ranked-head {
+  flex: none;
+  padding: var(--rf-space-5) var(--rf-space-6) var(--rf-space-4);
+  background: var(--rf-surface-1);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-ranked-headline {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--rf-space-6);
+  flex-wrap: wrap;
+}
+
+.rf-ranked-heading {
+  flex: 1;
+  min-width: 260px;
+}
+
+.rf-ranked-title {
+  margin: 0;
+}
+
+.rf-ranked-lead {
+  margin: var(--rf-space-1) 0 0;
+}
+
+/* auto-fit rather than a fixed three: the cards sit inside a pane whose width
+   depends on whether a detail panel is open beside them. */
+.rf-ranked-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--rf-space-3);
+  margin-top: var(--rf-space-4);
+}
+
+.rf-ranked-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.rf-ranked-foot {
+  flex: none;
+  padding: var(--rf-space-2) var(--rf-space-6);
+  border-top: var(--rf-hairline) solid var(--rf-border-subtle);
+  background: var(--rf-surface-1);
+}
+
+.rf-highlight {
+  padding: var(--rf-space-3) var(--rf-space-4);
+  display: flex;
+  gap: var(--rf-space-3);
+  align-items: flex-start;
+}
+
+.rf-highlight-clickable {
+  cursor: pointer;
+}
+
+/* Only the leader is gold. Three gold numbers would rank nothing. */
+.rf-highlight-rank {
+  color: var(--rf-fg-disabled);
+  line-height: 1;
+}
+
+.rf-highlight-rank-first {
+  color: var(--rf-gold-300);
+}
+
+.rf-highlight-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.rf-highlight-title {
+  font-size: var(--rf-text-data-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rf-highlight-sub {
+  margin-top: 2px;
+}
+
+.rf-highlight-meta {
+  margin-top: var(--rf-space-2);
+}
+
+.rf-highlight-figure {
+  text-align: right;
+  flex: none;
+}

@@ -50,6 +50,13 @@ export function Tooltip({
   };
 
   return (
+    /*
+      The wrapper is not itself interactive — whatever it wraps is. The mouse
+      handlers are mirrored by `onFocus`/`onBlur` immediately below, so the
+      tooltip opens for a keyboard exactly as it does for a pointer, which is
+      the thing this rule exists to check.
+    */
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <span
       className={cx("rf-tooltip-wrap", className)}
       onMouseEnter={show}

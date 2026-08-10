@@ -1,0 +1,63 @@
+/* ============================================================================
+   Layout primitives — the page shell.
+
+   The rule is: outer full-width, inner constrained. A band owns the background,
+   the border and the sticky behaviour and spans the whole viewport; the content
+   inside it is centred and capped. Never put the max-width on the element that
+   carries the background, or the background stops at the content edge and the
+   page reads as a floating card.
+   ========================================================================= */
+
+/**
+ * A full-bleed horizontal band. Carries no width of its own on purpose: it is
+ * the thing that touches both edges of the screen.
+ */
+.rf-band {
+  width: 100%;
+}
+
+/**
+ * The constrained content inside a band.
+ *
+ * The cap and the gutter are the same rule, not two: `--rf-side` is
+ * `max(space-6, (100vw - content-max) / 2)`, so below 1488px it resolves to the
+ * 24px minimum gutter and above it grows exactly enough to hold the content at
+ * `--rf-content-max`. Padding rather than `max-width` + `margin-inline: auto`
+ * because it is one mechanism instead of two, and moving `--rf-content-max`
+ * moves both behaviours.
+ *
+ * Without this the app was full-bleed with an 18px gutter at every width: a
+ * 1884px line on a 1920 monitor, and content touching the edge of the screen,
+ * which reads as unfinished rather than as spacious.
+ */
+.rf-shell {
+  width: 100%;
+  padding-inline: var(--rf-side);
+}
+
+/**
+ * Running prose is narrower than the shell, independently of it. Past roughly
+ * 75 characters the eye loses the return sweep and has to hunt for the start of
+ * the next line.
+ */
+.rf-prose {
+  max-width: var(--rf-measure);
+}
+
+/* Tighter gutters once the gutter costs more than it gives. 640px is
+   --rf-bp-sm; custom properties cannot be used inside a media condition, so the
+   literal is written out and the token named here instead. */
+@media (max-width: 639.98px) {
+  .rf-shell {
+    padding-inline: var(--rf-space-4);
+  }
+}
+
+/**
+ * Any flex or grid child that contains a table or a long unbreakable string
+ * needs this, or the child's intrinsic width wins and pushes a scrollbar onto
+ * the whole document instead of onto the child.
+ */
+.rf-min-0 {
+  min-width: 0;
+}

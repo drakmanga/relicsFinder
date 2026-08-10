@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Skeleton, Table, TableCell, TableHeaderCell, TableRow } from "relic-finder-ui";
+import { Skeleton, Table, TableCell, TableCols, TableHeaderCell, TableRow } from "relic-finder-ui";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import type { PrimeSet } from "../lib/setCompletion";
@@ -39,16 +39,23 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
     items.length > 0 ? virtualizer.getTotalSize() - (items[items.length - 1]?.end ?? 0) : 0;
 
   return (
-    <div ref={scrollRef} className="rf-virtual-scroll" style={{ height: "100%", overflow: "auto" }}>
-      <Table interactive framed={false}>
+    <div
+      ref={scrollRef}
+      className="rf-virtual-scroll"
+      role="region"
+      aria-label="Prime sets table"
+      tabIndex={0}
+    >
+      <Table interactive framed={false} className="rf-cols-sets">
+        <TableCols count={4} />
         <thead>
           <tr>
-            <TableHeaderCell style={{ width: "34%" }}>Set</TableHeaderCell>
-            <TableHeaderCell style={{ width: "26%" }}>Progress</TableHeaderCell>
-            <TableHeaderCell style={{ width: "14%" }} align="right">
+            <TableHeaderCell>Set</TableHeaderCell>
+            <TableHeaderCell>Progress</TableHeaderCell>
+            <TableHeaderCell align="right">
               Missing
             </TableHeaderCell>
-            <TableHeaderCell style={{ width: "26%" }} align="right">
+            <TableHeaderCell align="right">
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 To finish <PlatGlyph size={12} />
               </span>

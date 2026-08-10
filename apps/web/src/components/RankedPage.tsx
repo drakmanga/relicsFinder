@@ -35,42 +35,27 @@ export function Highlight({
       // Only the leader is gilded. Three gold frames would rank nothing.
       variant={rank === 1 ? "gilded" : "default"}
       surface={2}
-      className={onClick ? "rf-focus-ring" : undefined}
+      className={onClick ? "rf-highlight-clickable rf-focus-ring" : undefined}
       onClick={onClick}
-      style={onClick ? { cursor: "pointer" } : undefined}
     >
-      <div style={{ padding: "14px 16px", display: "flex", gap: 14, alignItems: "flex-start" }}>
+      <div className="rf-highlight">
         <span
-          className="rf-text-display-sm"
-          style={{ color: rank === 1 ? "var(--rf-gold-300)" : "var(--rf-fg-disabled)", lineHeight: 1 }}
+          className={`rf-text-display-sm rf-highlight-rank${rank === 1 ? " rf-highlight-rank-first" : ""}`}
         >
           {rank}
         </span>
 
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div
-            title={title}
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+        <div className="rf-highlight-body">
+          <div title={title} className="rf-highlight-title">
             {title}
           </div>
-          {subtitle && (
-            <div className="rf-text-caption rf-fg-muted" style={{ marginTop: 2 }}>
-              {subtitle}
-            </div>
-          )}
-          {meta && <div style={{ marginTop: 8 }}>{meta}</div>}
+          {subtitle && <div className="rf-text-caption rf-fg-muted rf-highlight-sub">{subtitle}</div>}
+          {meta && <div className="rf-highlight-meta">{meta}</div>}
         </div>
 
-        <div style={{ textAlign: "right", flex: "none" }}>
+        <div className="rf-highlight-figure">
           <div className="rf-text-overline rf-fg-muted">{figureLabel}</div>
-          <div style={{ marginTop: 2 }}>{figure}</div>
+          <div className="rf-highlight-sub">{figure}</div>
         </div>
       </div>
     </Frame>
@@ -96,55 +81,22 @@ interface PageProps {
  */
 export function RankedPage({ title, lead, controls, highlights, footnote, children }: PageProps) {
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <div
-        style={{
-          flex: "none",
-          padding: "20px 24px 16px",
-          background: "var(--rf-surface-1)",
-          borderBottom: "1px solid var(--rf-border-subtle)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 24, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <h2 className="rf-text-display-sm" style={{ margin: 0 }}>
-              {title}
-            </h2>
-            <p className="rf-text-body-sm rf-fg-muted" style={{ margin: "6px 0 0", maxWidth: "68ch" }}>
-              {lead}
-            </p>
+    <div className="rf-ranked">
+      <div className="rf-ranked-head">
+        <div className="rf-ranked-headline">
+          <div className="rf-ranked-heading">
+            <h2 className="rf-text-display-sm rf-ranked-title">{title}</h2>
+            <p className="rf-text-body-sm rf-fg-muted rf-prose rf-ranked-lead">{lead}</p>
           </div>
           {controls}
         </div>
 
-        {highlights && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: 12,
-              marginTop: 18,
-            }}
-          >
-            {highlights}
-          </div>
-        )}
+        {highlights && <div className="rf-ranked-highlights">{highlights}</div>}
       </div>
 
-      <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+      <div className="rf-ranked-body">{children}</div>
 
-      {footnote && (
-        <div
-          style={{
-            flex: "none",
-            padding: "10px 24px",
-            borderTop: "1px solid var(--rf-border-subtle)",
-            background: "var(--rf-surface-1)",
-          }}
-        >
-          {footnote}
-        </div>
-      )}
+      {footnote && <div className="rf-ranked-foot">{footnote}</div>}
     </div>
   );
 }

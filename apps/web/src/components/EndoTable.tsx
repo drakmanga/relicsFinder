@@ -2,12 +2,14 @@ import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Button,
+  Checkbox,
   Chip,
   EmptyState,
   ExternalLinkIcon,
   Skeleton,
   Table,
   TableCell,
+  TableCols,
   TableHeaderCell,
   TableRow,
 } from "relic-finder-ui";
@@ -59,17 +61,9 @@ export function EndoTable({ active, quantityOf }: Props) {
     items.length > 0 ? virtualizer.getTotalSize() - (items[items.length - 1]?.end ?? 0) : 0;
 
   const controls = (
-    <label
-      style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}
-    >
-      <input
-        type="checkbox"
-        checked={onlyFull}
-        onChange={(event) => setOnlyFull(event.target.checked)}
-        style={{ accentColor: "var(--rf-gold-500)" }}
-      />
-      <span className="rf-fg-secondary">Only sculptures already full</span>
-    </label>
+    <Checkbox checked={onlyFull} onChange={(event) => setOnlyFull(event.target.checked)}>
+      Only sculptures already full
+    </Checkbox>
   );
 
   const footnote = (
@@ -138,7 +132,9 @@ export function EndoTable({ active, quantityOf }: Props) {
       <div
         ref={scrollRef}
         className="rf-virtual-scroll"
-        style={{ height: "100%", overflow: "auto" }}
+        role="region"
+        aria-label="Endo per platinum table"
+        tabIndex={0}
       >
         {rows.length === 0 ? (
           <EmptyState
@@ -146,9 +142,11 @@ export function EndoTable({ active, quantityOf }: Props) {
             description="Nobody holding a sculpture is online. The list fills again within minutes."
           />
         ) : (
-          <Table interactive={false} framed={false} density="comfortable">
+          <Table interactive={false} framed={false} density="comfortable" className="rf-cols-endo">
+            <TableCols count={9} />
             <thead>
               <tr>
+                {/* Widths are mandatory under the table's fixed layout. */}
                 <TableHeaderCell align="right">#</TableHeaderCell>
                 <TableHeaderCell>Sculpture</TableHeaderCell>
                 <TableHeaderCell>Stars</TableHeaderCell>

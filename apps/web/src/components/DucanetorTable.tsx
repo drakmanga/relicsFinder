@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Button,
+  Checkbox,
   Chip,
   DucatGlyph,
   EmptyState,
@@ -9,6 +10,7 @@ import {
   InfoIcon,
   Table,
   TableCell,
+  TableCols,
   TableHeaderCell,
   TableRow,
 } from "relic-finder-ui";
@@ -96,17 +98,9 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
     items.length > 0 ? virtualizer.getTotalSize() - (items[items.length - 1]?.end ?? 0) : 0;
 
   const controls = (
-    <label
-      style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}
-    >
-      <input
-        type="checkbox"
-        checked={includeQuiet}
-        onChange={(event) => setIncludeQuiet(event.target.checked)}
-        style={{ accentColor: "var(--rf-gold-500)" }}
-      />
-      <span className="rf-fg-secondary">Include parts with under {MIN_TRADES} recent trades</span>
-    </label>
+    <Checkbox checked={includeQuiet} onChange={(event) => setIncludeQuiet(event.target.checked)}>
+      Include parts with under {MIN_TRADES} recent trades
+    </Checkbox>
   );
 
   if (!prices) {
@@ -157,7 +151,9 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
       <div
         ref={scrollRef}
         className="rf-virtual-scroll"
-        style={{ height: "100%", overflow: "auto" }}
+        role="region"
+        aria-label="Ducats per platinum table"
+        tabIndex={0}
       >
         {rows.length === 0 ? (
           <EmptyState
@@ -165,9 +161,11 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
             description="No part has both a price and a ducat value yet."
           />
         ) : (
-          <Table interactive framed={false} density="comfortable">
+          <Table interactive framed={false} density="comfortable" className="rf-cols-ducats">
+            <TableCols count={10} />
             <thead>
               <tr>
+                {/* Widths are mandatory under the table's fixed layout. */}
                 <TableHeaderCell align="right">#</TableHeaderCell>
                 <TableHeaderCell>Item</TableHeaderCell>
                 <TableHeaderCell>Set</TableHeaderCell>

@@ -23,10 +23,10 @@
   flex: none;
 }
 
-.rf-btn-xs { height: 24px; padding: 0 var(--rf-space-2); font-size: 12px; --rf-notch: var(--rf-notch-xs); }
-.rf-btn-sm { height: 32px; padding: 0 var(--rf-space-3); font-size: 13px; --rf-notch: var(--rf-notch-sm); }
-.rf-btn-md { height: 40px; padding: 0 var(--rf-space-4); font-size: 15px; --rf-notch: var(--rf-notch-sm); }
-.rf-btn-lg { height: 48px; padding: 0 var(--rf-space-5); font-size: 16px; --rf-notch: var(--rf-notch-md); }
+.rf-btn-xs { height: 24px; padding: 0 var(--rf-space-2); font-size: var(--rf-text-caption); --rf-notch: var(--rf-notch-xs); }
+.rf-btn-sm { height: 32px; padding: 0 var(--rf-space-3); font-size: var(--rf-text-body-sm); --rf-notch: var(--rf-notch-sm); }
+.rf-btn-md { height: 40px; padding: 0 var(--rf-space-4); font-size: var(--rf-text-body-md); --rf-notch: var(--rf-notch-sm); }
+.rf-btn-lg { height: 48px; padding: 0 var(--rf-space-5); font-size: var(--rf-text-body-lg); --rf-notch: var(--rf-notch-md); }
 
 .rf-btn-xs > svg { width: 16px; height: 16px; }
 .rf-btn-sm > svg { width: 16px; height: 16px; }
@@ -132,7 +132,7 @@
 .rf-field-label {
   display: block;
   margin-bottom: var(--rf-space-2);
-  font-size: 14px;
+  font-size: var(--rf-text-data-md);
   font-weight: 600;
   color: var(--rf-fg-secondary);
 }
@@ -174,7 +174,7 @@
 
 .rf-field-helper {
   margin-top: var(--rf-space-2);
-  font-size: 12px;
+  font-size: var(--rf-text-caption);
   line-height: 1.4;
   color: var(--rf-fg-muted);
 }
@@ -185,7 +185,7 @@
 
 .rf-kbd {
   padding: 2px 6px;
-  font-size: 11px;
+  font-size: var(--rf-text-overline);
   color: var(--rf-fg-muted);
   background: var(--rf-surface-3);
   --rf-notch: 3px;
@@ -211,7 +211,7 @@
 .rf-chip-tier {
   height: 20px;
   padding: 0 var(--rf-space-2);
-  font-size: 11px;
+  font-size: var(--rf-text-overline);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -236,7 +236,7 @@
 .rf-chip-filter {
   height: 24px;
   padding: 0 var(--rf-space-2);
-  font-size: 12px;
+  font-size: var(--rf-text-caption);
   background: var(--rf-state-row-selected);
   color: var(--rf-fg-accent);
 }
@@ -244,7 +244,7 @@
 .rf-chip-count {
   height: 20px;
   padding: 0 var(--rf-space-2);
-  font-size: 12px;
+  font-size: var(--rf-text-caption);
   background: var(--rf-surface-3);
   color: var(--rf-fg-secondary);
 }
@@ -267,7 +267,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--rf-text-body-sm);
 }
 
 .rf-rarity-dot {
@@ -294,11 +294,11 @@
 .rf-price-ducat { color: var(--rf-currency-ducat); }
 .rf-price-credit { color: var(--rf-currency-credit); }
 
-.rf-price-md { font-size: 14px; }
-.rf-price-lg { font-size: 20px; font-weight: 600; }
+.rf-price-md { font-size: var(--rf-text-data-md); }
+.rf-price-lg { font-size: var(--rf-text-data-lg); font-weight: 600; }
 
 .rf-price-suffix {
-  font-size: 12px;
+  font-size: var(--rf-text-caption);
   font-weight: 400;
   color: var(--rf-fg-muted);
   margin-left: 2px;
@@ -310,7 +310,7 @@
 }
 
 .rf-delta {
-  font-size: 12px;
+  font-size: var(--rf-text-caption);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -325,12 +325,27 @@
   overflow-x: auto;
 }
 
+/* table-layout: fixed — the column widths come from the header, not from the
+   cells. Under `auto` the browser measures the rows it currently has, and a
+   virtualised table only ever has a screenful: scrolling swaps in longer names
+   and every column resizes mid-scroll, so the whole table shivers. It also let
+   a single row widen its column — a search match appended to a name pushed the
+   layout sideways. Fixed makes the widths a property of the table.
+
+   Widths are therefore mandatory on the header cells: without them, fixed
+   layout divides the space equally and ignores what is in the column. */
 .rf-table {
   width: 100%;
-  min-width: 640px;
+  /* 40rem is the same 640px at the default preference, and grows with the
+     reader's: the columns are percentages of this, so a table pinned in px
+     kept its width while the text inside it doubled and every column started
+     truncating. In rem the pane scrolls sideways instead, which is the
+     strategy this table is committed to. */
+  min-width: 40rem;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 13px;
+  font-size: var(--rf-text-body-sm);
 }
 
 /* top:0 — the wrapper's overflow-x makes it the scroll container, so any
@@ -344,7 +359,7 @@
   padding: 0 var(--rf-space-3);
   background: var(--rf-surface-2);
   border-bottom: 1px solid var(--rf-border-default);
-  font-size: 11px;
+  font-size: var(--rf-text-overline);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -389,6 +404,16 @@
   padding: 0 var(--rf-space-3);
   border-bottom: 1px solid var(--rf-border-subtle);
   vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Cells holding a control keep their overflow visible: `hidden` would clip the
+   focus ring off an icon button sitting in a narrow column, and a control is
+   sized by its own box anyway, so it has nothing to truncate. */
+.rf-table tbody td:has(button, a, input, select) {
+  overflow: visible;
 }
 
 .rf-table-compact tbody td { height: 32px; }
@@ -476,7 +501,7 @@
 .rf-droprow-name {
   flex: 1;
   min-width: 0;
-  font-size: 13px;
+  font-size: var(--rf-text-body-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -552,6 +577,23 @@
   flex: none;
 }
 
+/* Below --rf-bp-lg (1024px) the side-by-side layout stops fitting: subtract a
+   440px panel and the two gutters from a 1024px viewport and the table is left
+   with 536px, under the 640px it needs, so it scrolls sideways while the panel
+   sits beside it taking the room it is missing. The panel goes under the table
+   instead and both get the full width.
+
+   The specification asks for an overlay drawer here (§6.3). This is the same
+   decision — stop being a column — without the focus trap and backdrop a drawer
+   needs; those are a behavioural change, not a stylesheet one. */
+@media (max-width: 1023.98px) {
+  .rf-detail {
+    width: 100%;
+    max-height: 45vh;
+    overflow: auto;
+  }
+}
+
 .rf-detail-body {
   padding: var(--rf-space-4);
   background: var(--rf-surface-1);
@@ -560,7 +602,7 @@
 
 .rf-detail-meta {
   margin-top: var(--rf-space-1);
-  font-size: 12px;
+  font-size: var(--rf-text-caption);
   line-height: 1.4;
   color: var(--rf-fg-muted);
 }
@@ -599,7 +641,7 @@
   background: transparent;
   border: 0;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--rf-text-body-sm);
   font-weight: 500;
   color: var(--rf-fg-muted);
   --rf-notch: var(--rf-notch-sm);
@@ -644,7 +686,7 @@
   padding: 6px 10px;
   background: var(--rf-surface-4);
   color: var(--rf-fg-primary);
-  font-size: 12px;
+  font-size: var(--rf-text-caption);
   line-height: 1.4;
   --rf-notch: var(--rf-notch-sm);
   pointer-events: none;
@@ -735,9 +777,9 @@
 
 .rf-toast-content { flex: 1; min-width: 0; }
 
-.rf-toast-title { font-size: 13px; font-weight: 600; }
+.rf-toast-title { font-size: var(--rf-text-body-sm); font-weight: 600; }
 
-.rf-toast-desc { font-size: 12px; line-height: 1.4; color: var(--rf-fg-muted); }
+.rf-toast-desc { font-size: var(--rf-text-caption); line-height: 1.4; color: var(--rf-fg-muted); }
 
 .rf-toast-close {
   background: transparent;
@@ -808,4 +850,26 @@
   margin-top: var(--rf-space-2);
   flex-wrap: wrap;
   justify-content: center;
+}
+
+/* -------------------------------------------------------------- Checkbox - */
+.rf-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-2);
+  font-size: var(--rf-text-body-sm);
+}
+
+/* The tick is the browser's own: restyling it costs a custom control and a
+   keyboard implementation, and buys a shape nobody was asking about. Only the
+   accent colour is ours. */
+.rf-checkbox-input {
+  accent-color: var(--rf-gold-500);
+  cursor: pointer;
+  flex: none;
+}
+
+.rf-checkbox-label {
+  cursor: pointer;
+  color: var(--rf-fg-secondary);
 }

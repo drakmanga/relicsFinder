@@ -12,7 +12,7 @@ relicsFinder/
   design-system/              the design specification
 ```
 
-Requirements: **Java 24+** and **Maven**, **Node 20+**. The bundled `./mvnw`
+Requirements: **Java 25+** and **Maven**, **Node 20+**. The bundled `./mvnw`
 works in place of a system `mvn`.
 
 ## First time
@@ -78,7 +78,7 @@ Without `RELICS_STATIC_DIR` the build lands in `apps/web/dist/`.
 |---|---|
 | Blank page, console full of 500s on `/api/...` | Backend is down. Terminal 1. |
 | `Port 8080 was already in use` | `ss -ltnp \| grep 8080`, then close the process |
-| `release version 24 not supported` | Java too old: 24+ is required |
+| `release version 25 not supported` | Java too old: 25+ is required |
 | Page with no styles, text unreadable | Library not built: `npm run build:ui` |
 | Changes in `packages/ui` do nothing | No watcher: rebuild with `npm run build:ui` |
 | `Failed to resolve entry for package "relic-finder-ui"` | Library never built, so `packages/ui/dist/` is missing. `npm install` (which runs `prepare`) or `npm run build:ui` |

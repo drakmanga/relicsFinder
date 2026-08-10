@@ -6,6 +6,7 @@ import {
   Skeleton,
   Table,
   TableCell,
+  TableCols,
   TableHeaderCell,
   TableRow,
   TierChip,
@@ -95,8 +96,15 @@ export function ResultsTable({
     items.length > 0 ? virtualizer.getTotalSize() - (items[items.length - 1]?.end ?? 0) : 0;
 
   return (
-    <div ref={scrollRef} className="rf-virtual-scroll" style={{ height: "100%", overflow: "auto" }}>
-      <Table interactive framed={false}>
+    <div
+      ref={scrollRef}
+      className="rf-virtual-scroll"
+      role="region"
+      aria-label="Relics table"
+      tabIndex={0}
+    >
+      <Table interactive framed={false} className="rf-cols-relics">
+        <TableCols count={7} />
         <thead>
           <tr>
             {/*
@@ -108,16 +116,18 @@ export function ResultsTable({
               same space across all seven, and the table stays even at any
               window size.
             */}
-            <TableHeaderCell style={{ width: "8%" }}>Tier</TableHeaderCell>
+            {/* Tier is sized to the longest chip, Vanguard: under fixed layout
+                a column that is too narrow truncates rather than pushing its
+                neighbours aside, and "VANGUA…" is not a tier. */}
+            <TableHeaderCell>Tier</TableHeaderCell>
             <TableHeaderCell
-              style={{ width: "28%" }}
               sortable
               sortDirection={dir("relic")}
               onSort={() => onSort("relic")}
             >
               Relic
             </TableHeaderCell>
-            <TableHeaderCell style={{ width: "13%" }}>Status</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
             {/*
               Expected value first, because it is the number the decision turns
               on. Best drop stays beside it — it answers a different question,
@@ -130,7 +140,6 @@ export function ResultsTable({
             */}
             <TableHeaderCell
               align="right"
-              style={{ width: "14%" }}
               sortable
               sortDirection={dir("expected")}
               onSort={() => onSort("expected")}
@@ -142,7 +151,6 @@ export function ResultsTable({
             </TableHeaderCell>
             <TableHeaderCell
               align="right"
-              style={{ width: "14%" }}
               sortable
               sortDirection={dir("value")}
               onSort={() => onSort("value")}
@@ -159,7 +167,6 @@ export function ResultsTable({
             */}
             <TableHeaderCell
               align="right"
-              style={{ width: "13%" }}
               sortable
               sortDirection={dir("cost")}
               onSort={() => onSort("cost")}
@@ -175,7 +182,7 @@ export function ResultsTable({
               number nobody can ever collect. It lives on Prime Items, where it
               is a real trade, and per drop inside the relic panel.
             */}
-            <TableHeaderCell align="center" style={{ width: "10%" }}>
+            <TableHeaderCell align="center">
               Market
             </TableHeaderCell>
           </tr>
@@ -239,7 +246,7 @@ export function ResultsTable({
                     <Skeleton width={64} height={14} />
                   ) : unvaulted.has(row.relicFullName) ? (
                     <span className="rf-text-caption" style={{ color: "var(--rf-success)" }}>
-                      Farmable
+                      Droppable
                     </span>
                   ) : (
                     <span className="rf-text-caption rf-fg-muted">Vaulted</span>

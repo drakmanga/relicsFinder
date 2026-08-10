@@ -53,7 +53,7 @@ If you play Warframe you know the routine:
 
 ## 🛠️ Stack
 
-- **Backend**: Spring Boot (Java 24)
+- **Backend**: Spring Boot (Java 25)
 - **Frontend**: React + TypeScript + Vite (`apps/web`)
 - **Design system**: an in-house React library, Orokin theme (`packages/ui`, spec in
   `design-system/`)
@@ -67,7 +67,7 @@ below and the [open issues](https://github.com/drakmanga/relicsFinder/issues).
 
 ## 📋 Requirements
 
-- Java 24 or later
+- Java 25 or later
 - Node 20+ and npm (for the frontend)
 - Maven 3.8+ (or the bundled wrapper)
 - An internet connection, for the Warframe Market API

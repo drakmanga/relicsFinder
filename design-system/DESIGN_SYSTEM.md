@@ -8,7 +8,7 @@ Version 1.0 — 2026-08-06.
 | File | Role |
 |---|---|
 | `DESIGN_SYSTEM.md` | This document. The source of truth for every rule. |
-| `tokens.json` | Tokens in W3C DTCG format. The source for Style Dictionary / sync. |
+| `tokens.json` | Tokens in W3C DTCG format. **The only place a design value is authored.** `packages/ui/src/styles/tokens.css` is generated from it by `npm run build:tokens` and is not committed — edit it and the next build discards the edit. |
 | `globals.css` | Tailwind v4 theme (`@theme`) + the Orokin geometry primitives. |
 | `tailwind.config.ts` | Tailwind v3 / shadcn theme + the clipping utility plugin. |
 | `preview.html` | Standalone page rendering every token and component. |
@@ -473,6 +473,52 @@ Base 4px. Do not use off-scale values.
 
 Below `lg`, touch targets rise to a 44×44px minimum and rows switch to `row-comfortable` 48px.
 
+### 6.4 The content shell — outer full-width, inner constrained
+
+Two levels, always. A **band** spans the viewport and owns the background, the
+border and any sticky behaviour; the **shell** inside it holds the content and
+carries the gutter. Never put the cap on the element that paints the background,
+or the background stops where the content stops and the page reads as a card
+floating on nothing.
+
+```html
+<header class="rf-band rf-topbar">   <!-- full width: background, border -->
+  <div class="rf-shell rf-topbar-inner">…</div>   <!-- capped and centred -->
+</header>
+```
+
+| Token | Value | Meaning |
+|---|---|---|
+| `--rf-content-max` | `1440px` | Ceiling for the widest content — this app's eight-column tables. A **ceiling, not a target** |
+| `--rf-measure` | `68ch` | Running prose, narrower than the shell and independent of it |
+| `--rf-side` | `max(space-6, (100vw − content-max) / 2)` | The gutter, **derived**: 24px below 1488, growing above it |
+
+`--rf-side` is `.rf-shell`'s `padding-inline` and nothing else — cap and gutter
+are one rule, so moving `--rf-content-max` moves both. 1440 rather than the 1280
+of a content site because squeezing eight columns into 1280 costs more in
+truncation than it buys in line length.
+
+### 6.5 What scales with what
+
+Three axes, and every value belongs to exactly one.
+
+| Axis | What | How |
+|---|---|---|
+| The **window** | Layout, gutters, column counts, panel width | Breakpoints and `clamp()`. Never responds to font-size preference |
+| The **user** | Reading text, and only reading text | Every `font-size` is a `--rf-text-*` token, all `rem` |
+| **Neither** | Touch targets, hairlines, icon boxes, notch depth | `--rf-touch-target`, `--rf-hairline`: px on purpose |
+
+`.rf-root` sets `font-size: max(1rem, var(--rf-reading-floor))`. On the root
+`1rem` is the browser's own preference, so the floor catches a preference set
+below the size the design was drawn at while leaving a raised one untouched. A
+flat `px` root size overrides the reader in both directions and fails WCAG 1.4.4.
+
+> **Trap.** Table widths in `px` do not survive text zoom. The columns are
+> percentages of the table, so at 200% the text doubles inside a table that did
+> not, and every column truncates at once. `.rf-table`'s minimum is `40rem` —
+> the same 640px at the default preference — and the wide tables declare their
+> own floor the same way, so the pane scrolls sideways instead.
+
 ---
 
 ## 7. Control sizes
@@ -651,6 +697,11 @@ Canonical column structure for search results:
 - Sort: clickable header, 14px arrow to the right of the label, correct `aria-sort`.
 - The wrapper carries `clip-orokin notch-lg` + `.o-frame`. Rows are never clipped.
 - Past a hundred rows: virtualization, with a fixed 40px row height as a requirement.
+- **`table-layout: fixed`, and every header cell carries a width.** Cell text is
+  one line, truncated with an ellipsis; cells holding a control keep their
+  overflow visible so the focus ring survives.
+
+> **Trap.** Automatic table layout measures the rows the browser currently has. A virtualised table only ever has a screenful of them, so scrolling swaps in longer names and every column resizes as it goes — the table shivers. The same mechanism lets one row widen its column, which is how appending a search match to a name pushed the whole layout sideways. Fixed layout makes width a property of the table rather than of whatever happens to be on screen; the price is that a header cell with no width gets an equal share, so widths are not optional.
 
 ### 10.5 Detail panel
 

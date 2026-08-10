@@ -46,9 +46,24 @@ export const emptyFilters = (): Filters => ({
 
 export const ALL_VAULT_FILTERS: VaultFilter[] = ["all", "farmable", "vaulted"];
 
+/**
+ * Where the price slider stops filtering.
+ *
+ * The top of the range means "no ceiling", not "500p": a handful of parts sell
+ * above it, and a slider pushed to the end has to keep them rather than hide
+ * the most expensive things in the game behind an off-by-one.
+ */
+export const MAX_PRICE_CEILING = 500;
+
+/**
+ * "Droppable", not "Farmable": the state being named is whether the relic is in
+ * the drop tables at all, which is a fact about the game rather than about how
+ * hard it would be to get. The `farmable` key is left alone — it is in shared
+ * links as `?vault=farmable`, and renaming it would break them.
+ */
 export const VAULT_LABEL: Record<VaultFilter, string> = {
   all: "All",
-  farmable: "Farmable",
+  farmable: "Droppable",
   vaulted: "Vaulted",
 };
 

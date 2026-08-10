@@ -57,6 +57,13 @@ export function Dialog({
   if (!open) return null;
 
   return (
+    /*
+      The scrim is not a control and deliberately has no role: it is the page
+      behind the dialog, dimmed. Clicking it is a shortcut, not the only way
+      out — Escape is bound above and the dialog carries its own close button —
+      so there is nothing here for a keyboard user to be locked out of.
+    */
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       className="rf-dialog-scrim"
       onMouseDown={(event) => {

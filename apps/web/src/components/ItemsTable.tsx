@@ -8,6 +8,7 @@ import {
   RarityTag,
   Table,
   TableCell,
+  TableCols,
   TableHeaderCell,
   TableRow,
   TierChip,
@@ -57,12 +58,31 @@ export function ItemsTable({
     items.length > 0 ? virtualizer.getTotalSize() - (items[items.length - 1]?.end ?? 0) : 0;
 
   return (
-    <div ref={scrollRef} className="rf-virtual-scroll" style={{ height: "100%", overflow: "auto" }}>
-      <Table interactive framed={false}>
+    <div
+      ref={scrollRef}
+      className="rf-virtual-scroll"
+      role="region"
+      aria-label="Prime items table"
+      tabIndex={0}
+    >
+      <Table interactive framed={false} className="rf-cols-items">
+        <TableCols count={10} />
         <thead>
           <tr>
+            {/*
+              Widths are mandatory under the table's fixed layout — without
+              them the ten columns would each take a tenth, and a part name
+              needs several times what an icon button does. The item name gets
+              the slack because it is the longest string in the view and the
+              one being read: "Volt Prime Neuroptics Blueprint" is 31
+              characters against "Rare".
+            */}
             <TableHeaderCell>Item</TableHeaderCell>
             <TableHeaderCell>Set</TableHeaderCell>
+            {/* Rarity fits "Uncommon"; Relics fits the three tier chips and the
+                count beside them. Both were sized by eye first and measured
+                after — under fixed layout an undersized column silently eats
+                its own content instead of pushing the table wider. */}
             <TableHeaderCell>Rarity</TableHeaderCell>
             <TableHeaderCell>Relics</TableHeaderCell>
             <TableHeaderCell align="right">Best drop</TableHeaderCell>
@@ -114,8 +134,11 @@ export function ItemsTable({
                 selected={row.itemName === selected}
                 onClick={() => onSelect(row.itemName)}
               >
-                <TableCell>{row.itemName}</TableCell>
-                <TableCell>{row.setName ?? "—"}</TableCell>
+                {/* Titled because the column truncates: the longest part names
+                    run past any width this table can spare, and the full name
+                    has to stay reachable without opening the panel. */}
+                <TableCell title={row.itemName}>{row.itemName}</TableCell>
+                <TableCell title={row.setName ?? undefined}>{row.setName ?? "—"}</TableCell>
                 <TableCell>
                   <RarityTag rarity={row.rarity} />
                 </TableCell>

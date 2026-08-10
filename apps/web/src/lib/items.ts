@@ -1,4 +1,4 @@
-import type { Rarity, Relic, Tier } from "../api/types";
+import type { PriceMap, Rarity, Relic, RelicItemRow, Tier } from "../api/types";
 import { setOf } from "./sets";
 import { matchesRelic, type Filters } from "./rows";
 
@@ -80,4 +80,65 @@ export function buildItemRows(relics: Relic[], filters: Filters): PrimeItemRow[]
           row.relicNames.some((name) => matchesRelic(name, term)),
       )
     : rows;
+}
+
+/**
+ * Applies the price ceiling to a list of parts.
+ *
+ * Here the ceiling means what it says: a row is one part, so it is that part's
+ * own price being capped — no need for the relic list's convention of capping
+ * the best drop. The ceiling was previously never applied to this view at all,
+ * so the slider moved, the readout changed and the table did not.
+ *
+ * Prices arrive in their own request, so this runs separately from
+ * `buildItemRows`: rows have to exist before the batch lands, or the view would
+ * be empty for as long as it takes. Unpriced parts survive the filter — nothing
+ * is known about them, which is not the same as them being expensive.
+ */
+export function applyItemPriceCeiling(
+  rows: PrimeItemRow[],
+  maxPrice: number | null,
+  prices: PriceMap | undefined,
+): PrimeItemRow[] {
+  if (maxPrice === null || !prices) return rows;
+
+  return rows.filter((row) => {
+    const price = prices.get(row.itemName)?.averagePrice;
+    return price == null || price <= maxPrice;
+  });
+}
+
+/**
+ * A panel row for a part, built from the first relic that drops it.
+ *
+ * The Prime Items panel has no table row behind it — a row there is a part, and
+ * the panel wants a relic to have come from — so one is synthesised. Intact
+ * only: all four states hold the same items, and the panel quotes the state the
+ * catalogue is read at.
+ *
+ * A plain function rather than a `useMemo` body: the loop with its early
+ * returns is exactly the shape React Compiler refuses to memoise, so writing it
+ * inline opted the whole component out of compilation.
+ */
+export function synthesiseItemRow(relics: Relic[], itemName: string | null): RelicItemRow | null {
+  if (!itemName) return null;
+
+  for (const relic of relics) {
+    if (relic.refinement !== "intact") continue;
+
+    const reward = relic.rewards.find((r) => r.itemName === itemName);
+    if (!reward) continue;
+
+    return {
+      id: `${relic.fullName}|${relic.refinement}|${itemName}`,
+      tier: relic.tier,
+      relicFullName: relic.fullName,
+      refinement: relic.refinement,
+      itemName,
+      rarity: reward.rarity,
+      chance: reward.chance,
+    };
+  }
+
+  return null;
 }

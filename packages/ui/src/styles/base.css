@@ -4,11 +4,17 @@
    OrokinProvider renders this class; components are unstyled without it.
    ========================================================================= */
 
+/* `1rem` resolves against the document root, which is where the browser's own
+   font-size preference lives — so max() floors a below-default preference at
+   the size the design was drawn at while leaving a raised preference completely
+   untouched. The old flat `15px` overrode the reader in both directions, which
+   is a WCAG 1.4.4 failure. Written on .rf-root rather than on `html` because
+   the design system is scoped: it must not reach out into a host page. */
 .rf-root {
   background: var(--rf-surface-0);
   color: var(--rf-fg-primary);
   font-family: var(--rf-font-ui);
-  font-size: 15px;
+  font-size: max(1rem, var(--rf-reading-floor));
   line-height: 1.55;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
@@ -84,22 +90,22 @@
   letter-spacing: 0.01em;
 }
 
-.rf-text-display-xl { font-size: 48px; line-height: 1.05; }
-.rf-text-display-lg { font-size: 36px; line-height: 1.1; }
-.rf-text-display-md { font-size: 28px; line-height: 1.15; }
-.rf-text-display-sm { font-size: 22px; line-height: 1.2; }
+.rf-text-display-xl { font-size: var(--rf-text-display-xl); line-height: 1.05; }
+.rf-text-display-lg { font-size: var(--rf-text-display-lg); line-height: 1.1; }
+.rf-text-display-md { font-size: var(--rf-text-display-md); line-height: 1.15; }
+.rf-text-display-sm { font-size: var(--rf-text-display-sm); line-height: 1.2; }
 
-.rf-text-heading-lg { font-size: 18px; line-height: 1.3; font-weight: 600; }
-.rf-text-heading-md { font-size: 16px; line-height: 1.4; font-weight: 600; }
-.rf-text-heading-sm { font-size: 14px; line-height: 1.4; font-weight: 600; }
+.rf-text-heading-lg { font-size: var(--rf-text-heading-lg); line-height: 1.3; font-weight: 600; }
+.rf-text-heading-md { font-size: var(--rf-text-heading-md); line-height: 1.4; font-weight: 600; }
+.rf-text-heading-sm { font-size: var(--rf-text-heading-sm); line-height: 1.4; font-weight: 600; }
 
-.rf-text-body-lg { font-size: 16px; line-height: 1.6; }
-.rf-text-body-md { font-size: 15px; line-height: 1.55; }
-.rf-text-body-sm { font-size: 13px; line-height: 1.5; }
-.rf-text-caption { font-size: 12px; line-height: 1.4; }
+.rf-text-body-lg { font-size: var(--rf-text-body-lg); line-height: 1.6; }
+.rf-text-body-md { font-size: var(--rf-text-body-md); line-height: 1.55; }
+.rf-text-body-sm { font-size: var(--rf-text-body-sm); line-height: 1.5; }
+.rf-text-caption { font-size: var(--rf-text-caption); line-height: 1.4; }
 
 .rf-text-overline {
-  font-size: 11px;
+  font-size: var(--rf-text-overline);
   line-height: 1.2;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -114,9 +120,9 @@
   font-feature-settings: "tnum" 1;
 }
 
-.rf-text-data-lg { font-size: 20px; line-height: 1.2; font-weight: 600; }
-.rf-text-data-md { font-size: 14px; line-height: 1.2; font-weight: 500; }
-.rf-text-data-sm { font-size: 13px; line-height: 1.2; }
+.rf-text-data-lg { font-size: var(--rf-text-data-lg); line-height: 1.2; font-weight: 600; }
+.rf-text-data-md { font-size: var(--rf-text-data-md); line-height: 1.2; font-weight: 500; }
+.rf-text-data-sm { font-size: var(--rf-text-data-sm); line-height: 1.2; }
 
 /* Colour helpers */
 .rf-fg-primary { color: var(--rf-fg-primary); }
