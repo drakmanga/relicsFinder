@@ -1,22 +1,14 @@
 /**
- * Over 150 lines (rule 4). Two blocks — the parts checklist and the buy-or-farm
- * verdict — sharing one set and one price map. The verdict is the extraction
- * worth making, and has not been made yet.
+ * Over 150 lines (rule 4). The per-piece verdict went to SetPiece; what is left
+ * is how far along the set is and the route to finishing it, which are one
+ * question asked twice.
  */
 import { useState } from "react";
-import {
-  ArrowLeftIcon,
-  Button,
-  DetailPanel,
-  Divider,
-  InfoIcon,
-  Skeleton,
-  XIcon,
-} from "relic-finder-ui";
+import { ArrowLeftIcon, Button, DetailPanel, Divider, InfoIcon, XIcon } from "relic-finder-ui";
 
 import { PlatPrice } from "./Plat";
-import type { PrimeSet, SetPart } from "../lib/setCompletion";
-import { verdictFor } from "../lib/setCompletion";
+import type { PrimeSet } from "../lib/setCompletion";
+import { Piece } from "./SetPiece";
 import { ALL_REFINEMENTS, REFINEMENT_LABEL } from "../lib/rows";
 import type { Refinement } from "../api/types";
 
@@ -240,123 +232,5 @@ export function SetDetailPanel({
         </>
       )}
     </DetailPanel>
-  );
-}
-
-function Piece({
-  part,
-  setName,
-  pricesPending,
-  onToggle,
-  onPickItem,
-  onPickRelic,
-}: {
-  part: SetPart;
-  setName: string;
-  pricesPending: boolean;
-  onToggle: (itemName: string) => void;
-  onPickItem: (itemName: string) => void;
-  onPickRelic: (relicFullName: string) => void;
-}) {
-  const verdict = verdictFor(part);
-
-  return (
-    <div style={{ opacity: part.owned ? 0.55 : 1 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <input
-          type="checkbox"
-          checked={part.owned}
-          onChange={() => onToggle(part.itemName)}
-          aria-label={`I have ${part.itemName}`}
-          style={{ accentColor: "var(--rf-gold-500)", width: 15, height: 15, flex: "none" }}
-        />
-
-        <button
-          type="button"
-          className="rf-focus-ring"
-          onClick={() => onPickItem(part.itemName)}
-          title={`${part.itemName} — open it in Prime Items`}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            textAlign: "left",
-            background: "none",
-            border: 0,
-            padding: 0,
-            cursor: "pointer",
-            fontSize: 13,
-            color: "var(--rf-fg-primary)",
-            textDecoration: part.owned ? "line-through" : undefined,
-          }}
-        >
-          {/* The set name is the panel title; repeating it on all six rows
-              spends the width that tells them apart. */}
-          {part.itemName.replace(`${setName} `, "")}
-        </button>
-
-        {pricesPending && part.price === null ? (
-          <Skeleton width={36} height={13} />
-        ) : (
-          <PlatPrice value={part.price} />
-        )}
-      </div>
-
-      {!part.owned && (
-        <div
-          className="rf-text-caption rf-fg-muted"
-          style={{ display: "flex", alignItems: "baseline", gap: 6, marginLeft: 23, marginTop: 3 }}
-        >
-          {part.bestRelic ? (
-            <>
-              <button
-                type="button"
-                className="rf-focus-ring"
-                onClick={() => onPickRelic(part.bestRelic!)}
-                title={`${part.bestRelic} — open it in Relics`}
-                style={{
-                  background: "none",
-                  border: 0,
-                  padding: 0,
-                  cursor: "pointer",
-                  font: "inherit",
-                  color: "var(--rf-fg-secondary)",
-                  textDecoration: "underline",
-                  textUnderlineOffset: 3,
-                }}
-              >
-                {part.bestRelic}
-              </button>
-              <span>{part.bestChance.toFixed(2)}%</span>
-              <span>·</span>
-              <span>{part.runs === null ? "—" : `${part.runs.toFixed(1)} runs`}</span>
-              {part.netFarmCost !== null && (
-                <span>
-                  ·{" "}
-                  {part.netFarmCost <= 0
-                    ? "pays for itself"
-                    : `${Math.round(part.netFarmCost)}p net`}
-                </span>
-              )}
-            </>
-          ) : (
-            <span>No relic drops it at this refinement</span>
-          )}
-
-          <span
-            style={{
-              marginLeft: "auto",
-              color:
-                verdict === "buy"
-                  ? "var(--rf-success)"
-                  : verdict === "farm"
-                    ? "var(--rf-gold-300)"
-                    : "var(--rf-fg-muted)",
-            }}
-          >
-            {verdict === "unknown" ? "—" : verdict}
-          </span>
-        </div>
-      )}
-    </div>
   );
 }

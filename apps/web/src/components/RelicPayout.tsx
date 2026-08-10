@@ -1,4 +1,9 @@
 /**
+ * Over 150 lines (rule 4): two tables of figures over the same rewards, and the
+ * explanations behind them. Splitting them would put the payout and the cost of
+ * reaching it in different files.
+ */
+/**
  * What a relic pays, and what refining it costs.
  *
  * Two blocks that belong together and nowhere else: the payout per squad size,

@@ -1,11 +1,8 @@
 /**
- * Over 150 lines (rule 4), and not because it should be.
- *
- * The drop sites came out into RelicDropSites; what is left is four blocks that
- * still belong together — refinement, contents, squad value, the trace ladder —
- * because each reads the same relic and the same prices, and splitting them
- * would mean passing the whole row to four siblings to save nothing. The next
- * cut is the trace ladder, which is the only block with arithmetic of its own.
+ * Over 150 lines (rule 4). The mission list went to RelicDropSites and the
+ * payout arithmetic to RelicPayout; what is left is the relic's identity, its
+ * refinement slider and its contents — three things that read the same row and
+ * would only be passed it again if they were split further.
  */
 import { useState } from "react";
 import {
