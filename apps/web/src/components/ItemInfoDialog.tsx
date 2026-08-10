@@ -1,5 +1,7 @@
 import { Button, Dialog, ExternalLinkIcon, PriceDelta, Skeleton } from "relic-finder-ui";
 
+import { Unlisted } from "./Unlisted";
+
 import { PlatPrice } from "./Plat";
 import { PriceChart } from "./PriceChart";
 import { useItemHistory } from "../api/queries";
@@ -64,7 +66,7 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
 
         <Stat label="Ducats">
           {meta?.ducats == null ? (
-            <span className="rf-fg-disabled">—</span>
+            <Unlisted />
           ) : (
             <span className="rf-text-data-md" style={{ color: "var(--rf-currency-ducat)" }}>
               {meta.ducats}
@@ -77,17 +79,11 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
         </Stat>
 
         <Stat label="vs 90-day avg">
-          {meta?.trend == null ? (
-            <span className="rf-fg-disabled">—</span>
-          ) : (
-            <PriceDelta value={Math.round(meta.trend)} />
-          )}
+          {meta?.trend == null ? <Unlisted /> : <PriceDelta value={Math.round(meta.trend)} />}
         </Stat>
       </div>
 
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        Completed trades, 90 days
-      </p>
+      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Completed trades, 90 days</p>
 
       {history.isPending ? (
         <Skeleton height={160} />

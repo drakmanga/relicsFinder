@@ -12,7 +12,10 @@ export type IconProps = SVGProps<SVGSVGElement>;
  */
 function glyph(path: ReactNode, displayName: string) {
   const Component = (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+    /* focusable="false" as well as aria-hidden: without it these land in the
+       tab order in some engines, which puts an invisible stop between every
+       pair of real controls. */
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" {...props}>
       {path}
     </svg>
   );
@@ -145,6 +148,7 @@ function strokeIcon(path: ReactNode, displayName: string) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      focusable="false"
       {...props}
     >
       {path}
@@ -216,11 +220,11 @@ export const ArrowUpDownIcon = strokeIcon(
   "ArrowUpDownIcon",
 );
 
-export const ArrowLeftIcon = strokeIcon(
-  <path d="M20 12H4M4 12l5-5M4 12l5 5" />,
-  "ArrowLeftIcon",
-);
+export const ArrowLeftIcon = strokeIcon(<path d="M20 12H4M4 12l5-5M4 12l5 5" />, "ArrowLeftIcon");
 
 export const ArrowUpIcon = strokeIcon(<path d="M12 20V4M12 4l-5 5M12 4l5 5" />, "ArrowUpIcon");
 
-export const ArrowDownIcon = strokeIcon(<path d="M12 4v16M12 20l-5-5M12 20l5-5" />, "ArrowDownIcon");
+export const ArrowDownIcon = strokeIcon(
+  <path d="M12 4v16M12 20l-5-5M12 20l5-5" />,
+  "ArrowDownIcon",
+);

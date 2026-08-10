@@ -48,7 +48,7 @@ export function QtyStepper({
           fontSize: 12,
           minWidth: 16,
           textAlign: "center",
-          color: qty === 0 ? "var(--rf-fg-disabled)" : "var(--rf-fg-primary)",
+          color: qty === 0 ? "var(--rf-fg-muted)" : "var(--rf-fg-primary)",
         }}
       >
         {qty}

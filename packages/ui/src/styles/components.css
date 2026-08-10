@@ -23,41 +23,95 @@
   flex: none;
 }
 
-.rf-btn-xs { height: 24px; padding: 0 var(--rf-space-2); font-size: var(--rf-text-caption); --rf-notch: var(--rf-notch-xs); }
-.rf-btn-sm { height: 32px; padding: 0 var(--rf-space-3); font-size: var(--rf-text-body-sm); --rf-notch: var(--rf-notch-sm); }
-.rf-btn-md { height: 40px; padding: 0 var(--rf-space-4); font-size: var(--rf-text-body-md); --rf-notch: var(--rf-notch-sm); }
-.rf-btn-lg { height: 48px; padding: 0 var(--rf-space-5); font-size: var(--rf-text-body-lg); --rf-notch: var(--rf-notch-md); }
+.rf-btn-xs {
+  height: 24px;
+  padding: 0 var(--rf-space-2);
+  font-size: var(--rf-text-caption);
+  --rf-notch: var(--rf-notch-xs);
+}
+.rf-btn-sm {
+  height: 32px;
+  padding: 0 var(--rf-space-3);
+  font-size: var(--rf-text-body-sm);
+  --rf-notch: var(--rf-notch-sm);
+}
+.rf-btn-md {
+  height: 40px;
+  padding: 0 var(--rf-space-4);
+  font-size: var(--rf-text-body-md);
+  --rf-notch: var(--rf-notch-sm);
+}
+.rf-btn-lg {
+  height: 48px;
+  padding: 0 var(--rf-space-5);
+  font-size: var(--rf-text-body-lg);
+  --rf-notch: var(--rf-notch-md);
+}
 
-.rf-btn-xs > svg { width: 16px; height: 16px; }
-.rf-btn-sm > svg { width: 16px; height: 16px; }
-.rf-btn-md > svg { width: 20px; height: 20px; }
-.rf-btn-lg > svg { width: 24px; height: 24px; }
+.rf-btn-xs > svg {
+  width: 16px;
+  height: 16px;
+}
+.rf-btn-sm > svg {
+  width: 16px;
+  height: 16px;
+}
+.rf-btn-md > svg {
+  width: 20px;
+  height: 20px;
+}
+.rf-btn-lg > svg {
+  width: 24px;
+  height: 24px;
+}
 
 /* Icon-only: square at the control height. */
-.rf-btn-icon-xs { width: 24px; padding: 0; }
-.rf-btn-icon-sm { width: 32px; padding: 0; }
-.rf-btn-icon-md { width: 40px; padding: 0; }
-.rf-btn-icon-lg { width: 48px; padding: 0; }
+.rf-btn-icon-xs {
+  width: 24px;
+  padding: 0;
+}
+.rf-btn-icon-sm {
+  width: 32px;
+  padding: 0;
+}
+.rf-btn-icon-md {
+  width: 40px;
+  padding: 0;
+}
+.rf-btn-icon-lg {
+  width: 48px;
+  padding: 0;
+}
 
 .rf-btn-primary {
   background: var(--rf-action-primary-bg);
   color: var(--rf-action-primary-fg);
 }
-.rf-btn-primary:hover:not(:disabled) { background: var(--rf-action-primary-bg-hover); }
-.rf-btn-primary:active:not(:disabled) { background: var(--rf-action-primary-bg-active); }
+.rf-btn-primary:hover:not(:disabled) {
+  background: var(--rf-action-primary-bg-hover);
+}
+.rf-btn-primary:active:not(:disabled) {
+  background: var(--rf-action-primary-bg-active);
+}
 
 .rf-btn-accent {
   background: var(--rf-action-accent-bg);
   color: var(--rf-action-accent-fg);
 }
-.rf-btn-accent:hover:not(:disabled) { background: var(--rf-action-accent-bg-hover); }
-.rf-btn-accent:active:not(:disabled) { background: var(--rf-action-accent-bg-active); }
+.rf-btn-accent:hover:not(:disabled) {
+  background: var(--rf-action-accent-bg-hover);
+}
+.rf-btn-accent:active:not(:disabled) {
+  background: var(--rf-action-accent-bg-active);
+}
 
 .rf-btn-danger {
   background: var(--rf-action-danger-bg);
   color: var(--rf-action-danger-fg);
 }
-.rf-btn-danger:hover:not(:disabled) { background: var(--rf-action-danger-bg-hover); }
+.rf-btn-danger:hover:not(:disabled) {
+  background: var(--rf-action-danger-bg-hover);
+}
 
 .rf-btn-ghost {
   background: transparent;
@@ -74,7 +128,9 @@
   color: var(--rf-fg-primary);
   width: 100%;
 }
-.rf-btn-outline:hover:not(:disabled) { background: var(--rf-action-ghost-bg-hover); }
+.rf-btn-outline:hover:not(:disabled) {
+  background: var(--rf-action-ghost-bg-hover);
+}
 
 /* Never dim the whole button with opacity — it drops the border below
    contrast threshold along with the label. */
@@ -120,9 +176,18 @@
   flex: none;
 }
 
-.rf-spinner-sm { width: 14px; height: 14px; }
-.rf-spinner-md { width: 16px; height: 16px; }
-.rf-spinner-lg { width: 20px; height: 20px; }
+.rf-spinner-sm {
+  width: 14px;
+  height: 14px;
+}
+.rf-spinner-md {
+  width: 16px;
+  height: 16px;
+}
+.rf-spinner-lg {
+  width: 20px;
+  height: 20px;
+}
 
 /* ----------------------------------------------------------------- Input - */
 .rf-field {
@@ -148,9 +213,15 @@
   padding: 0 var(--rf-space-3);
 }
 
-.rf-field-sm .rf-field-row { height: 30px; }
-.rf-field-md .rf-field-row { height: 38px; }
-.rf-field-lg .rf-field-row { height: 46px; }
+.rf-field-sm .rf-field-row {
+  height: 30px;
+}
+.rf-field-md .rf-field-row {
+  height: 38px;
+}
+.rf-field-lg .rf-field-row {
+  height: 46px;
+}
 
 .rf-field-row > svg {
   width: 20px;
@@ -218,20 +289,53 @@
   color: var(--rf-ink-950);
 }
 
-.rf-tier-lith { background: var(--rf-tier-lith); }
-.rf-tier-meso { background: var(--rf-tier-meso); }
-.rf-tier-neo { background: var(--rf-tier-neo); }
-.rf-tier-axi { background: var(--rf-tier-axi); }
-.rf-tier-requiem { background: var(--rf-tier-requiem); }
-.rf-tier-vanguard { background: var(--rf-tier-vanguard); }
+.rf-tier-lith {
+  background: var(--rf-tier-lith);
+}
+.rf-tier-meso {
+  background: var(--rf-tier-meso);
+}
+.rf-tier-neo {
+  background: var(--rf-tier-neo);
+}
+.rf-tier-axi {
+  background: var(--rf-tier-axi);
+}
+.rf-tier-requiem {
+  background: var(--rf-tier-requiem);
+}
+.rf-tier-vanguard {
+  background: var(--rf-tier-vanguard);
+}
 
 /* Refinement modulates the tier chip; it has no colour of its own.
    The label always travels with it — opacity alone is not an accessible
-   channel. */
-.rf-ref-intact { opacity: 0.55; }
-.rf-ref-exceptional { opacity: 0.7; box-shadow: 0 0 0 1px var(--rf-gold-800); }
-.rf-ref-flawless { opacity: 0.85; box-shadow: 0 0 0 1px var(--rf-gold-700); }
-.rf-ref-radiant { opacity: 1; box-shadow: 0 0 0 1px var(--rf-gold-500); }
+   channel.
+
+   The ladder starts at 0.8, not at 0.55. Opacity composites the fill toward the
+   surface behind it, and the chip's label is near-black on that fill: at 0.55
+   every tier measured between 3.4:1 and 3.8:1 against the 4.5:1 an 11px label
+   needs — and 0.55 was Intact, the default state. 0.8 is the lowest step where
+   all six clear it on the darkest surface the chip sits on (worst case 5.37 on
+   surface-0; 0.7 still failed there at 4.34).
+
+   The range is narrow on purpose. The ladder that carries the distinction is
+   the gold ring below, and the label travels with the chip either way. */
+.rf-ref-intact {
+  opacity: 0.8;
+}
+.rf-ref-exceptional {
+  opacity: 0.87;
+  box-shadow: 0 0 0 1px var(--rf-gold-800);
+}
+.rf-ref-flawless {
+  opacity: 0.93;
+  box-shadow: 0 0 0 1px var(--rf-gold-700);
+}
+.rf-ref-radiant {
+  opacity: 1;
+  box-shadow: 0 0 0 1px var(--rf-gold-500);
+}
 
 .rf-chip-filter {
   height: 24px;
@@ -260,7 +364,9 @@
   line-height: 1;
 }
 
-.rf-chip-dismiss:hover { opacity: 1; }
+.rf-chip-dismiss:hover {
+  opacity: 1;
+}
 
 /* ---------------------------------------------------------------- Rarity - */
 .rf-rarity {
@@ -278,9 +384,15 @@
   background: currentColor;
 }
 
-.rf-rarity-common { color: var(--rf-rarity-common); }
-.rf-rarity-uncommon { color: var(--rf-rarity-uncommon); }
-.rf-rarity-rare { color: var(--rf-rarity-rare); }
+.rf-rarity-common {
+  color: var(--rf-rarity-common);
+}
+.rf-rarity-uncommon {
+  color: var(--rf-rarity-uncommon);
+}
+.rf-rarity-rare {
+  color: var(--rf-rarity-rare);
+}
 
 /* ----------------------------------------------------------------- Price - */
 .rf-price {
@@ -290,12 +402,23 @@
   white-space: nowrap;
 }
 
-.rf-price-platinum { color: var(--rf-currency-platinum); }
-.rf-price-ducat { color: var(--rf-currency-ducat); }
-.rf-price-credit { color: var(--rf-currency-credit); }
+.rf-price-platinum {
+  color: var(--rf-currency-platinum);
+}
+.rf-price-ducat {
+  color: var(--rf-currency-ducat);
+}
+.rf-price-credit {
+  color: var(--rf-currency-credit);
+}
 
-.rf-price-md { font-size: var(--rf-text-data-md); }
-.rf-price-lg { font-size: var(--rf-text-data-lg); font-weight: 600; }
+.rf-price-md {
+  font-size: var(--rf-text-data-md);
+}
+.rf-price-lg {
+  font-size: var(--rf-text-data-lg);
+  font-weight: 600;
+}
 
 .rf-price-suffix {
   font-size: var(--rf-text-caption);
@@ -316,9 +439,15 @@
   white-space: nowrap;
 }
 
-.rf-delta-up { color: var(--rf-success); }
-.rf-delta-down { color: var(--rf-danger); }
-.rf-delta-flat { color: var(--rf-fg-muted); }
+.rf-delta-up {
+  color: var(--rf-success);
+}
+.rf-delta-down {
+  color: var(--rf-danger);
+}
+.rf-delta-flat {
+  color: var(--rf-fg-muted);
+}
 
 /* ----------------------------------------------------------------- Table - */
 .rf-table-wrap {
@@ -416,8 +545,12 @@
   overflow: visible;
 }
 
-.rf-table-compact tbody td { height: 32px; }
-.rf-table-comfortable tbody td { height: 48px; }
+.rf-table-compact tbody td {
+  height: 32px;
+}
+.rf-table-comfortable tbody td {
+  height: 48px;
+}
 
 .rf-table tbody tr {
   transition: background var(--rf-dur-fast) var(--rf-ease-standard);
@@ -466,15 +599,25 @@
   transition: background var(--rf-dur-fast) var(--rf-ease-standard);
 }
 
-.rf-droprow-compact { height: 36px; }
+.rf-droprow-compact {
+  height: 36px;
+}
 
-.rf-droprow:last-child { border-bottom: 0; }
+.rf-droprow:last-child {
+  border-bottom: 0;
+}
 
-.rf-droprow-interactive { cursor: pointer; }
+.rf-droprow-interactive {
+  cursor: pointer;
+}
 
-.rf-droprow-interactive:hover { background: var(--rf-state-row-hover); }
+.rf-droprow-interactive:hover {
+  background: var(--rf-state-row-hover);
+}
 
-.rf-droprow-interactive:hover .rf-droprow-name { color: var(--rf-fg-accent); }
+.rf-droprow-interactive:hover .rf-droprow-name {
+  color: var(--rf-fg-accent);
+}
 
 .rf-droprow-img {
   width: 32px;
@@ -645,13 +788,7 @@
   font-weight: 500;
   color: var(--rf-fg-muted);
   --rf-notch: var(--rf-notch-sm);
-  clip-path: polygon(
-    var(--rf-notch) 0,
-    100% 0,
-    100% 100%,
-    0 100%,
-    0 var(--rf-notch)
-  );
+  clip-path: polygon(var(--rf-notch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--rf-notch));
   transition:
     color var(--rf-dur-fast) var(--rf-ease-standard),
     background var(--rf-dur-fast) var(--rf-ease-standard);
@@ -693,10 +830,26 @@
   animation: rf-rise var(--rf-dur-base) var(--rf-ease-enter) both;
 }
 
-.rf-tooltip-top { bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); }
-.rf-tooltip-bottom { top: calc(100% + 6px); left: 50%; transform: translateX(-50%); }
-.rf-tooltip-left { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
-.rf-tooltip-right { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+.rf-tooltip-top {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.rf-tooltip-bottom {
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.rf-tooltip-left {
+  right: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.rf-tooltip-right {
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 /* ---------------------------------------------------------------- Dialog - */
 .rf-dialog-scrim {
@@ -770,16 +923,34 @@
   flex: none;
 }
 
-.rf-toast-success .rf-toast-bar { background: var(--rf-success); }
-.rf-toast-warning .rf-toast-bar { background: var(--rf-warning); }
-.rf-toast-danger .rf-toast-bar { background: var(--rf-danger); }
-.rf-toast-info .rf-toast-bar { background: var(--rf-info); }
+.rf-toast-success .rf-toast-bar {
+  background: var(--rf-success);
+}
+.rf-toast-warning .rf-toast-bar {
+  background: var(--rf-warning);
+}
+.rf-toast-danger .rf-toast-bar {
+  background: var(--rf-danger);
+}
+.rf-toast-info .rf-toast-bar {
+  background: var(--rf-info);
+}
 
-.rf-toast-content { flex: 1; min-width: 0; }
+.rf-toast-content {
+  flex: 1;
+  min-width: 0;
+}
 
-.rf-toast-title { font-size: var(--rf-text-body-sm); font-weight: 600; }
+.rf-toast-title {
+  font-size: var(--rf-text-body-sm);
+  font-weight: 600;
+}
 
-.rf-toast-desc { font-size: var(--rf-text-caption); line-height: 1.4; color: var(--rf-fg-muted); }
+.rf-toast-desc {
+  font-size: var(--rf-text-caption);
+  line-height: 1.4;
+  color: var(--rf-fg-muted);
+}
 
 .rf-toast-close {
   background: transparent;
@@ -791,7 +962,9 @@
   flex: none;
 }
 
-.rf-toast-close:hover { color: var(--rf-fg-primary); }
+.rf-toast-close:hover {
+  color: var(--rf-fg-primary);
+}
 
 /* -------------------------------------------------------------- Skeleton - */
 /* surface-2 → surface-3 is 1.06:1 — a loading state nobody can see, and
@@ -837,7 +1010,9 @@
   color: var(--rf-gold-800);
 }
 
-.rf-empty-icon-error { color: var(--rf-danger); }
+.rf-empty-icon-error {
+  color: var(--rf-danger);
+}
 
 .rf-empty-desc {
   color: var(--rf-fg-muted);
@@ -872,4 +1047,21 @@
 .rf-checkbox-label {
   cursor: pointer;
   color: var(--rf-fg-secondary);
+}
+
+/* The sort control fills its cell so the whole header remains the hit area,
+   and inherits the header's type rather than the browser's button defaults. */
+.rf-th-button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  cursor: pointer;
 }

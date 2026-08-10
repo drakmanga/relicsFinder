@@ -187,8 +187,8 @@ export function RelicDetailPanel({
    * it has no rate — and a relic where every trade is a loss gets no star
    * rather than the least bad one.
    */
-  const bestByTrace = ALL_REFINEMENTS.reduce<{ state: Refinement; rate: number } | null>(
-    (best, state) => {
+  const bestByTrace =
+    ALL_REFINEMENTS.reduce<{ state: Refinement; rate: number } | null>((best, state) => {
       const traces = TRACE_COST[state];
       if (traces === 0) return best;
 
@@ -196,9 +196,7 @@ export function RelicDetailPanel({
       if (rate <= 0) return best;
 
       return best === null || rate > best.rate ? { state, rate } : best;
-    },
-    null,
-  )?.state ?? null;
+    }, null)?.state ?? null;
 
   // The rare is what a squad is actually chasing, so it is the drop whose odds
   // are worth restating per squad size.
@@ -240,16 +238,14 @@ export function RelicDetailPanel({
       <SectionLabel
         hint={
           <>
-            <p style={{ margin: 0 }}>
-              Refining a relic with void traces shifts the odds towards the rare and away
-              from the commons. Four states, from Intact at no cost to Radiant at 100
-              traces.
+            <p className="rf-flush">
+              Refining a relic with void traces shifts the odds towards the rare and away from the
+              commons. Four states, from Intact at no cost to Radiant at 100 traces.
             </p>
-            <p style={{ margin: "8px 0 0" }}>
-              The star marks the state that buys the most platinum per trace on{" "}
-              <em>this</em> relic — which is often not Radiant, and on a relic whose rare
-              is cheap is nothing at all, because the trade loses money. The full working
-              is under Refining below.
+            <p className="rf-panel-note">
+              The star marks the state that buys the most platinum per trace on <em>this</em> relic
+              — which is often not Radiant, and on a relic whose rare is cheap is nothing at all,
+              because the trade loses money. The full working is under Refining below.
             </p>
           </>
         }
@@ -263,12 +259,10 @@ export function RelicDetailPanel({
         max={ALL_REFINEMENTS.length - 1}
         step={1}
         value={ALL_REFINEMENTS.indexOf(active)}
-        onChange={(event) =>
-          setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
-        }
+        onChange={(event) => setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")}
         aria-label="Refinement of this relic"
         aria-valuetext={REFINEMENT_LABEL[active]}
-        style={{ width: "100%", accentColor: "var(--rf-gold-500)" }}
+        className="rf-range"
       />
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
@@ -297,14 +291,13 @@ export function RelicDetailPanel({
       <SectionLabel
         hint={
           <>
-            <p style={{ margin: 0 }}>
+            <p className="rf-flush">
               Platinum is what the part sells for. The gold number next to it is its{" "}
-              <strong>ducat value</strong> — what Baro's kiosk pays if you dissolve it
-              instead.
+              <strong>ducat value</strong> — what Baro's kiosk pays if you dissolve it instead.
             </p>
-            <p style={{ margin: "8px 0 0" }}>
-              Per part, not per relic: a run gives you one drop, so only that one can
-              ever be dissolved.
+            <p className="rf-panel-note">
+              Per part, not per relic: a run gives you one drop, so only that one can ever be
+              dissolved.
             </p>
           </>
         }
@@ -357,9 +350,7 @@ export function RelicDetailPanel({
                       alignItems: "center",
                       justifyContent: "flex-end",
                       gap: 3,
-                      color: ducats
-                        ? "var(--rf-currency-ducat)"
-                        : "var(--rf-fg-disabled)",
+                      color: ducats ? "var(--rf-currency-ducat)" : "var(--rf-fg-muted)",
                     }}
                     title={
                       ducats
@@ -382,15 +373,14 @@ export function RelicDetailPanel({
       <SectionLabel
         hint={
           <>
-            <p style={{ margin: 0 }}>
-              In a squad everyone opens their own copy, all the rewards are revealed,
-              and the squad keeps <strong>one — the best of them</strong>. So the payout
-              is a best of four rolls, not an average: more players is a better roll,
-              not more loot.
+            <p className="rf-flush">
+              In a squad everyone opens their own copy, all the rewards are revealed, and the squad
+              keeps <strong>one — the best of them</strong>. So the payout is a best of four rolls,
+              not an average: more players is a better roll, not more loot.
             </p>
-            <p style={{ margin: "8px 0 0" }}>
-              Left: the chance that <em>at least one</em> player hits the rare. Right:
-              what a run is worth on average at that squad size, at today's prices.
+            <p className="rf-panel-note">
+              Left: the chance that <em>at least one</em> player hits the rare. Right: what a run is
+              worth on average at that squad size, at today's prices.
             </p>
           </>
         }
@@ -406,11 +396,8 @@ export function RelicDetailPanel({
       */}
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
         {[1, 2, 3, 4].map((players) => (
-          <div
-            key={players}
-            style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 13 }}
-          >
-            <span style={{ flex: 1, minWidth: 0 }} className="rf-fg-secondary">
+          <div key={players} className="rf-stat-row">
+            <span className="rf-fill rf-fg-secondary">
               {players === 1 ? "Solo" : `Squad of ${players}`}
             </span>
             <span className="rf-text-caption rf-fg-muted" style={{ width: 96, textAlign: "right" }}>
@@ -426,14 +413,13 @@ export function RelicDetailPanel({
       <SectionLabel
         hint={
           <>
-            <p style={{ margin: 0 }}>
+            <p className="rf-flush">
               What each refinement state is worth, and what it costs in void traces.
             </p>
-            <p style={{ margin: "8px 0 0" }}>
-              The last column is <strong>platinum gained per trace spent</strong>,
-              measured against Intact. It can be negative: refining moves chance off the
-              commons and onto the rare, so on a relic whose rare is cheap the trade
-              loses money.
+            <p className="rf-panel-note">
+              The last column is <strong>platinum gained per trace spent</strong>, measured against
+              Intact. It can be negative: refining moves chance off the commons and onto the rare,
+              so on a relic whose rare is cheap the trade loses money.
             </p>
           </>
         }
@@ -463,7 +449,7 @@ export function RelicDetailPanel({
                 color: state === active ? "var(--rf-fg-primary)" : "var(--rf-fg-muted)",
               }}
             >
-              <span style={{ flex: 1, minWidth: 0 }}>
+              <span className="rf-fill">
                 {REFINEMENT_LABEL[state]}
                 {state === bestByTrace && (
                   <OrokinStar
@@ -473,10 +459,16 @@ export function RelicDetailPanel({
                   />
                 )}
               </span>
-              <span className="rf-text-caption rf-fg-muted" style={{ width: 62, textAlign: "right" }}>
+              <span
+                className="rf-text-caption rf-fg-muted"
+                style={{ width: 62, textAlign: "right" }}
+              >
                 {traces === 0 ? "free" : `${traces} traces`}
               </span>
-              <span className="rf-text-data-sm rf-tabular" style={{ width: 50, textAlign: "right" }}>
+              <span
+                className="rf-text-data-sm rf-tabular"
+                style={{ width: 50, textAlign: "right" }}
+              >
                 {value.toFixed(1)} p
               </span>
               <span
@@ -486,7 +478,7 @@ export function RelicDetailPanel({
                   textAlign: "right",
                   color:
                     traces === 0
-                      ? "var(--rf-fg-disabled)"
+                      ? "var(--rf-fg-muted)"
                       : gain > 0
                         ? "var(--rf-success)"
                         : "var(--rf-danger)",
@@ -501,30 +493,26 @@ export function RelicDetailPanel({
 
       <Divider />
 
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        Where it drops
-      </p>
+      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Where it drops</p>
 
       {sitesPending ? (
         <Skeleton height={40} />
       ) : sites.length === 0 ? (
-        <p className="rf-text-body-sm rf-fg-muted">
-          No mission drops it — the relic is vaulted.
-        </p>
+        <p className="rf-text-body-sm rf-fg-muted">No mission drops it — the relic is vaulted.</p>
       ) : (
         <>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {sites.slice(0, SITES_SHOWN).map((site, index) => (
-              <div
-                key={`${site.location}-${site.rotation}-${index}`}
-                style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 13 }}
-              >
-                <span style={{ flex: 1, minWidth: 0 }}>{site.location}</span>
+              <div key={`${site.location}-${site.rotation}-${index}`} className="rf-stat-row">
+                <span className="rf-fill">{site.location}</span>
                 <span className="rf-text-caption rf-fg-muted">{site.mission}</span>
                 {site.rotation && (
                   <span className="rf-text-caption rf-fg-muted">rot {site.rotation}</span>
                 )}
-                <span className="rf-text-data-sm rf-fg-muted" style={{ width: 48, textAlign: "right" }}>
+                <span
+                  className="rf-text-data-sm rf-fg-muted"
+                  style={{ width: 48, textAlign: "right" }}
+                >
                   {site.chance.toFixed(2)}%
                 </span>
               </div>
@@ -570,7 +558,7 @@ export function RelicDetailPanel({
         <Button
           variant="primary"
           icon={<ExternalLinkIcon />}
-          style={{ width: "100%" }}
+          className="rf-full"
           onClick={() =>
             window.open(relicMarketUrl(row.relicFullName), "_blank", "noopener,noreferrer")
           }
@@ -609,7 +597,7 @@ export function RelicDetailPanel({
               key={`${site.location}-${site.rotation}-${index}`}
               style={{ display: "flex", alignItems: "baseline", gap: 10, fontSize: 13 }}
             >
-              <span style={{ flex: 1, minWidth: 0 }}>{site.location}</span>
+              <span className="rf-fill">{site.location}</span>
               <span className="rf-text-caption rf-fg-muted">{site.mission}</span>
               {site.rotation && (
                 <span className="rf-text-caption rf-fg-muted">rot {site.rotation}</span>

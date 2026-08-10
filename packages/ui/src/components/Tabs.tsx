@@ -32,7 +32,14 @@ export function Tabs({ items, value, onChange, label, className, ...rest }: Tabs
           role="tab"
           id={`rf-tab-${item.id}`}
           aria-selected={item.id === value}
-          aria-controls={`rf-tabpanel-${item.id}`}
+          /*
+            Only the selected tab points at a panel, because only the selected
+            panel is rendered: these tabs swap the content rather than mounting
+            all of it and hiding five sixths. `aria-controls` naming an element
+            that is not in the document is a broken reference, and axe reports
+            it as critical.
+          */
+          aria-controls={item.id === value ? `rf-tabpanel-${item.id}` : undefined}
           disabled={item.disabled}
           className="rf-tab rf-focus-ring"
           onClick={() => onChange(item.id)}

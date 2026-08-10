@@ -1,9 +1,4 @@
-import type {
-  HTMLAttributes,
-  ReactNode,
-  TdHTMLAttributes,
-  ThHTMLAttributes,
-} from "react";
+import type { HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { cx } from "../lib/cx";
 import type { Density } from "../lib/types";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "./icons";
@@ -16,6 +11,12 @@ export interface TableProps extends HTMLAttributes<HTMLTableElement> {
   interactive?: boolean;
   /** Wraps the table in a notched frame. Turn off inside an existing panel. */
   framed?: boolean;
+  /**
+   * Names the table for assistive technology. Rendered as a `<caption>` and
+   * hidden from the screen: a data table with no name is announced as "table"
+   * and nothing else, which on a page with six of them is no name at all.
+   */
+  caption?: string;
   children?: ReactNode;
 }
 
@@ -44,6 +45,7 @@ export function Table({
   density = "default",
   interactive = false,
   framed = true,
+  caption,
   className,
   children,
   ...rest
@@ -59,6 +61,7 @@ export function Table({
         )}
         {...rest}
       >
+        {caption && <caption className="rf-sr-only">{caption}</caption>}
         {children}
       </table>
     </div>
@@ -121,14 +124,16 @@ export interface TableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
 }
 
 /** Table cell. */
-export function TableCell({ align = "left", numeric, className, children, ...rest }: TableCellProps) {
+export function TableCell({
+  align = "left",
+  numeric,
+  className,
+  children,
+  ...rest
+}: TableCellProps) {
   return (
     <td
-      className={cx(
-        align !== "left" && `rf-align-${align}`,
-        numeric && "rf-tabular",
-        className,
-      )}
+      className={cx(align !== "left" && `rf-align-${align}`, numeric && "rf-tabular", className)}
       {...rest}
     >
       {children}
@@ -138,8 +143,10 @@ export function TableCell({ align = "left", numeric, className, children, ...res
 
 export type SortDirection = "asc" | "desc" | null;
 
-export interface TableHeaderCellProps
-  extends Omit<ThHTMLAttributes<HTMLTableCellElement>, "onClick"> {
+export interface TableHeaderCellProps extends Omit<
+  ThHTMLAttributes<HTMLTableCellElement>,
+  "onClick"
+> {
   align?: Align;
   /** Renders the sort affordance and keeps `aria-sort` correct. */
   sortable?: boolean;
@@ -167,36 +174,36 @@ export function TableHeaderCell({
         : "none";
 
   const Arrow =
-    sortDirection === "asc" ? ArrowUpIcon : sortDirection === "desc" ? ArrowDownIcon : ArrowUpDownIcon;
+    sortDirection === "asc"
+      ? ArrowUpIcon
+      : sortDirection === "desc"
+        ? ArrowDownIcon
+        : ArrowUpDownIcon;
 
+  /*
+    The sort control is a `<button>` inside the `<th>`, not a click handler on
+    the cell. A cell with `tabindex` and a hand-written Enter/Space handler is a
+    button that has to reimplement everything a button already does, and it is
+    announced as a cell rather than as something you can press.
+  */
   return (
     <th
       scope="col"
       aria-sort={ariaSort}
       className={cx(
         align !== "left" && `rf-align-${align}`,
-        sortable && "rf-th-sortable rf-focus-ring",
+        sortable && "rf-th-sortable",
         className,
       )}
-      onClick={sortable ? onSort : undefined}
-      tabIndex={sortable ? 0 : undefined}
-      onKeyDown={
-        sortable
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onSort?.();
-              }
-            }
-          : undefined
-      }
       {...rest}
     >
       {sortable ? (
-        <span className="rf-th-inner">
-          {children}
-          <Arrow className="rf-sort-arrow" />
-        </span>
+        <button type="button" className="rf-th-button rf-focus-ring" onClick={onSort}>
+          <span className="rf-th-inner">
+            {children}
+            <Arrow className="rf-sort-arrow" />
+          </span>
+        </button>
       ) : (
         children
       )}

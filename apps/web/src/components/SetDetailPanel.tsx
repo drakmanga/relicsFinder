@@ -140,22 +140,21 @@ export function SetDetailPanel({
             marginBottom: 12,
           }}
         >
-          <p style={{ margin: 0 }}>
-            <strong>Buy</strong> is what the finished piece sells for.{" "}
-            <strong>Farm</strong> is the relic with the best odds at the chosen refinement,
-            the runs that takes on average, and what those runs cost <em>net</em> — the
-            price of the relics minus everything else they drop along the way, which you
-            keep.
+          <p className="rf-flush">
+            <strong>Buy</strong> is what the finished piece sells for. <strong>Farm</strong> is the
+            relic with the best odds at the chosen refinement, the runs that takes on average, and
+            what those runs cost <em>net</em> — the price of the relics minus everything else they
+            drop along the way, which you keep.
           </p>
-          <p style={{ margin: "8px 0 0" }}>
-            That subtraction is the whole point: a relic worth more than it sells for pays
-            for its own farming, and "pays for itself" means the runs turn a profit before
-            the piece even arrives.
+          <p className="rf-panel-note">
+            That subtraction is the whole point: a relic worth more than it sells for pays for its
+            own farming, and "pays for itself" means the runs turn a profit before the piece even
+            arrives.
           </p>
-          <p style={{ margin: "8px 0 0" }}>
-            Runs are a mean, not a promise: at 25% it is four on average, and a long tail
-            says it can be twelve. The verdict weighs platinum against platinum — what an
-            evening is worth is the part only you can price.
+          <p className="rf-panel-note">
+            Runs are a mean, not a promise: at 25% it is four on average, and a long tail says it
+            can be twelve. The verdict weighs platinum against platinum — what an evening is worth
+            is the part only you can price.
           </p>
         </div>
       )}
@@ -164,15 +163,18 @@ export function SetDetailPanel({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onToggleAll(set.parts.map((part) => part.itemName), !complete)}
+          onClick={() =>
+            onToggleAll(
+              set.parts.map((part) => part.itemName),
+              !complete,
+            )
+          }
         >
           {complete ? "Clear the set" : "I have all of these"}
         </Button>
       </div>
 
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        Refinement
-      </p>
+      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Refinement</p>
 
       <input
         type="range"
@@ -180,12 +182,10 @@ export function SetDetailPanel({
         max={ALL_REFINEMENTS.length - 1}
         step={1}
         value={ALL_REFINEMENTS.indexOf(refinement)}
-        onChange={(event) =>
-          onRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
-        }
+        onChange={(event) => onRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")}
         aria-label="Refinement the farming route assumes"
         aria-valuetext={REFINEMENT_LABEL[refinement]}
-        style={{ width: "100%", accentColor: "var(--rf-gold-500)" }}
+        className="rf-range"
       />
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
@@ -206,9 +206,7 @@ export function SetDetailPanel({
 
       <Divider />
 
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        Pieces
-      </p>
+      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Pieces</p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {set.parts.map((part) => (
@@ -350,7 +348,7 @@ function Piece({
                   ? "var(--rf-success)"
                   : verdict === "farm"
                     ? "var(--rf-gold-300)"
-                    : "var(--rf-fg-disabled)",
+                    : "var(--rf-fg-muted)",
             }}
           >
             {verdict === "unknown" ? "—" : verdict}

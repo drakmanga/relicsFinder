@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Chip, EmptyState, InfoIcon, Tabs } from "relic-finder-ui";
+import { Chip, EmptyState, InfoIcon, TabPanel, Tabs } from "relic-finder-ui";
 
 import { PlatPrice } from "./Plat";
 import { DucatRows, EndoRows, PartRows } from "./WishlistRows";
@@ -203,7 +203,9 @@ export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
         </p>
       )}
 
-      <div className="rf-virtual-scroll rf-virtual-scroll-flex">
+      {/* The panel the section tabs point at: without it their `aria-controls`
+          names an element that is not in the document. */}
+      <TabPanel id={kind} value={kind} className="rf-virtual-scroll rf-virtual-scroll-flex">
         {shown.length === 0 ? (
           <EmptyState
             title={`Nothing under ${note.label}`}
@@ -216,7 +218,7 @@ export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
         ) : (
           <EndoRows entries={endo} offers={endoOffers} />
         )}
-      </div>
+      </TabPanel>
     </div>
   );
 }

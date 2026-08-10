@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Chip, Input, SearchIcon, Tabs } from "relic-finder-ui";
+import { Button, Chip, Input, SearchIcon, TabPanel, Tabs } from "relic-finder-ui";
 
 import { DetailPane } from "./components/DetailPane";
 import { FilterBar } from "./components/FilterBar";
@@ -30,7 +30,6 @@ import {
   type SortDirection,
 } from "./lib/rows";
 
-
 type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
 
 /**
@@ -43,8 +42,7 @@ type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
  */
 type CatalogueView = "relics" | "items";
 
-const isCatalogue = (view: View): view is CatalogueView =>
-  view === "relics" || view === "items";
+const isCatalogue = (view: View): view is CatalogueView => view === "relics" || view === "items";
 
 export function App() {
   // Read once, so a shared link opens on the state it describes rather than on
@@ -272,10 +270,7 @@ export function App() {
   }, [relics.data]);
   const prices = useItemPrices(pricedNames);
 
-  const rows = useMemo(
-    () => buildRelicRows(relics.data ?? [], filters),
-    [relics.data, filters],
-  );
+  const rows = useMemo(() => buildRelicRows(relics.data ?? [], filters), [relics.data, filters]);
 
   /**
    * The relic the panel is showing.
@@ -359,7 +354,8 @@ export function App() {
     if (view === "items" && filters.rarities.size > 0) {
       active.push(`rarity ${[...filters.rarities].join(", ")}`);
     }
-    if (filters.vault !== "all") active.push(filters.vault === "farmable" ? "droppable" : "vaulted");
+    if (filters.vault !== "all")
+      active.push(filters.vault === "farmable" ? "droppable" : "vaulted");
     if (filters.maxPrice !== null) active.push(`a ceiling of ${filters.maxPrice}p`);
     if (filters.refinement !== "intact") active.push(filters.refinement);
 
@@ -452,7 +448,6 @@ export function App() {
     [sets, selectedSet],
   );
 
-
   const visible = useMemo(() => {
     const farmable = applyVaultFilter(rows, filters.vault, unvaulted.data);
     const ceiled = applyRelicPriceCeiling(farmable, filters.maxPrice, prices.data);
@@ -470,7 +465,9 @@ export function App() {
     const term = filters.term.trim().toLowerCase();
     if (!term || !selectedRow) return null;
 
-    return selectedRow.rewards.find((r) => r.itemName.toLowerCase().includes(term))?.itemName ?? null;
+    return (
+      selectedRow.rewards.find((r) => r.itemName.toLowerCase().includes(term))?.itemName ?? null
+    );
   }, [filters.term, selectedRow]);
 
   const toggleSort = (column: RelicSortColumn) =>
@@ -543,8 +540,12 @@ export function App() {
                 aria-label="Search relic or item"
               />
             </div>
+            {/* The count changes as the user types and again when prices land,
+                and it is the only feedback that a filter did anything. Polite,
+                so it waits for a pause rather than interrupting the typing it
+                is reporting on. */}
             {relics.data && (
-              <Chip>
+              <Chip aria-live="polite">
                 {view === "items"
                   ? itemRows.length
                   : view === "sets"
@@ -594,7 +595,9 @@ export function App() {
           440px panel from a 1024px viewport and the table is left under the
           640px it needs. See .rf-results in app.css. */}
       <div className="rf-band rf-resultsband">
-        <div className="rf-shell rf-results">
+        {/* The panel the tabs point at. Only the selected one is rendered — the
+            views are different questions, not five hidden copies of one. */}
+        <TabPanel id={view} value={view} className="rf-shell rf-results">
           <main className="rf-results-main">
             <ResultsPane
               view={view}
@@ -645,14 +648,10 @@ export function App() {
             onBack={trail.length > 0 ? goBack : undefined}
             onClose={closePanel}
           />
-        </div>
+        </TabPanel>
       </div>
 
-      <ItemInfoDialog
-        itemName={infoItem}
-        prices={prices.data}
-        onClose={() => setInfoItem(null)}
-      />
+      <ItemInfoDialog itemName={infoItem} prices={prices.data} onClose={() => setInfoItem(null)} />
     </div>
   );
 }
