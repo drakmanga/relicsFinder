@@ -1,0 +1,10 @@
+dist
+target
+node_modules
+.vite
+ds-bundle
+.ds-sync
+.design-sync
+design-imports
+package-lock.json
+src/main/resources/relics.json
