@@ -1,4 +1,10 @@
 /**
+ * Over 150 lines (rule 4) and deliberately so: three row renderers that were
+ * split out of WishlistTable together. Each is under a hundred lines; putting
+ * them in three files would spread one idea — how a wishlist line is drawn —
+ * across three, and they share the actions block below them.
+ */
+/**
  * The three lists a wishlist is made of, and the bits they share.
  *
  * Split out of WishlistTable because a part you are collecting, a part you
@@ -15,6 +21,7 @@ import {
   PriceDelta,
   Table,
   TableCell,
+  TableCols,
   TableHeaderCell,
   TableRow,
   TierChip,
@@ -82,36 +89,35 @@ function LineActions({
 
 export function PartRows({ entries, prices, onInfo }: RowsProps) {
   return (
-    <Table interactive={false} framed={false} caption="Wishlist: parts you are collecting">
+    <Table
+      stickyFirstColumn
+      interactive={false}
+      framed={false}
+      caption="Wishlist: parts you are collecting"
+      className="rf-cols-wl-parts"
+    >
+      <TableCols count={9} />
       <thead>
         <tr>
           {/* Proportional, so the columns share the slack instead of pooling it
               in whichever one happens to be widest. */}
-          <TableHeaderCell style={{ width: "26%" }}>Item</TableHeaderCell>
-          <TableHeaderCell style={{ width: "15%" }}>Set</TableHeaderCell>
-          <TableHeaderCell style={{ width: "15%" }}>From</TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "9%" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <TableHeaderCell>Item</TableHeaderCell>
+          <TableHeaderCell>Set</TableHeaderCell>
+          <TableHeaderCell>From</TableHeaderCell>
+          <TableHeaderCell align="right">
+            <span className="rf-inline">
               Unit <PlatGlyph size={12} />
             </span>
           </TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "9%" }}>
-            vs 90d
-          </TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "10%" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <TableHeaderCell align="right">vs 90d</TableHeaderCell>
+          <TableHeaderCell align="right">
+            <span className="rf-inline">
               Line total <PlatGlyph size={12} />
             </span>
           </TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "9%" }}>
-            Qty
-          </TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "3%" }}>
-            Info
-          </TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "4%" }}>
-            Market
-          </TableHeaderCell>
+          <TableHeaderCell align="center">Qty</TableHeaderCell>
+          <TableHeaderCell align="center">Info</TableHeaderCell>
+          <TableHeaderCell align="center">Market</TableHeaderCell>
         </tr>
       </thead>
 
@@ -125,7 +131,7 @@ export function PartRows({ entries, prices, onInfo }: RowsProps) {
               <TableCell>{entry.itemName}</TableCell>
               <TableCell>{meta?.setName ?? "—"}</TableCell>
               <TableCell>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span className="rf-inline">
                   <TierChip tier={entry.tier} />
                   {entry.relicFullName}
                 </span>
@@ -151,39 +157,38 @@ export function PartRows({ entries, prices, onInfo }: RowsProps) {
 /** Judged on ducats per platinum — the same columns the Ducanetor ranks on. */
 export function DucatRows({ entries, prices, onInfo }: RowsProps) {
   return (
-    <Table interactive={false} framed={false} caption="Wishlist: parts you are keeping for ducats">
+    <Table
+      stickyFirstColumn
+      interactive={false}
+      framed={false}
+      caption="Wishlist: parts you are keeping for ducats"
+      className="rf-cols-wl-ducats"
+    >
+      <TableCols count={9} />
       <thead>
         <tr>
-          <TableHeaderCell style={{ width: "30%" }}>Item</TableHeaderCell>
-          <TableHeaderCell style={{ width: "18%" }}>Set</TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "9%" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <TableHeaderCell>Item</TableHeaderCell>
+          <TableHeaderCell>Set</TableHeaderCell>
+          <TableHeaderCell align="right">
+            <span className="rf-inline">
               Unit <PlatGlyph size={12} />
             </span>
           </TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "9%" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <TableHeaderCell align="right">
+            <span className="rf-inline">
               Ducats
               <DucatGlyph style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }} />
             </span>
           </TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "12%" }}>
-            Ducats / plat
-          </TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "10%" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <TableHeaderCell align="right">Ducats / plat</TableHeaderCell>
+          <TableHeaderCell align="right">
+            <span className="rf-inline">
               Line total <PlatGlyph size={12} />
             </span>
           </TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "9%" }}>
-            Qty
-          </TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "3%" }}>
-            Info
-          </TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "4%" }}>
-            Market
-          </TableHeaderCell>
+          <TableHeaderCell align="center">Qty</TableHeaderCell>
+          <TableHeaderCell align="center">Info</TableHeaderCell>
+          <TableHeaderCell align="center">Market</TableHeaderCell>
         </tr>
       </thead>
 
@@ -205,14 +210,14 @@ export function DucatRows({ entries, prices, onInfo }: RowsProps) {
                 {ducats === null ? (
                   <Unlisted />
                 ) : (
-                  <span style={{ color: "var(--rf-currency-ducat)" }}>{ducats * entry.qty}</span>
+                  <span className="rf-ducat">{ducats * entry.qty}</span>
                 )}
               </TableCell>
               <TableCell align="right" numeric>
                 {ratio === null ? (
                   <Unlisted />
                 ) : (
-                  <strong style={{ color: "var(--rf-gold-300)" }}>{ratio.toFixed(2)}</strong>
+                  <strong className="rf-gold">{ratio.toFixed(2)}</strong>
                 )}
               </TableCell>
               <TableCell align="right" numeric>
@@ -236,29 +241,28 @@ export function DucatRows({ entries, prices, onInfo }: RowsProps) {
  */
 export function EndoRows({ entries, offers }: { entries: WishlistEntry[]; offers?: EndoOffer[] }) {
   return (
-    <Table interactive={false} framed={false} caption="Wishlist: Ayatan sculptures">
+    <Table
+      stickyFirstColumn
+      interactive={false}
+      framed={false}
+      caption="Wishlist: Ayatan sculptures"
+      className="rf-cols-wl-endo"
+    >
+      <TableCols count={8} />
       <thead>
         <tr>
-          <TableHeaderCell style={{ width: "28%" }}>Sculpture</TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "11%" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <TableHeaderCell>Sculpture</TableHeaderCell>
+          <TableHeaderCell align="right">
+            <span className="rf-inline">
               Best now <PlatGlyph size={12} />
             </span>
           </TableHeaderCell>
-          <TableHeaderCell style={{ width: "11%" }}>Stars</TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "10%" }}>
-            Endo
-          </TableHeaderCell>
-          <TableHeaderCell align="right" style={{ width: "12%" }}>
-            Endo / plat
-          </TableHeaderCell>
-          <TableHeaderCell style={{ width: "15%" }}>Seller</TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "9%" }}>
-            Qty
-          </TableHeaderCell>
-          <TableHeaderCell align="center" style={{ width: "4%" }}>
-            Market
-          </TableHeaderCell>
+          <TableHeaderCell>Stars</TableHeaderCell>
+          <TableHeaderCell align="right">Endo</TableHeaderCell>
+          <TableHeaderCell align="right">Endo / plat</TableHeaderCell>
+          <TableHeaderCell>Seller</TableHeaderCell>
+          <TableHeaderCell align="center">Qty</TableHeaderCell>
+          <TableHeaderCell align="center">Market</TableHeaderCell>
         </tr>
       </thead>
 
@@ -282,11 +286,7 @@ export function EndoRows({ entries, offers }: { entries: WishlistEntry[]; offers
                 {best ? best.endo : <Unlisted />}
               </TableCell>
               <TableCell align="right" numeric>
-                {best ? (
-                  <strong style={{ color: "var(--rf-gold-300)" }}>{best.ratio.toFixed(0)}</strong>
-                ) : (
-                  <Unlisted />
-                )}
+                {best ? <strong className="rf-gold">{best.ratio.toFixed(0)}</strong> : <Unlisted />}
               </TableCell>
               <TableCell>
                 <span className="rf-text-caption rf-fg-muted">

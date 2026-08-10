@@ -1,3 +1,7 @@
+/**
+ * Over 150 lines (rule 4). The rows came out into WishlistRows; what is left is
+ * the section tabs, the totals and the note behind the info icon.
+ */
 import { useState } from "react";
 import { Chip, EmptyState, InfoIcon, TabPanel, Tabs } from "relic-finder-ui";
 
@@ -107,9 +111,7 @@ export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
         </Total>
 
         <Total label="Ducats">
-          <span className="rf-text-data-lg" style={{ color: "var(--rf-currency-ducat)" }}>
-            {ducatTotal}
-          </span>
+          <span className="rf-text-data-lg rf-ducat">{ducatTotal}</span>
         </Total>
 
         <Total label="Lines">
@@ -167,19 +169,12 @@ export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
           onClick={() => setNoteOpen((was) => !was)}
           aria-expanded={noteOpen}
           aria-label={noteOpen ? "Hide the explanation" : `What ${note.label} is judged on`}
-          style={{
-            display: "inline-flex",
-            padding: 0,
-            border: 0,
-            background: "none",
-            cursor: "pointer",
-            color: noteOpen ? "var(--rf-gold-500)" : "var(--rf-fg-muted)",
-          }}
+          className={`rf-icon-button rf-focus-ring${noteOpen ? " rf-gold-mark" : ""}`}
         >
           <InfoIcon width={13} height={13} />
         </button>
         {shown.length > 0 && (
-          <Chip style={{ marginLeft: "auto" }}>
+          <Chip className="rf-push">
             {shown.length} {shown.length === 1 ? "line" : "lines"}
           </Chip>
         )}

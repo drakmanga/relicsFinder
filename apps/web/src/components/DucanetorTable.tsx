@@ -1,3 +1,9 @@
+/**
+ * Over 150 lines (rule 4). A table component is a column specification and a
+ * row renderer, and the two are read together: the fourth `<col>` and the
+ * fourth `<TableCell>` are the same decision. Splitting them would put the
+ * halves of every column in two files.
+ */
 import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -133,11 +139,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
           title={row.itemName}
           subtitle={row.setName ?? undefined}
           figureLabel="Ducats / plat"
-          figure={
-            <span className="rf-text-data-lg" style={{ color: "var(--rf-gold-300)" }}>
-              {row.ratio.toFixed(1)}
-            </span>
-          }
+          figure={<span className="rf-text-data-lg rf-gold">{row.ratio.toFixed(1)}</span>}
           meta={
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
               <PlatPrice value={row.price} />
@@ -162,6 +164,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
           />
         ) : (
           <Table
+            stickyFirstColumn
             interactive
             framed={false}
             density="comfortable"
@@ -176,12 +179,12 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                 <TableHeaderCell>Item</TableHeaderCell>
                 <TableHeaderCell>Set</TableHeaderCell>
                 <TableHeaderCell align="right">
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span className="rf-inline">
                     Price <PlatGlyph size={12} />
                   </span>
                 </TableHeaderCell>
                 <TableHeaderCell align="right">
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span className="rf-inline">
                     Ducats
                     <DucatGlyph
                       style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }}
@@ -199,7 +202,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
             <tbody>
               {paddingTop > 0 && (
                 <tr aria-hidden="true">
-                  <td colSpan={10} style={{ height: paddingTop, padding: 0, border: 0 }} />
+                  <td colSpan={10} className="rf-spacer" style={{ height: paddingTop }} />
                 </tr>
               )}
 
@@ -228,12 +231,10 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                       <PlatPrice value={row.price} />
                     </TableCell>
                     <TableCell align="right" numeric>
-                      <span style={{ color: "var(--rf-currency-ducat)" }}>{row.ducats}</span>
+                      <span className="rf-ducat">{row.ducats}</span>
                     </TableCell>
                     <TableCell align="right" numeric>
-                      <strong style={{ color: "var(--rf-gold-300)" }}>
-                        {row.ratio.toFixed(2)}
-                      </strong>
+                      <strong className="rf-gold">{row.ratio.toFixed(2)}</strong>
                     </TableCell>
                     <TableCell align="right" numeric>
                       <span className={row.volume < MIN_TRADES ? "rf-fg-muted" : "rf-fg-secondary"}>
@@ -281,7 +282,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
 
               {paddingBottom > 0 && (
                 <tr aria-hidden="true">
-                  <td colSpan={10} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+                  <td colSpan={10} className="rf-spacer" style={{ height: paddingBottom }} />
                 </tr>
               )}
             </tbody>

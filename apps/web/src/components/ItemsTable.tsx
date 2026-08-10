@@ -1,3 +1,9 @@
+/**
+ * Over 150 lines (rule 4). A table component is a column specification and a
+ * row renderer, and the two are read together: the fourth `<col>` and the
+ * fourth `<TableCell>` are the same decision. Splitting them would put the
+ * halves of every column in two files.
+ */
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -61,6 +67,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
       tabIndex={0}
     >
       <Table
+        stickyFirstColumn
         interactive
         framed={false}
         caption="Prime parts, with the relics that drop them, ducats and price"
@@ -87,13 +94,13 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
             <TableHeaderCell>Relics</TableHeaderCell>
             <TableHeaderCell align="right">Best drop</TableHeaderCell>
             <TableHeaderCell align="right">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span className="rf-inline">
                 Ducats
                 <DucatGlyph style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }} />
               </span>
             </TableHeaderCell>
             <TableHeaderCell align="right">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span className="rf-inline">
                 Price <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
@@ -106,7 +113,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={10} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -141,7 +148,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
                   <RarityTag rarity={row.rarity} />
                 </TableCell>
                 <TableCell>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span className="rf-inline">
                     {row.tiers.slice(0, 3).map((tier) => (
                       <TierChip key={tier} tier={tier} />
                     ))}
@@ -155,7 +162,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
                   {meta?.ducats == null ? (
                     <Unlisted />
                   ) : (
-                    <span style={{ color: "var(--rf-currency-ducat)" }}>{meta.ducats}</span>
+                    <span className="rf-ducat">{meta.ducats}</span>
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
@@ -202,7 +209,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={10} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

@@ -1,3 +1,8 @@
+/**
+ * Over 150 lines (rule 4) and correctly so: it is a catalogue, not a component.
+ * Twenty-nine glyphs behind two factories, each glyph a path. Splitting a
+ * catalogue by file makes it longer to read, not shorter.
+ */
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import type { Rarity, Tier } from "../lib/types";
 

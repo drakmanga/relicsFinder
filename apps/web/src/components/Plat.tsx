@@ -33,7 +33,7 @@ export function PlatPrice(props: ComponentProps<typeof Price>) {
   const missing = props.value === null || props.value === undefined;
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+    <span className="rf-inline-tight">
       <Price {...props} />
       {!missing && <PlatGlyph size={props.size === "lg" ? 15 : 13} />}
     </span>

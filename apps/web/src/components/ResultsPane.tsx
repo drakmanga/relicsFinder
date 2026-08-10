@@ -1,3 +1,8 @@
+/**
+ * Over 150 lines (rule 4) and it is all one decision: which of six tables the
+ * current view is about. The length is the six branches and the props they
+ * need, not logic that could live elsewhere.
+ */
 import { Button, EmptyState, Skeleton } from "relic-finder-ui";
 
 import { DucanetorTable } from "./DucanetorTable";

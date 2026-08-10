@@ -1,3 +1,9 @@
+/**
+ * Over 150 lines (rule 4). A table component is a column specification and a
+ * row renderer, and the two are read together: the fourth `<col>` and the
+ * fourth `<TableCell>` are the same decision. Splitting them would put the
+ * halves of every column in two files.
+ */
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -106,6 +112,7 @@ export function ResultsTable({
       tabIndex={0}
     >
       <Table
+        stickyFirstColumn
         interactive
         framed={false}
         caption="Relics, with expected value, best drop and cost"
@@ -148,7 +155,7 @@ export function ResultsTable({
               onSort={() => onSort("expected")}
               title="Average payout of one run: every drop weighted by its chance"
             >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span className="rf-inline">
                 Expected <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
@@ -159,7 +166,7 @@ export function ResultsTable({
               onSort={() => onSort("value")}
               title="The most valuable single drop, however unlikely"
             >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span className="rf-inline">
                 Best drop <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
@@ -175,7 +182,7 @@ export function ResultsTable({
               onSort={() => onSort("cost")}
               title="What the relic itself sells for on the market"
             >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span className="rf-inline">
                 Cost <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
@@ -192,7 +199,7 @@ export function ResultsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={7} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={7} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -259,7 +266,7 @@ export function ResultsTable({
                   ) : expected === 0 ? (
                     <Unlisted />
                   ) : (
-                    <strong style={{ color: "var(--rf-gold-300)" }}>{expected.toFixed(1)}</strong>
+                    <strong className="rf-gold">{expected.toFixed(1)}</strong>
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
@@ -299,7 +306,7 @@ export function ResultsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={7} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={7} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

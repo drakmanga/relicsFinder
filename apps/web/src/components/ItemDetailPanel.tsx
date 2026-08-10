@@ -1,3 +1,8 @@
+/**
+ * Over 150 lines (rule 4). The price history chart is already its own component;
+ * what is left is the part's own figures and the list of relics that drop it,
+ * which is the next thing to come out.
+ */
 import { useState } from "react";
 import {
   ArrowLeftIcon,
@@ -144,7 +149,7 @@ export function ItemDetailPanel({
 
       <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
         <span className="rf-text-overline rf-fg-muted">Market price</span>
-        <span style={{ marginLeft: "auto" }}>
+        <span className="rf-push">
           <PlatPrice value={priceOf(prices, row.itemName)} size="lg" />
         </span>
       </div>

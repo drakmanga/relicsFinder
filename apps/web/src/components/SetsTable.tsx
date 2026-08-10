@@ -1,3 +1,9 @@
+/**
+ * Over 150 lines (rule 4). A table component is a column specification and a
+ * row renderer, and the two are read together: the fourth `<col>` and the
+ * fourth `<TableCell>` are the same decision. Splitting them would put the
+ * halves of every column in two files.
+ */
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Skeleton, Table, TableCell, TableCols, TableHeaderCell, TableRow } from "relic-finder-ui";
@@ -49,6 +55,7 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
       tabIndex={0}
     >
       <Table
+        stickyFirstColumn
         interactive
         framed={false}
         caption="Prime sets, with what each one still needs"
@@ -61,7 +68,7 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
             <TableHeaderCell>Progress</TableHeaderCell>
             <TableHeaderCell align="right">Missing</TableHeaderCell>
             <TableHeaderCell align="right">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span className="rf-inline">
                 To finish <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
@@ -71,7 +78,7 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={4} style={{ height: paddingTop, padding: 0, border: 0 }} />
+              <td colSpan={4} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -152,7 +159,7 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={4} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+              <td colSpan={4} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

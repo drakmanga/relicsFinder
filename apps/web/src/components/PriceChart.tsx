@@ -1,3 +1,7 @@
+/**
+ * Over 150 lines (rule 4). One chart: the geometry it computes and the SVG it
+ * draws. The geometry is the half worth moving to lib/, and has not been.
+ */
 import { useMemo, useRef, useState } from "react";
 import type { PricePoint } from "../api/types";
 

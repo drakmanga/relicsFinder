@@ -1,3 +1,8 @@
+/**
+ * Over 150 lines (rule 4). Two blocks — the parts checklist and the buy-or-farm
+ * verdict — sharing one set and one price map. The verdict is the extraction
+ * worth making, and has not been made yet.
+ */
 import { useState } from "react";
 import {
   ArrowLeftIcon,
@@ -231,7 +236,7 @@ export function SetDetailPanel({
               Buy everything missing
               {set.costIncomplete && " (some unlisted)"}
             </span>
-            <span style={{ marginLeft: "auto" }}>
+            <span className="rf-push">
               <PlatPrice value={Math.round(set.missingCost)} size="lg" />
             </span>
           </div>

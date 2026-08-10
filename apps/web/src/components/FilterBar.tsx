@@ -1,3 +1,9 @@
+/**
+ * Over 150 lines (rule 4). One bar, five groups, and two local primitives that
+ * exist only here — a toggle and a slider tick. The design system has no toggle
+ * component, and promoting one on a sample size of five would be guessing at
+ * the second use.
+ */
 import { RarityTag, TierChip } from "relic-finder-ui";
 
 import {

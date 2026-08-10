@@ -173,23 +173,17 @@ body {
 
 /* Below --rf-bp-lg the panel stops being a column and stacks under the table;
    see the matching rule on .rf-detail in packages/ui. */
+/* Below --rf-bp-lg the panel leaves the layout entirely: it becomes a modal
+   drawer over the table, rendered only while something is selected. The table
+   therefore takes the whole band rather than sharing it. */
 @media (max-width: 1023.98px) {
-  /* Stacked, and the band scrolls. Without the scroll the two rows fight over
-     a height that the filter bar has already spent: the panel keeps `flex:
-     none` from its own rule and the table is squeezed to nothing, which is how
-     a phone ended up showing filters and an empty panel and no results. */
   .rf-results {
     flex-direction: column;
-    overflow-y: auto;
   }
 
   .rf-results-main {
-    flex: 1 0 auto;
-    min-height: 320px;
-  }
-
-  .rf-detail {
-    flex: 0 0 auto;
+    flex: 1;
+    min-height: 0;
   }
 }
 
@@ -663,4 +657,171 @@ body {
 
 .rf-full {
   width: 100%;
+}
+
+/* The wishlist is three tables: parts you are collecting, parts you are keeping
+   for ducats, and Ayatan sculptures. Different columns, so different widths.
+   The ducats table summed to 104% before these moved out of the JSX — nobody
+   can add up nine numbers scattered across a hundred lines of markup. */
+.rf-cols-wl-parts col:nth-child(1) {
+  width: 26%;
+}
+.rf-cols-wl-parts col:nth-child(2) {
+  width: 15%;
+}
+.rf-cols-wl-parts col:nth-child(3) {
+  width: 15%;
+}
+.rf-cols-wl-parts col:nth-child(4) {
+  width: 9%;
+}
+.rf-cols-wl-parts col:nth-child(5) {
+  width: 9%;
+}
+.rf-cols-wl-parts col:nth-child(6) {
+  width: 10%;
+}
+.rf-cols-wl-parts col:nth-child(7) {
+  width: 9%;
+}
+.rf-cols-wl-parts col:nth-child(8) {
+  width: 3%;
+}
+.rf-cols-wl-parts col:nth-child(9) {
+  width: 4%;
+}
+
+.rf-cols-wl-ducats col:nth-child(1) {
+  width: 28%;
+}
+.rf-cols-wl-ducats col:nth-child(2) {
+  width: 17%;
+}
+.rf-cols-wl-ducats col:nth-child(3) {
+  width: 9%;
+}
+.rf-cols-wl-ducats col:nth-child(4) {
+  width: 9%;
+}
+.rf-cols-wl-ducats col:nth-child(5) {
+  width: 12%;
+}
+.rf-cols-wl-ducats col:nth-child(6) {
+  width: 10%;
+}
+.rf-cols-wl-ducats col:nth-child(7) {
+  width: 8%;
+}
+.rf-cols-wl-ducats col:nth-child(8) {
+  width: 3%;
+}
+.rf-cols-wl-ducats col:nth-child(9) {
+  width: 4%;
+}
+
+.rf-cols-wl-endo col:nth-child(1) {
+  width: 28%;
+}
+.rf-cols-wl-endo col:nth-child(2) {
+  width: 11%;
+}
+.rf-cols-wl-endo col:nth-child(3) {
+  width: 11%;
+}
+.rf-cols-wl-endo col:nth-child(4) {
+  width: 10%;
+}
+.rf-cols-wl-endo col:nth-child(5) {
+  width: 12%;
+}
+.rf-cols-wl-endo col:nth-child(6) {
+  width: 15%;
+}
+.rf-cols-wl-endo col:nth-child(7) {
+  width: 9%;
+}
+.rf-cols-wl-endo col:nth-child(8) {
+  width: 4%;
+}
+
+/* A glyph beside the number it belongs to, or an icon beside its label. */
+.rf-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rf-inline-tight {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rf-space-1);
+}
+
+/* Pushes what follows to the far end of a flex row. */
+.rf-push {
+  margin-left: auto;
+}
+
+.rf-ducat {
+  color: var(--rf-currency-ducat);
+}
+
+.rf-gold {
+  color: var(--rf-gold-300);
+}
+
+.rf-gold-mark {
+  color: var(--rf-gold-500);
+}
+
+/* Stands in for the rows the virtualiser is not rendering: it exists to give
+   the scrollbar their height, and carries nothing else. */
+.rf-spacer {
+  padding: 0;
+  border: 0;
+}
+
+/* A bare icon acting as a button. Small on a desktop by design — it sits inside
+   a dense strip — and grown to the 44px minimum wherever a finger is the
+   pointer. See the touch-target rule below. */
+.rf-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44 everywhere, not only where a finger is: it sits in a strip with room
+     for it, so there is nothing to trade away. */
+  min-width: var(--rf-touch-target);
+  min-height: var(--rf-touch-target);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--rf-fg-muted);
+}
+
+/* ------------------------------------------------------------ Touch size --
+   WCAG 2.5.8 asks for 44×44. On a mouse the pointer is a pixel and the dense
+   layout is the point, so the minimum applies where it matters: below --rf-bp-lg
+   and on any coarse pointer, whatever the width. Growing a range input is free
+   — the extra height is transparent padding around the same track.
+   ----------------------------------------------------------------------- */
+@media (max-width: 1023.98px), (pointer: coarse) {
+  .rf-checkbox-input,
+  .rf-range {
+    min-height: var(--rf-touch-target);
+  }
+
+  .rf-checkbox-input {
+    min-width: var(--rf-touch-target);
+  }
+
+  /* The checkbox's own box stays the size it is drawn at; the hit area around
+     it is what grows. */
+  .rf-checkbox-input {
+    width: var(--rf-touch-target);
+  }
+
+  .rf-table tbody td {
+    height: var(--rf-size-row-comfortable);
+  }
 }

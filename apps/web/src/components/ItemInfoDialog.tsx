@@ -68,9 +68,7 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
           {meta?.ducats == null ? (
             <Unlisted />
           ) : (
-            <span className="rf-text-data-md" style={{ color: "var(--rf-currency-ducat)" }}>
-              {meta.ducats}
-            </span>
+            <span className="rf-text-data-md rf-ducat">{meta.ducats}</span>
           )}
         </Stat>
 
