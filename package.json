@@ -19,9 +19,11 @@
     "lint:debt": "node scripts/lint-debt.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify:all": "npm run typecheck && npm run lint && npm run lint:debt && npm run verify"
+    "verify:all": "npm run typecheck && npm run lint && npm run lint:debt && npm run verify",
+    "axe": "node scripts/axe-check.mjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",

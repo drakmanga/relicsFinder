@@ -8,3 +8,4 @@ ds-bundle
 design-imports
 package-lock.json
 src/main/resources/relics.json
+src/main/resources/*.postman_collection.json
