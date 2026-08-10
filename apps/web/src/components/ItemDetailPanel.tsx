@@ -262,7 +262,7 @@ export function ItemDetailPanel({
       {shown.length === 0 ? (
         <p className="rf-text-body-sm rf-fg-muted">No relic in the dataset contains it.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div className="rf-stack-6">
           {shown.map((source) => (
             <button
               key={`${source.relicFullName}-${source.refinement}`}
@@ -297,7 +297,7 @@ export function ItemDetailPanel({
 
           <p className="rf-text-overline rf-fg-muted rf-stack-sm">Rest of {setName}</p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div className="rf-stack">
             {siblings.map((part) => (
               <button
                 key={part}
@@ -336,7 +336,7 @@ export function ItemDetailPanel({
         </>
       )}
 
-      <div style={{ marginTop: 20 }}>
+      <div className="rf-mt-5">
         <Button
           variant="primary"
           icon={<ExternalLinkIcon />}

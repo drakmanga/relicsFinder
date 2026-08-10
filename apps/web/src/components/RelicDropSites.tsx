@@ -41,7 +41,7 @@ export function RelicDropSites({ relicFullName, sites, sitesPending, best }: Pro
         <p className="rf-text-body-sm rf-fg-muted">No mission drops it — the relic is vaulted.</p>
       ) : (
         <>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="rf-stack-6">
             {sites.slice(0, SITES_SHOWN).map((site, index) => (
               <div key={`${site.location}-${site.rotation}-${index}`} className="rf-stat-row">
                 <span className="rf-fill">{site.location}</span>
@@ -88,7 +88,7 @@ export function RelicDropSites({ relicFullName, sites, sitesPending, best }: Pro
           )}
         </>
       )}
-      <div style={{ marginTop: 20 }}>
+      <div className="rf-mt-5">
         {/*
         The relic, not a part. Relics are traded in their own right, and this
         panel is about the relic — buying one is an alternative to farming it,

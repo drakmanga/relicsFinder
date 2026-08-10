@@ -108,10 +108,7 @@ export function SetDetailPanel({
     >
       <Divider />
 
-      <p
-        className="rf-text-overline rf-fg-muted"
-        style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}
-      >
+      <p className="rf-text-overline rf-fg-muted rf-label-row">
         Buy or farm
         <button
           type="button"
@@ -193,7 +190,7 @@ export function SetDetailPanel({
         className="rf-range"
       />
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+      <div className="rf-split">
         {ALL_REFINEMENTS.map((state) => (
           <span
             key={state}

@@ -92,7 +92,7 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
       )}
 
       {meta?.volume != null && meta.volume < 10 && (
-        <p className="rf-text-caption rf-fg-muted" style={{ marginTop: 12 }}>
+        <p className="rf-text-caption rf-fg-muted rf-mt-3">
           Only {meta.volume} trades in 48 hours — treat this price as indicative.
         </p>
       )}

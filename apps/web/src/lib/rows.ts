@@ -325,3 +325,38 @@ export const REFINEMENT_LABEL: Record<Refinement, string> = {
   flawless: "Flawless",
   radiant: "Radiant",
 };
+
+/**
+ * The refinement that buys the most value per void trace.
+ *
+ * Not always Radiant, and that is the point: refining moves chance off the
+ * commons and onto the rare, so on a relic whose rare is cheap the hundred
+ * traces of a Radiant buy less than the twenty-five of an Exceptional, and
+ * sometimes buy nothing at all. Intact is excluded — it costs no traces, so it
+ * has no rate — and a relic where every trade is a loss gets no answer rather
+ * than the least bad one.
+ *
+ * A function rather than a local because two places mark it: the star on the
+ * refinement slider and the star on the ladder below it, which must agree.
+ */
+export function bestRefinementByTrace(
+  states: Partial<Record<Refinement, Reward[]>>,
+  prices: PriceMap | undefined,
+): Refinement | null {
+  // Refining is always measured against Intact, whatever the slider is showing:
+  // that is the state the relic arrives in, so it is the only baseline a cost
+  // in traces can be compared to.
+  const baseValue = expectedValue(states.intact ?? [], prices);
+
+  return (
+    ALL_REFINEMENTS.reduce<{ state: Refinement; rate: number } | null>((best, state) => {
+      const traces = TRACE_COST[state];
+      if (traces === 0) return best;
+
+      const rate = (expectedValue(states[state] ?? [], prices) - baseValue) / traces;
+      if (rate <= 0) return best;
+
+      return best === null || rate > best.rate ? { state, rate } : best;
+    }, null)?.state ?? null
+  );
+}

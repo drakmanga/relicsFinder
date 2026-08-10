@@ -177,7 +177,7 @@ export function DucatRows({ entries, prices, onInfo }: RowsProps) {
           <TableHeaderCell align="right">
             <span className="rf-inline">
               Ducats
-              <DucatGlyph style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }} />
+              <DucatGlyph className="rf-glyph-ducat" />
             </span>
           </TableHeaderCell>
           <TableHeaderCell align="right">Ducats / plat</TableHeaderCell>

@@ -17,7 +17,7 @@ const ROOTS = ["apps/web/src", "packages/ui/src"];
 const COUNTERS = [
   {
     name: "inline styles",
-    baseline: 102,
+    baseline: 89,
     extensions: [".tsx"],
     pattern: /style=\{\{/g,
     hint: "move visual values into a CSS class",

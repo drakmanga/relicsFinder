@@ -825,3 +825,55 @@ body {
     height: var(--rf-size-row-comfortable);
   }
 }
+
+/* Vertical stacks, at the three gaps the panels actually use. */
+.rf-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-1);
+}
+
+.rf-stack-6 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rf-stack-8 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-2);
+}
+
+/* A label on the left, its figure on the right. */
+.rf-split {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--rf-space-4);
+}
+
+/* An overline with an icon button beside it. */
+.rf-label-row {
+  margin-bottom: var(--rf-space-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rf-glyph-ducat {
+  width: 12px;
+  height: 12px;
+  color: var(--rf-currency-ducat);
+}
+
+.rf-mt-3 {
+  margin-top: var(--rf-space-3);
+}
+
+.rf-mt-5 {
+  margin-top: var(--rf-space-5);
+}
+
+.rf-mb-3 {
+  margin-bottom: var(--rf-space-3);
+}
