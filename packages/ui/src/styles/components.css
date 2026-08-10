@@ -722,20 +722,9 @@
 
 /* Below --rf-bp-lg (1024px) the side-by-side layout stops fitting: subtract a
    440px panel and the two gutters from a 1024px viewport and the table is left
-   with 536px, under the 640px it needs, so it scrolls sideways while the panel
-   sits beside it taking the room it is missing. The panel goes under the table
-   instead and both get the full width.
-
-   The specification asks for an overlay drawer here (§6.3). This is the same
-   decision — stop being a column — without the focus trap and backdrop a drawer
-   needs; those are a behavioural change, not a stylesheet one. */
-@media (max-width: 1023.98px) {
-  .rf-detail {
-    width: 100%;
-    max-height: 45vh;
-    overflow: auto;
-  }
-}
+   with 536px, under the 640px it needs. The panel stops being a column there
+   and becomes a Drawer over the table — see components/Drawer.tsx, which owns
+   the sizing at that point. */
 
 .rf-detail-body {
   padding: var(--rf-space-4);
@@ -1064,4 +1053,98 @@
   text-transform: inherit;
   text-align: inherit;
   cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ Drawer -
+   The detail panel once there is no room for it beside the table.
+   ----------------------------------------------------------------------- */
+
+.rf-drawer-scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--rf-scrim);
+  z-index: var(--rf-z-overlay);
+}
+
+.rf-drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: min(420px, 100vw);
+  max-width: 100vw;
+  z-index: var(--rf-z-overlay);
+  display: flex;
+  flex-direction: column;
+  background: var(--rf-surface-1);
+  border-inline-start: var(--rf-hairline) solid var(--rf-border-strong);
+  animation: rf-drawer-in var(--rf-dur-base) var(--rf-ease-enter);
+}
+
+/* The panel inside fills the drawer and scrolls on its own: the page behind
+   must not scroll while a modal surface is over it. */
+.rf-drawer > .rf-detail {
+  width: 100%;
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+@keyframes rf-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+/* Reduced motion: the drawer still arrives, it just stops travelling. */
+@media (prefers-reduced-motion: reduce) {
+  .rf-drawer {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------- Sticky first column ----
+   The other half of the strategy this table is committed to: it scrolls
+   sideways rather than crushing its columns, and the column that says *which
+   row this is* stays put while the rest travels. Without it a reader scrolled
+   to the price column is looking at a number with nothing attached to it.
+
+   The cell has to paint its own background or the scrolling columns show
+   through it, and it has to repeat the row's hover and selected fills or the
+   row appears to break in half under the pointer. `inset-inline-start: 0`
+   rather than `left`, so a right-to-left reading pins the same column.
+   ----------------------------------------------------------------------- */
+
+.rf-table-sticky thead th:first-child,
+.rf-table-sticky tbody td:first-child {
+  position: sticky;
+  inset-inline-start: 0;
+  background: var(--rf-surface-1);
+  /* Above its own row's cells, below the sticky header, which also owns the
+     top-left corner and has to win there. */
+  z-index: var(--rf-z-raised);
+}
+
+.rf-table-sticky thead th:first-child {
+  background: var(--rf-surface-2);
+  z-index: calc(var(--rf-z-raised) + 1);
+}
+
+.rf-table-sticky.rf-table-interactive tbody tr:hover td:first-child {
+  background: color-mix(in srgb, var(--rf-state-row-hover), var(--rf-surface-1));
+}
+
+.rf-table-sticky tbody tr[aria-selected="true"] td:first-child {
+  background: color-mix(in srgb, var(--rf-state-row-selected), var(--rf-surface-1));
+}
+
+/* The seam, so the pinned column reads as pinned once the rest has moved. */
+.rf-table-sticky thead th:first-child::after,
+.rf-table-sticky tbody td:first-child::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: var(--rf-hairline);
+  background: var(--rf-border-default);
 }

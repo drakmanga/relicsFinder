@@ -472,13 +472,26 @@ Base 4px. Do not use off-scale values.
 
 | BP    | Width | Behaviour                                                                                      |
 | ----- | ----- | ---------------------------------------------------------------------------------------------- |
-| `2xl` | ≥1536 | Full layout, sidebar expanded                                                                  |
-| `xl`  | ≥1280 | Full layout, sidebar collapsed to icons                                                        |
-| `lg`  | ≥1024 | Detail panel becomes an **overlay drawer** from the right (`420px`), table full width          |
-| `md`  | ≥768  | Table drops to four columns: tier, relic, best drop, price                                     |
-| `sm`  | <768  | Table → **list of cards**. One card per relic: tier + name header, six drop rows, price footer |
+| `2xl` | ≥1536 | Full layout. Content capped at `--rf-content-max`, the gutter grows                            |
+| `xl`  | ≥1280 | Full layout                                                                                    |
+| `lg`  | ≥1024 | Table and detail panel side by side                                                            |
+| `md`  | ≥768  | Detail panel becomes a **modal drawer** over the table; the table takes the full width         |
+| `sm`  | <768  | Filter groups stack one per row, the tab strip scrolls sideways, the gutter drops to `space-4` |
 
-Below `lg`, touch targets rise to a 44×44px minimum and rows switch to `row-comfortable` 48px.
+Below `lg`, touch targets rise to a 44×44px minimum.
+
+**One table strategy, everywhere: horizontal scroll with a pinned first column.**
+The alternatives — dropping columns per tier, or reflowing rows into cards — are
+not mixed in: a table that hides its price column below a width is a table that
+answers a different question depending on the window, and this app's six views
+exist to compare numbers. The pane scrolls, the column naming the row stays put,
+and every column keeps its width at every size. `.rf-table` sets the floor in
+`rem` so it rises with the reader's font size; the wider tables raise it further.
+
+> **Trap.** The breakpoints are the five in `tokens.json`, not a second scale. A
+> media query cannot read a custom property, so each one writes the literal and
+> names the token beside it in a comment. Adding a sixth means adding it to
+> `tokens.json` first.
 
 ### 6.4 The content shell — outer full-width, inner constrained
 

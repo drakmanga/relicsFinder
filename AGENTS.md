@@ -148,6 +148,13 @@ It is missing four families that the rules in this document depend on:
 --rf-reading-floor: 15px;
 ```
 
+> **Decided 2026-08-11: this project uses the five breakpoints already in
+> `tokens.json`** — `sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536` — not the
+> three proposed above. Rule 8 makes `tokens.json` the only source of design
+> values, `DESIGN_SYSTEM.md` §6.3 already documents what each tier does, and a
+> second scale beside the first is exactly the drift this document exists to
+> prevent.
+
 Note on breakpoints: CSS custom properties do not work inside `@media` conditions.
 Declare the numbers here as documentation and single reference, and either use a
 preprocessor/`postcss-custom-media`, or write the literal in the media query with a

@@ -1,3 +1,8 @@
+/**
+ * Over 150 lines (rule 4) and correctly so: one component family — table,
+ * columns, row, cell, header cell — whose parts are meaningless apart and are
+ * always imported together.
+ */
 import type { HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { cx } from "../lib/cx";
 import type { Density } from "../lib/types";
@@ -11,6 +16,11 @@ export interface TableProps extends HTMLAttributes<HTMLTableElement> {
   interactive?: boolean;
   /** Wraps the table in a notched frame. Turn off inside an existing panel. */
   framed?: boolean;
+  /**
+   * Pins the first column while the rest scrolls sideways. On for any table
+   * wide enough to scroll: it is the column that says which row you are on.
+   */
+  stickyFirstColumn?: boolean;
   /**
    * Names the table for assistive technology. Rendered as a `<caption>` and
    * hidden from the screen: a data table with no name is announced as "table"
@@ -45,6 +55,7 @@ export function Table({
   density = "default",
   interactive = false,
   framed = true,
+  stickyFirstColumn = false,
   caption,
   className,
   children,
@@ -57,6 +68,7 @@ export function Table({
           "rf-table",
           DENSITY_CLASS[density],
           interactive && "rf-table-interactive",
+          stickyFirstColumn && "rf-table-sticky",
           className,
         )}
         {...rest}
