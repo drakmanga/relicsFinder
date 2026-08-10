@@ -163,9 +163,7 @@ export function ItemDetailPanel({
 
       <Divider />
 
-      <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-        Dropped by
-      </p>
+      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Dropped by</p>
 
       {/*
         The chances below are only true of one refinement, and which one was
@@ -209,14 +207,14 @@ export function ItemDetailPanel({
             marginBottom: 10,
           }}
         >
-          <p style={{ margin: 0 }}>
-            Refining moves chance towards the rare drop and away from the commons, so the
-            odds below change with the state the relic is opened in.
+          <p className="rf-flush">
+            Refining moves chance towards the rare drop and away from the commons, so the odds below
+            change with the state the relic is opened in.
           </p>
-          <p style={{ margin: "8px 0 0" }}>
-            The star marks the state where <em>this</em> part is likeliest — Radiant if it
-            is the rare, Intact if it is a common, because for five drops out of six
-            refining makes things worse.
+          <p className="rf-panel-note">
+            The star marks the state where <em>this</em> part is likeliest — Radiant if it is the
+            rare, Intact if it is a common, because for five drops out of six refining makes things
+            worse.
           </p>
         </div>
       )}
@@ -227,12 +225,10 @@ export function ItemDetailPanel({
         max={ALL_REFINEMENTS.length - 1}
         step={1}
         value={ALL_REFINEMENTS.indexOf(refinement)}
-        onChange={(event) =>
-          setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
-        }
+        onChange={(event) => setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")}
         aria-label="Refinement the drop chances are quoted at"
         aria-valuetext={REFINEMENT_LABEL[refinement]}
-        style={{ width: "100%", accentColor: "var(--rf-gold-500)" }}
+        className="rf-range"
       />
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
@@ -283,7 +279,7 @@ export function ItemDetailPanel({
               }}
             >
               <TierChip tier={source.tier} refinement={source.refinement} />
-              <span style={{ flex: 1, minWidth: 0 }}>{source.relicFullName}</span>
+              <span className="rf-fill">{source.relicFullName}</span>
               <span className="rf-text-data-sm rf-fg-muted">{source.chance.toFixed(2)}%</span>
             </button>
           ))}
@@ -294,9 +290,7 @@ export function ItemDetailPanel({
         <>
           <Divider />
 
-          <p className="rf-text-overline rf-fg-muted" style={{ marginBottom: 8 }}>
-            Rest of {setName}
-          </p>
+          <p className="rf-text-overline rf-fg-muted rf-stack-sm">Rest of {setName}</p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {siblings.map((part) => (
@@ -341,7 +335,7 @@ export function ItemDetailPanel({
         <Button
           variant="primary"
           icon={<ExternalLinkIcon />}
-          style={{ width: "100%" }}
+          className="rf-full"
           onClick={() => window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer")}
         >
           Open on Warframe Market

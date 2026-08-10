@@ -2,6 +2,8 @@ import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Skeleton, Table, TableCell, TableCols, TableHeaderCell, TableRow } from "relic-finder-ui";
 
+import { Unlisted } from "./Unlisted";
+
 import { PlatGlyph, PlatPrice } from "./Plat";
 import type { PrimeSet } from "../lib/setCompletion";
 
@@ -46,15 +48,18 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
       aria-label="Prime sets table"
       tabIndex={0}
     >
-      <Table interactive framed={false} className="rf-cols-sets">
+      <Table
+        interactive
+        framed={false}
+        caption="Prime sets, with what each one still needs"
+        className="rf-cols-sets"
+      >
         <TableCols count={4} />
         <thead>
           <tr>
             <TableHeaderCell>Set</TableHeaderCell>
             <TableHeaderCell>Progress</TableHeaderCell>
-            <TableHeaderCell align="right">
-              Missing
-            </TableHeaderCell>
+            <TableHeaderCell align="right">Missing</TableHeaderCell>
             <TableHeaderCell align="right">
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 To finish <PlatGlyph size={12} />
@@ -130,7 +135,7 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
 
                 <TableCell align="right" numeric>
                   {done ? (
-                    <span className="rf-fg-disabled">—</span>
+                    <Unlisted />
                   ) : pricesPending ? (
                     <Skeleton width={44} height={14} />
                   ) : (

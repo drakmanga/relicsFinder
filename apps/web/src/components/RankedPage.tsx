@@ -49,7 +49,9 @@ export function Highlight({
           <div title={title} className="rf-highlight-title">
             {title}
           </div>
-          {subtitle && <div className="rf-text-caption rf-fg-muted rf-highlight-sub">{subtitle}</div>}
+          {subtitle && (
+            <div className="rf-text-caption rf-fg-muted rf-highlight-sub">{subtitle}</div>
+          )}
           {meta && <div className="rf-highlight-meta">{meta}</div>}
         </div>
 

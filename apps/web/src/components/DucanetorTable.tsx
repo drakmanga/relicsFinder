@@ -161,7 +161,13 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
             description="No part has both a price and a ducat value yet."
           />
         ) : (
-          <Table interactive framed={false} density="comfortable" className="rf-cols-ducats">
+          <Table
+            interactive
+            framed={false}
+            density="comfortable"
+            caption="Prime parts ranked by ducats per platinum"
+            className="rf-cols-ducats"
+          >
             <TableCols count={10} />
             <thead>
               <tr>
@@ -230,7 +236,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                       </strong>
                     </TableCell>
                     <TableCell align="right" numeric>
-                      <span className={row.volume < MIN_TRADES ? "rf-fg-disabled" : "rf-fg-muted"}>
+                      <span className={row.volume < MIN_TRADES ? "rf-fg-muted" : "rf-fg-secondary"}>
                         {row.volume}
                       </span>
                     </TableCell>

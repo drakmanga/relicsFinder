@@ -17,7 +17,7 @@ const ROOTS = ["apps/web/src", "packages/ui/src"];
 const COUNTERS = [
   {
     name: "inline styles",
-    baseline: 194,
+    baseline: 163,
     extensions: [".tsx"],
     pattern: /style=\{\{/g,
     hint: "move visual values into a CSS class",
@@ -32,7 +32,7 @@ const COUNTERS = [
   },
   {
     name: "px fontSize in JSX",
-    baseline: 15,
+    baseline: 13,
     extensions: [".tsx"],
     pattern: /fontSize:\s*[0-9]/g,
     hint: "use a --rf-text-* token in CSS",
@@ -53,7 +53,10 @@ let loosened = false;
 for (const counter of COUNTERS) {
   const count = files
     .filter((file) => counter.extensions.some((extension) => file.endsWith(extension)))
-    .reduce((total, file) => total + (readFileSync(file, "utf8").match(counter.pattern)?.length ?? 0), 0);
+    .reduce(
+      (total, file) => total + (readFileSync(file, "utf8").match(counter.pattern)?.length ?? 0),
+      0,
+    );
 
   const label = `${counter.name}: ${count} / ${counter.baseline}`;
 
@@ -69,4 +72,5 @@ for (const counter of COUNTERS) {
 }
 
 if (failed) process.exit(1);
-if (loosened) console.log("\nA baseline is now higher than reality. Tighten it, or it protects nothing.");
+if (loosened)
+  console.log("\nA baseline is now higher than reality. Tighten it, or it protects nothing.");

@@ -14,6 +14,8 @@ import {
   TierChip,
 } from "relic-finder-ui";
 
+import { Unlisted } from "./Unlisted";
+
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, remove } from "../lib/wishlist";
@@ -34,14 +36,7 @@ interface Props {
 }
 
 /** One row per Prime part: set, rarity, which relics hold it, ducats and price. */
-export function ItemsTable({
-  rows,
-  prices,
-  quantityOf,
-  onSelect,
-  selected,
-  onInfo,
-}: Props) {
+export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInfo }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -65,7 +60,12 @@ export function ItemsTable({
       aria-label="Prime items table"
       tabIndex={0}
     >
-      <Table interactive framed={false} className="rf-cols-items">
+      <Table
+        interactive
+        framed={false}
+        caption="Prime parts, with the relics that drop them, ducats and price"
+        className="rf-cols-items"
+      >
         <TableCols count={10} />
         <thead>
           <tr>
@@ -89,9 +89,7 @@ export function ItemsTable({
             <TableHeaderCell align="right">
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 Ducats
-                <DucatGlyph
-                  style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }}
-                />
+                <DucatGlyph style={{ width: 12, height: 12, color: "var(--rf-currency-ducat)" }} />
               </span>
             </TableHeaderCell>
             <TableHeaderCell align="right">
@@ -147,9 +145,7 @@ export function ItemsTable({
                     {row.tiers.slice(0, 3).map((tier) => (
                       <TierChip key={tier} tier={tier} />
                     ))}
-                    <span className="rf-text-caption rf-fg-muted">
-                      {row.relicNames.length}
-                    </span>
+                    <span className="rf-text-caption rf-fg-muted">{row.relicNames.length}</span>
                   </span>
                 </TableCell>
                 <TableCell align="right" numeric>
@@ -157,7 +153,7 @@ export function ItemsTable({
                 </TableCell>
                 <TableCell align="right" numeric>
                   {meta?.ducats == null ? (
-                    <span className="rf-fg-disabled">—</span>
+                    <Unlisted />
                   ) : (
                     <span style={{ color: "var(--rf-currency-ducat)" }}>{meta.ducats}</span>
                   )}

@@ -20,6 +20,8 @@ import {
   TierChip,
 } from "relic-finder-ui";
 
+import { Unlisted } from "./Unlisted";
+
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, remove, type WishlistEntry } from "../lib/wishlist";
@@ -80,7 +82,7 @@ function LineActions({
 
 export function PartRows({ entries, prices, onInfo }: RowsProps) {
   return (
-    <Table interactive={false} framed={false}>
+    <Table interactive={false} framed={false} caption="Wishlist: parts you are collecting">
       <thead>
         <tr>
           {/* Proportional, so the columns share the slack instead of pooling it
@@ -132,11 +134,7 @@ export function PartRows({ entries, prices, onInfo }: RowsProps) {
                 <PlatPrice value={unit} />
               </TableCell>
               <TableCell align="right" numeric>
-                {meta?.trend == null ? (
-                  <span className="rf-fg-disabled">—</span>
-                ) : (
-                  <PriceDelta value={Math.round(meta.trend)} />
-                )}
+                {meta?.trend == null ? <Unlisted /> : <PriceDelta value={Math.round(meta.trend)} />}
               </TableCell>
               <TableCell align="right" numeric>
                 <PlatPrice value={unit === null ? null : Math.round(unit * entry.qty)} />
@@ -153,7 +151,7 @@ export function PartRows({ entries, prices, onInfo }: RowsProps) {
 /** Judged on ducats per platinum — the same columns the Ducanetor ranks on. */
 export function DucatRows({ entries, prices, onInfo }: RowsProps) {
   return (
-    <Table interactive={false} framed={false}>
+    <Table interactive={false} framed={false} caption="Wishlist: parts you are keeping for ducats">
       <thead>
         <tr>
           <TableHeaderCell style={{ width: "30%" }}>Item</TableHeaderCell>
@@ -205,14 +203,14 @@ export function DucatRows({ entries, prices, onInfo }: RowsProps) {
               </TableCell>
               <TableCell align="right" numeric>
                 {ducats === null ? (
-                  <span className="rf-fg-disabled">—</span>
+                  <Unlisted />
                 ) : (
                   <span style={{ color: "var(--rf-currency-ducat)" }}>{ducats * entry.qty}</span>
                 )}
               </TableCell>
               <TableCell align="right" numeric>
                 {ratio === null ? (
-                  <span className="rf-fg-disabled">—</span>
+                  <Unlisted />
                 ) : (
                   <strong style={{ color: "var(--rf-gold-300)" }}>{ratio.toFixed(2)}</strong>
                 )}
@@ -238,7 +236,7 @@ export function DucatRows({ entries, prices, onInfo }: RowsProps) {
  */
 export function EndoRows({ entries, offers }: { entries: WishlistEntry[]; offers?: EndoOffer[] }) {
   return (
-    <Table interactive={false} framed={false}>
+    <Table interactive={false} framed={false} caption="Wishlist: Ayatan sculptures">
       <thead>
         <tr>
           <TableHeaderCell style={{ width: "28%" }}>Sculpture</TableHeaderCell>
@@ -273,7 +271,7 @@ export function EndoRows({ entries, offers }: { entries: WishlistEntry[]; offers
             <TableRow key={entry.itemName}>
               <TableCell>{entry.itemName}</TableCell>
               <TableCell align="right" numeric>
-                {best ? <PlatPrice value={best.platinum} /> : <span className="rf-fg-disabled">—</span>}
+                {best ? <PlatPrice value={best.platinum} /> : <Unlisted />}
               </TableCell>
               <TableCell>
                 <span className="rf-text-caption rf-fg-secondary rf-tabular">
@@ -281,17 +279,19 @@ export function EndoRows({ entries, offers }: { entries: WishlistEntry[]; offers
                 </span>
               </TableCell>
               <TableCell align="right" numeric>
-                {best ? best.endo : <span className="rf-fg-disabled">—</span>}
+                {best ? best.endo : <Unlisted />}
               </TableCell>
               <TableCell align="right" numeric>
                 {best ? (
                   <strong style={{ color: "var(--rf-gold-300)" }}>{best.ratio.toFixed(0)}</strong>
                 ) : (
-                  <span className="rf-fg-disabled">—</span>
+                  <Unlisted />
                 )}
               </TableCell>
               <TableCell>
-                <span className="rf-text-caption rf-fg-muted">{best?.seller ?? "nobody online"}</span>
+                <span className="rf-text-caption rf-fg-muted">
+                  {best?.seller ?? "nobody online"}
+                </span>
               </TableCell>
               <LineActions entry={entry} />
             </TableRow>

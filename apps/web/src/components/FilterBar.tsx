@@ -59,18 +59,18 @@ export function FilterBar({ id, filters, onChange, view }: Props) {
         that part's own.
       */}
       {view === "items" && (
-      <Group label="Rarity">
-        {ALL_RARITIES.map((rarity) => (
-          <Toggle
-            key={rarity}
-            on={filters.rarities.has(rarity)}
-            label={`Filter by rarity ${rarity}`}
-            onClick={() => onChange({ ...filters, rarities: toggle(filters.rarities, rarity) })}
-          >
-            <RarityTag rarity={rarity as Rarity} />
-          </Toggle>
-        ))}
-      </Group>
+        <Group label="Rarity">
+          {ALL_RARITIES.map((rarity) => (
+            <Toggle
+              key={rarity}
+              on={filters.rarities.has(rarity)}
+              label={`Filter by rarity ${rarity}`}
+              onClick={() => onChange({ ...filters, rarities: toggle(filters.rarities, rarity) })}
+            >
+              <RarityTag rarity={rarity as Rarity} />
+            </Toggle>
+          ))}
+        </Group>
       )}
 
       {/*
@@ -182,7 +182,9 @@ export function FilterBar({ id, filters, onChange, view }: Props) {
 
 /** One end of a slider's scale, lit when the slider is sitting on it. */
 function End({ on, children }: { on: boolean; children: React.ReactNode }) {
-  return <span className={on ? "rf-slider-tick rf-slider-tick-on" : "rf-slider-tick"}>{children}</span>;
+  return (
+    <span className={on ? "rf-slider-tick rf-slider-tick-on" : "rf-slider-tick"}>{children}</span>
+  );
 }
 
 function Group({

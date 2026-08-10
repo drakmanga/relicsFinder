@@ -213,50 +213,130 @@ body {
    rather than crushing eight columns into a phone.
    ----------------------------------------------------------------------- */
 
-.rf-cols-relics col:nth-child(1) { width: 13%; }  /* Tier — fits the Vanguard chip */
-.rf-cols-relics col:nth-child(2) { width: 23%; }  /* Relic */
-.rf-cols-relics col:nth-child(3) { width: 13%; }  /* Status */
-.rf-cols-relics col:nth-child(4) { width: 14%; }  /* Expected */
-.rf-cols-relics col:nth-child(5) { width: 14%; }  /* Best drop */
-.rf-cols-relics col:nth-child(6) { width: 13%; }  /* Cost */
-.rf-cols-relics col:nth-child(7) { width: 10%; }  /* Market */
+.rf-cols-relics col:nth-child(1) {
+  width: 13%;
+} /* Tier — fits the Vanguard chip */
+.rf-cols-relics col:nth-child(2) {
+  width: 23%;
+} /* Relic */
+.rf-cols-relics col:nth-child(3) {
+  width: 13%;
+} /* Status */
+.rf-cols-relics col:nth-child(4) {
+  width: 14%;
+} /* Expected */
+.rf-cols-relics col:nth-child(5) {
+  width: 14%;
+} /* Best drop */
+.rf-cols-relics col:nth-child(6) {
+  width: 13%;
+} /* Cost */
+.rf-cols-relics col:nth-child(7) {
+  width: 10%;
+} /* Market */
 
-.rf-cols-items col:nth-child(1) { width: 17%; }   /* Item */
-.rf-cols-items col:nth-child(2) { width: 10%; }   /* Set */
-.rf-cols-items col:nth-child(3) { width: 10%; }   /* Rarity — fits "Uncommon" */
-.rf-cols-items col:nth-child(4) { width: 22%; }   /* Relics — three tier chips and the count */
-.rf-cols-items col:nth-child(5) { width: 8%; }    /* Best drop */
-.rf-cols-items col:nth-child(6) { width: 7%; }    /* Ducats */
-.rf-cols-items col:nth-child(7) { width: 8%; }    /* Price */
-.rf-cols-items col:nth-child(8) { width: 8%; }    /* Wishlist */
-.rf-cols-items col:nth-child(9) { width: 4%; }    /* Info */
-.rf-cols-items col:nth-child(10) { width: 6%; }   /* Market */
+.rf-cols-items col:nth-child(1) {
+  width: 17%;
+} /* Item */
+.rf-cols-items col:nth-child(2) {
+  width: 10%;
+} /* Set */
+.rf-cols-items col:nth-child(3) {
+  width: 10%;
+} /* Rarity — fits "Uncommon" */
+.rf-cols-items col:nth-child(4) {
+  width: 22%;
+} /* Relics — three tier chips and the count */
+.rf-cols-items col:nth-child(5) {
+  width: 8%;
+} /* Best drop */
+.rf-cols-items col:nth-child(6) {
+  width: 7%;
+} /* Ducats */
+.rf-cols-items col:nth-child(7) {
+  width: 8%;
+} /* Price */
+.rf-cols-items col:nth-child(8) {
+  width: 8%;
+} /* Wishlist */
+.rf-cols-items col:nth-child(9) {
+  width: 4%;
+} /* Info */
+.rf-cols-items col:nth-child(10) {
+  width: 6%;
+} /* Market */
 
-.rf-cols-sets col:nth-child(1) { width: 34%; }
-.rf-cols-sets col:nth-child(2) { width: 26%; }
-.rf-cols-sets col:nth-child(3) { width: 14%; }
-.rf-cols-sets col:nth-child(4) { width: 26%; }
+.rf-cols-sets col:nth-child(1) {
+  width: 34%;
+}
+.rf-cols-sets col:nth-child(2) {
+  width: 26%;
+}
+.rf-cols-sets col:nth-child(3) {
+  width: 14%;
+}
+.rf-cols-sets col:nth-child(4) {
+  width: 26%;
+}
 
-.rf-cols-ducats col:nth-child(1) { width: 5%; }
-.rf-cols-ducats col:nth-child(2) { width: 24%; }
-.rf-cols-ducats col:nth-child(3) { width: 14%; }
-.rf-cols-ducats col:nth-child(4) { width: 9%; }
-.rf-cols-ducats col:nth-child(5) { width: 9%; }
-.rf-cols-ducats col:nth-child(6) { width: 13%; }
-.rf-cols-ducats col:nth-child(7) { width: 9%; }
-.rf-cols-ducats col:nth-child(8) { width: 9%; }
-.rf-cols-ducats col:nth-child(9) { width: 4%; }
-.rf-cols-ducats col:nth-child(10) { width: 4%; }
+.rf-cols-ducats col:nth-child(1) {
+  width: 5%;
+}
+.rf-cols-ducats col:nth-child(2) {
+  width: 24%;
+}
+.rf-cols-ducats col:nth-child(3) {
+  width: 14%;
+}
+.rf-cols-ducats col:nth-child(4) {
+  width: 9%;
+}
+.rf-cols-ducats col:nth-child(5) {
+  width: 9%;
+}
+.rf-cols-ducats col:nth-child(6) {
+  width: 13%;
+}
+.rf-cols-ducats col:nth-child(7) {
+  width: 9%;
+}
+.rf-cols-ducats col:nth-child(8) {
+  width: 9%;
+}
+.rf-cols-ducats col:nth-child(9) {
+  width: 4%;
+}
+.rf-cols-ducats col:nth-child(10) {
+  width: 4%;
+}
 
-.rf-cols-endo col:nth-child(1) { width: 5%; }
-.rf-cols-endo col:nth-child(2) { width: 22%; }
-.rf-cols-endo col:nth-child(3) { width: 13%; }
-.rf-cols-endo col:nth-child(4) { width: 9%; }
-.rf-cols-endo col:nth-child(5) { width: 9%; }
-.rf-cols-endo col:nth-child(6) { width: 12%; }
-.rf-cols-endo col:nth-child(7) { width: 18%; }
-.rf-cols-endo col:nth-child(8) { width: 8%; }
-.rf-cols-endo col:nth-child(9) { width: 4%; }
+.rf-cols-endo col:nth-child(1) {
+  width: 5%;
+}
+.rf-cols-endo col:nth-child(2) {
+  width: 22%;
+}
+.rf-cols-endo col:nth-child(3) {
+  width: 13%;
+}
+.rf-cols-endo col:nth-child(4) {
+  width: 9%;
+}
+.rf-cols-endo col:nth-child(5) {
+  width: 9%;
+}
+.rf-cols-endo col:nth-child(6) {
+  width: 12%;
+}
+.rf-cols-endo col:nth-child(7) {
+  width: 18%;
+}
+.rf-cols-endo col:nth-child(8) {
+  width: 8%;
+}
+.rf-cols-endo col:nth-child(9) {
+  width: 4%;
+}
 
 /* WishlistTable keeps its widths inline for now: it is three tables in one
    517-line file, and splitting it is its own task (see the repair order in the
@@ -302,24 +382,26 @@ body {
   gap: var(--rf-space-1);
 }
 
-/* Dimmed rather than hidden when off: the set of filters available has to stay
-   readable, or turning one on becomes a memory game. */
+/* The off state is carried by the border and the fill, not by opacity. The
+   toggle wraps a tier chip, and an opacity here multiplies with the chip's own:
+   0.5 over the chip's 0.8 put a near-black label on a washed-out fill at 2.8:1.
+   Nothing inside a control that has to stay readable should be faded. */
 .rf-filter-toggle {
   display: flex;
   align-items: center;
   gap: var(--rf-space-1);
   padding: 5px var(--rf-space-2);
   cursor: pointer;
-  background: var(--rf-surface-2);
+  background: var(--rf-surface-1);
   border: var(--rf-hairline) solid var(--rf-border-subtle);
-  opacity: 0.5;
-  transition: opacity var(--rf-dur-fast) var(--rf-ease-standard);
+  transition:
+    background var(--rf-dur-fast) var(--rf-ease-standard),
+    border-color var(--rf-dur-fast) var(--rf-ease-standard);
 }
 
 .rf-filter-toggle[aria-pressed="true"] {
   background: var(--rf-surface-3);
   border-color: var(--rf-border-interactive);
-  opacity: 1;
 }
 
 .rf-filter-vault {
@@ -417,9 +499,15 @@ body {
    ten-column table answers a narrow pane by truncating every column at once.
    In rem so the floor rises with the reader's font size, same as .rf-table's
    own minimum. */
-.rf-cols-items { min-width: 74rem; }
-.rf-cols-ducats { min-width: 66rem; }
-.rf-cols-endo { min-width: 62rem; }
+.rf-cols-items {
+  min-width: 74rem;
+}
+.rf-cols-ducats {
+  min-width: 66rem;
+}
+.rf-cols-endo {
+  min-width: 62rem;
+}
 
 /* ------------------------------------------------------------ Ranked page -
    Shell shared by Ducanetor and Endo: they answer the same shape of question,
@@ -491,9 +579,11 @@ body {
   cursor: pointer;
 }
 
-/* Only the leader is gold. Three gold numbers would rank nothing. */
+/* Only the leader is gold. Three gold numbers would rank nothing — but the
+   others are still the rank, which is information, so they take fg-muted at
+   6.06:1 rather than fg-disabled at 2.57:1. */
 .rf-highlight-rank {
-  color: var(--rf-fg-disabled);
+  color: var(--rf-fg-muted);
   line-height: 1;
 }
 
@@ -525,4 +615,52 @@ body {
 .rf-highlight-figure {
   text-align: right;
   flex: none;
+}
+
+/* A number nobody has. fg-muted, not fg-disabled: see components/Unlisted.tsx. */
+.rf-unlisted {
+  color: var(--rf-fg-muted);
+}
+
+/* ----------------------------------------------------------- Detail panel -
+   Shapes the three panels share. Named for what the element is rather than for
+   the declarations inside, so the next reader is not decoding a class name back
+   into intent.
+   ----------------------------------------------------------------------- */
+
+/* A heading or paragraph that takes its spacing from its container. */
+.rf-flush {
+  margin: 0;
+}
+
+/* The line of explanation under a panel heading. */
+.rf-panel-note {
+  margin: var(--rf-space-2) 0 0;
+}
+
+/* The name in a row of name-then-numbers: takes the slack, and may truncate. */
+.rf-fill {
+  flex: 1;
+  min-width: 0;
+}
+
+/* One line of a panel's figures: a name, then columns of numbers aligned on
+   their baseline so the digits line up across rows. */
+.rf-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--rf-space-2);
+  font-size: var(--rf-text-body-sm);
+}
+
+.rf-stack-sm {
+  margin-bottom: var(--rf-space-2);
+}
+
+.rf-stack-md {
+  margin-bottom: var(--rf-space-4);
+}
+
+.rf-full {
+  width: 100%;
 }

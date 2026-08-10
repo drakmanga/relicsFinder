@@ -12,6 +12,8 @@ import {
   TierChip,
 } from "relic-finder-ui";
 
+import { Unlisted } from "./Unlisted";
+
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { relicMarketUrl } from "../lib/format";
 import { bestDropValue, expectedValue } from "../lib/rows";
@@ -103,7 +105,12 @@ export function ResultsTable({
       aria-label="Relics table"
       tabIndex={0}
     >
-      <Table interactive framed={false} className="rf-cols-relics">
+      <Table
+        interactive
+        framed={false}
+        caption="Relics, with expected value, best drop and cost"
+        className="rf-cols-relics"
+      >
         <TableCols count={7} />
         <thead>
           <tr>
@@ -120,11 +127,7 @@ export function ResultsTable({
                 a column that is too narrow truncates rather than pushing its
                 neighbours aside, and "VANGUA…" is not a tier. */}
             <TableHeaderCell>Tier</TableHeaderCell>
-            <TableHeaderCell
-              sortable
-              sortDirection={dir("relic")}
-              onSort={() => onSort("relic")}
-            >
+            <TableHeaderCell sortable sortDirection={dir("relic")} onSort={() => onSort("relic")}>
               Relic
             </TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
@@ -182,9 +185,7 @@ export function ResultsTable({
               number nobody can ever collect. It lives on Prime Items, where it
               is a real trade, and per drop inside the relic panel.
             */}
-            <TableHeaderCell align="center">
-              Market
-            </TableHeaderCell>
+            <TableHeaderCell align="center">Market</TableHeaderCell>
           </tr>
         </thead>
 
@@ -256,11 +257,9 @@ export function ResultsTable({
                   {pricesPending && !prices ? (
                     <Skeleton width={44} height={14} />
                   ) : expected === 0 ? (
-                    <span className="rf-fg-disabled">—</span>
+                    <Unlisted />
                   ) : (
-                    <strong style={{ color: "var(--rf-gold-300)" }}>
-                      {expected.toFixed(1)}
-                    </strong>
+                    <strong style={{ color: "var(--rf-gold-300)" }}>{expected.toFixed(1)}</strong>
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>

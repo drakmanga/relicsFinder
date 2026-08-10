@@ -135,8 +135,7 @@ export function PriceChart({ points, height = 170 }: Props) {
               // Flips to the left near the right edge so the readout never
               // leaves the dialog.
               left: hover > points.length * 0.6 ? undefined : `${geometry.toX(hover)}%`,
-              right:
-                hover > points.length * 0.6 ? `${100 - geometry.toX(hover)}%` : undefined,
+              right: hover > points.length * 0.6 ? `${100 - geometry.toX(hover)}%` : undefined,
               top: 0,
               transform: hover > points.length * 0.6 ? "translateX(-8px)" : "translateX(8px)",
               background: "var(--rf-surface-4)",

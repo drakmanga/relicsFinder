@@ -68,8 +68,8 @@ export function EndoTable({ active, quantityOf }: Props) {
 
   const footnote = (
     <p className="rf-text-caption rf-fg-muted">
-      All eleven sculptures, Chattraka included. Loose Cyan and Amber stars are not ranked: they
-      are bought to fill a sculpture, not to be dissolved.
+      All eleven sculptures, Chattraka included. Loose Cyan and Amber stars are not ranked: they are
+      bought to fill a sculpture, not to be dissolved.
     </p>
   );
 
@@ -142,7 +142,13 @@ export function EndoTable({ active, quantityOf }: Props) {
             description="Nobody holding a sculpture is online. The list fills again within minutes."
           />
         ) : (
-          <Table interactive={false} framed={false} density="comfortable" className="rf-cols-endo">
+          <Table
+            interactive={false}
+            framed={false}
+            density="comfortable"
+            caption="Ayatan sculptures ranked by Endo per platinum"
+            className="rf-cols-endo"
+          >
             <TableCols count={9} />
             <thead>
               <tr>
@@ -250,7 +256,8 @@ export function EndoTable({ active, quantityOf }: Props) {
 }
 
 /** "Ayatan Orta Sculpture" → "Orta": the rest is on every row. */
-const shortName = (itemName: string) => itemName.replace(/^Ayatan\s+/, "").replace(/\s+Sculpture$/, "");
+const shortName = (itemName: string) =>
+  itemName.replace(/^Ayatan\s+/, "").replace(/\s+Sculpture$/, "");
 
 /** Highest Endo seen for a sculpture — its value with every socket filled. */
 function maxEndo(offers: EndoOffer[], itemName: string): number {
