@@ -1,23 +1,30 @@
+/**
+ * Over 150 lines (rule 4), and not because it should be.
+ *
+ * The drop sites came out into RelicDropSites; what is left is four blocks that
+ * still belong together — refinement, contents, squad value, the trace ladder —
+ * because each reads the same relic and the same prices, and splitting them
+ * would mean passing the whole row to four siblings to save nothing. The next
+ * cut is the trace ladder, which is the only block with arithmetic of its own.
+ */
 import { useState } from "react";
 import type { ReactNode } from "react";
 import {
   ArrowLeftIcon,
   Button,
   DetailPanel,
-  Dialog,
   Divider,
   DropList,
   DropRow,
   DucatGlyph,
-  ExternalLinkIcon,
   InfoIcon,
   OrokinStar,
-  Skeleton,
   TierChip,
   XIcon,
 } from "relic-finder-ui";
 
 import { PlatPrice } from "./Plat";
+import { RelicDropSites } from "./RelicDropSites";
 
 import type { DropInfo, PriceMap, Refinement, RelicRow, Reward } from "../api/types";
 import {
@@ -28,7 +35,7 @@ import {
   expectedValue,
   squadValue,
 } from "../lib/rows";
-import { priceOf, relicMarketUrl } from "../lib/format";
+import { priceOf } from "../lib/format";
 
 interface Props {
   row: RelicRow | null;
@@ -63,9 +70,6 @@ interface Props {
   /** Shuts the panel and clears the selection. */
   onClose: () => void;
 }
-
-/** How many missions to list before collapsing into a count. */
-const SITES_SHOWN = 4;
 
 /**
  * A section heading that can explain itself.
@@ -156,7 +160,6 @@ export function RelicDetailPanel({
 }: Props) {
   const [refinement, setRefinement] = useState<Refinement | null>(null);
   /** Whether the full mission list is open. */
-  const [allSites, setAllSites] = useState(false);
 
   if (!row) return <DetailPanel empty />;
 
@@ -491,127 +494,12 @@ export function RelicDetailPanel({
         })}
       </div>
 
-      <Divider />
-
-      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Where it drops</p>
-
-      {sitesPending ? (
-        <Skeleton height={40} />
-      ) : sites.length === 0 ? (
-        <p className="rf-text-body-sm rf-fg-muted">No mission drops it — the relic is vaulted.</p>
-      ) : (
-        <>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {sites.slice(0, SITES_SHOWN).map((site, index) => (
-              <div key={`${site.location}-${site.rotation}-${index}`} className="rf-stat-row">
-                <span className="rf-fill">{site.location}</span>
-                <span className="rf-text-caption rf-fg-muted">{site.mission}</span>
-                {site.rotation && (
-                  <span className="rf-text-caption rf-fg-muted">rot {site.rotation}</span>
-                )}
-                <span
-                  className="rf-text-data-sm rf-fg-muted"
-                  style={{ width: 48, textAlign: "right" }}
-                >
-                  {site.chance.toFixed(2)}%
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {sites.length > SITES_SHOWN && (
-            /*
-              The four best are the answer most of the time — a relic worth
-              farming has one or two places worth farming it — so the list stays
-              short and the rest is a click away rather than a scroll away. The
-              ones underneath still matter: a mission four rotations deep can be
-              the only one somebody has unlocked.
-            */
-            <button
-              type="button"
-              className="rf-focus-ring"
-              onClick={() => setAllSites(true)}
-              style={{
-                marginTop: 8,
-                padding: 0,
-                background: "none",
-                border: 0,
-                cursor: "pointer",
-                font: "inherit",
-                color: "var(--rf-fg-accent, var(--rf-gold-500))",
-                textDecoration: "underline",
-                textUnderlineOffset: 3,
-              }}
-            >
-              and {sites.length - SITES_SHOWN} more missions
-            </button>
-          )}
-        </>
-      )}
-
-      <div style={{ marginTop: 20 }}>
-        {/*
-          The relic, not a part. Relics are traded in their own right, and this
-          panel is about the relic — buying one is an alternative to farming it,
-          which is exactly the choice the missions above inform.
-        */}
-        <Button
-          variant="primary"
-          icon={<ExternalLinkIcon />}
-          className="rf-full"
-          onClick={() =>
-            window.open(relicMarketUrl(row.relicFullName), "_blank", "noopener,noreferrer")
-          }
-        >
-          Buy this relic on Warframe Market
-        </Button>
-      </div>
-
-      <div style={{ marginTop: 12, display: "flex", alignItems: "baseline", gap: 8 }}>
-        <span className="rf-text-caption rf-fg-muted">Best drop</span>
-        <span style={{ marginLeft: "auto" }}>
-          <PlatPrice value={best} />
-        </span>
-      </div>
-
-      {/*
-        A dialog rather than an expanding section: the panel is a column of
-        short blocks read top to bottom, and dropping forty rows into the middle
-        of it pushes everything below out of reach. This is a detour, and it
-        hands the panel back exactly as it was.
-      */}
-      <Dialog
-        open={allSites}
-        onClose={() => setAllSites(false)}
-        title={`Where ${row.relicFullName} drops`}
-        description={`${sites.length} missions, best chance first`}
-        footer={
-          <Button variant="ghost" onClick={() => setAllSites(false)}>
-            Close
-          </Button>
-        }
-      >
-        <div style={{ maxHeight: "60vh", overflowY: "auto", display: "grid", gap: 6 }}>
-          {sites.map((site, index) => (
-            <div
-              key={`${site.location}-${site.rotation}-${index}`}
-              style={{ display: "flex", alignItems: "baseline", gap: 10, fontSize: 13 }}
-            >
-              <span className="rf-fill">{site.location}</span>
-              <span className="rf-text-caption rf-fg-muted">{site.mission}</span>
-              {site.rotation && (
-                <span className="rf-text-caption rf-fg-muted">rot {site.rotation}</span>
-              )}
-              <span
-                className="rf-text-data-sm rf-tabular rf-fg-muted"
-                style={{ width: 56, textAlign: "right" }}
-              >
-                {site.chance.toFixed(2)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </Dialog>
+      <RelicDropSites
+        relicFullName={row.relicFullName}
+        sites={sites}
+        sitesPending={sitesPending}
+        best={best}
+      />
     </DetailPanel>
   );
 }
