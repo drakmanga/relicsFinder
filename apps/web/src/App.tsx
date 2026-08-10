@@ -1,26 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  Chip,
-  DetailPanel,
-  EmptyState,
-  Input,
-  SearchIcon,
-  Skeleton,
-  Tabs,
-} from "relic-finder-ui";
+import { Button, Chip, Input, SearchIcon, Tabs } from "relic-finder-ui";
 
+import { DetailPane } from "./components/DetailPane";
 import { FilterBar } from "./components/FilterBar";
-import { ItemDetailPanel } from "./components/ItemDetailPanel";
-import { DucanetorTable } from "./components/DucanetorTable";
-import { EndoTable } from "./components/EndoTable";
+import { ResultsPane } from "./components/ResultsPane";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
-import { WishlistTable } from "./components/WishlistTable";
-import { ItemsTable } from "./components/ItemsTable";
-import { ResultsTable } from "./components/ResultsTable";
-import { RelicDetailPanel } from "./components/RelicDetailPanel";
-import { SetsTable } from "./components/SetsTable";
-import { SetDetailPanel } from "./components/SetDetailPanel";
 import {
   useDropInfo,
   useEndoOffers,
@@ -32,9 +16,9 @@ import {
 import { useWishlist } from "./lib/wishlist";
 import { useOwned } from "./lib/owned";
 import { buildSets } from "./lib/setCompletion";
-import { buildItemRows } from "./lib/items";
+import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./lib/items";
 import { fromSearch, toSearch } from "./lib/urlState";
-import type { Refinement, RelicItemRow, Reward } from "./api/types";
+import type { Refinement, Reward } from "./api/types";
 import {
   applyRelicPriceCeiling,
   applyVaultFilter,
@@ -57,18 +41,57 @@ type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
  * rankings of what the market is offering right now — and none of them has
  * anything for a relic filter to act on.
  */
-const isCatalogue = (view: View) => view === "relics" || view === "items";
+type CatalogueView = "relics" | "items";
 
-/** Views with a detail panel beside the list. */
-const hasPanel = (view: View) => isCatalogue(view) || view === "sets";
+const isCatalogue = (view: View): view is CatalogueView =>
+  view === "relics" || view === "items";
 
 export function App() {
   // Read once, so a shared link opens on the state it describes rather than on
   // the default and then jumping.
   const initial = fromSearch(window.location.search, emptyFilters());
 
-  const [filters, setFilters] = useState<Filters>(initial.filters);
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  /**
+   * One set of filters per catalogue view, not one for the app.
+   *
+   * A ceiling of 20p is a sensible question to ask of a list of parts and a
+   * meaningless one to ask of a list of relics, where it caps the best drop
+   * instead; refinement likewise means "which state am I reading" on one and
+   * "which state am I farming at" on the other. Sharing them meant a filter set
+   * on one tab silently emptied the other, and the bar that explained it was on
+   * the tab the user had just left.
+   *
+   * The link is read into whichever view it names — its filters describe that
+   * view, not the other one.
+   */
+  const [viewFilters, setViewFilters] = useState<Record<CatalogueView, Filters>>(() => ({
+    relics: emptyFilters(),
+    items: emptyFilters(),
+    ...(isCatalogue(initial.view as View) ? { [initial.view]: initial.filters } : {}),
+  }));
+  /**
+   * The search term, deliberately shared by every view.
+   *
+   * It sits above the filter bar rather than in it, and it is a question about
+   * the game — "where is Volt Prime Neuroptics" — not about the list being
+   * read. Someone who searches a part on Relics and switches to Prime Items is
+   * following the same question into another view, and re-typing it there would
+   * be the tool losing the thread.
+   */
+  const [term, setTerm] = useState(initial.filters.term);
+  /**
+   * Open where there is room for it, shut where there is not.
+   *
+   * The bar is five groups tall on a narrow screen, which on a phone is the
+   * whole viewport: opening by default meant the first thing the app showed was
+   * its filters and none of the list they filter. Read once at mount rather
+   * than watched, so resizing never yanks the bar away from someone using it.
+   * 1024px is --rf-bp-lg, the same width at which the detail panel stops being
+   * a column.
+   */
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => window.matchMedia("(min-width: 1024px)").matches,
+  );
   /** Alphabetical: the Relics view is a catalogue, and A comes first. */
   const [sort, setSort] = useState<{ column: RelicSortColumn; direction: SortDirection }>({
     column: "relic",
@@ -104,6 +127,23 @@ export function App() {
     { view: View; selected: string | null; pickedItem: string | null }[]
   >([]);
 
+  /**
+   * The filters in force, which is the current view's own set plus the shared
+   * term. Views without a filter bar still search, so they get the term over an
+   * otherwise empty set rather than borrowing another view's filters.
+   */
+  const filters: Filters = useMemo(
+    () => (isCatalogue(view) ? { ...viewFilters[view], term } : { ...emptyFilters(), term }),
+    [view, viewFilters, term],
+  );
+
+  /** Routes a change from the filter bar: the term is shared, the rest is not. */
+  const setFilters = (next: Filters) => {
+    setTerm(next.term);
+    if (isCatalogue(view)) {
+      setViewFilters((current) => ({ ...current, [view]: { ...next, term: "" } }));
+    }
+  };
 
   /**
    * Writes the state back into the address bar.
@@ -125,7 +165,15 @@ export function App() {
     const onPop = () => {
       const next = fromSearch(window.location.search, emptyFilters());
       setView(next.view as View);
-      setFilters(next.filters);
+      setTerm(next.filters.term);
+      // The entry's filters belong to the view it names, and only that one: the
+      // other view's are left as the user had them.
+      if (isCatalogue(next.view as View)) {
+        setViewFilters((current) => ({
+          ...current,
+          [next.view]: { ...next.filters, term: "" },
+        }));
+      }
       setSelected(next.selected);
       setPickedItem(next.pickedItem);
     };
@@ -155,7 +203,10 @@ export function App() {
    */
   const openRelic = (relicFullName: string) => {
     setTrail((steps) => [...steps, { view, selected, pickedItem }]);
-    setSelected(`${relicFullName}|${filters.refinement}`);
+    // The Relics view's own refinement, not the one in force where the click
+    // happened: the row has to exist in the list being opened, and since the
+    // filters are per view that list is filtered by its own state.
+    setSelected(`${relicFullName}|${viewFilters.relics.refinement}`);
     setView("relics");
   };
 
@@ -196,6 +247,30 @@ export function App() {
    */
   const wantsSculptures = wishlist.entries.some((entry) => entry.kind === "endo");
   const endoOffers = useEndoOffers(view === "wishlist" && wantsSculptures);
+
+  // Prices only for what is about to be shown: the batch is one request, but it
+  // is still forty market lookups on the server the first time round.
+  // Wishlist entries join the batch even when scrolled out of the results:
+  // the panel total needs their prices, and asking separately would double the
+  // number of market lookups.
+  /**
+   * Every distinct part in the dataset, priced in one request.
+   *
+   * The list is stable, so this is a single query whatever the user filters or
+   * scrolls to — and sorting by price needs the whole set anyway.
+   *
+   * Read before the row lists rather than after them: the price ceiling is a
+   * filter now, on both catalogue views, so the rows cannot be built without it.
+   */
+  const pricedNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const relic of relics.data ?? []) {
+      if (relic.refinement !== "intact") continue;
+      for (const reward of relic.rewards) names.add(reward.itemName);
+    }
+    return [...names];
+  }, [relics.data]);
+  const prices = useItemPrices(pricedNames);
 
   const rows = useMemo(
     () => buildRelicRows(relics.data ?? [], filters),
@@ -240,16 +315,21 @@ export function App() {
     if (view !== "items") return [];
 
     const built = buildItemRows(relics.data ?? [], filters);
-    if (filters.vault === "all" || !unvaulted.data) return built;
 
-    // A part is farmable when any relic holding it is in rotation: one
+    // A part is droppable when any relic holding it is in rotation: one
     // unvaulted source is enough, and the other five being vaulted changes
     // nothing about whether it can be farmed tonight.
     const names = unvaulted.data;
-    return built.filter(
-      (row) => row.relicNames.some((name) => names.has(name)) === (filters.vault === "farmable"),
-    );
-  }, [view, relics.data, filters, unvaulted.data]);
+    const vaulted =
+      filters.vault === "all" || !names
+        ? built
+        : built.filter(
+            (row) =>
+              row.relicNames.some((name) => names.has(name)) === (filters.vault === "farmable"),
+          );
+
+    return applyItemPriceCeiling(vaulted, filters.maxPrice, prices.data);
+  }, [view, relics.data, filters, unvaulted.data, prices.data]);
 
   // The row carries one item; the panel shows the whole relic, so the other
   // five rewards are looked up rather than re-fetched.
@@ -279,11 +359,29 @@ export function App() {
     if (view === "items" && filters.rarities.size > 0) {
       active.push(`rarity ${[...filters.rarities].join(", ")}`);
     }
-    if (filters.vault !== "all") active.push(filters.vault === "farmable" ? "farmable" : "vaulted");
+    if (filters.vault !== "all") active.push(filters.vault === "farmable" ? "droppable" : "vaulted");
     if (filters.maxPrice !== null) active.push(`a ceiling of ${filters.maxPrice}p`);
     if (filters.refinement !== "intact") active.push(filters.refinement);
 
     return active;
+  }, [filters, view]);
+
+  /**
+   * How many of those came from the filter bar.
+   *
+   * Shown beside the toggle when the bar is collapsed. A ceiling left at 5p
+   * empties the catalogue, and with the bar shut there was nothing on screen
+   * saying so — the count is what turns "the app is broken" back into "I have
+   * three filters on".
+   */
+  const activeBarFilters = useMemo(() => {
+    let count = 0;
+    if (filters.tiers.size > 0) count += 1;
+    if (view === "items" && filters.rarities.size > 0) count += 1;
+    if (filters.vault !== "all") count += 1;
+    if (filters.maxPrice !== null) count += 1;
+    if (filters.refinement !== "intact") count += 1;
+    return count;
   }, [filters, view]);
 
   /**
@@ -293,48 +391,10 @@ export function App() {
    * row is synthesised from the first relic that drops the part — the panel
    * needs a name, a rarity and somewhere to have come from.
    */
-  const itemPanelRow = useMemo((): RelicItemRow | null => {
-    const name = pickedItem;
-    if (!name) return null;
-
-    for (const relic of relics.data ?? []) {
-      if (relic.refinement !== "intact") continue;
-      const reward = relic.rewards.find((r) => r.itemName === name);
-      if (!reward) continue;
-
-      return {
-        id: `${relic.fullName}|${relic.refinement}|${name}`,
-        tier: relic.tier,
-        relicFullName: relic.fullName,
-        refinement: relic.refinement,
-        itemName: name,
-        rarity: reward.rarity,
-        chance: reward.chance,
-      };
-    }
-    return null;
-  }, [pickedItem, relics.data]);
-
-  // Prices only for what is about to be shown: the batch is one request, but it
-  // is still forty market lookups on the server the first time round.
-  // Wishlist entries join the batch even when scrolled out of the results:
-  // the panel total needs their prices, and asking separately would double the
-  // number of market lookups.
-  /**
-   * Every distinct part in the dataset, priced in one request.
-   *
-   * The list is stable, so this is a single query whatever the user filters or
-   * scrolls to — and sorting by price needs the whole set anyway.
-   */
-  const pricedNames = useMemo(() => {
-    const names = new Set<string>();
-    for (const relic of relics.data ?? []) {
-      if (relic.refinement !== "intact") continue;
-      for (const reward of relic.rewards) names.add(reward.itemName);
-    }
-    return [...names];
-  }, [relics.data]);
-  const prices = useItemPrices(pricedNames);
+  const itemPanelRow = useMemo(
+    () => synthesiseItemRow(relics.data ?? [], pickedItem),
+    [pickedItem, relics.data],
+  );
 
   /**
    * What each relic itself sells for.
@@ -423,253 +483,169 @@ export function App() {
     );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
-      <header
-        style={{
-          height: 56,
-          flex: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: 28,
-          padding: "0 18px",
-          background: "var(--rf-surface-2)",
-          borderBottom: "1px solid var(--rf-border-default)",
-        }}
-      >
-        <span
-          style={{
-            flex: "none",
-            fontFamily: "var(--rf-font-display)",
-            fontSize: 17,
-            letterSpacing: "0.14em",
-            color: "var(--rf-gold-300)",
-          }}
-        >
-          RELIC FINDER
-        </span>
+    <div className="rf-app">
+      {/* Every band below is full-bleed and carries its own background and
+          border; the shell inside it caps the content at --rf-content-max and
+          centres it. Before this the app was full-bleed at every width, which
+          on a 1920 monitor meant an 1884px line with an 18px gutter. */}
+      <header className="rf-band rf-topbar">
+        <div className="rf-shell rf-topbar-inner">
+          {/*
+            The name is the way home, which is what a masthead is for everywhere
+            else on the web. It closes the panel too: landing on Relics with a
+            part still open in the panel beside it would be halfway back rather
+            than back.
+          */}
+          <button
+            type="button"
+            className="rf-brand rf-focus-ring"
+            onClick={() => {
+              setView("relics");
+              closePanel();
+            }}
+            aria-label="Relic Finder — back to the relics"
+          >
+            RELIC FINDER
+          </button>
 
-        <Tabs
-          label="Views"
-          value={view}
-          onChange={(id) => setView(id as typeof view)}
-          items={[
-            { id: "relics", label: "Relics" },
-            { id: "items", label: "Prime Items" },
-            { id: "sets", label: "Sets" },
-            { id: "wishlist", label: `Wishlist · ${wishlist.totalItems}` },
-            { id: "ducats", label: "Ducanetor" },
-            { id: "endo", label: "Endo" },
-          ]}
-        />
-
+          <Tabs
+            label="Views"
+            value={view}
+            onChange={(id) => setView(id as typeof view)}
+            items={[
+              { id: "relics", label: "Relics" },
+              { id: "items", label: "Prime Items" },
+              { id: "sets", label: "Sets" },
+              { id: "wishlist", label: `Wishlist · ${wishlist.totalItems}` },
+              { id: "ducats", label: "Ducanetor" },
+              { id: "endo", label: "Endo" },
+            ]}
+          />
+        </div>
       </header>
 
       {/* Search and filters act on the catalogue, not on the list. */}
       {(isCatalogue(view) || view === "sets") && (
-      <div
-        style={{
-          flex: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "14px 18px",
-          background: "var(--rf-surface-1)",
-          borderBottom: "1px solid var(--rf-border-default)",
-        }}
-      >
-        <div style={{ flex: 1, minWidth: 0, maxWidth: 720 }}>
-          <Input
-            icon={<SearchIcon />}
-            placeholder="Lith V9, Volt Prime Neuroptics…"
-            value={filters.term}
-            onChange={(event) => setFilters({ ...filters, term: event.target.value })}
-            aria-label="Search relic or item"
-            trailing={
-              <Button
-                variant={filtersOpen ? "accent" : "ghost"}
-                size="sm"
-                onClick={() => setFiltersOpen((open) => !open)}
-              >
-                Filters {filtersOpen ? "▴" : "▾"}
-              </Button>
-            }
-          />
+        <div className="rf-band rf-searchbar">
+          <div className="rf-shell rf-searchbar-inner">
+            <div className="rf-search-field">
+              {/*
+                Nothing trails the field. The Filters toggle used to, which put
+                a control that only shows and hides a bar inside the box you
+                type into — the one place where a button reads as "do the
+                search".
+              */}
+              <Input
+                icon={<SearchIcon />}
+                placeholder="Lith V9, Volt Prime Neuroptics…"
+                value={filters.term}
+                onChange={(event) => setFilters({ ...filters, term: event.target.value })}
+                aria-label="Search relic or item"
+              />
+            </div>
+            {relics.data && (
+              <Chip>
+                {view === "items"
+                  ? itemRows.length
+                  : view === "sets"
+                    ? visibleSets.length
+                    : visible.length}{" "}
+                results
+              </Chip>
+            )}
+          </div>
         </div>
-        {relics.data && (
-          <Chip>
-            {view === "items"
-              ? itemRows.length
-              : view === "sets"
-                ? visibleSets.length
-                : visible.length}{" "}
-            results
-          </Chip>
-        )}
-      </div>
+      )}
+
+      {/* The toggle lives with the thing it toggles, and stays put when the bar
+          folds away — otherwise closing the filters would take the only control
+          that reopens them with it. */}
+      {isCatalogue(view) && (
+        <div className={`rf-band rf-filterstrip${filtersOpen ? "" : " rf-filterstrip-closed"}`}>
+          <div className="rf-shell rf-filterstrip-inner">
+            <Button
+              variant={filtersOpen ? "accent" : "ghost"}
+              size="sm"
+              onClick={() => setFiltersOpen((open) => !open)}
+              aria-expanded={filtersOpen}
+              aria-controls="rf-filter-bar"
+            >
+              Filters {filtersOpen ? "▴" : "▾"}
+            </Button>
+            {!filtersOpen && activeBarFilters > 0 && (
+              <span className="rf-text-caption rf-fg-muted">{activeBarFilters} active</span>
+            )}
+          </div>
+        </div>
       )}
 
       {filtersOpen && isCatalogue(view) && (
-        <FilterBar filters={filters} onChange={setFilters} view={view} />
+        <div className="rf-band rf-filterband">
+          <div className="rf-shell">
+            <FilterBar id="rf-filter-bar" filters={filters} onChange={setFilters} view={view} />
+          </div>
+        </div>
       )}
 
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          gap: 1,
-          background: "var(--rf-border-default)",
-        }}
-      >
-        {/*
-          Surface-1, the same ground the detail panel stands on. On surface-0
-          the area below the last row read as a hole punched in the layout
-          rather than as an empty table — obvious the moment a search returns
-          one result and the panel beside it is eight hundred pixels tall.
-        */}
-        <main
-          style={{ flex: 1, minWidth: 0, background: "var(--rf-surface-1)", overflow: "hidden" }}
-        >
-          {/* Ayatan offers come straight from the market: nothing here waits on
-              the relic catalogue, so it must not wait on its loading state. */}
-          {view === "endo" ? (
-            <EndoTable active quantityOf={wishlist.quantityOf} />
-          ) : relics.isPending ? (
-            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              {Array.from({ length: 12 }, (_, i) => (
-                <Skeleton key={i} height={40} />
-              ))}
-            </div>
-          ) : relics.isError ? (
-            <EmptyState
-              tone="error"
-              title="Could not load relics"
-              description={String(relics.error)}
-              actions={
-                <Button variant="outline" size="sm" onClick={() => relics.refetch()}>
-                  Retry
-                </Button>
-              }
-            />
-          ) : view === "ducats" ? (
-            <DucanetorTable
-              prices={prices.data}
-              onInfo={setInfoItem}
-              quantityOf={wishlist.quantityOf}
-            />
-          ) : view === "sets" ? (
-            <SetsTable
+      {/* Below --rf-bp-lg the shell's two columns become two rows: subtract a
+          440px panel from a 1024px viewport and the table is left under the
+          640px it needs. See .rf-results in app.css. */}
+      {/* Below --rf-bp-lg the shell's two columns become two rows: subtract a
+          440px panel from a 1024px viewport and the table is left under the
+          640px it needs. See .rf-results in app.css. */}
+      <div className="rf-band rf-resultsband">
+        <div className="rf-shell rf-results">
+          <main className="rf-results-main">
+            <ResultsPane
+              view={view}
+              catalogue={relics}
+              relicRows={visible}
+              itemRows={itemRows}
               sets={visibleSets}
-              pricesPending={prices.isPending}
-              selected={selectedSet}
-              onSelect={setSelectedSet}
-            />
-          ) : view === "wishlist" ? (
-            <WishlistTable
-              entries={wishlist.entries}
-              prices={prices.data}
-              onInfo={setInfoItem}
+              wishlistEntries={wishlist.entries}
               endoOffers={endoOffers.data}
-            />
-          ) : (view === "items" ? itemRows.length : visible.length) === 0 ? (
-            activeFilters.length > 0 ? (
-              /*
-                The filters are named, not merely alluded to. A price ceiling
-                left at 5p empties the whole catalogue and the bar that set it
-                may well be collapsed — "no item matches the active filters" is
-                then a riddle. Saying which ones, and offering to drop them, is
-                the difference between a dead end and a wrong turn.
-              */
-              <EmptyState
-                title="No results"
-                description={`Nothing matches ${activeFilters.join(", ")}.`}
-                actions={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setFilters({ ...emptyFilters(), term: filters.term })}
-                  >
-                    Clear filters
-                  </Button>
-                }
-              />
-            ) : (
-              <EmptyState
-                tone="initial"
-                title="Search for a relic"
-                description="The name of the relic, or of the Prime part you are after."
-              />
-            )
-          ) : view === "items" ? (
-            <ItemsTable
-              rows={itemRows}
-              prices={prices.data}
-              quantityOf={wishlist.quantityOf}
-              selected={pickedItem}
-              onSelect={setPickedItem}
-              onInfo={setInfoItem}
-            />
-          ) : (
-            <ResultsTable
-              rows={visible}
               prices={prices.data}
               pricesPending={prices.isPending}
               relicPrices={relicPrices.data}
-              term={filters.term}
               unvaulted={unvaulted.data}
-              selected={selected}
-              onSelect={setSelected}
+              term={filters.term}
+              activeFilters={activeFilters}
+              onClearFilters={() => setFilters({ ...emptyFilters(), term: filters.term })}
+              quantityOf={wishlist.quantityOf}
+              selectedRelic={selected}
+              onSelectRelic={setSelected}
+              selectedItem={pickedItem}
+              onSelectItem={setPickedItem}
+              selectedSet={selectedSet}
+              onSelectSet={setSelectedSet}
+              onInfo={setInfoItem}
               sort={sort}
               onSort={toggleSort}
             />
-          )}
-        </main>
+          </main>
 
-        {/*
-          One panel per view rather than one panel with a mode: the Relics view
-          shows relics and the Prime Items view shows parts, so which panel to
-          draw is no longer a question about the clicked cell.
-        */}
-        {!hasPanel(view) ? null : view === "sets" ? (
-          <SetDetailPanel
-            set={selectedSetRow}
+          <DetailPane
+            view={view}
+            relics={relics.data ?? []}
+            prices={prices.data}
             pricesPending={prices.isPending}
-            refinement={setRefinement}
-            onRefinement={setSetRefinement}
-            onToggle={ownedParts.toggle}
-            onToggleAll={ownedParts.setAll}
+            relicRow={selectedRow}
+            relicStates={selectedStates}
+            sites={selectedSites.data ?? []}
+            sitesPending={selectedSites.isPending}
+            highlightItem={searchedItem}
+            itemRow={itemPanelRow}
+            set={selectedSetRow}
+            setRefinement={setRefinement}
+            onSetRefinement={setSetRefinement}
+            onToggleOwned={ownedParts.toggle}
+            onToggleAllOwned={ownedParts.setAll}
             onPickItem={openItem}
             onPickRelic={openRelic}
             onBack={trail.length > 0 ? goBack : undefined}
             onClose={closePanel}
           />
-        ) : view === "items" ? (
-          itemPanelRow === null ? (
-            <DetailPanel empty />
-          ) : (
-            <ItemDetailPanel
-              row={itemPanelRow}
-              relics={relics.data ?? []}
-              prices={prices.data}
-              onPickItem={openItem}
-              onPickRelic={openRelic}
-              onBack={trail.length > 0 ? goBack : undefined}
-              onClose={closePanel}
-            />
-          )
-        ) : (
-          <RelicDetailPanel
-            row={selectedRow}
-            onPickItem={openItem}
-            onBack={trail.length > 0 ? goBack : undefined}
-            onClose={closePanel}
-            highlightItem={searchedItem}
-            states={selectedStates}
-            prices={prices.data}
-            sites={selectedSites.data ?? []}
-            sitesPending={selectedSites.isPending}
-          />
-        )}
+        </div>
       </div>
 
       <ItemInfoDialog
