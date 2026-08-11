@@ -68,6 +68,11 @@ jobs:
 
       - run: ./mvnw --batch-mode verify
 
+      # The backend suite has to be able to fail too: fifteen deliberate bugs
+      # in the rarity table, the market slugs, the Endo formula and the search.
+      - name: Mutation check
+        run: node scripts/mutants-java.mjs
+
   accessibility:
     name: Accessibility
     runs-on: ubuntu-latest

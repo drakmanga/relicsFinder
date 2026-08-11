@@ -81,7 +81,9 @@ views against a real preview build. Locally:
 ```sh
 npm run verify:all     # typecheck, lint, debt baselines, unit tests, render checks
 npm run format:check   # prettier
-npm run test:mutants   # proves the unit tests can fail
+npm run test:mutants   # proves the frontend unit tests can fail
+./mvnw verify          # backend: 40 tests
+npm run test:mutants:java   # proves the backend tests can fail
 npm run axe            # accessibility, needs the two servers below
 npm run lighthouse     # performance, same
 ```

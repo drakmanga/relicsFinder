@@ -521,6 +521,12 @@ Do not report "verified" for a check that was not run.
 Recorded so that a gate can freeze it and so that no agent "discovers" it again as if it were new.
 These are accepted-for-now, not approved.
 
+> **The backend has tests too (2026-08-11):** 39 over the rarity correction, the
+> market slugs, the Endo formula and the search, proven the same way —
+> `npm run test:mutants:java`, fifteen deliberate bugs, fifteen caught. This
+> document is about the frontend, so that work is outside it; it is recorded
+> here because the arithmetic it checks is the arithmetic `lib/` consumes.
+>
 > **CI exists (2026-08-11):** `.github/workflows/ci.yml` runs every gate in this
 > document on every push — including the axe check §7.3 asks for, against a
 > preview build with the backend up. The gates below are no longer a matter of

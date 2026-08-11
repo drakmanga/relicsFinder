@@ -25,7 +25,8 @@
     "test:watch": "vitest",
     "test:mutants": "node scripts/mutants.mjs",
     "lint:inline-style": "node scripts/lint-debt.mjs",
-    "lighthouse": "unlighthouse-ci --throttle"
+    "lighthouse": "unlighthouse-ci --throttle",
+    "test:mutants:java": "node scripts/mutants-java.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",

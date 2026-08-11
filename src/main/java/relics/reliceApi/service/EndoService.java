@@ -48,7 +48,10 @@ public class EndoService {
      * are bought to fill a sculpture, not to be dissolved, so ranking them by
      * Endo per platinum would answer a question nobody asks.
      */
-    private static final List<Sculpture> SCULPTURES = List.of(
+    // Package-private, not private: the formula below is checked against the
+    // filled value the game publishes for each sculpture, and that check is a
+    // test rather than a comment.
+    static final List<Sculpture> SCULPTURES = List.of(
             new Sculpture("Ayatan Anasa Sculpture", "ayatan_anasa_sculpture", 2000, 2, 2, 0.5),
             new Sculpture("Ayatan Kitha Sculpture", "ayatan_kitha_sculpture", 450, 4, 1, 3.0),
             new Sculpture("Ayatan Orta Sculpture", "ayatan_orta_sculpture", 650, 3, 1, 2.0),
@@ -62,8 +65,8 @@ public class EndoService {
             new Sculpture("Ayatan Ayr Sculpture", "ayatan_ayr_sculpture", 325, 3, 0, 2.0)
     );
 
-    private record Sculpture(String name, String slug, int base, int cyanSockets,
-                             int amberSockets, double multiplier) {
+    record Sculpture(String name, String slug, int base, int cyanSockets,
+                     int amberSockets, double multiplier) {
         int sockets() {
             return cyanSockets + amberSockets;
         }
