@@ -521,6 +521,13 @@ Do not report "verified" for a check that was not run.
 Recorded so that a gate can freeze it and so that no agent "discovers" it again as if it were new.
 These are accepted-for-now, not approved.
 
+> **Done since this was written (2026-08-11):** vitest with 86 tests over the
+> pure logic in `lib/`, proven by `npm run test:mutants` — seventeen deliberate
+> bugs, seventeen caught. `npm run lint:inline-style` is an alias of
+> `lint:debt`, which counts three things rather than one. Lighthouse runs with
+> `npm run lighthouse` against the six views listed in `unlighthouse.config.ts`,
+> because the crawler finds one route in a single-page app and stops.
+>
 > **The live numbers are in `scripts/lint-debt.mjs`, not in the table below.**
 > The table is the measurement that started the ratchet; the script is what
 > enforces it, and it is the one to lower. Run `npm run lint:debt`.

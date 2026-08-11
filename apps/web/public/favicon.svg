@@ -1,0 +1,12 @@
+<!--
+  The Void sigil from the design system's icon set, in Orokin gold on the app
+  canvas. The same path as packages/ui VoidSigil: the tab and the page should
+  not be wearing two different marks.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <rect width="24" height="24" fill="#0b0a08" />
+  <path
+    fill="#c9a227"
+    d="M8.2 2h7.6L22 8.2v7.6L15.8 22H8.2L2 15.8V8.2L8.2 2Zm.9 2.2L4.2 9.1v5.8l4.9 4.9h5.8l4.9-4.9V9.1l-4.9-4.9H9.1Zm2.9 3.3 4.4 4.5-4.4 4.5-4.4-4.5 4.4-4.5Z"
+  />
+</svg>

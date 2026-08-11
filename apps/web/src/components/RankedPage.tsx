@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
-import { Frame } from "relic-finder-ui";
+import { Frame, Skeleton } from "relic-finder-ui";
+
+/** Measured from a rendered card: three of them are one 99px row. */
+const HIGHLIGHT_HEIGHT = 99;
 
 interface HighlightProps {
   rank: number;
@@ -61,6 +64,25 @@ export function Highlight({
         </div>
       </div>
     </Frame>
+  );
+}
+
+/**
+ * Three cards' worth of nothing, at the height three cards take.
+ *
+ * The ranked views spend their first seconds waiting on the market, and the
+ * highlights only exist once it answers. Rendering the header without them and
+ * adding them later moved the table down by 99px after paint — a layout shift
+ * of 0.4, against the 0.1 that counts as good. Reserving the space costs an
+ * empty frame and removes the shift entirely.
+ */
+export function HighlightPlaceholder() {
+  return (
+    <div className="rf-ranked-highlights" aria-hidden="true">
+      {[0, 1, 2].map((index) => (
+        <Skeleton key={index} height={HIGHLIGHT_HEIGHT} />
+      ))}
+    </div>
   );
 }
 

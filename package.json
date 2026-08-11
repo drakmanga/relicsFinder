@@ -19,8 +19,13 @@
     "lint:debt": "node scripts/lint-debt.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify:all": "npm run typecheck && npm run lint && npm run lint:debt && npm run verify",
-    "axe": "node scripts/axe-check.mjs"
+    "verify:all": "npm run typecheck && npm run lint && npm run lint:debt && npm run test && npm run verify",
+    "axe": "node scripts/axe-check.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:mutants": "node scripts/mutants.mjs",
+    "lint:inline-style": "node scripts/lint-debt.mjs",
+    "lighthouse": "unlighthouse-ci --throttle"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
@@ -32,6 +37,7 @@
     "globals": "^17.9.0",
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
-    "typescript-eslint": "^8.67.0"
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.10"
   }
 }

@@ -22,7 +22,7 @@ import {
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
-import { Highlight, RankedPage } from "./RankedPage";
+import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { useEndoOffers } from "../api/queries";
 import { bump, remove } from "../lib/wishlist";
 import type { EndoOffer, WishlistKind } from "../api/types";
@@ -81,7 +81,12 @@ export function EndoTable({ active, quantityOf }: Props) {
 
   if (offers.isPending) {
     return (
-      <RankedPage title="Endo" lead="Reading the open orders." controls={controls}>
+      <RankedPage
+        title="Endo"
+        lead="Reading the open orders."
+        controls={controls}
+        highlights={<HighlightPlaceholder />}
+      >
         <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 8 }}>
           {Array.from({ length: 8 }, (_, i) => (
             <Skeleton key={i} height={48} />

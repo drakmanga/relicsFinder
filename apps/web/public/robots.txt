@@ -1,0 +1,11 @@
+# Relic Finder is self-hosted and single-tenant: there is nothing here for a
+# crawler that it could not get from warframe.market and the drop tables
+# directly, and the API answers with live market data that would be stale in an
+# index the moment it was written.
+#
+# The file exists rather than being absent because a single-page app answers
+# every unknown path with index.html, and a crawler reading HTML as robots
+# syntax treats the whole document as errors.
+User-agent: *
+Allow: /$
+Disallow: /api/

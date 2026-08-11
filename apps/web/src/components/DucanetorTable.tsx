@@ -23,7 +23,7 @@ import {
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
-import { Highlight, RankedPage } from "./RankedPage";
+import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { bump, remove } from "../lib/wishlist";
 import { marketUrl } from "../lib/format";
 import type { PriceMap, WishlistKind } from "../api/types";
@@ -111,7 +111,12 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
 
   if (!prices) {
     return (
-      <RankedPage title="Ducanetor" lead="Waiting for the market to be read.">
+      <RankedPage
+        title="Ducanetor"
+        lead="Waiting for the market to be read."
+        controls={controls}
+        highlights={<HighlightPlaceholder />}
+      >
         <EmptyState
           tone="initial"
           title="No prices yet"
