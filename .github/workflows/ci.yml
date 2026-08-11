@@ -1,0 +1,128 @@
+# Every gate this repository has, run on every push.
+#
+# The gates existed before this file did and ran only when somebody remembered
+# them, which is another way of saying they ran until the first distracted
+# commit. The debt baselines in scripts/lint-debt.mjs in particular only ratchet
+# downwards if something checks them without being asked.
+#
+# Three jobs rather than one: they are independent, and a Java failure should
+# not hide a lint failure behind it.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A second push supersedes the first: nothing is learned from finishing a run
+# for a commit that is already history.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Types, lint, tests, debt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` also builds packages/ui through its prepare script, which is
+      # what generates tokens.css — nothing downstream compiles without it.
+      - run: npm ci
+
+      - name: Typecheck, lint, debt baselines, unit tests, render checks
+        run: npm run verify:all
+
+      # Separate from verify:all so its output is legible on its own: a
+      # formatting failure is a one-command fix and should say so.
+      - name: Formatting
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      # The suite has to be able to fail. Seventeen deliberate bugs, one per
+      # behaviour the tests claim to protect; every one must turn the suite red.
+      - name: Mutation check
+        run: npm run test:mutants
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - run: ./mvnw --batch-mode verify
+
+  accessibility:
+    name: Accessibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - run: npm ci
+
+      - name: Install the browser axe drives
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      # The backend serves the relic catalogue from a file committed to this
+      # repository, so the tables fill even when the market API is unreachable —
+      # which is what makes this job about the markup rather than about
+      # warframe.market's uptime.
+      - name: Start the backend
+        run: |
+          ./mvnw --batch-mode spring-boot:run > backend.log 2>&1 &
+          for _ in $(seq 1 60); do
+            curl -sf http://localhost:8080/api/relics -o /dev/null && exit 0
+            sleep 2
+          done
+          echo "backend never answered"; cat backend.log; exit 1
+
+      - name: Start the preview build
+        run: |
+          npm run preview --workspace=@relic-finder/web > preview.log 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:4173/ -o /dev/null && exit 0
+            sleep 2
+          done
+          echo "preview never answered"; cat preview.log; exit 1
+
+      - name: axe over all six views
+        run: npm run axe
+
+      - name: Keep the logs when something failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            backend.log
+            preview.log
+          if-no-files-found: ignore

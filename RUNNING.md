@@ -72,6 +72,25 @@ mvn spring-boot:run
 
 Without `RELICS_STATIC_DIR` the build lands in `apps/web/dist/`.
 
+## The gates
+
+Everything runs on every push through `.github/workflows/ci.yml`, in three jobs:
+types, lint, tests and the debt baselines; the backend; and axe over all six
+views against a real preview build. Locally:
+
+```sh
+npm run verify:all     # typecheck, lint, debt baselines, unit tests, render checks
+npm run format:check   # prettier
+npm run test:mutants   # proves the unit tests can fail
+npm run axe            # accessibility, needs the two servers below
+npm run lighthouse     # performance, same
+```
+
+`npm run lint:debt` counts inline styles and px font sizes against a baseline
+frozen in `scripts/lint-debt.mjs`. It never fails on the debt already there,
+only on growth. When a count drops, lower the baseline in that file — the number
+may go down, never up.
+
 ## When something will not start
 
 | Symptom                                                 | Cause                                                                                                              |

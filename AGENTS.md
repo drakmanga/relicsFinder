@@ -521,6 +521,11 @@ Do not report "verified" for a check that was not run.
 Recorded so that a gate can freeze it and so that no agent "discovers" it again as if it were new.
 These are accepted-for-now, not approved.
 
+> **CI exists (2026-08-11):** `.github/workflows/ci.yml` runs every gate in this
+> document on every push — including the axe check §7.3 asks for, against a
+> preview build with the backend up. The gates below are no longer a matter of
+> remembering them.
+>
 > **Done since this was written (2026-08-11):** vitest with 86 tests over the
 > pure logic in `lib/`, proven by `npm run test:mutants` — seventeen deliberate
 > bugs, seventeen caught. `npm run lint:inline-style` is an alias of
