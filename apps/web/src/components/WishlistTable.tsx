@@ -7,13 +7,22 @@ import { Chip, EmptyState, InfoIcon, TabPanel, Tabs } from "relic-finder-ui";
 
 import { PlatPrice } from "./Plat";
 import { DucatRows, EndoRows, PartRows } from "./WishlistRows";
-import { listTotal, type WishlistEntry } from "../lib/wishlist";
-import type { EndoOffer, PriceMap } from "../api/types";
+import { RelicLineRows } from "./WishlistRelicRows";
+import { listTotal, relicListTotal, type WishlistEntry } from "../lib/wishlist";
+import type { EndoOffer, PriceMap, RelicPriceMap } from "../api/types";
 
 interface Props {
   entries: WishlistEntry[];
   prices: PriceMap | undefined;
+  /** What a relic sells for; the item price map does not carry relics. */
+  relicPrices: RelicPriceMap | undefined;
   onInfo: (itemName: string) => void;
+  /** Opens a part in Prime Items, a relic in Relics. A line is a way back to
+      the thing it names, not just a row of numbers about it. */
+  onPickItem: (itemName: string) => void;
+  onPickRelic: (relicFullName: string) => void;
+  /** Sculptures have no panel; their click goes to the Endo ranking. */
+  onShowEndo: () => void;
   /** Live Ayatan offers, so a saved sculpture still shows what it costs today. */
   endoOffers?: EndoOffer[];
 }
@@ -26,7 +35,7 @@ interface Props {
  * the other on ducats per platinum. Mixing them in one table forces every row to
  * carry both sets of columns and answers neither question well.
  */
-type Kind = "part" | "ducat" | "endo";
+type Kind = "part" | "relic" | "ducat" | "endo";
 
 /** What each list is for, in one line. The long version is behind the info icon. */
 const KIND_NOTE: Record<Kind, { label: string; short: string; long: string }> = {
@@ -34,6 +43,11 @@ const KIND_NOTE: Record<Kind, { label: string; short: string; long: string }> = 
     label: "Prime parts",
     short: "Pieces you are collecting, in the order you added them.",
     long: "Judged on price: what a piece costs today and how that compares with its ninety-day average. A piece wanted for a set and the same piece wanted for ducats are two separate lines, because they are read against different numbers.",
+  },
+  relic: {
+    label: "Relics",
+    short: "Relics you mean to buy whole and crack yourself.",
+    long: "Priced from the relic market rather than the item one: what is being bought is the sealed relic, not any one of the six things inside it. The state beside each line is the one it was added in — refining is a decision about the same relic, not a different purchase.",
   },
   ducat: {
     label: "Ducat farm",
@@ -58,18 +72,31 @@ const KIND_NOTE: Record<Kind, { label: string; short: string; long: string }> = 
  * tabs lets every table have exactly the columns its question needs and puts
  * only one grid on screen at a time.
  */
-export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
+export function WishlistTable({
+  entries,
+  prices,
+  relicPrices,
+  onInfo,
+  onPickItem,
+  onPickRelic,
+  onShowEndo,
+  endoOffers,
+}: Props) {
   const [kind, setKind] = useState<Kind>("part");
   const [noteOpen, setNoteOpen] = useState(false);
 
   const parts = entries.filter((entry) => entry.kind === "part");
+  const relics = entries.filter((entry) => entry.kind === "relic");
   const ducats = entries.filter((entry) => entry.kind === "ducat");
   const endo = entries.filter((entry) => entry.kind === "endo");
 
   // Sculptures are deliberately excluded from the total: they have no catalogue
   // price, and counting them as unpriced would report a gap the tool chose to
   // leave.
-  const { total, unpriced } = listTotal([...parts, ...ducats], prices);
+  const items = listTotal([...parts, ...ducats], prices);
+  const sealed = relicListTotal(relics, relicPrices);
+  const total = items.total + sealed.total;
+  const unpriced = items.unpriced + sealed.unpriced;
   const ducatTotal = entries.reduce(
     (sum, entry) => sum + (prices?.get(entry.itemName)?.ducats ?? 0) * entry.qty,
     0,
@@ -85,7 +112,8 @@ export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
     );
   }
 
-  const shown = kind === "part" ? parts : kind === "ducat" ? ducats : endo;
+  const shown =
+    kind === "part" ? parts : kind === "relic" ? relics : kind === "ducat" ? ducats : endo;
   const note = KIND_NOTE[kind];
 
   return (
@@ -146,6 +174,7 @@ export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
           }}
           items={[
             { id: "part", label: `${KIND_NOTE.part.label} · ${parts.length}` },
+            { id: "relic", label: `${KIND_NOTE.relic.label} · ${relics.length}` },
             { id: "ducat", label: `${KIND_NOTE.ducat.label} · ${ducats.length}` },
             { id: "endo", label: `${KIND_NOTE.endo.label} · ${endo.length}` },
           ]}
@@ -207,11 +236,13 @@ export function WishlistTable({ entries, prices, onInfo, endoOffers }: Props) {
             description="Lines added from the other views land here."
           />
         ) : kind === "part" ? (
-          <PartRows entries={parts} prices={prices} onInfo={onInfo} />
+          <PartRows entries={parts} prices={prices} onInfo={onInfo} onPick={onPickItem} />
+        ) : kind === "relic" ? (
+          <RelicLineRows entries={relics} relicPrices={relicPrices} onPick={onPickRelic} />
         ) : kind === "ducat" ? (
-          <DucatRows entries={ducats} prices={prices} onInfo={onInfo} />
+          <DucatRows entries={ducats} prices={prices} onInfo={onInfo} onPick={onPickItem} />
         ) : (
-          <EndoRows entries={endo} offers={endoOffers} />
+          <EndoRows entries={endo} offers={endoOffers} onPick={onShowEndo} />
         )}
       </TabPanel>
     </div>

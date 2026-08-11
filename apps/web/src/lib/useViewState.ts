@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { emptyFilters, type Filters, type RelicSortColumn, type SortDirection } from "./rows";
 import { fromSearch, toSearch } from "./urlState";
-import { BELOW_LG, useMediaQuery } from "./useMediaQuery";
 import type { Refinement } from "../api/types";
 
 export type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
@@ -76,8 +75,6 @@ export function useViewState() {
   const [filtersOpen, setFiltersOpen] = useState(
     () => window.matchMedia("(min-width: 1024px)").matches,
   );
-  /** Below `lg` there is no room for a column beside the table. */
-  const compact = useMediaQuery(BELOW_LG);
   /** Alphabetical: the Relics view is a catalogue, and A comes first. */
   const [sort, setSort] = useState<{ column: RelicSortColumn; direction: SortDirection }>({
     column: "relic",
@@ -88,6 +85,9 @@ export function useViewState() {
   const [view, setView] = useState<View>(initial.view as View);
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
+  /** Relic whose price history is open. Its own state: the two dialogs read
+      different endpoints, and a single string could not say which. */
+  const [infoRelic, setInfoRelic] = useState<string | null>(null);
   /** Set the panel is showing, by name. */
   const [selectedSet, setSelectedSet] = useState<string | null>(null);
   /**
@@ -230,7 +230,6 @@ export function useViewState() {
     term,
     filtersOpen,
     setFiltersOpen,
-    compact,
     sort,
     setSort,
     selected,
@@ -239,6 +238,8 @@ export function useViewState() {
     setPickedItem,
     infoItem,
     setInfoItem,
+    infoRelic,
+    setInfoRelic,
     selectedSet,
     setSelectedSet,
     setRefinement,

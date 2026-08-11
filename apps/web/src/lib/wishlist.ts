@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
-import type { PriceMap, Refinement, Tier, WireWishlistEntry, WishlistKind } from "../api/types";
+import type {
+  PriceMap,
+  Refinement,
+  RelicPriceMap,
+  Tier,
+  WireWishlistEntry,
+  WishlistKind,
+} from "../api/types";
 
 /**
  * Local mirror of the list.
@@ -28,8 +35,32 @@ export interface WishlistEntry {
   qty: number;
 }
 
-/** Lines are identified by what they are for as well as by their name. */
-const idOf = (entry: { itemName: string; kind: WishlistKind }) => `${entry.kind}|${entry.itemName}`;
+/** The fields that decide whether two lines are the same line. */
+export type WishlistLineId = {
+  itemName: string;
+  kind: WishlistKind;
+  refinement?: Refinement;
+};
+
+/**
+ * Lines are identified by what they are for as well as by their name — and, for
+ * a relic, by the state it is wanted in.
+ *
+ * A relic is bought sealed and then refined with void traces, so Axi A20 Intact
+ * and Axi A20 Exceptional are two different plans and two different quantities.
+ * Without the state in the key, adding one at Exceptional found the Intact line
+ * and raised its count instead, and the state the user had just chosen was
+ * silently dropped.
+ *
+ * For every other kind the refinement is context — where the user found the
+ * part — and keying on it would split one part into four lines nobody asked
+ * for. The backend applies the same rule; the two must agree or a reload
+ * collapses lines this side kept apart.
+ */
+const idOf = (entry: WishlistLineId) =>
+  entry.kind === "relic"
+    ? `relic|${entry.itemName}|${entry.refinement ?? "intact"}`
+    : `${entry.kind}|${entry.itemName}`;
 
 type Listener = (entries: WishlistEntry[]) => void;
 
@@ -155,8 +186,9 @@ export function bump(seed: Omit<WishlistEntry, "qty">, delta: number) {
   commit(entries.map((entry, i) => (i === index ? { ...entry, qty } : entry)));
 }
 
-export function remove(itemName: string, kind: WishlistKind = "part") {
-  commit(entries.filter((entry) => idOf(entry) !== `${kind}|${itemName}`));
+/** Drops a line. Takes the identity rather than a name: see `idOf`. */
+export function remove(line: WishlistLineId) {
+  commit(entries.filter((entry) => idOf(entry) !== idOf(line)));
 }
 
 export function clear() {
@@ -184,14 +216,36 @@ export function useWishlist() {
   }, []);
 
   const quantityOf = useCallback(
-    (itemName: string, kind: WishlistKind = "part") =>
-      snapshot.find((entry) => idOf(entry) === `${kind}|${itemName}`)?.qty ?? 0,
+    (itemName: string, kind: WishlistKind = "part", refinement?: Refinement) =>
+      snapshot.find((entry) => idOf(entry) === idOf({ itemName, kind, refinement }))?.qty ?? 0,
     [snapshot],
   );
 
   const totalItems = snapshot.reduce((sum, entry) => sum + entry.qty, 0);
 
   return { entries: snapshot, quantityOf, totalItems };
+}
+
+/**
+ * The same sum for relic lines, which are priced from the relic market.
+ *
+ * A separate function rather than a `kind` branch inside `listTotal`: the two
+ * read different maps, and a relic name is not a key the item map has.
+ */
+export function relicListTotal(
+  wishlist: WishlistEntry[],
+  relicPrices: RelicPriceMap | undefined,
+): { total: number; unpriced: number } {
+  let total = 0;
+  let unpriced = 0;
+
+  for (const entry of wishlist) {
+    const price = relicPrices?.get(entry.itemName);
+    if (price === null || price === undefined) unpriced += 1;
+    else total += price * entry.qty;
+  }
+
+  return { total: Math.round(total), unpriced };
 }
 
 /**

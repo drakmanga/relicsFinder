@@ -465,7 +465,7 @@ Base 4px. Do not use off-scale values.
 ```
 
 - Sidebar `260px`, collapsing to `56px` (icons only) below 1440px.
-- Detail panel fixed at `380px`, `position: sticky; top: 56px`, height `calc(100dvh - 56px)`, scrolling independently.
+- The detail panel is no longer the third zone: it opens over the table as a modal (§10.5), so the results take the width the diagram gives both.
 - The gap between zones is 1px of `border-subtle`, not whitespace. Density is the point.
 
 ### 6.3 Breakpoints and degradation
@@ -474,8 +474,8 @@ Base 4px. Do not use off-scale values.
 | ----- | ----- | ---------------------------------------------------------------------------------------------- |
 | `2xl` | ≥1536 | Full layout. Content capped at `--rf-content-max`, the gutter grows                            |
 | `xl`  | ≥1280 | Full layout                                                                                    |
-| `lg`  | ≥1024 | Table and detail panel side by side                                                            |
-| `md`  | ≥768  | Detail panel becomes a **modal drawer** over the table; the table takes the full width         |
+| `lg`  | ≥1024 | Full layout. The detail panel is a modal over the table at every width (§10.5)                 |
+| `md`  | ≥768  | Table unchanged, scrolling sideways inside its pane                                            |
 | `sm`  | <768  | Filter groups stack one per row, the tab strip scrolls sideways, the gutter drops to `space-4` |
 
 Below `lg`, touch targets rise to a 44×44px minimum.
@@ -729,7 +729,7 @@ Canonical column structure for search results:
 ### 10.5 Detail panel
 
 - Width `380px`, `surface-1`, `.o-frame--gilded`, `clip-orokin-inverse notch-lg` (mirroring the table).
-- Sticky below the topbar, scrolling internally.
+- Opens as a **modal over the table at every width** (§10.8b), scrolling internally, capped at the height of the viewport. It was a sticky third column beside the table; a column reserved 440px of a screen whose point is a wide dense table, and stood there empty whenever nothing was selected.
 - Anatomy: tier + refinement chip → relic name in `display-md` Cinzel → meta (drop location, rotation) in `caption fg-muted` → Orokin divider → the six drops → divider → price block → `Open on Warframe Market` CTA (`primary`, full width).
 - Entrance: the 420ms sweep signature. The six drop rows enter on a 40ms stagger.
 - Empty (no relic selected): `void-sigil` 48px `bone-500`, `body-sm fg-muted` text, centred.
@@ -762,6 +762,15 @@ A row inside the detail panel, 48px:
 - Title `display-sm` Cinzel, body `body-md`, footer with right-aligned actions, 12px gap.
 - Enter: `o-rise` 280ms `enter` plus a 180ms scrim fade. Exit: 180ms `exit`.
 - Focus trap, `Esc` closes, focus returns to the trigger.
+
+### 10.8b Modal
+
+A dialog with no chrome of its own, for content that already carries a frame and a heading — the detail panel is the only user today.
+
+- Scrim and z-order as §10.8; the surface inside brings its own background and frame.
+- Max-width `34rem`, max-height the viewport minus the scrim's `space-6` padding; what is inside scrolls rather than the page behind it.
+- Focus trap, `Esc` closes, focus returns to the row that opened it.
+- Enter: `o-rise`, `dur-slow`. Nothing animates under `prefers-reduced-motion`.
 
 ### 10.9 Tooltip / Popover
 

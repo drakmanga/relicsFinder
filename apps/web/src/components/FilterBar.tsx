@@ -1,5 +1,5 @@
 /**
- * Over 150 lines (rule 4). One bar, five groups, and two local primitives that
+ * Over 150 lines (rule 4). One bar, four groups, and two local primitives that
  * exist only here — a toggle and a slider tick. The design system has no toggle
  * component, and promoting one on a sample size of five would be guessing at
  * the second use.
@@ -43,7 +43,7 @@ export function FilterBar({ id, filters, onChange, view }: Props) {
 
   return (
     <div id={id} className="rf-filters">
-      <Group label="Tier">
+      <Group label="Tier" wide>
         {ALL_TIERS.map((tier) => (
           <Toggle
             key={tier}
@@ -57,52 +57,60 @@ export function FilterBar({ id, filters, onChange, view }: Props) {
       </Group>
 
       {/*
+        Rarity and vault share one group because five groups do not fit on one
+        row: the bar is about 1390px inside the shell and the five want 1660,
+        so one of them was always dropping onto a second row by itself. They
+        pair honestly — both answer "which of these am I allowed to see" — and
+        each keeps its own line inside the group.
+
         Rarity is a property of a drop, not of a relic. Every relic in the game
         holds three commons, two uncommons and one rare, so on a list of relics
         the filter can only ever keep all of them or, with all three off, keep
         all of them again — a control that cannot change its own result. It
         earns its place on Prime Items, where a row is a part and the rarity is
-        that part's own.
+        that part's own, and there alone the group carries both names.
       */}
-      {view === "items" && (
-        <Group label="Rarity">
-          {ALL_RARITIES.map((rarity) => (
+      <Group label={view === "items" ? "Rarity & vault" : "Vault"}>
+        {view === "items" && (
+          <div className="rf-filter-set">
+            {ALL_RARITIES.map((rarity) => (
+              <Toggle
+                key={rarity}
+                on={filters.rarities.has(rarity)}
+                label={`Filter by rarity ${rarity}`}
+                onClick={() => onChange({ ...filters, rarities: toggle(filters.rarities, rarity) })}
+              >
+                <RarityTag rarity={rarity as Rarity} />
+              </Toggle>
+            ))}
+          </div>
+        )}
+
+        {/*
+          Three exclusive states rather than toggles, because "neither farmable
+          nor vaulted" is not a thing a relic can be — and a filter that can be
+          set to an empty result is a trap.
+        */}
+        <div className="rf-filter-set">
+          {ALL_VAULT_FILTERS.map((vault) => (
             <Toggle
-              key={rarity}
-              on={filters.rarities.has(rarity)}
-              label={`Filter by rarity ${rarity}`}
-              onClick={() => onChange({ ...filters, rarities: toggle(filters.rarities, rarity) })}
+              key={vault}
+              on={filters.vault === vault}
+              label={`Show ${VAULT_LABEL[vault].toLowerCase()} relics`}
+              onClick={() => onChange({ ...filters, vault })}
             >
-              <RarityTag rarity={rarity as Rarity} />
+              <span
+                className={
+                  filters.vault === vault && vault === "farmable"
+                    ? "rf-filter-vault rf-filter-vault-on"
+                    : "rf-filter-vault"
+                }
+              >
+                {VAULT_LABEL[vault]}
+              </span>
             </Toggle>
           ))}
-        </Group>
-      )}
-
-      {/*
-        Three exclusive states rather than toggles, because "neither farmable
-        nor vaulted" is not a thing a relic can be — and a filter that can be
-        set to an empty result is a trap.
-      */}
-      <Group label="Vault">
-        {ALL_VAULT_FILTERS.map((vault) => (
-          <Toggle
-            key={vault}
-            on={filters.vault === vault}
-            label={`Show ${VAULT_LABEL[vault].toLowerCase()} relics`}
-            onClick={() => onChange({ ...filters, vault })}
-          >
-            <span
-              className={
-                filters.vault === vault && vault === "farmable"
-                  ? "rf-filter-vault rf-filter-vault-on"
-                  : "rf-filter-vault"
-              }
-            >
-              {VAULT_LABEL[vault]}
-            </span>
-          </Toggle>
-        ))}
+        </div>
       </Group>
 
       <Group label="Refinement">
@@ -197,13 +205,20 @@ function Group({
   label,
   children,
   last = false,
+  wide = false,
 }: {
   label: string;
   children: React.ReactNode;
   last?: boolean;
+  /** Takes a double share of the row. For the group with six chips in it. */
+  wide?: boolean;
 }) {
   return (
-    <div className={last ? "rf-filter-group rf-filter-group-last" : "rf-filter-group"}>
+    <div
+      className={["rf-filter-group", wide && "rf-filter-group-wide", last && "rf-filter-group-last"]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <p className="rf-text-overline rf-fg-muted rf-filter-group-label">{label}</p>
       <div className="rf-filter-group-body">{children}</div>
     </div>

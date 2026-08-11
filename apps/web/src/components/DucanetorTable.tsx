@@ -250,7 +250,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                         qty={quantityOf(row.itemName, "ducat")}
                         onIncrement={() => bump(seed, 1)}
                         onDecrement={() => bump(seed, -1)}
-                        onRemove={() => remove(row.itemName, "ducat")}
+                        onRemove={() => remove(seed)}
                       />
                     </TableCell>
                     <TableCell align="center">

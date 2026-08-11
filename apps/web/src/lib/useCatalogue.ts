@@ -224,11 +224,15 @@ export function useCatalogue({
   const relicPrices = useRelicPrices(
     // The Sets view prices relics too — the farming route is quoted in the
     // cost of the relics it takes — and there the whole catalogue is in play.
+    // The wishlist asks for the handful it has lines for and nothing else: a
+    // list of four relics must not queue six hundred behind it.
     view === "relics" || view === "sets"
       ? (relics.data ?? [])
           .filter((relic) => relic.refinement === "intact")
           .map((relic) => relic.fullName)
-      : [],
+      : view === "wishlist"
+        ? wishlist.entries.filter((entry) => entry.kind === "relic").map((entry) => entry.itemName)
+        : [],
   );
 
   /**

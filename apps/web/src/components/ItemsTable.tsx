@@ -174,7 +174,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
                     qty={quantityOf(row.itemName)}
                     onIncrement={() => bump(seed, 1)}
                     onDecrement={() => bump(seed, -1)}
-                    onRemove={() => remove(row.itemName)}
+                    onRemove={() => remove(seed)}
                   />
                 </TableCell>
                 <TableCell align="center">

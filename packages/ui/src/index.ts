@@ -60,6 +60,8 @@ export { Drawer } from "./components/Drawer";
 export type { DrawerProps } from "./components/Drawer";
 export { Dialog } from "./components/Dialog";
 export type { DialogProps } from "./components/Dialog";
+export { Modal } from "./components/Modal";
+export type { ModalProps } from "./components/Modal";
 
 export { Toast, ToastRegion } from "./components/Toast";
 export type { ToastProps, ToastRegionProps, ToastTone } from "./components/Toast";

@@ -11,7 +11,14 @@ import { ItemsTable } from "./ItemsTable";
 import { ResultsTable } from "./ResultsTable";
 import { SetsTable } from "./SetsTable";
 import { WishlistTable } from "./WishlistTable";
-import type { EndoOffer, PriceMap, RelicPriceMap, RelicRow } from "../api/types";
+import type {
+  EndoOffer,
+  PriceMap,
+  Refinement,
+  RelicPriceMap,
+  RelicRow,
+  WishlistKind,
+} from "../api/types";
 import type { PrimeItemRow } from "../lib/items";
 import type { PrimeSet } from "../lib/setCompletion";
 import type { RelicSortColumn, SortDirection } from "../lib/rows";
@@ -36,7 +43,7 @@ interface Props {
   /** Every filter currently narrowing the list, in words, for the empty state. */
   activeFilters: string[];
   onClearFilters: () => void;
-  quantityOf: (itemName: string) => number;
+  quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
   selectedRelic: string | null;
   onSelectRelic: (id: string) => void;
   selectedItem: string | null;
@@ -44,6 +51,10 @@ interface Props {
   selectedSet: string | null;
   onSelectSet: (setName: string) => void;
   onInfo: (itemName: string) => void;
+  /** Where a wishlist line leads when it is clicked. */
+  onPickItem: (itemName: string) => void;
+  onPickRelic: (relicFullName: string) => void;
+  onShowEndo: () => void;
   sort: { column: RelicSortColumn; direction: SortDirection };
   onSort: (column: RelicSortColumn) => void;
 }
@@ -77,6 +88,9 @@ export function ResultsPane({
   selectedSet,
   onSelectSet,
   onInfo,
+  onPickItem,
+  onPickRelic,
+  onShowEndo,
   sort,
   onSort,
 }: Props) {
@@ -129,7 +143,11 @@ export function ResultsPane({
       <WishlistTable
         entries={wishlistEntries}
         prices={prices}
+        relicPrices={relicPrices}
         onInfo={onInfo}
+        onPickItem={onPickItem}
+        onPickRelic={onPickRelic}
+        onShowEndo={onShowEndo}
         endoOffers={endoOffers}
       />
     );
@@ -187,6 +205,7 @@ export function ResultsPane({
       unvaulted={unvaulted}
       selected={selectedRelic}
       onSelect={onSelectRelic}
+      quantityOf={quantityOf}
       sort={sort}
       onSort={onSort}
     />

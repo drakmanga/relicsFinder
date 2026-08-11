@@ -168,6 +168,22 @@ export const api = {
     return await get<PricePoint[]>(`/market/item/${seg(itemName)}/history`, signal);
   },
 
+  /**
+   * Everything the market knows about a whole relic.
+   *
+   * Its own call rather than a lookup in the batch above: a relic and a part
+   * reach the market through different slugs, and the batch answers with an
+   * average alone — the panel shows the median and the trades behind it.
+   */
+  async relicDetail(relicName: string, signal?: AbortSignal): Promise<ItemPrice> {
+    return await get<WireItemPrice>(`/market/relic/${seg(relicName)}`, signal);
+  },
+
+  /** Ninety days of completed trades for a whole relic. */
+  async relicHistory(relicName: string, signal?: AbortSignal): Promise<PricePoint[]> {
+    return await get<PricePoint[]>(`/market/relic/${seg(relicName)}/history`, signal);
+  },
+
   /** How much of the price cache is filled — the UI says so while it warms. */
   async marketStatus(signal?: AbortSignal): Promise<MarketStatus> {
     return await get<MarketStatus>("/market/status", signal);

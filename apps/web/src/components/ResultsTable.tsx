@@ -21,9 +21,11 @@ import {
 import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
+import { QtyStepper } from "./QtyStepper";
+import { bump, remove } from "../lib/wishlist";
 import { relicMarketUrl } from "../lib/format";
 import { bestDropValue, expectedValue } from "../lib/rows";
-import type { PriceMap, RelicPriceMap, RelicRow } from "../api/types";
+import type { PriceMap, Refinement, RelicPriceMap, RelicRow, WishlistKind } from "../api/types";
 import type { RelicSortColumn, SortDirection } from "../lib/rows";
 
 /**
@@ -57,6 +59,8 @@ interface Props {
   unvaulted: Set<string> | undefined;
   selected: string | null;
   onSelect: (id: string) => void;
+  /** How many of a relic the wishlist holds, for the stepper on each row. */
+  quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
   sort: { column: RelicSortColumn; direction: SortDirection };
   onSort: (column: RelicSortColumn) => void;
 }
@@ -79,6 +83,7 @@ export function ResultsTable({
   unvaulted,
   selected,
   onSelect,
+  quantityOf,
   sort,
   onSort,
 }: Props) {
@@ -118,7 +123,7 @@ export function ResultsTable({
         caption="Relics, with expected value, best drop and cost"
         className="rf-cols-relics"
       >
-        <TableCols count={7} />
+        <TableCols count={8} />
         <thead>
           <tr>
             {/*
@@ -192,6 +197,12 @@ export function ResultsTable({
               number nobody can ever collect. It lives on Prime Items, where it
               is a real trade, and per drop inside the relic panel.
             */}
+            {/*
+              A relic is a thing you buy whole and crack, so it is a wishlist
+              line in its own right — separate from the parts inside it, which
+              take their own steppers in the panel.
+            */}
+            <TableHeaderCell align="center">Wishlist</TableHeaderCell>
             <TableHeaderCell align="center">Market</TableHeaderCell>
           </tr>
         </thead>
@@ -199,7 +210,7 @@ export function ResultsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={7} className="rf-spacer" style={{ height: paddingTop }} />
+              <td colSpan={8} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -217,6 +228,16 @@ export function ResultsTable({
                   null)
                 : null;
             const cost = relicPrices?.get(row.relicFullName) ?? null;
+
+            // The relic is its own line: its name is the item, and the state it
+            // is wanted in is the one the table is listing it in.
+            const seed = {
+              itemName: row.relicFullName,
+              kind: "relic" as const,
+              tier: row.tier,
+              relicFullName: row.relicFullName,
+              refinement: row.refinement,
+            };
 
             return (
               <TableRow
@@ -282,6 +303,15 @@ export function ResultsTable({
                   )}
                 </TableCell>
                 <TableCell align="center">
+                  <QtyStepper
+                    itemName={row.relicFullName}
+                    qty={quantityOf(row.relicFullName, "relic", row.refinement)}
+                    onIncrement={() => bump(seed, 1)}
+                    onDecrement={() => bump(seed, -1)}
+                    onRemove={() => remove(seed)}
+                  />
+                </TableCell>
+                <TableCell align="center">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -304,7 +334,7 @@ export function ResultsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={7} className="rf-spacer" style={{ height: paddingBottom }} />
+              <td colSpan={8} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

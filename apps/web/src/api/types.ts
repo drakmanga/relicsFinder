@@ -190,8 +190,14 @@ export interface MarketStatus {
 }
 
 /** One wishlist line as the server stores it. */
-/** What a wishlist line is for. Part of its identity, not a label. */
-export type WishlistKind = "part" | "ducat" | "endo";
+/**
+ * What a wishlist line is for. Part of its identity, not a label.
+ *
+ * "relic" is the odd one: its `itemName` is a relic's full name rather than a
+ * part's, so it is priced from the relic price map and never appears in the
+ * item one. Everything else about a line works the same.
+ */
+export type WishlistKind = "part" | "ducat" | "endo" | "relic";
 
 export interface WireWishlistEntry {
   itemName: string;

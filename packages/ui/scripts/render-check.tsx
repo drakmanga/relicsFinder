@@ -23,6 +23,7 @@ import {
   EmptyState,
   Frame,
   Input,
+  Modal,
   OrokinProvider,
   Price,
   PriceDelta,
@@ -352,6 +353,31 @@ const checks: Check[] = [
       <Dialog open={false} onClose={() => {}} title="Nascosto">
         content
       </Dialog>
+    ),
+    expect: [],
+  },
+  {
+    name: "Modal",
+    element: (
+      <Modal open onClose={() => {}} label="Details">
+        <DetailPanel title="Axi A1">contents</DetailPanel>
+      </Modal>
+    ),
+    expect: [
+      "rf-modal-scrim",
+      'role="dialog"',
+      'aria-modal="true"',
+      'aria-label="Details"',
+      "rf-detail",
+      "Axi A1",
+    ],
+  },
+  {
+    name: "Modal/closed",
+    element: (
+      <Modal open={false} onClose={() => {}} label="Details">
+        contents
+      </Modal>
     ),
     expect: [],
   },

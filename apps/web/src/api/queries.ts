@@ -12,10 +12,11 @@ export const keys = {
   relicStates: (name: string) => ["relics", "states", name] as const,
   dropInfo: (name: string) => ["relics", "drop-info", name] as const,
   search: (term: string) => ["search", term] as const,
-  price: (name: string) => ["market", name] as const,
   itemPrices: (names: string[]) => ["market", "items", names] as const,
   relicPrices: (names: string[]) => ["market", "relics", names] as const,
   itemHistory: (name: string) => ["market", "history", name] as const,
+  relicDetail: (name: string) => ["market", "relic", name] as const,
+  relicHistory: (name: string) => ["market", "relic", "history", name] as const,
   vaulted: (name: string) => ["relics", "vaulted", name] as const,
   endo: ["endo", "offers"] as const,
 };
@@ -78,28 +79,6 @@ export function useItemSearch(term: string) {
 }
 
 /**
- * `dataUpdatedAt` on the result is what feeds the "updated N minutes ago" line
- * in the detail panel — the freshness the design asks for is already tracked
- * by the cache, so nothing extra needs storing.
- */
-export function useRelicPrice(relicName: string | null) {
-  return useQuery({
-    queryKey: keys.price(relicName ?? ""),
-    queryFn: async ({ signal }) => {
-      try {
-        return await api.relicPrice(relicName!, signal);
-      } catch (error) {
-        // No listing on the market is a legitimate "no price", not an error.
-        if (error instanceof ApiError && error.isNotFound) return null;
-        throw error;
-      }
-    },
-    enabled: !!relicName,
-    ...PRICE_DATA,
-  });
-}
-
-/**
  * Prices for the entire catalogue, in one request.
  *
  * Not a scroll window. The server warms every part in the background, so
@@ -155,6 +134,30 @@ export function useRelicPrices(relicNames: string[]) {
       return missing > data.length * 0.05 ? 15_000 : false;
     },
     select: (prices) => new Map(prices.map((p) => [p.relicName, p.averagePrice])) as RelicPriceMap,
+  });
+}
+
+/**
+ * Price, median, trades and trend for one relic, and its ninety-day series.
+ *
+ * Asked for only while a relic's panel or dialog is open, which is why these
+ * may wait on a first fetch where the table's batch never does.
+ */
+export function useRelicDetail(relicName: string | null) {
+  return useQuery({
+    queryKey: keys.relicDetail(relicName ?? ""),
+    queryFn: ({ signal }) => api.relicDetail(relicName!, signal),
+    enabled: !!relicName,
+    ...PRICE_DATA,
+  });
+}
+
+export function useRelicHistory(relicName: string | null) {
+  return useQuery({
+    queryKey: keys.relicHistory(relicName ?? ""),
+    queryFn: ({ signal }) => api.relicHistory(relicName!, signal),
+    enabled: !!relicName,
+    ...PRICE_DATA,
   });
 }
 

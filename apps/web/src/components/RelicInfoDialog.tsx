@@ -4,33 +4,31 @@ import { Unlisted } from "./Unlisted";
 
 import { PlatPrice } from "./Plat";
 import { PriceChart } from "./PriceChart";
-import { useItemHistory } from "../api/queries";
-import { marketUrl } from "../lib/format";
-import type { PriceMap } from "../api/types";
+import { useRelicDetail, useRelicHistory } from "../api/queries";
+import { relicMarketUrl } from "../lib/format";
 
 interface Props {
-  itemName: string | null;
-  prices: PriceMap | undefined;
+  relicFullName: string | null;
   onClose: () => void;
 }
 
 /**
- * Everything known about one part, in a dialog.
+ * What the market has done to one relic over ninety days.
  *
- * A dialog rather than a third tab: this is a detour from whatever the user was
- * doing, and it should hand them back to the same scroll position and the same
- * filters when they close it.
+ * The mirror of the part dialog, and separate from it because a relic is a
+ * different listing: its slug ends in `_relic`, it has no ducat value and it
+ * belongs to no set, so three of the five figures there would be blank here.
  */
-export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
-  const history = useItemHistory(itemName);
-  const meta = itemName ? prices?.get(itemName) : undefined;
+export function RelicInfoDialog({ relicFullName, onClose }: Props) {
+  const detail = useRelicDetail(relicFullName);
+  const history = useRelicHistory(relicFullName);
 
   return (
     <Dialog
-      open={!!itemName}
+      open={!!relicFullName}
       onClose={onClose}
-      title={itemName ?? ""}
-      description={meta?.setName ?? undefined}
+      title={relicFullName ?? ""}
+      description="Sealed relic, as sold on the market"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -40,7 +38,8 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
             variant="primary"
             icon={<ExternalLinkIcon />}
             onClick={() =>
-              itemName && window.open(marketUrl(itemName), "_blank", "noopener,noreferrer")
+              relicFullName &&
+              window.open(relicMarketUrl(relicFullName), "_blank", "noopener,noreferrer")
             }
           >
             Open on Warframe Market
@@ -50,27 +49,27 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
     >
       <div className="rf-stat-grid">
         <Stat label="Price">
-          <PlatPrice value={meta?.averagePrice ?? null} size="lg" />
-        </Stat>
-
-        <Stat label="Median">
-          <PlatPrice value={meta?.median ?? null} />
-        </Stat>
-
-        <Stat label="Ducats">
-          {meta?.ducats == null ? (
-            <Unlisted />
+          {detail.isPending ? (
+            <Skeleton width={64} height={20} />
           ) : (
-            <span className="rf-text-data-md rf-ducat">{meta.ducats}</span>
+            <PlatPrice value={detail.data?.averagePrice ?? null} size="lg" />
           )}
         </Stat>
 
+        <Stat label="Median">
+          <PlatPrice value={detail.data?.median ?? null} />
+        </Stat>
+
         <Stat label="Trades / 48h">
-          <span className="rf-text-data-md rf-fg-secondary">{meta?.volume ?? "—"}</span>
+          <span className="rf-text-data-md rf-fg-secondary">{detail.data?.volume ?? "—"}</span>
         </Stat>
 
         <Stat label="vs 90-day avg">
-          {meta?.trend == null ? <Unlisted /> : <PriceDelta value={Math.round(meta.trend)} />}
+          {detail.data?.trend == null ? (
+            <Unlisted />
+          ) : (
+            <PriceDelta value={Math.round(detail.data.trend)} />
+          )}
         </Stat>
       </div>
 
@@ -84,9 +83,9 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
         <PriceChart points={history.data ?? []} />
       )}
 
-      {meta?.volume != null && meta.volume < 10 && (
+      {detail.data?.volume != null && detail.data.volume < 10 && (
         <p className="rf-text-caption rf-fg-muted rf-mt-3">
-          Only {meta.volume} trades in 48 hours — treat this price as indicative.
+          Only {detail.data.volume} trades in 48 hours — treat this price as indicative.
         </p>
       )}
     </Dialog>

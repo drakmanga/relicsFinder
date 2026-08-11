@@ -669,21 +669,26 @@
 
 /* The three trailing columns are as narrow as their widest real value, not as
    their label: "Uncommon" is abbreviated to "Unc.", a chance is five characters
-   and a price four. Every pixel they do not use goes to the item name. */
+   and a price four. Every pixel they do not use goes to the item name.
+
+   In rem, not px: what they hold is text, so at 200% text preference a fixed
+   box keeps its width while the words inside it double, and the three columns
+   print over each other. The values are the same 44, 52 and 46 pixels at the
+   default preference and grow from there. */
 .rf-droprow-rarity {
-  width: 44px;
+  width: 2.95rem;
   flex: none;
 }
 
 .rf-droprow-rate {
-  width: 52px;
+  width: 3.45rem;
   text-align: right;
   flex: none;
   color: var(--rf-fg-muted);
 }
 
 .rf-droprow-price {
-  width: 46px;
+  width: 3.05rem;
   text-align: right;
   flex: none;
 }
@@ -881,6 +886,51 @@
   justify-content: flex-end;
   gap: var(--rf-space-3);
   margin-top: var(--rf-space-6);
+}
+
+/* ----------------------------------------------------------------- Modal - */
+/* The scrim of a Dialog with none of its chrome: what sits on top brings its
+   own frame. Same z-order and same entrance, so the two read as one surface
+   family. */
+.rf-modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--rf-z-overlay);
+  background: var(--rf-scrim);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--rf-space-6);
+  animation: rf-rise var(--rf-dur-base) var(--rf-ease-enter) both;
+}
+
+.rf-modal {
+  z-index: var(--rf-z-modal);
+  width: 100%;
+  /* 34rem is the detail panel's 440px with room for the frame either side, and
+     in rem so it grows with the reader's font size rather than truncating. */
+  max-width: 34rem;
+  max-height: 100%;
+  display: flex;
+  min-height: 0;
+  animation: rf-rise var(--rf-dur-slow) var(--rf-ease-enter) both;
+}
+
+/* The panel fills the modal and scrolls inside it: the page behind must not
+   scroll while a modal surface is over it, and a relic panel is taller than a
+   laptop viewport once the mission list is open. */
+.rf-modal > .rf-detail {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-modal-scrim,
+  .rf-modal {
+    animation: none;
+  }
 }
 
 /* ----------------------------------------------------------------- Toast - */

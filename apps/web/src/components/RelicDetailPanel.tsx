@@ -10,19 +10,20 @@ import {
   Button,
   DetailPanel,
   Divider,
-  DropList,
-  DropRow,
-  DucatGlyph,
+  InfoIcon,
   OrokinStar,
   TierChip,
   XIcon,
 } from "relic-finder-ui";
 
+import { PanelWishlist } from "./PanelWishlist";
+import { PlatPrice } from "./Plat";
+import { RelicContents } from "./RelicContents";
 import { RelicDropSites } from "./RelicDropSites";
 import { RelicPayout } from "./RelicPayout";
 import { SectionLabel } from "./SectionLabel";
 
-import type { DropInfo, PriceMap, Refinement, RelicRow, Reward } from "../api/types";
+import type { DropInfo, PriceMap, Refinement, RelicRow, Reward, WishlistKind } from "../api/types";
 import { ALL_REFINEMENTS, REFINEMENT_LABEL, bestRefinementByTrace } from "../lib/rows";
 import { priceOf } from "../lib/format";
 
@@ -54,6 +55,12 @@ interface Props {
    * row is a way through to it rather than a dead label.
    */
   onPickItem: (itemName: string) => void;
+  /** What the sealed relic sells for. Undefined while the batch is in flight. */
+  price: number | null | undefined;
+  /** Opens the relic's own price history. */
+  onInfo: (relicFullName: string) => void;
+  /** How many of a line the wishlist holds — the relic itself, and each drop. */
+  quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
   /** Steps back to whatever the panel was showing before. Absent at the start. */
   onBack?: () => void;
   /** Shuts the panel and clears the selection. */
@@ -75,6 +82,9 @@ export function RelicDetailPanel({
   sites,
   sitesPending,
   onPickItem,
+  price,
+  onInfo,
+  quantityOf,
   onBack,
   onClose,
 }: Props) {
@@ -91,8 +101,8 @@ export function RelicDetailPanel({
   // The prices do not change with refinement — only the chances do — so this is
   // the same number the table shows, and is meant to be recognised as such.
   const best = rewards.reduce<number | null>((top, reward) => {
-    const price = priceOf(prices, reward.itemName);
-    return price != null && (top === null || price > top) ? price : top;
+    const drop = priceOf(prices, reward.itemName);
+    return drop != null && (top === null || drop > top) ? drop : top;
   }, null);
 
   const bestByTrace = bestRefinementByTrace(states, prices);
@@ -129,6 +139,44 @@ export function RelicDetailPanel({
       meta={`${rewards.length} rewards`}
     >
       <Divider />
+
+      {/*
+        What the relic itself costs, which is the other half of every decision
+        in this panel: everything below says what opening one is worth, and
+        that number means nothing without the price of buying one.
+      */}
+      <div className="rf-row-baseline-wide">
+        <span className="rf-text-overline rf-fg-muted">Market price</span>
+        <span className="rf-push rf-inline">
+          <PlatPrice value={price ?? null} size="lg" />
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<InfoIcon />}
+            aria-label={`Price history for ${row.relicFullName}`}
+            title="Ninety days of completed trades"
+            onClick={() => onInfo(row.relicFullName)}
+          />
+        </span>
+      </div>
+
+      {/*
+        The relic itself, which is a different line from any of its drops: one
+        is bought whole on the market and cracked, the others are bought
+        finished. The steppers under Contents add those.
+      */}
+      <PanelWishlist
+        seed={{
+          itemName: row.relicFullName,
+          kind: "relic",
+          tier: row.tier,
+          relicFullName: row.relicFullName,
+          refinement: active,
+        }}
+        qty={quantityOf(row.relicFullName, "relic", active)}
+        hint="The relic itself, unopened. Its drops have their own steppers below."
+      />
 
       <SectionLabel
         hint={
@@ -200,68 +248,15 @@ export function RelicDetailPanel({
         Contents
       </SectionLabel>
 
-      <DropList key={active}>
-        {rewards.map((reward, index) => {
-          const isSelected = !!highlightItem && reward.itemName === highlightItem;
-          const ducats = prices?.get(reward.itemName)?.ducats ?? null;
-
-          return (
-            <div
-              key={reward.id || reward.itemName}
-              style={{
-                // Same treatment as a selected table row, so the highlight
-                // reads as "this is the one you clicked" rather than decoration.
-                background: isSelected ? "var(--rf-state-row-selected, #7c5ce61a)" : undefined,
-                boxShadow: isSelected ? "inset 2px 0 0 0 var(--rf-void-400)" : undefined,
-              }}
-            >
-              <DropRow
-                name={reward.itemName}
-                rarity={reward.rarity}
-                chance={reward.chance}
-                price={priceOf(prices, reward.itemName)}
-                index={index}
-                showImage={false}
-                className="rf-droprow-roomy"
-                interactive
-                role="button"
-                tabIndex={0}
-                title={`${reward.itemName} — open it in Prime Items`}
-                onClick={() => onPickItem(reward.itemName)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onPickItem(reward.itemName);
-                  }
-                }}
-                trailing={
-                  <span
-                    className="rf-text-data-sm rf-tabular"
-                    style={{
-                      width: 42,
-                      flex: "none",
-                      textAlign: "right",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                      gap: 3,
-                      color: ducats ? "var(--rf-currency-ducat)" : "var(--rf-fg-muted)",
-                    }}
-                    title={
-                      ducats
-                        ? `${ducats} ducats if dissolved at Baro's kiosk`
-                        : "Not a Prime part — no ducat value"
-                    }
-                  >
-                    {ducats ?? "—"}
-                    {ducats != null && <DucatGlyph style={{ width: 11, height: 11 }} />}
-                  </span>
-                }
-              />
-            </div>
-          );
-        })}
-      </DropList>
+      <RelicContents
+        row={row}
+        rewards={rewards}
+        refinement={active}
+        prices={prices}
+        highlightItem={highlightItem}
+        onPickItem={onPickItem}
+        quantityOf={quantityOf}
+      />
 
       <RelicPayout rewards={rewards} states={states} prices={prices} refinement={active} />
 

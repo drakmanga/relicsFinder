@@ -40,6 +40,15 @@ interface RowsProps {
   entries: WishlistEntry[];
   prices: PriceMap | undefined;
   onInfo: (itemName: string) => void;
+  /**
+   * Opens the part in the view that is about parts.
+   *
+   * A wishlist line names something the user went and found somewhere else, and
+   * the questions that follow — what else is in that set, which relics drop it,
+   * what it has done over ninety days — are all answered there. Without this the
+   * list was a dead end you could only read.
+   */
+  onPick: (itemName: string) => void;
 }
 
 /** Shared by the two priced sections: name, market and info all behave the same. */
@@ -58,7 +67,7 @@ function LineActions({
           qty={entry.qty}
           onIncrement={() => bump(entry, 1)}
           onDecrement={() => bump(entry, -1)}
-          onRemove={() => remove(entry.itemName, entry.kind)}
+          onRemove={() => remove(entry)}
         />
       </TableCell>
       {onInfo && (
@@ -69,7 +78,10 @@ function LineActions({
             iconOnly
             icon={<InfoIcon />}
             aria-label={`More about ${entry.itemName}`}
-            onClick={() => onInfo(entry.itemName)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onInfo(entry.itemName);
+            }}
           />
         </TableCell>
       )}
@@ -80,18 +92,21 @@ function LineActions({
           iconOnly
           icon={<ExternalLinkIcon />}
           aria-label={`Open ${entry.itemName} on Warframe Market`}
-          onClick={() => window.open(marketUrl(entry.itemName), "_blank", "noopener,noreferrer")}
+          onClick={(event) => {
+            event.stopPropagation();
+            window.open(marketUrl(entry.itemName), "_blank", "noopener,noreferrer");
+          }}
         />
       </TableCell>
     </>
   );
 }
 
-export function PartRows({ entries, prices, onInfo }: RowsProps) {
+export function PartRows({ entries, prices, onInfo, onPick }: RowsProps) {
   return (
     <Table
       stickyFirstColumn
-      interactive={false}
+      interactive
       framed={false}
       caption="Wishlist: parts you are collecting"
       className="rf-cols-wl-parts"
@@ -127,7 +142,11 @@ export function PartRows({ entries, prices, onInfo }: RowsProps) {
           const unit = meta?.averagePrice ?? null;
 
           return (
-            <TableRow key={entry.itemName}>
+            <TableRow
+              key={entry.itemName}
+              onClick={() => onPick(entry.itemName)}
+              title={`${entry.itemName} — click to open it in Prime Items`}
+            >
               <TableCell>{entry.itemName}</TableCell>
               <TableCell>{meta?.setName ?? "—"}</TableCell>
               <TableCell>
@@ -155,11 +174,11 @@ export function PartRows({ entries, prices, onInfo }: RowsProps) {
 }
 
 /** Judged on ducats per platinum — the same columns the Ducanetor ranks on. */
-export function DucatRows({ entries, prices, onInfo }: RowsProps) {
+export function DucatRows({ entries, prices, onInfo, onPick }: RowsProps) {
   return (
     <Table
       stickyFirstColumn
-      interactive={false}
+      interactive
       framed={false}
       caption="Wishlist: parts you are keeping for ducats"
       className="rf-cols-wl-ducats"
@@ -200,7 +219,11 @@ export function DucatRows({ entries, prices, onInfo }: RowsProps) {
           const ratio = unit && unit > 0 && ducats ? ducats / unit : null;
 
           return (
-            <TableRow key={entry.itemName}>
+            <TableRow
+              key={entry.itemName}
+              onClick={() => onPick(entry.itemName)}
+              title={`${entry.itemName} — click to open it in Prime Items`}
+            >
               <TableCell>{entry.itemName}</TableCell>
               <TableCell>{meta?.setName ?? "—"}</TableCell>
               <TableCell align="right" numeric>
@@ -239,11 +262,21 @@ export function DucatRows({ entries, prices, onInfo }: RowsProps) {
  * stars and the other none. Showing a price here would be showing the price of
  * whichever offer happened to be on screen when the line was added, hours ago.
  */
-export function EndoRows({ entries, offers }: { entries: WishlistEntry[]; offers?: EndoOffer[] }) {
+export function EndoRows({
+  entries,
+  offers,
+  onPick,
+}: {
+  entries: WishlistEntry[];
+  offers?: EndoOffer[];
+  /** Sculptures have no panel of their own; the Endo ranking is where they
+      are actually bought, so that is where a click goes. */
+  onPick: () => void;
+}) {
   return (
     <Table
       stickyFirstColumn
-      interactive={false}
+      interactive
       framed={false}
       caption="Wishlist: Ayatan sculptures"
       className="rf-cols-wl-endo"
@@ -272,7 +305,11 @@ export function EndoRows({ entries, offers }: { entries: WishlistEntry[]; offers
           const best = offers?.find((offer) => offer.itemName === entry.itemName);
 
           return (
-            <TableRow key={entry.itemName}>
+            <TableRow
+              key={entry.itemName}
+              onClick={onPick}
+              title={`${entry.itemName} — click for the offers open right now`}
+            >
               <TableCell>{entry.itemName}</TableCell>
               <TableCell align="right" numeric>
                 {best ? <PlatPrice value={best.platinum} /> : <Unlisted />}

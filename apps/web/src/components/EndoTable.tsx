@@ -225,7 +225,7 @@ export function EndoTable({ active, quantityOf }: Props) {
                         qty={quantityOf(offer.itemName, "endo")}
                         onIncrement={() => bump(seed, 1)}
                         onDecrement={() => bump(seed, -1)}
-                        onRemove={() => remove(offer.itemName, "endo")}
+                        onRemove={() => remove(seed)}
                       />
                     </TableCell>
                     <TableCell align="center">

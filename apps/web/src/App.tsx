@@ -10,6 +10,7 @@ import { DetailPane } from "./components/DetailPane";
 import { FilterBar } from "./components/FilterBar";
 import { ResultsPane } from "./components/ResultsPane";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
+import { RelicInfoDialog } from "./components/RelicInfoDialog";
 import { emptyFilters, type RelicSortColumn } from "./lib/rows";
 import { useCatalogue } from "./lib/useCatalogue";
 import { isCatalogue, useViewState } from "./lib/useViewState";
@@ -22,7 +23,6 @@ export function App() {
     setFilters,
     filtersOpen,
     setFiltersOpen,
-    compact,
     sort,
     setSort,
     selected,
@@ -31,6 +31,8 @@ export function App() {
     setPickedItem,
     infoItem,
     setInfoItem,
+    infoRelic,
+    setInfoRelic,
     selectedSet,
     setSelectedSet,
     setRefinement,
@@ -181,12 +183,8 @@ export function App() {
         </div>
       )}
 
-      {/* Below --rf-bp-lg the shell's two columns become two rows: subtract a
-          440px panel from a 1024px viewport and the table is left under the
-          640px it needs. See .rf-results in app.css. */}
-      {/* Below --rf-bp-lg the shell's two columns become two rows: subtract a
-          440px panel from a 1024px viewport and the table is left under the
-          640px it needs. See .rf-results in app.css. */}
+      {/* One column at every width: the detail panel opens over the table as a
+          modal rather than beside it. See DetailPane. */}
       <div className="rf-band rf-resultsband">
         {/* The panel the tabs point at. Only the selected one is rendered — the
             views are different questions, not five hidden copies of one. */}
@@ -215,18 +213,21 @@ export function App() {
               selectedSet={selectedSet}
               onSelectSet={setSelectedSet}
               onInfo={setInfoItem}
+              onPickItem={openItem}
+              onPickRelic={openRelic}
+              onShowEndo={() => setView("endo")}
               sort={sort}
               onSort={toggleSort}
             />
           </main>
 
           <DetailPane
-            asDrawer={compact}
             view={view}
             relics={relics.data ?? []}
             prices={prices.data}
             pricesPending={prices.isPending}
             relicRow={selectedRow}
+            relicPrice={selectedRow ? relicPrices.data?.get(selectedRow.relicFullName) : undefined}
             relicStates={selectedStates}
             sites={selectedSites.data ?? []}
             sitesPending={selectedSites.isPending}
@@ -237,8 +238,10 @@ export function App() {
             onSetRefinement={setSetRefinement}
             onToggleOwned={ownedParts.toggle}
             onToggleAllOwned={ownedParts.setAll}
+            quantityOf={wishlist.quantityOf}
             onPickItem={openItem}
             onPickRelic={openRelic}
+            onInfoRelic={setInfoRelic}
             onBack={trail.length > 0 ? goBack : undefined}
             onClose={closePanel}
           />
@@ -246,6 +249,8 @@ export function App() {
       </div>
 
       <ItemInfoDialog itemName={infoItem} prices={prices.data} onClose={() => setInfoItem(null)} />
+
+      <RelicInfoDialog relicFullName={infoRelic} onClose={() => setInfoRelic(null)} />
     </div>
   );
 }

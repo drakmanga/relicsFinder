@@ -128,7 +128,8 @@ by the backend. No database and no accounts: the service is single-tenant, so
 whoever runs it owns the only list. The directory is git-ignored.
 
 ```
-data/wishlist.json    lines you are collecting, farming for ducats, or want as Ayatan
+data/wishlist.json    lines you are collecting, buying as sealed relics, farming for
+                      ducats, or want as Ayatan
 data/owned.json       parts already in your inventory, ticked in the Sets view
 ```
 
@@ -136,7 +137,7 @@ data/owned.json       parts already in your inventory, ticked in the Sets view
 
 Six views: **Relics** (one row per relic, with vault state, expected value and
 best drop), **Prime Items**, **Sets** (what a set is missing and whether to buy
-or farm it), **Wishlist** (split by kind: parts, ducats, Ayatan), **Ducanetor**
+or farm it), **Wishlist** (split by kind: parts, relics, ducats, Ayatan), **Ducanetor**
 (ducats per platinum) and **Endo** (Ayatan by Endo per platinum). Search,
 filters, the wishlist and the owned list are all in place. For what is left, see
 the roadmap in the README and the open issues.

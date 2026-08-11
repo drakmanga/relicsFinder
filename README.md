@@ -25,7 +25,8 @@ Six views, each answering one question:
   already have, what the missing ones cost, and for each of them whether it is cheaper to
   **buy it or farm it**.
 - **Wishlist** — stored on the server, split by what each line is for: pieces you are
-  collecting, pieces to dissolve for ducats, Ayatan sculptures.
+  collecting, sealed relics you mean to buy, pieces to dissolve for ducats, Ayatan
+  sculptures.
 - **Ducanetor** — _what do I buy for Baro?_ Parts ranked by **ducats per platinum** spent.
 - **Endo** — _which Ayatan should I buy?_ Offers ranked by **Endo per platinum**, computed
   from the stars actually socketed in that specific sculpture.

@@ -15,8 +15,9 @@ import {
 
 import { PlatPrice } from "./Plat";
 import { ItemDroppedBy } from "./ItemDroppedBy";
+import { PanelWishlist } from "./PanelWishlist";
 
-import type { PriceMap, Relic, RelicItemRow } from "../api/types";
+import type { PriceMap, Relic, RelicItemRow, WishlistKind } from "../api/types";
 import { partsOfSet, setOf, sourcesFor } from "../lib/sets";
 import { marketUrl, priceOf } from "../lib/format";
 
@@ -34,6 +35,8 @@ interface Props {
    * in the relic panel.
    */
   onPickRelic: (relicFullName: string) => void;
+  /** How many of this part the wishlist holds, for the stepper in the header. */
+  quantityOf: (itemName: string, kind?: WishlistKind) => number;
   /** Steps back to whatever the panel was showing before. Absent at the start. */
   onBack?: () => void;
   /** Shuts the panel and clears the selection. */
@@ -53,6 +56,7 @@ export function ItemDetailPanel({
   prices,
   onPickItem,
   onPickRelic,
+  quantityOf,
   onBack,
   onClose,
 }: Props) {
@@ -110,6 +114,17 @@ export function ItemDetailPanel({
           <span className="rf-text-data-md rf-push rf-ducat">{meta.ducats}</span>
         </div>
       )}
+
+      <PanelWishlist
+        seed={{
+          itemName: row.itemName,
+          kind: "part",
+          tier: row.tier,
+          relicFullName: row.relicFullName,
+          refinement: row.refinement,
+        }}
+        qty={quantityOf(row.itemName)}
+      />
 
       <ItemDroppedBy sources={sources} onPickRelic={onPickRelic} />
 

@@ -2,7 +2,7 @@
  * Over 150 lines (rule 4), most of it the prop list three different panels
  * need. The alternative is three prop types saying the same thing.
  */
-import { DetailPanel, Drawer } from "relic-finder-ui";
+import { DetailPanel, Modal } from "relic-finder-ui";
 
 import { ItemDetailPanel } from "./ItemDetailPanel";
 import { RelicDetailPanel } from "./RelicDetailPanel";
@@ -16,6 +16,7 @@ import type {
   RelicItemRow,
   RelicRow,
   Reward,
+  WishlistKind,
 } from "../api/types";
 import type { PrimeSet } from "../lib/setCompletion";
 
@@ -26,6 +27,8 @@ interface Props {
   pricesPending: boolean;
 
   relicRow: RelicRow | null;
+  /** What the relic on show sells for, sealed. */
+  relicPrice: number | null | undefined;
   /** The other refinements of the relic on show, for the state switcher. */
   relicStates: Partial<Record<Refinement, Reward[]>>;
   /** Where the relic on show drops. */
@@ -47,11 +50,10 @@ interface Props {
   onBack: (() => void) | undefined;
   onClose: () => void;
 
-  /**
-   * Below `lg` the panel is a modal drawer over the table rather than a column
-   * beside it, and it exists only while something is selected.
-   */
-  asDrawer: boolean;
+  /** Opens the price history of the relic on show. */
+  onInfoRelic: (relicFullName: string) => void;
+  /** How many of a line the wishlist already holds, for the steppers inside. */
+  quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
 }
 
 /**
@@ -63,18 +65,18 @@ interface Props {
  * nothing to open beside them.
  */
 export function DetailPane(props: Props) {
-  const { view, asDrawer, onClose } = props;
+  const { view, onClose } = props;
 
   if (view === "wishlist" || view === "ducats" || view === "endo") return null;
 
-  const panel = <Panel {...props} />;
-
-  if (!asDrawer) return panel;
-
   /*
-    As a drawer the panel is not a permanent column, so an empty one has nothing
-    to say and should not be sitting over the table. What the view is currently
-    pointing at decides whether there is a drawer at all.
+    The panel opens over the table rather than beside it, at every width.
+
+    As a permanent column it took 440px of a screen whose whole point is a wide
+    dense table, and it stood there empty whenever nothing was selected — a
+    third of the window reserved for an answer nobody had asked for yet. As a
+    modal it exists only while something is open, so the table gets the room
+    back and the panel gets the reader's whole attention when it does appear.
   */
   const pointingAtSomething =
     view === "sets"
@@ -84,9 +86,9 @@ export function DetailPane(props: Props) {
         : props.relicRow !== null;
 
   return (
-    <Drawer open={pointingAtSomething} onClose={onClose} label="Details">
-      {panel}
-    </Drawer>
+    <Modal open={pointingAtSomething} onClose={onClose} label="Details">
+      <Panel {...props} />
+    </Modal>
   );
 }
 
@@ -97,6 +99,7 @@ function Panel({
   prices,
   pricesPending,
   relicRow,
+  relicPrice,
   relicStates,
   sites,
   sitesPending,
@@ -109,8 +112,10 @@ function Panel({
   onToggleAllOwned,
   onPickItem,
   onPickRelic,
+  onInfoRelic,
   onBack,
   onClose,
+  quantityOf,
 }: Props) {
   if (view === "sets") {
     return (
@@ -137,6 +142,7 @@ function Panel({
         row={itemRow}
         relics={relics}
         prices={prices}
+        quantityOf={quantityOf}
         onPickItem={onPickItem}
         onPickRelic={onPickRelic}
         onBack={onBack}
@@ -156,6 +162,9 @@ function Panel({
       prices={prices}
       sites={sites}
       sitesPending={sitesPending}
+      price={relicPrice}
+      onInfo={onInfoRelic}
+      quantityOf={quantityOf}
     />
   );
 }

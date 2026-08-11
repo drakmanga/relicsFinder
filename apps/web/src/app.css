@@ -121,11 +121,14 @@ body {
   border-bottom: var(--rf-hairline) solid var(--rf-border-default);
 }
 
+/* Tighter under the toggle than over it: the bar it opens belongs to it, and
+   an even gap either side read as two separate strips with a gutter between
+   them. */
 .rf-filterstrip-inner {
   display: flex;
   align-items: center;
   gap: var(--rf-space-2);
-  padding-block: var(--rf-space-2);
+  padding-block: var(--rf-space-2) var(--rf-space-1);
 }
 
 /* ---- Filter bar band ---- */
@@ -148,43 +151,24 @@ body {
   background: var(--rf-surface-0);
 }
 
-/* The 1px gap is the divider: the design is dense on purpose, so the zones are
-   told apart by a hairline of the band's own background rather than by
-   whitespace. */
+/* One column at every width. The detail panel used to be the second one, and
+   it took 440px of the window whether or not anything was selected; it opens
+   over the table as a modal now, so the table has the band to itself. */
 .rf-results {
   display: flex;
-  gap: var(--rf-hairline);
   height: 100%;
-  background: var(--rf-border-default);
 }
 
 /*
-  Surface-1, the same ground the detail panel stands on. On surface-0 the area
-  below the last row read as a hole punched in the layout rather than as an
-  empty table — obvious the moment a search returns one result and the panel
-  beside it is eight hundred pixels tall.
+  Surface-1, a step up from the band it sits in. On surface-0 the area below
+  the last row read as a hole punched in the layout rather than as an empty
+  table — obvious the moment a search returns a single result.
 */
 .rf-results-main {
   flex: 1;
   min-width: 0;
   background: var(--rf-surface-1);
   overflow: hidden;
-}
-
-/* Below --rf-bp-lg the panel stops being a column and stacks under the table;
-   see the matching rule on .rf-detail in packages/ui. */
-/* Below --rf-bp-lg the panel leaves the layout entirely: it becomes a modal
-   drawer over the table, rendered only while something is selected. The table
-   therefore takes the whole band rather than sharing it. */
-@media (max-width: 1023.98px) {
-  .rf-results {
-    flex-direction: column;
-  }
-
-  .rf-results-main {
-    flex: 1;
-    min-height: 0;
-  }
 }
 
 /* ---- Loading placeholder ---- */
@@ -203,61 +187,73 @@ body {
    platform provides for exactly this.
 
    Percentages, not pixels: they divide whatever width the pane has. The floor
-   is `.rf-table`'s own 640px min-width — under that the pane scrolls sideways
+   is each table's own min-width below — under that the pane scrolls sideways
    rather than crushing eight columns into a phone.
+
+   A column has to be wide enough for its *header*, not only for what the rows
+   put in it. The header is one uppercase word with 0.12em of tracking and it
+   never wraps, so an undersized action column showed "MARKE" where the word is
+   MARKET, and a Wishlist column narrower than its stepper let the stepper run
+   over the column beside it. The three action columns are therefore sized from
+   what they hold — a 6-character label, a 32px icon button, a 102px stepper —
+   against the table's own floor, and the floors below are set so those
+   percentages resolve to at least that.
    ----------------------------------------------------------------------- */
 
 .rf-cols-relics col:nth-child(1) {
-  width: 13%;
+  width: 11%;
 } /* Tier — fits the Vanguard chip */
 .rf-cols-relics col:nth-child(2) {
-  width: 23%;
+  width: 20%;
 } /* Relic */
 .rf-cols-relics col:nth-child(3) {
-  width: 13%;
+  width: 11%;
 } /* Status */
 .rf-cols-relics col:nth-child(4) {
-  width: 14%;
+  width: 13%;
 } /* Expected */
 .rf-cols-relics col:nth-child(5) {
-  width: 14%;
+  width: 13%;
 } /* Best drop */
 .rf-cols-relics col:nth-child(6) {
-  width: 13%;
+  width: 12%;
 } /* Cost */
 .rf-cols-relics col:nth-child(7) {
-  width: 10%;
+  width: 12%;
+} /* Wishlist — the stepper */
+.rf-cols-relics col:nth-child(8) {
+  width: 8%;
 } /* Market */
 
 .rf-cols-items col:nth-child(1) {
   width: 17%;
 } /* Item */
 .rf-cols-items col:nth-child(2) {
-  width: 10%;
+  width: 9%;
 } /* Set */
 .rf-cols-items col:nth-child(3) {
-  width: 10%;
+  width: 8%;
 } /* Rarity — fits "Uncommon" */
 .rf-cols-items col:nth-child(4) {
-  width: 22%;
+  width: 17%;
 } /* Relics — three tier chips and the count */
 .rf-cols-items col:nth-child(5) {
-  width: 8%;
+  width: 9%;
 } /* Best drop */
 .rf-cols-items col:nth-child(6) {
-  width: 7%;
+  width: 8%;
 } /* Ducats */
 .rf-cols-items col:nth-child(7) {
   width: 8%;
 } /* Price */
 .rf-cols-items col:nth-child(8) {
-  width: 8%;
-} /* Wishlist */
+  width: 11%;
+} /* Wishlist — the stepper is 102px wide and does not shrink */
 .rf-cols-items col:nth-child(9) {
-  width: 4%;
+  width: 6%;
 } /* Info */
 .rf-cols-items col:nth-child(10) {
-  width: 6%;
+  width: 7%;
 } /* Market */
 
 .rf-cols-sets col:nth-child(1) {
@@ -274,67 +270,66 @@ body {
 }
 
 .rf-cols-ducats col:nth-child(1) {
-  width: 5%;
-}
+  width: 4%;
+} /* # */
 .rf-cols-ducats col:nth-child(2) {
-  width: 24%;
-}
+  width: 22%;
+} /* Item */
 .rf-cols-ducats col:nth-child(3) {
-  width: 14%;
-}
+  width: 12%;
+} /* Set */
 .rf-cols-ducats col:nth-child(4) {
-  width: 9%;
-}
+  width: 8%;
+} /* Price */
 .rf-cols-ducats col:nth-child(5) {
   width: 9%;
-}
+} /* Ducats */
 .rf-cols-ducats col:nth-child(6) {
   width: 13%;
-}
+} /* Ducats / plat — the longest header in the table */
 .rf-cols-ducats col:nth-child(7) {
-  width: 9%;
-}
+  width: 7%;
+} /* Trades */
 .rf-cols-ducats col:nth-child(8) {
-  width: 9%;
-}
+  width: 12%;
+} /* Wishlist — the stepper */
 .rf-cols-ducats col:nth-child(9) {
-  width: 4%;
-}
+  width: 6%;
+} /* Info */
 .rf-cols-ducats col:nth-child(10) {
-  width: 4%;
-}
+  width: 7%;
+} /* Market */
 
 .rf-cols-endo col:nth-child(1) {
-  width: 5%;
-}
+  width: 4%;
+} /* # */
 .rf-cols-endo col:nth-child(2) {
-  width: 22%;
-}
+  width: 25%;
+} /* Sculpture */
 .rf-cols-endo col:nth-child(3) {
-  width: 13%;
-}
+  width: 8%;
+} /* Stars */
 .rf-cols-endo col:nth-child(4) {
-  width: 9%;
-}
+  width: 7%;
+} /* Endo */
 .rf-cols-endo col:nth-child(5) {
-  width: 9%;
-}
+  width: 8%;
+} /* Price */
 .rf-cols-endo col:nth-child(6) {
   width: 12%;
-}
+} /* Endo / plat */
 .rf-cols-endo col:nth-child(7) {
-  width: 18%;
-}
+  width: 15%;
+} /* Seller */
 .rf-cols-endo col:nth-child(8) {
-  width: 8%;
-}
+  width: 13%;
+} /* Wishlist — the stepper */
 .rf-cols-endo col:nth-child(9) {
-  width: 4%;
-}
+  width: 8%;
+} /* Market */
 
-/* WishlistTable keeps its widths inline for now: it is three tables in one
-   517-line file, and splitting it is its own task (see the repair order in the
-   rules). Its columns were already sized before fixed layout arrived. */
+/* Sets is four wide columns and no action column, so it needs no floor of its
+   own beyond `.rf-table`'s. */
 
 /* ------------------------------------------------------------ Filter bar --
    The band above owns the background and the border; this owns the content.
@@ -345,20 +340,37 @@ body {
   flex-wrap: wrap;
 }
 
-/* The groups grow to fill the row they land on. Sized to their contents they
-   wrapped ragged — at 1280 the tier chips take most of the first row and Max
-   price dropped alone onto a second one with a hand's width of nothing beside
-   it. */
+/* The groups share the row rather than claiming it by content.
+
+   With `flex-basis: auto` a group asks for everything it holds on one line —
+   the six tier chips alone want 577px — and the four groups then want more
+   than the bar has, so one of them dropped onto a second row by itself. A
+   basis of 210px is a floor, not a width: they all fit on one line and grow to
+   fill it, and a group whose contents are wider than its share wraps them
+   inside its own column, which is what `.rf-filter-group-body` was already
+   set up to do. */
 .rf-filter-group {
-  flex: 1 1 auto;
+  flex: 1 1 210px;
   min-width: 210px;
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding-block: var(--rf-space-3);
+  /* Top, not centre. The groups are different heights now that the widest one
+     wraps its chips onto three lines, and centring each in the row left four
+     labels at four different heights. Aligned to the top the labels read as a
+     header row — and the two sliders, whose groups are the same shape, still
+     land on the same line. */
+  justify-content: flex-start;
+  padding-block: var(--rf-space-2) var(--rf-space-3);
   padding-inline: var(--rf-space-4);
   border-right: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+/* Six chips against three, so a double share of whatever the row has spare.
+   On an even split the tier chips wrapped onto three lines while the group
+   beside them sat half empty. */
+.rf-filter-group-wide {
+  flex-grow: 2;
 }
 
 /* The last group has nothing to its right to be divided from. */
@@ -371,6 +383,15 @@ body {
 }
 
 .rf-filter-group-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rf-space-1);
+}
+
+/* One set of controls inside a group that holds two of them. It wraps as a
+   unit, so rarity and vault never interleave into one ambiguous row of chips
+   where "Rare" and "Vaulted" look like the same kind of switch. */
+.rf-filter-set {
   display: flex;
   flex-wrap: wrap;
   gap: var(--rf-space-1);
@@ -493,14 +514,34 @@ body {
    ten-column table answers a narrow pane by truncating every column at once.
    In rem so the floor rises with the reader's font size, same as .rf-table's
    own minimum. */
+.rf-cols-relics {
+  min-width: 66rem;
+}
 .rf-cols-items {
   min-width: 74rem;
 }
+/* 68rem rather than 66: the Wishlist column is 12% of it, which is 130px, and
+   the stepper inside it is 102px plus the cell's own padding. Below that the
+   stepper overflowed into the Info column beside it. */
 .rf-cols-ducats {
-  min-width: 66rem;
+  min-width: 68rem;
 }
 .rf-cols-endo {
   min-width: 62rem;
+}
+/* The three wishlist tables had no floor at all, so they fell back to
+   `.rf-table`'s 40rem: at that width a 7% Market column is 45px and the header
+   read "MARKE". */
+.rf-cols-wl-parts,
+.rf-cols-wl-ducats {
+  min-width: 68rem;
+}
+.rf-cols-wl-endo {
+  min-width: 64rem;
+}
+/* Six columns rather than nine, so it needs less floor to hold its stepper. */
+.rf-cols-wl-relics {
+  min-width: 56rem;
 }
 
 /* ------------------------------------------------------------ Ranked page -
@@ -664,84 +705,172 @@ body {
    The ducats table summed to 104% before these moved out of the JSX — nobody
    can add up nine numbers scattered across a hundred lines of markup. */
 .rf-cols-wl-parts col:nth-child(1) {
-  width: 26%;
-}
+  width: 22%;
+} /* Item */
 .rf-cols-wl-parts col:nth-child(2) {
-  width: 15%;
-}
+  width: 12%;
+} /* Set */
 .rf-cols-wl-parts col:nth-child(3) {
   width: 15%;
-}
+} /* From — a tier chip and the relic name */
 .rf-cols-wl-parts col:nth-child(4) {
-  width: 9%;
-}
+  width: 7%;
+} /* Unit */
 .rf-cols-wl-parts col:nth-child(5) {
-  width: 9%;
-}
+  width: 7%;
+} /* vs 90d */
 .rf-cols-wl-parts col:nth-child(6) {
-  width: 10%;
-}
+  width: 12%;
+} /* Line total */
 .rf-cols-wl-parts col:nth-child(7) {
-  width: 9%;
-}
+  width: 12%;
+} /* Qty — the stepper */
 .rf-cols-wl-parts col:nth-child(8) {
-  width: 3%;
-}
+  width: 6%;
+} /* Info */
 .rf-cols-wl-parts col:nth-child(9) {
-  width: 4%;
-}
+  width: 7%;
+} /* Market */
 
 .rf-cols-wl-ducats col:nth-child(1) {
-  width: 28%;
-}
+  width: 23%;
+} /* Item */
 .rf-cols-wl-ducats col:nth-child(2) {
-  width: 17%;
-}
+  width: 11%;
+} /* Set */
 .rf-cols-wl-ducats col:nth-child(3) {
-  width: 9%;
-}
+  width: 7%;
+} /* Unit */
 .rf-cols-wl-ducats col:nth-child(4) {
   width: 9%;
-}
+} /* Ducats */
 .rf-cols-wl-ducats col:nth-child(5) {
-  width: 12%;
-}
+  width: 13%;
+} /* Ducats / plat */
 .rf-cols-wl-ducats col:nth-child(6) {
-  width: 10%;
-}
+  width: 12%;
+} /* Line total */
 .rf-cols-wl-ducats col:nth-child(7) {
-  width: 8%;
-}
+  width: 12%;
+} /* Qty — the stepper */
 .rf-cols-wl-ducats col:nth-child(8) {
-  width: 3%;
-}
+  width: 6%;
+} /* Info */
 .rf-cols-wl-ducats col:nth-child(9) {
-  width: 4%;
-}
+  width: 7%;
+} /* Market */
+
+.rf-cols-wl-relics col:nth-child(1) {
+  width: 34%;
+} /* Relic — the tier chip and the name */
+.rf-cols-wl-relics col:nth-child(2) {
+  width: 15%;
+} /* Wanted at */
+.rf-cols-wl-relics col:nth-child(3) {
+  width: 12%;
+} /* Cost */
+.rf-cols-wl-relics col:nth-child(4) {
+  width: 14%;
+} /* Line total */
+.rf-cols-wl-relics col:nth-child(5) {
+  width: 15%;
+} /* Qty — the stepper */
+.rf-cols-wl-relics col:nth-child(6) {
+  width: 10%;
+} /* Market */
 
 .rf-cols-wl-endo col:nth-child(1) {
-  width: 28%;
-}
+  width: 22%;
+} /* Sculpture */
 .rf-cols-wl-endo col:nth-child(2) {
   width: 11%;
-}
+} /* Best now */
 .rf-cols-wl-endo col:nth-child(3) {
-  width: 11%;
-}
+  width: 8%;
+} /* Stars */
 .rf-cols-wl-endo col:nth-child(4) {
-  width: 10%;
-}
+  width: 8%;
+} /* Endo */
 .rf-cols-wl-endo col:nth-child(5) {
   width: 12%;
-}
+} /* Endo / plat */
 .rf-cols-wl-endo col:nth-child(6) {
-  width: 15%;
-}
+  width: 18%;
+} /* Seller */
 .rf-cols-wl-endo col:nth-child(7) {
-  width: 9%;
-}
+  width: 13%;
+} /* Qty — the stepper */
 .rf-cols-wl-endo col:nth-child(8) {
-  width: 4%;
+  width: 8%;
+} /* Market */
+
+/* The row of figures at the head of an info dialog. auto-fit rather than a
+   fixed count: the part dialog carries five and the relic one four. */
+.rf-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--rf-space-4);
+  margin-bottom: var(--rf-space-5);
+}
+
+/* The wishlist stepper at the head of a panel, for the thing the panel is
+   about. Spaced as a block of its own so it does not read as part of the
+   section that follows it. */
+.rf-panel-wishlist {
+  margin-block: var(--rf-space-4);
+}
+
+/* ------------------------------------------------------- Relic contents --
+   One line of what a relic holds: the drop, then its wishlist stepper. The
+   stepper sits beside the drop row rather than inside it because the row is
+   itself a button — it is the way through to the part — and buttons do not
+   nest.
+   ----------------------------------------------------------------------- */
+
+.rf-relic-drop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--rf-space-2);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+/* 17rem is the width below which the drop row starts eating itself: the item
+   name wraps to three lines and then spills over the rarity beside it, because
+   a roomy row lets its name overflow rather than truncate mid-word. Given that
+   floor as a flex basis, a panel too narrow for the row and the stepper side
+   by side drops the stepper onto its own line instead of crushing both. */
+.rf-relic-drop > .rf-droprow {
+  flex: 1 1 17rem;
+  min-width: 0;
+}
+
+/* On that second line the stepper stays under the numbers it belongs to. */
+.rf-relic-drop > .rf-droprow ~ * {
+  margin-left: auto;
+}
+
+.rf-relic-drop:last-child {
+  border-bottom: 0;
+}
+
+/* The part the search named. Same fill and same marker as a selected table
+   row, so it reads as "this is the one you asked about". */
+.rf-relic-drop-marked {
+  background: var(--rf-state-row-selected);
+  box-shadow: inset 2px 0 0 0 var(--rf-void-400);
+}
+
+/* Sized to its widest real value — three digits and the glyph — so the figures
+   line up down the six rows instead of drifting with the item names. In rem,
+   like the drop row's own columns, so it still holds them at 200% text. */
+.rf-relic-ducats {
+  width: 2.8rem;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
 }
 
 /* A glyph beside the number it belongs to, or an icon beside its label. */
