@@ -18,7 +18,7 @@ public class WishlistEntry {
     private String itemName;
 
     /**
-     * What the line is for: "part", "ducat" or "endo".
+     * What the line is for: "part", "ducat", "endo" or "relic".
      *
      * <p>Part of the identity, not decoration. The same Prime part can be
      * wanted twice for different reasons — one to complete a set, one to

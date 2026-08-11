@@ -194,6 +194,53 @@ public class RelicMarketService {
     }
 
     /**
+     * The same series for a whole relic.
+     *
+     * <p>Separate from {@link #getHistory} because a relic and a part of the
+     * same name are two different listings: only the slug differs, and reusing
+     * the item one would chart the part called "Axi A1", which does not exist.
+     */
+    public List<PricePoint> getRelicHistory(String relicName) {
+        String slug = relicSlug(relicName);
+        Cached cached = cache.get(slug);
+
+        if (cached == null || !cached.isFresh()) {
+            enqueueFirst(slug);
+            if (cached == null) cached = awaitBriefly(slug);
+        }
+        return cached == null ? List.of() : cached.history();
+    }
+
+    /**
+     * Everything the market knows about a whole relic: price, median, trades
+     * and the ninety-day trend.
+     *
+     * <p>{@link #getRelicPrices} answers the table, which needs one number per
+     * row and cannot wait; this answers the panel someone has open, so it waits
+     * briefly for a first fetch rather than showing dashes. Ducats and set are
+     * null by nature — a relic cannot be dissolved and belongs to no set.
+     */
+    public ItemPrice getRelicPrice(String relicName) {
+        String slug = relicSlug(relicName);
+        Cached cached = cache.get(slug);
+
+        if (cached == null || !cached.isFresh()) {
+            enqueueFirst(slug);
+            if (cached == null) cached = awaitBriefly(slug);
+        }
+
+        return new ItemPrice(
+                relicName,
+                cached == null ? null : cached.avg(),
+                cached == null ? null : cached.median(),
+                cached == null ? null : cached.volume(),
+                cached == null ? null : cached.trend(),
+                slug,
+                null,
+                null);
+    }
+
+    /**
      * Average price of a whole relic.
      *
      * @return the average, or -1 when unavailable — the contract the original

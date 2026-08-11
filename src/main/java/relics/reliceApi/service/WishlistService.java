@@ -59,7 +59,7 @@ public class WishlistService {
                 // Identity is kind plus name: the same part wanted for a set and
                 // for ducats is two lines. A true duplicate would double a total
                 // silently.
-                if (!seen.add(entry.getKind() + "|" + entry.getItemName())) continue;
+                if (!seen.add(identityOf(entry))) continue;
                 cleaned.add(entry);
             }
 
@@ -69,6 +69,27 @@ public class WishlistService {
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * What makes two lines the same line.
+     *
+     * <p>Kind plus name, except for a relic, where the refinement joins the key:
+     * a relic is bought sealed and then refined with void traces, so Axi A20
+     * Intact and Axi A20 Exceptional are two plans and two quantities. For every
+     * other kind the refinement is a note about where the part was found, and
+     * keying on it would split one part into four lines.
+     *
+     * <p>The client applies the same rule in {@code lib/wishlist.ts}. The two
+     * have to agree: if this one is coarser, a reload silently merges lines the
+     * user kept apart and adds their quantities together.
+     */
+    static String identityOf(WishlistEntry entry) {
+        String kind = entry.getKind();
+        if (!"relic".equals(kind)) return kind + "|" + entry.getItemName();
+
+        String refinement = entry.getRefinement();
+        return kind + "|" + entry.getItemName() + "|" + (refinement == null ? "intact" : refinement);
     }
 
     private void load() {

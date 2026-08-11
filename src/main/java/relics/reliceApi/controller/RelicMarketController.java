@@ -104,6 +104,30 @@ public class RelicMarketController {
         return ResponseEntity.ok(relicMarketService.getRelicPrices(relicNames));
     }
 
+    /**
+     * Price, median, trades and trend for a whole relic, e.g. "Lith V9".
+     *
+     * <p>Under {@code /relic/} rather than at the root so it does not collide
+     * with the single-segment mapping below, which predates it and answers a
+     * bare average.
+     */
+    @GetMapping("/relic/{relicName}")
+    public ResponseEntity<ItemPrice> getRelicDetail(@PathVariable String relicName) {
+        if (relicName == null || relicName.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(relicMarketService.getRelicPrice(relicName));
+    }
+
+    /** Ninety days of completed trades for a whole relic, for the price chart. */
+    @GetMapping("/relic/{relicName}/history")
+    public ResponseEntity<List<PricePoint>> getRelicHistory(@PathVariable String relicName) {
+        if (relicName == null || relicName.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(relicMarketService.getRelicHistory(relicName));
+    }
+
     /** Average price of a whole relic, e.g. "Lith V9". */
     @GetMapping("/{relicName}")
     public ResponseEntity<RelicPrice> getAvaragePrice(@PathVariable String relicName) {
