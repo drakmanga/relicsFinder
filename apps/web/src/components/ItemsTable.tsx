@@ -27,6 +27,7 @@ import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, remove } from "../lib/wishlist";
 import { marketUrl, priceOf } from "../lib/format";
+import { usePricePriority } from "../lib/usePricePriority";
 import type { PriceMap, WishlistKind } from "../api/types";
 import type { PrimeItemRow } from "../lib/items";
 
@@ -67,6 +68,13 @@ export function ItemsTable({
   });
 
   const items = virtualizer.getVirtualItems();
+
+  // The rows on screen, told to the server so it prices those first.
+  usePricePriority({
+    items: items
+      .map((item) => rows[item.index]?.itemName)
+      .filter((name): name is string => !!name),
+  });
 
   const paddingTop = items.length > 0 ? (items[0]?.start ?? 0) : 0;
   const paddingBottom =

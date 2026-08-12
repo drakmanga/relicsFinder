@@ -25,6 +25,7 @@ import { QtyStepper } from "./QtyStepper";
 import { bump, remove } from "../lib/wishlist";
 import { relicMarketUrl } from "../lib/format";
 import { bestDropValue, expectedValue } from "../lib/rows";
+import { usePricePriority } from "../lib/usePricePriority";
 import type { PriceMap, Refinement, RelicPriceMap, RelicRow, WishlistKind } from "../api/types";
 import type { RelicSortColumn, SortDirection } from "../lib/rows";
 
@@ -97,6 +98,14 @@ export function ResultsTable({
   });
 
   const items = virtualizer.getVirtualItems();
+
+  // The rows on screen, told to the server so it prices those first. The batch
+  // above still asks for every row — this only changes the order they fill in.
+  usePricePriority({
+    relics: items
+      .map((item) => rows[item.index]?.relicFullName)
+      .filter((name): name is string => !!name),
+  });
 
   const needle = term.trim().toLowerCase();
 

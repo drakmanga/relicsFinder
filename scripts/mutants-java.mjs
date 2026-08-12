@@ -17,7 +17,8 @@ const SERVICE = "src/main/java/relics/reliceApi/service";
 
 const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
-  "RelicVaultedServiceTest,RelicSearchItemServiceTest -DfailIfNoTests=false";
+  "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
+  "RelicMarketSweepTest,PriceCacheStoreTest -DfailIfNoTests=false";
 
 const MUTANTS = [
   {
@@ -109,6 +110,60 @@ const MUTANTS = [
     file: `${SERVICE}/RelicSearchItemService.java`,
     from: "if (relics == null || itemName == null || itemName.isEmpty()) {",
     to: "if (relics == null || itemName == null) {",
+  },
+  {
+    name: "a traded item is re-read as rarely as a dead one",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "return volume != null && volume >= ACTIVE_VOLUME ? ACTIVE_TTL : IDLE_TTL;",
+    to: "return IDLE_TTL;",
+  },
+  {
+    name: "a failed call is written down as a real answer",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "            if (failed) return RETRY_TTL;\n",
+    to: "",
+  },
+  {
+    name: "a quiet item is held for a week instead of a day",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "private static final Duration IDLE_TTL = Duration.ofHours(24);",
+    to: "private static final Duration IDLE_TTL = Duration.ofDays(7);",
+  },
+  {
+    name: "the sweep cursor stops advancing, so one name is refreshed forever",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "names.get(Math.floorMod(sweepCursor.getAndIncrement(), names.size()))",
+    to: "names.get(Math.floorMod(sweepCursor.get(), names.size()))",
+  },
+  {
+    name: "the sweep queues the whole catalogue at once",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "                enqueue(slug);\n                return;",
+    to: "                enqueue(slug);",
+  },
+  {
+    name: "a failed call blocks its own retry by counting as an answer",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "return cached == null || cached.failed();",
+    to: "return cached == null;",
+  },
+  {
+    name: "a failed call is carried across a restart",
+    file: `${SERVICE}/PriceCacheStore.java`,
+    from: "if (entry.getValue().failed()) continue;",
+    to: "",
+  },
+  {
+    name: "an entry with no timestamp is loaded as if it were fresh",
+    file: `${SERVICE}/PriceCacheStore.java`,
+    from: 'if (!node.hasNonNull("at")) return null;',
+    to: "",
+  },
+  {
+    name: "the saved cache is merged into the old file instead of replacing it",
+    file: `${SERVICE}/PriceCacheStore.java`,
+    from: "                json.writeStartObject();\n",
+    to: "                json.writeStartObject();\n                for (Map.Entry<String, RelicMarketService.Cached> old : load().entrySet()) { json.writeFieldName(old.getKey()); writeEntry(json, old.getValue()); }\n",
   },
 ];
 
