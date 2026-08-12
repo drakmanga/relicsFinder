@@ -163,6 +163,30 @@ export const api = {
     return (await res.json()) as WireRelicPrice[];
   },
 
+  /**
+   * Tells the server which rows are on screen, so it prices those first.
+   *
+   * A hint, not a request: the batches above still ask for the whole catalogue,
+   * because sorting a table by price is only right when every row has one. This
+   * only changes the order the server fills them in.
+   *
+   * Deliberately swallows its own failures. Nothing on screen depends on it,
+   * and a rejected promise here would surface as an error toast for something
+   * the user never asked for.
+   */
+  async prioritise(names: { items?: string[]; relics?: string[] }): Promise<void> {
+    try {
+      await fetch(`${BASE}/market/priority`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(names),
+        keepalive: true,
+      });
+    } catch {
+      // Ordering hint only.
+    }
+  },
+
   /** Ninety days of completed trades. */
   async itemHistory(itemName: string, signal?: AbortSignal): Promise<PricePoint[]> {
     return await get<PricePoint[]>(`/market/item/${seg(itemName)}/history`, signal);

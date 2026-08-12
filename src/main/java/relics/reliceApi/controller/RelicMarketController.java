@@ -15,11 +15,15 @@ import java.util.Map;
 public class RelicMarketController {
 
     /**
-     * The whole catalogue is about 550 parts and the client asks for all of
+     * The whole catalogue is about 770 relics and the client asks for all of
      * them at once — the server answers from cache, so this is map lookups, not
      * network calls. The cap only guards against a nonsense request.
+     *
+     * <p>Raised from 1.000, which the relics table was within 230 rows of: the
+     * failure it would have produced is a 400 and a table with no prices in it
+     * at all, several Prime releases from now and with nothing to point at.
      */
-    private static final int MAX_BATCH = 1000;
+    private static final int MAX_BATCH = 5000;
 
     private final RelicMarketService relicMarketService;
 
@@ -118,6 +122,31 @@ public class RelicMarketController {
         }
         return ResponseEntity.ok(relicMarketService.getRelicPrice(relicName));
     }
+
+    /**
+     * Says which rows are on screen, so those get priced first.
+     *
+     * <p>Not a request for data: the tables go on asking for the whole catalogue
+     * in one batch, because sorting by price is only correct when every row has
+     * a price. This carries the one thing the server cannot work out for itself
+     * — which thirty of those rows someone is actually looking at.
+     *
+     * <p>Answers 204 whatever happens. A hint that arrives late, twice or not at
+     * all changes an order of work, never an answer, so there is nothing here
+     * for the client to handle.
+     */
+    @PostMapping("/priority")
+    public ResponseEntity<Void> prioritise(@RequestBody(required = false) PriorityRequest request) {
+        if (request != null) {
+            relicMarketService.prioritise(
+                    request.items() == null ? List.of() : request.items(),
+                    request.relics() == null ? List.of() : request.relics());
+        }
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Item names, relic names, or both — whichever table is on screen. */
+    public record PriorityRequest(List<String> items, List<String> relics) {}
 
     /** Ninety days of completed trades for a whole relic, for the price chart. */
     @GetMapping("/relic/{relicName}/history")

@@ -2,12 +2,14 @@ package relics.reliceApi.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 import relics.reliceApi.model.ItemPrice;
 import relics.reliceApi.model.PricePoint;
 import relics.reliceApi.model.RelicPrice;
 
+import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -16,7 +18,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Prices from warframe.market.
@@ -37,11 +42,39 @@ public class RelicMarketService {
 
     private static final String API = "https://api.warframe.market/v1/items/";
 
-    /** Prices move over days, not minutes; the warmer re-reads on this cycle. */
-    private static final Duration TTL = Duration.ofMinutes(30);
+    /**
+     * How long an answer is worth keeping, for an item that trades.
+     *
+     * <p>Six hours rather than the thirty minutes this used to be, because
+     * thirty minutes was faster than the source can move. The price shown is the
+     * mean of {@code statistics_closed.48hours}, whose buckets are hourly — 31
+     * and 44 of them on two sampled items, since hours with no sale are omitted.
+     * One new hour therefore shifts the mean by about one fortieth, and reading
+     * twice an hour re-fetched a number that had not changed.
+     */
+    private static final Duration ACTIVE_TTL = Duration.ofHours(6);
 
-    /** An unlisted item stays unlisted; retrying it constantly wastes the budget. */
-    private static final Duration MISS_TTL = Duration.ofHours(6);
+    /**
+     * The same, for everything else — including items nobody is selling.
+     *
+     * <p>A day is the ceiling for the whole catalogue, deliberately: earlier
+     * drafts of this gave quiet items a week or a month, which saved a few
+     * hundred requests a day and in exchange would have shown a fortnight-old
+     * price for the parts of a Prime the moment it was unvaulted, which is
+     * exactly when the price matters.
+     */
+    private static final Duration IDLE_TTL = Duration.ofHours(24);
+
+    /**
+     * How long a failed call is held before asking again.
+     *
+     * <p>Short because a failure taught us nothing about the item; long enough
+     * that a market which is down does not turn into a spin.
+     */
+    private static final Duration RETRY_TTL = Duration.ofMinutes(1);
+
+    /** Trades in the last 48 hours above which an item counts as moving. */
+    private static final int ACTIVE_VOLUME = 20;
 
     private static final Duration TIMEOUT = Duration.ofSeconds(15);
 
@@ -63,10 +96,18 @@ public class RelicMarketService {
     private final DucatService ducatService;
     /** Only for how the market spells an assembled set. */
     private final SetListingService setListingService;
+    private final PriceCacheStore store;
 
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
 
-    /** Items waiting to be fetched. */
+    /**
+     * Items waiting to be fetched, soonest first.
+     *
+     * <p>Holds what has no price at all: a cold start, a Prime released this
+     * morning, a row someone is looking at. Merely stale entries are not put
+     * here — {@link #sweep()} walks those one at a time, so a day's worth of
+     * expiries cannot arrive as one wall of requests.
+     */
     private final LinkedBlockingDeque<String> queue = new LinkedBlockingDeque<>();
     private final Set<String> queued = ConcurrentHashMap.newKeySet();
 
@@ -101,10 +142,112 @@ public class RelicMarketService {
 
     private volatile boolean running = true;
 
-    public RelicMarketService(DucatService ducatService, SetListingService setListingService) {
+    /* --- The rolling refresh, and the cache's copy on disk ------------------ */
+
+    /**
+     * How often one expired entry is picked up for re-reading.
+     *
+     * <p>The catalogue needs about 3.700 reads a day to stay inside its TTLs,
+     * which is 2,6 a minute; one every five seconds leaves better than four
+     * times that in reserve while keeping the traffic flat. Flat matters
+     * because the alternative is what this replaced — every entry fetched in
+     * the same eight minutes expires in the same eight minutes, and the day is
+     * then a sawtooth of idle hours and stampedes.
+     */
+    private static final Duration SWEEP_INTERVAL = Duration.ofSeconds(5);
+
+    /** How often the cache is written out, at most, when something changed. */
+    private static final Duration FLUSH_INTERVAL = Duration.ofSeconds(60);
+
+    /**
+     * Every name worth keeping fresh, walked in order and without end.
+     *
+     * <p>A cursor over a list rather than a scan for the oldest entry: the
+     * cursor only ever moves forward, so every name is reached before any name
+     * is reached twice, and nothing can be starved by a neighbour that keeps
+     * expiring sooner.
+     */
+    private volatile List<String> sweepList = List.of();
+    private final AtomicInteger sweepCursor = new AtomicInteger();
+
+    private final AtomicBoolean dirty = new AtomicBoolean();
+
+    private final ScheduledExecutorService housekeeping =
+            Executors.newSingleThreadScheduledExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "market-housekeeping");
+                thread.setDaemon(true);
+                return thread;
+            });
+
+    public RelicMarketService(DucatService ducatService, SetListingService setListingService,
+                              PriceCacheStore store) {
         this.ducatService = ducatService;
         this.setListingService = setListingService;
+        this.store = store;
+    }
+
+    /**
+     * Reads back the prices the last run had already paid for, and starts work.
+     *
+     * <p>Eight minutes of requests survive a restart, so the tables have numbers
+     * in them before the first screen is drawn. Whatever the file does not carry
+     * is simply missing, and missing is the one state that always gets queued.
+     *
+     * <p>The threads start here rather than in the constructor so that
+     * constructing this service touches neither the network nor a clock — which
+     * is what lets the queue and the sweep be tested at all.
+     */
+    @PostConstruct
+    void start() {
+        Map<String, Cached> saved = store.load();
+        cache.putAll(saved);
+        if (!saved.isEmpty()) System.out.println("price-cache: " + saved.size() + " entries restored");
+
         for (int i = 0; i < WARMERS; i++) warmer.submit(this::warmLoop);
+
+        housekeeping.scheduleWithFixedDelay(this::sweep,
+                SWEEP_INTERVAL.toMillis(), SWEEP_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
+        housekeeping.scheduleWithFixedDelay(this::flush,
+                FLUSH_INTERVAL.toMillis(), FLUSH_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Replaces the list the rolling refresh walks.
+     *
+     * <p>Called by the warm-up runner with the current catalogue, so a Prime
+     * released today joins the rotation without a restart. The cursor is left
+     * where it is: it wraps on the new size, and a name it steps over early is
+     * reached on the next lap rather than lost.
+     */
+    void setSweepList(List<String> slugs) {
+        sweepList = List.copyOf(slugs);
+    }
+
+    /**
+     * Queues the next expired entry, and only that one.
+     *
+     * <p>Walks forward from the cursor until it finds one, so a lap costs a few
+     * map lookups when everything is fresh and never more than one request when
+     * it is not.
+     */
+    void sweep() {
+        List<String> names = sweepList;
+        if (names.isEmpty()) return;
+
+        for (int step = 0; step < names.size(); step++) {
+            String slug = names.get(Math.floorMod(sweepCursor.getAndIncrement(), names.size()));
+            Cached cached = cache.get(slug);
+
+            if (cached == null || !cached.isFresh()) {
+                enqueue(slug);
+                return;
+            }
+        }
+    }
+
+    /** Writes the cache out if anything changed since the last time. */
+    private void flush() {
+        if (dirty.compareAndSet(true, false)) store.save(Map.copyOf(cache));
     }
 
     /**
@@ -131,15 +274,53 @@ public class RelicMarketService {
     void shutdown() {
         running = false;
         warmer.shutdownNow();
+        housekeeping.shutdownNow();
+        // Written unconditionally: the sixty-second flush may be up to sixty
+        // seconds behind, and this is the one moment it cannot catch up later.
+        store.save(Map.copyOf(cache));
     }
 
-    /** What one lookup produced. A null price is a real answer: nothing sold. */
-    private record Cached(Double avg, Double median, Integer volume, Double trend,
-                          List<PricePoint> history, Instant at) {
-        boolean isFresh() {
-            Duration ttl = avg == null ? MISS_TTL : TTL;
-            return Duration.between(at, Instant.now()).compareTo(ttl) < 0;
+    /**
+     * What one lookup produced. A null price is a real answer: nothing sold.
+     *
+     * <p>{@code failed} separates that answer from the absence of one. Until it
+     * existed, a timeout and a 404 produced the same record, so a moment of bad
+     * network was written down as "this item has no market" and displayed as
+     * such for as long as the entry stayed fresh.
+     */
+    record Cached(Double avg, Double median, Integer volume, Double trend,
+                  List<PricePoint> history, Instant at, boolean failed) {
+
+        /**
+         * How long this answer stays good.
+         *
+         * <p>Decided by the item rather than by the clock: {@code volume} comes
+         * back in the same response as the price, so an item that stops trading
+         * slows itself down on the next read and one that starts trading speeds
+         * itself up, with no list to maintain when a Prime is released.
+         */
+        Duration ttl() {
+            if (failed) return RETRY_TTL;
+            return volume != null && volume >= ACTIVE_VOLUME ? ACTIVE_TTL : IDLE_TTL;
         }
+
+        boolean isFresh() {
+            return Duration.between(at, Instant.now()).compareTo(ttl()) < 0;
+        }
+    }
+
+    /**
+     * Whether there is anything worth showing for this entry.
+     *
+     * <p>A failed call counts as nothing, exactly like an entry that was never
+     * fetched: it holds no price, no volume and no history. Without this rule
+     * the record of the failure would stand in for the item everywhere a miss
+     * is looked for — a market that was down during the first fill would leave
+     * 1.527 entries that the warm-up no longer considers missing, and recovery
+     * would fall to the sweep alone, at one name every five seconds.
+     */
+    static boolean isMissing(Cached cached) {
+        return cached == null || cached.failed();
     }
 
     /* ------------------------------------------------------------------ */
@@ -152,12 +333,18 @@ public class RelicMarketService {
      * <p>Returns immediately. A cache miss queues the item and answers with
      * nulls, so a screen paints at once and fills in as prices arrive rather
      * than holding the response for fifteen seconds.
+     *
+     * <p>Only a miss is queued. An entry past its TTL still has a price worth
+     * showing, and this method is called once per row of a table asking for the
+     * whole catalogue — queueing those would put a day's expiries into the
+     * queue the moment anyone opened a screen, which is the stampede
+     * {@link #sweep()} exists to prevent.
      */
     public ItemPrice getItemPrice(String itemName) {
         String slug = slugFor(itemName);
         Cached cached = cache.get(slug);
 
-        if (cached == null || !cached.isFresh()) enqueue(slug);
+        if (isMissing(cached)) enqueue(slug);
 
         DucatService.ItemMeta meta = ducatService.lookup(itemName);
 
@@ -289,8 +476,9 @@ public class RelicMarketService {
 
             // Queued, not waited on. One slow relic must not hold up the other
             // thirty on screen — the warmer fills it in and the next poll from
-            // the client picks it up.
-            if (cached == null || !cached.isFresh()) enqueue(slug);
+            // the client picks it up. Stale entries are left to the sweep, for
+            // the reason given on getItemPrice.
+            if (isMissing(cached)) enqueue(slug);
 
             out.add(new RelicPrice(relicName, cached == null ? null : cached.avg()));
         }
@@ -298,13 +486,50 @@ public class RelicMarketService {
         return out;
     }
 
-    /** How much of the catalogue is priced. Drives the "warming" hint in the UI. */
+    /**
+     * How much of the catalogue is priced. Drives the "warming" hint in the UI.
+     *
+     * <p>Failed calls are left out of both counts. They sit in the map like any
+     * other entry, so counting them would let a market that answered nothing at
+     * all report a catalogue fully priced, and the hint that exists to say
+     * "still warming" would say the opposite.
+     */
     public Map<String, Object> cacheStatus() {
-        long fresh = cache.values().stream().filter(Cached::isFresh).count();
+        long priced = cache.values().stream().filter(cached -> !cached.failed()).count();
+        long fresh = cache.values().stream()
+                .filter(cached -> !cached.failed() && cached.isFresh())
+                .count();
+
         return Map.of(
-                "cached", cache.size(),
+                "cached", priced,
                 "fresh", fresh,
                 "queued", queue.size());
+    }
+
+    /**
+     * Moves the rows someone is actually looking at to the front of the queue.
+     *
+     * <p>The client asks for the whole catalogue in one request and always will
+     * — sorting a table by price is only right when every row has one — but it
+     * also knows which thirty rows are on screen, and that is the one signal
+     * about what matters first that does not have to be guessed. Nothing is
+     * returned: this changes the order of work, not the answer to a question,
+     * and a call that fails costs the caller nothing.
+     */
+    public void prioritise(Collection<String> itemNames, Collection<String> relicNames) {
+        prioritise(itemNames, this::slugFor);
+        prioritise(relicNames, RelicMarketService::relicSlug);
+    }
+
+    private void prioritise(Collection<String> names, Function<String, String> toSlug) {
+        if (names == null) return;
+
+        for (String name : names) {
+            if (name == null || name.isBlank()) continue;
+            String slug = toSlug.apply(name.trim());
+            Cached cached = cache.get(slug);
+            if (cached == null || !cached.isFresh()) enqueueFirst(slug);
+        }
     }
 
     /* ------------------------------------------------------------------ */
@@ -323,9 +548,14 @@ public class RelicMarketService {
         queue.addFirst(slug);
     }
 
-    /** Warms a whole catalogue, e.g. every Prime part in the drop tables. */
-    public void enqueueAll(Collection<String> itemNames) {
-        enqueueAllSlugs(itemNames, this::slugFor);
+    /**
+     * Warms a whole catalogue, e.g. every Prime part in the drop tables.
+     *
+     * @return the slugs behind those names, for the caller to hand back as the
+     *         rolling refresh's beat — see {@link #setSweepList}.
+     */
+    public List<String> enqueueAll(Collection<String> itemNames) {
+        return enqueueAllSlugs(itemNames, this::slugFor);
     }
 
     /**
@@ -336,17 +566,29 @@ public class RelicMarketService {
      * opened it and then waited for the queue to reach the back — every restart
      * of the server, for every user.
      */
-    public void enqueueAllRelics(Collection<String> relicNames) {
-        enqueueAllSlugs(relicNames, RelicMarketService::relicSlug);
+    public List<String> enqueueAllRelics(Collection<String> relicNames) {
+        return enqueueAllSlugs(relicNames, RelicMarketService::relicSlug);
     }
 
-    private void enqueueAllSlugs(Collection<String> names, Function<String, String> toSlug) {
+    /**
+     * Queues what has no price at all, and returns the slugs it walked.
+     *
+     * <p>Only the misses: a name that already has a price, however old, is left
+     * to {@link #sweep()}. That is what keeps a Prime released this morning
+     * arriving within minutes while nothing else moves — a new name is a miss,
+     * and a miss is the one state that is always queued at once.
+     */
+    private List<String> enqueueAllSlugs(Collection<String> names, Function<String, String> toSlug) {
+        List<String> slugs = new ArrayList<>(names.size());
+
         for (String name : names) {
             if (name == null || name.isBlank()) continue;
             String slug = toSlug.apply(name.trim());
-            Cached cached = cache.get(slug);
-            if (cached == null || !cached.isFresh()) enqueue(slug);
+            slugs.add(slug);
+            if (isMissing(cache.get(slug))) enqueue(slug);
         }
+
+        return slugs;
     }
 
     private void warmLoop() {
@@ -365,6 +607,7 @@ public class RelicMarketService {
                 // slept afterwards would let five others fire at once.
                 awaitSlot();
                 cache.put(slug, fetch(slug));
+                dirty.set(true);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
@@ -396,21 +639,28 @@ public class RelicMarketService {
                     .timeout(TIMEOUT)
                     .header("accept", "application/json")
                     .header("platform", "pc")
+                    // Asked for explicitly because HttpClient neither requests
+                    // nor decodes compression on its own, and this response is
+                    // ninety days of numbers: 99,5 KB becomes 13,6 KB.
+                    .header("Accept-Encoding", "gzip")
                     .GET()
                     .build();
 
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<byte[]> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
             // 404 means the item is not traded — an answer, not a fault.
+            if (response.statusCode() == 404) return noListing();
+
+            // Anything else is the market failing to answer, which says nothing
+            // about the item: recorded as a failure so it is retried in a
+            // minute rather than shown as a part nobody sells.
             if (response.statusCode() != 200) {
-                if (response.statusCode() != 404) {
-                    System.err.println("market: HTTP " + response.statusCode() + " for " + slug);
-                }
-                return new Cached(null, null, null, null, List.of(), Instant.now());
+                System.err.println("market: HTTP " + response.statusCode() + " for " + slug);
+                return unanswered();
             }
 
-            JsonNode closed = mapper.readTree(response.body())
+            JsonNode closed = decode(response)
                     .path("payload").path("statistics_closed");
 
             List<PricePoint> history = points(closed.path("90days"));
@@ -424,11 +674,42 @@ public class RelicMarketService {
             }
 
             return new Cached(recent.avg(), recent.median(), recent.volume(),
-                    trend(recent.avg(), history), history, Instant.now());
+                    trend(recent.avg(), history), history, Instant.now(), false);
 
         } catch (Exception e) {
             System.err.println("market: error on " + slug + " — " + e.getMessage());
-            return new Cached(null, null, null, null, List.of(), Instant.now());
+            return unanswered();
+        }
+    }
+
+    /** The market answered: this item has no listings. */
+    private static Cached noListing() {
+        return new Cached(null, null, null, null, List.of(), Instant.now(), false);
+    }
+
+    /** The market did not answer. Indistinguishable from the above until it was. */
+    private static Cached unanswered() {
+        return new Cached(null, null, null, null, List.of(), Instant.now(), true);
+    }
+
+    /**
+     * The body, decompressed when the server chose to compress it.
+     *
+     * <p>The header is a request, not a guarantee: a proxy or a future change of
+     * mind can answer in plain JSON, so the uncompressed path stays.
+     */
+    private JsonNode decode(HttpResponse<byte[]> response) throws Exception {
+        boolean gzipped = response.headers()
+                .firstValue("content-encoding")
+                .orElse("")
+                .toLowerCase(Locale.ROOT)
+                .contains("gzip");
+
+        if (!gzipped) return mapper.readTree(response.body());
+
+        try (GZIPInputStream unzipped =
+                     new GZIPInputStream(new ByteArrayInputStream(response.body()))) {
+            return mapper.readTree(unzipped);
         }
     }
 
