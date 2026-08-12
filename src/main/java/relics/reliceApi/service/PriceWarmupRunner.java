@@ -15,8 +15,9 @@ import java.util.Set;
  * Fills the price cache with everything the interface prices: every Prime part
  * in the drop tables, and every relic that holds them.
  *
- * <p>About 600 parts and 690 relics, against a market that allows roughly three
- * requests a second — so a full pass takes around seven minutes. Doing it here,
+ * <p>About 600 parts, 160 assembled sets and 690 relics, against a market that
+ * allows roughly three requests a second — so a full pass takes around eight
+ * minutes. Doing it here,
  * once, in the background, is the difference between a table that shows prices
  * immediately and one where every user pays fifteen seconds per screenful.
  *
@@ -30,10 +31,16 @@ public class PriceWarmupRunner implements ApplicationRunner {
 
     private final RelicLoadService relicLoadService;
     private final RelicMarketService marketService;
+    /** Only for the set a part belongs to — the assembled set is priced too. */
+    private final DucatService ducatService;
 
-    public PriceWarmupRunner(RelicLoadService relicLoadService, RelicMarketService marketService) {
+    public PriceWarmupRunner(
+            RelicLoadService relicLoadService,
+            RelicMarketService marketService,
+            DucatService ducatService) {
         this.relicLoadService = relicLoadService;
         this.marketService = marketService;
+        this.ducatService = ducatService;
     }
 
     @Override
@@ -66,7 +73,17 @@ public class PriceWarmupRunner implements ApplicationRunner {
                 if (relic.getRewards() == null) continue;
 
                 for (Rewards reward : relic.getRewards()) {
-                    if (reward.getItemName() != null) itemNames.add(reward.getItemName());
+                    if (reward.getItemName() == null) continue;
+
+                    itemNames.add(reward.getItemName());
+
+                    // The assembled set is its own listing — "Volt Prime Set" —
+                    // and the Sets view quotes it beside the cost of the pieces
+                    // still missing. Warmed here rather than on demand: it is
+                    // one more name per set, and asked for cold it would queue
+                    // behind the six hundred parts and arrive minutes later.
+                    String setName = ducatService.lookup(reward.getItemName()).setName();
+                    if (setName != null && !setName.isBlank()) itemNames.add(setName + " Set");
                 }
             }
 

@@ -52,4 +52,17 @@ public class ItemPrice {
 
     /** The Prime set the part belongs to, e.g. "Volt Prime". Null when it has none. */
     private String setName;
+
+    /**
+     * What kind of gear that set is: {@code warframe}, {@code primary},
+     * {@code secondary}, {@code melee}, {@code sentinel},
+     * {@code sentinel-weapon}, {@code archwing}, {@code arch-gun},
+     * {@code arch-melee} or {@code pet}.
+     *
+     * <p>Null for anything the item database does not list. Sent with the price
+     * because it is read at the same moment and by the same screen — the Sets
+     * view filters on it — and a second endpoint for one word per part would be
+     * a second round trip for every part on show.
+     */
+    private String category;
 }

@@ -61,6 +61,8 @@ public class RelicMarketService {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final DucatService ducatService;
+    /** Only for how the market spells an assembled set. */
+    private final SetListingService setListingService;
 
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
 
@@ -99,8 +101,9 @@ public class RelicMarketService {
 
     private volatile boolean running = true;
 
-    public RelicMarketService(DucatService ducatService) {
+    public RelicMarketService(DucatService ducatService, SetListingService setListingService) {
         this.ducatService = ducatService;
+        this.setListingService = setListingService;
         for (int i = 0; i < WARMERS; i++) warmer.submit(this::warmLoop);
     }
 
@@ -151,7 +154,7 @@ public class RelicMarketService {
      * than holding the response for fifteen seconds.
      */
     public ItemPrice getItemPrice(String itemName) {
-        String slug = itemSlug(itemName);
+        String slug = slugFor(itemName);
         Cached cached = cache.get(slug);
 
         if (cached == null || !cached.isFresh()) enqueue(slug);
@@ -159,7 +162,7 @@ public class RelicMarketService {
         DucatService.ItemMeta meta = ducatService.lookup(itemName);
 
         // Field order matches ItemPrice: name, price, median, volume, trend,
-        // slug, ducats, set.
+        // slug, ducats, set, category.
         return new ItemPrice(
                 itemName,
                 cached == null ? null : cached.avg(),
@@ -168,7 +171,8 @@ public class RelicMarketService {
                 cached == null ? null : cached.trend(),
                 slug,
                 meta.ducats(),
-                meta.setName());
+                meta.setName(),
+                meta.category());
     }
 
     public List<ItemPrice> getItemPrices(List<String> itemNames) {
@@ -236,6 +240,9 @@ public class RelicMarketService {
                 cached == null ? null : cached.volume(),
                 cached == null ? null : cached.trend(),
                 slug,
+                // A relic has no ducat value, no set and no kind of gear: it is
+                // the container, not the contents.
+                null,
                 null,
                 null);
     }
@@ -318,7 +325,7 @@ public class RelicMarketService {
 
     /** Warms a whole catalogue, e.g. every Prime part in the drop tables. */
     public void enqueueAll(Collection<String> itemNames) {
-        enqueueAllSlugs(itemNames, RelicMarketService::itemSlug);
+        enqueueAllSlugs(itemNames, this::slugFor);
     }
 
     /**
@@ -502,6 +509,18 @@ public class RelicMarketService {
      */
     static String itemSlug(String itemName) {
         return baseSlug(itemName);
+    }
+
+    /**
+     * The same, but asking the market how it spells an assembled set.
+     *
+     * <p>An instance method rather than a static one because the answer comes
+     * from a service: see SetListingService for the one set in the catalogue
+     * whose listing is not simply its name with "Set" on the end.
+     */
+    String slugFor(String itemName) {
+        String listed = setListingService.slugFor(itemName);
+        return listed != null ? listed : baseSlug(itemName);
     }
 
     /**

@@ -33,15 +33,34 @@ public class DucatService {
             "https://raw.githubusercontent.com/WFCD/warframe-items/master/data/json/";
 
     /**
-     * The categories that contain Prime gear.
+     * The categories that contain Prime gear, and what this application calls
+     * each one.
      *
      * <p>Not {@code All.json}: that is 55 MB, against roughly 12 MB for these
-     * eight, and the rest of it is quests, mods and resources that carry no
-     * ducat value.
+     * ten, and the rest of it is quests, mods and resources that carry no ducat
+     * value.
+     *
+     * <p>The file is the authority on what kind of thing an item is, not the
+     * {@code category} field inside it: a sentinel weapon is filed under
+     * "Primary" in its own records, which would put Wolf's Beacon in the same
+     * bucket as a Braton.
+     *
+     * <p>Arch-Melee holds no Prime gear today. It is fetched anyway so that the
+     * day one arrives it is named rather than uncategorised — and the filter
+     * over these is built from what the data actually contains, so an empty
+     * category never becomes a control that empties the screen.
      */
-    private static final List<String> CATEGORIES = List.of(
-            "Warframes", "Primary", "Secondary", "Melee",
-            "Sentinels", "SentinelWeapons", "Archwing", "Pets"
+    private static final Map<String, String> CATEGORIES = Map.ofEntries(
+            Map.entry("Warframes", "warframe"),
+            Map.entry("Primary", "primary"),
+            Map.entry("Secondary", "secondary"),
+            Map.entry("Melee", "melee"),
+            Map.entry("Sentinels", "sentinel"),
+            Map.entry("SentinelWeapons", "sentinel-weapon"),
+            Map.entry("Archwing", "archwing"),
+            Map.entry("Arch-Gun", "arch-gun"),
+            Map.entry("Arch-Melee", "arch-melee"),
+            Map.entry("Pets", "pet")
     );
 
     /** The item database only moves when a new Prime is released. */
@@ -59,8 +78,8 @@ public class DucatService {
 
     private volatile Snapshot snapshot;
 
-    /** Ducat value and set of one part. */
-    public record ItemMeta(Integer ducats, String setName) {}
+    /** Ducat value, set and kind of gear of one part. */
+    public record ItemMeta(Integer ducats, String setName, String category) {}
 
     private record Snapshot(Map<String, ItemMeta> byName, Instant fetchedAt) {
         boolean isFresh() {
@@ -85,7 +104,7 @@ public class DucatService {
             if (stripped != null) return stripped;
         }
 
-        return new ItemMeta(null, null);
+        return new ItemMeta(null, null, null);
     }
 
     private static String normalize(String value) {
@@ -117,9 +136,9 @@ public class DucatService {
     private Snapshot fetch() throws Exception {
         Map<String, ItemMeta> byName = new HashMap<>();
 
-        for (String category : CATEGORIES) {
+        for (Map.Entry<String, String> category : CATEGORIES.entrySet()) {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BASE + category + ".json"))
+                    .uri(URI.create(BASE + category.getKey() + ".json"))
                     .timeout(TIMEOUT)
                     .header("Accept", "application/json")
                     .GET()
@@ -130,17 +149,18 @@ public class DucatService {
 
             // One missing category should not cost the other seven.
             if (response.statusCode() != 200) {
-                System.err.println("DucatService: " + category + " → HTTP " + response.statusCode());
+                System.err.println(
+                        "DucatService: " + category.getKey() + " → HTTP " + response.statusCode());
                 continue;
             }
 
-            index(mapper.readTree(response.body()), byName);
+            index(mapper.readTree(response.body()), category.getValue(), byName);
         }
 
         return new Snapshot(Map.copyOf(byName), Instant.now());
     }
 
-    private void index(JsonNode items, Map<String, ItemMeta> byName) {
+    static void index(JsonNode items, String category, Map<String, ItemMeta> byName) {
         for (JsonNode item : items) {
             String setName = item.path("name").asText("");
             if (setName.isEmpty()) continue;
@@ -155,7 +175,7 @@ public class DucatService {
 
                 byName.put(
                         normalize(setName + " " + componentName),
-                        new ItemMeta(component.get("ducats").asInt(), setName));
+                        new ItemMeta(component.get("ducats").asInt(), setName, category));
             }
         }
     }
