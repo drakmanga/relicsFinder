@@ -98,6 +98,9 @@ export function FilterBar({ id, filters, onChange, view }: Props) {
               on={filters.vault === vault}
               label={`Show ${VAULT_LABEL[vault].toLowerCase()} relics`}
               onClick={() => onChange({ ...filters, vault })}
+              /* A word, not a chip: it has no colour of its own to be switched
+                 off, so it states its own state. See .rf-filter-toggle-text. */
+              text
             >
               <span
                 className={
@@ -236,11 +239,14 @@ function Toggle({
   on,
   label,
   onClick,
+  text = false,
   children,
 }: {
   on: boolean;
   label: string;
   onClick: () => void;
+  /** Wraps a word rather than a coloured chip. */
+  text?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -249,7 +255,11 @@ function Toggle({
       onClick={onClick}
       aria-pressed={on}
       aria-label={label}
-      className="rf-focus-ring rf-filter-toggle"
+      className={
+        text
+          ? "rf-focus-ring rf-filter-toggle rf-filter-toggle-text"
+          : "rf-focus-ring rf-filter-toggle"
+      }
     >
       {children}
     </button>

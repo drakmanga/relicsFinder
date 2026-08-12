@@ -37,6 +37,8 @@ interface Props {
   onPickRelic: (relicFullName: string) => void;
   /** How many of this part the wishlist holds, for the stepper in the header. */
   quantityOf: (itemName: string, kind?: WishlistKind) => number;
+  /** Opens the wishlist at the section this panel's line belongs to. */
+  onOpenWishlist: (section: WishlistKind) => void;
   /** Steps back to whatever the panel was showing before. Absent at the start. */
   onBack?: () => void;
   /** Shuts the panel and clears the selection. */
@@ -57,6 +59,7 @@ export function ItemDetailPanel({
   onPickItem,
   onPickRelic,
   quantityOf,
+  onOpenWishlist,
   onBack,
   onClose,
 }: Props) {
@@ -98,90 +101,108 @@ export function ItemDetailPanel({
       }
       title={row.itemName}
       meta={setName ?? "Belongs to no set"}
+      /* What the part is worth and how many are wanted, beside its name: both
+         are properties of the part in the heading, while the columns below are
+         about where it comes from. */
+      aside={
+        <>
+          <div className="rf-row-baseline-wide">
+            <span className="rf-text-overline rf-fg-muted">Market price</span>
+            <span className="rf-push">
+              <PlatPrice value={priceOf(prices, row.itemName)} size="lg" />
+            </span>
+          </div>
+
+          {meta?.ducats != null && (
+            <div className="rf-row-baseline-wide rf-mt-1">
+              <span className="rf-text-overline rf-fg-muted">Ducats</span>
+              <span className="rf-text-data-md rf-push rf-ducat">{meta.ducats}</span>
+            </div>
+          )}
+
+          <PanelWishlist
+            seed={{
+              itemName: row.itemName,
+              kind: "part",
+              tier: row.tier,
+              relicFullName: row.relicFullName,
+              refinement: row.refinement,
+            }}
+            qty={quantityOf(row.itemName)}
+            onOpen={() => onOpenWishlist("part")}
+          />
+        </>
+      }
     >
       <Divider />
 
-      <div className="rf-row-baseline-wide">
-        <span className="rf-text-overline rf-fg-muted">Market price</span>
-        <span className="rf-push">
-          <PlatPrice value={priceOf(prices, row.itemName)} size="lg" />
-        </span>
-      </div>
-
-      {meta?.ducats != null && (
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 6 }}>
-          <span className="rf-text-overline rf-fg-muted">Ducats</span>
-          <span className="rf-text-data-md rf-push rf-ducat">{meta.ducats}</span>
+      {/* Two columns: which relics drop the part on one side, the rest of its
+          set on the other. See .rf-panel-cols. */}
+      <div className="rf-panel-cols rf-panel-cols-lead">
+        <div className="rf-panel-col">
+          <ItemDroppedBy sources={sources} onPickRelic={onPickRelic} />
         </div>
-      )}
 
-      <PanelWishlist
-        seed={{
-          itemName: row.itemName,
-          kind: "part",
-          tier: row.tier,
-          relicFullName: row.relicFullName,
-          refinement: row.refinement,
-        }}
-        qty={quantityOf(row.itemName)}
-      />
+        <div className="rf-panel-col">
+          {setName && siblings.length > 0 && (
+            <>
+              <Divider />
 
-      <ItemDroppedBy sources={sources} onPickRelic={onPickRelic} />
+              <p className="rf-text-overline rf-fg-muted rf-stack-sm">Rest of {setName}</p>
 
-      {setName && siblings.length > 0 && (
-        <>
-          <Divider />
+              <div className="rf-stack">
+                {siblings.map((part) => (
+                  <button
+                    key={part}
+                    type="button"
+                    className="rf-focus-ring"
+                    onClick={() => onPickItem(part)}
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 8,
+                      padding: "4px 0",
+                      background: "none",
+                      border: 0,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: 13,
+                      color: "var(--rf-fg-primary)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                      title={part}
+                    >
+                      {part.replace(`${setName} `, "")}
+                    </span>
+                    <PlatPrice value={priceOf(prices, part)} />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
-          <p className="rf-text-overline rf-fg-muted rf-stack-sm">Rest of {setName}</p>
-
-          <div className="rf-stack">
-            {siblings.map((part) => (
-              <button
-                key={part}
-                type="button"
-                className="rf-focus-ring"
-                onClick={() => onPickItem(part)}
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 8,
-                  padding: "4px 0",
-                  background: "none",
-                  border: 0,
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontSize: 13,
-                  color: "var(--rf-fg-primary)",
-                }}
-              >
-                <span
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                  title={part}
-                >
-                  {part.replace(`${setName} `, "")}
-                </span>
-                <PlatPrice value={priceOf(prices, part)} />
-              </button>
-            ))}
+          {/* Last, under the set: the panel answers "where do I get this" and
+              "what else does it belong to" first, and buying it outright is the
+              answer someone takes when neither of those appeals. */}
+          <div className="rf-mt-5">
+            <Button
+              variant="primary"
+              icon={<ExternalLinkIcon />}
+              className="rf-full"
+              onClick={() => window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer")}
+            >
+              Open on Warframe Market
+            </Button>
           </div>
-        </>
-      )}
-
-      <div className="rf-mt-5">
-        <Button
-          variant="primary"
-          icon={<ExternalLinkIcon />}
-          className="rf-full"
-          onClick={() => window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer")}
-        >
-          Open on Warframe Market
-        </Button>
+        </div>
       </div>
     </DetailPanel>
   );

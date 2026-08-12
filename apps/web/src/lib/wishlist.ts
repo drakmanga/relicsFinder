@@ -227,6 +227,35 @@ export function useWishlist() {
 }
 
 /**
+ * The same sum for set lines, which are priced by what is left to buy.
+ *
+ * A set line means "I want to finish this one", so its price is the cost of the
+ * pieces still missing — not of the whole set, most of which the reader may
+ * already have. That number moves as pieces are ticked, which is the point:
+ * the list is a plan, and a plan gets cheaper as it is carried out.
+ */
+export function setListTotal(
+  wishlist: WishlistEntry[],
+  sets: Map<string, { missingCost: number; costIncomplete: boolean }>,
+): { total: number; unpriced: number } {
+  let total = 0;
+  let unpriced = 0;
+
+  for (const entry of wishlist) {
+    const set = sets.get(entry.itemName);
+    if (!set) {
+      unpriced += 1;
+      continue;
+    }
+
+    if (set.costIncomplete) unpriced += 1;
+    total += set.missingCost * entry.qty;
+  }
+
+  return { total: Math.round(total), unpriced };
+}
+
+/**
  * The same sum for relic lines, which are priced from the relic market.
  *
  * A separate function rather than a `kind` branch inside `listTotal`: the two

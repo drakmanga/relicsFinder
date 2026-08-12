@@ -33,13 +33,14 @@ import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, remove, type WishlistEntry } from "../lib/wishlist";
 import { marketUrl } from "../lib/format";
-import type { EndoOffer, PriceMap } from "../api/types";
+import type { EndoOffer, PriceMap, WishlistKind } from "../api/types";
 
 /** One list's worth of entries, already filtered to its kind by the parent. */
 interface RowsProps {
   entries: WishlistEntry[];
   prices: PriceMap | undefined;
-  onInfo: (itemName: string) => void;
+  /** Opens the line's dialog, on the same list the line belongs to. */
+  onInfo: (itemName: string, kind?: WishlistKind) => void;
   /**
    * Opens the part in the view that is about parts.
    *
@@ -57,7 +58,7 @@ function LineActions({
   onInfo,
 }: {
   entry: WishlistEntry;
-  onInfo?: (itemName: string) => void;
+  onInfo?: (itemName: string, kind?: WishlistKind) => void;
 }) {
   return (
     <>
@@ -80,7 +81,7 @@ function LineActions({
             aria-label={`More about ${entry.itemName}`}
             onClick={(event) => {
               event.stopPropagation();
-              onInfo(entry.itemName);
+              onInfo(entry.itemName, entry.kind);
             }}
           />
         </TableCell>

@@ -8,21 +8,45 @@ import { Chip, EmptyState, InfoIcon, TabPanel, Tabs } from "relic-finder-ui";
 import { PlatPrice } from "./Plat";
 import { DucatRows, EndoRows, PartRows } from "./WishlistRows";
 import { RelicLineRows } from "./WishlistRelicRows";
-import { listTotal, relicListTotal, type WishlistEntry } from "../lib/wishlist";
-import type { EndoOffer, PriceMap, RelicPriceMap } from "../api/types";
+import { WishlistSetRows } from "./WishlistSetRows";
+import { listTotal, relicListTotal, setListTotal, type WishlistEntry } from "../lib/wishlist";
+import type { PrimeSet } from "../lib/setCompletion";
+import type { EndoOffer, PriceMap, RelicPriceMap, WishlistKind } from "../api/types";
 
 interface Props {
   entries: WishlistEntry[];
   prices: PriceMap | undefined;
   /** What a relic sells for; the item price map does not carry relics. */
   relicPrices: RelicPriceMap | undefined;
-  onInfo: (itemName: string) => void;
+  onInfo: (itemName: string, kind?: WishlistKind) => void;
   /** Opens a part in Prime Items, a relic in Relics. A line is a way back to
       the thing it names, not just a row of numbers about it. */
   onPickItem: (itemName: string) => void;
   onPickRelic: (relicFullName: string) => void;
   /** Sculptures have no panel; their click goes to the Endo ranking. */
   onShowEndo: () => void;
+  /**
+   * The catalogue's sets, keyed by name.
+   *
+   * A set line stores a name and a quantity; how far along it is and what is
+   * left to buy are read from the catalogue, so the line stays true as pieces
+   * are ticked rather than freezing the numbers it was added with.
+   */
+  sets: Map<string, PrimeSet>;
+  /** What each set sells for assembled, by set name. */
+  setPrices: Map<string, { price: number | null; slug: string | null }>;
+  /** Opens a set line's panel over the wishlist. */
+  onPickSet: (setName: string) => void;
+  /**
+   * Which section is open.
+   *
+   * Lifted out of the table because the wishlist is now something other views
+   * send the reader to: a stepper in a relic panel adds a relic, and landing on
+   * Parts with the line you just added filed under the next tab along is the
+   * app pointing at the wrong thing.
+   */
+  section: Kind;
+  onSection: (section: Kind) => void;
   /** Live Ayatan offers, so a saved sculpture still shows what it costs today. */
   endoOffers?: EndoOffer[];
 }
@@ -35,7 +59,7 @@ interface Props {
  * the other on ducats per platinum. Mixing them in one table forces every row to
  * carry both sets of columns and answers neither question well.
  */
-type Kind = "part" | "relic" | "ducat" | "endo";
+type Kind = "part" | "set" | "relic" | "ducat" | "endo";
 
 /** What each list is for, in one line. The long version is behind the info icon. */
 const KIND_NOTE: Record<Kind, { label: string; short: string; long: string }> = {
@@ -43,6 +67,11 @@ const KIND_NOTE: Record<Kind, { label: string; short: string; long: string }> = 
     label: "Prime parts",
     short: "Pieces you are collecting, in the order you added them.",
     long: "Judged on price: what a piece costs today and how that compares with its ninety-day average. A piece wanted for a set and the same piece wanted for ducats are two separate lines, because they are read against different numbers.",
+  },
+  set: {
+    label: "Sets",
+    short: "Whole sets you mean to finish, priced by what is still missing.",
+    long: 'A set line is one decision — "I want Volt Prime" — rather than four part lines that say nothing about belonging together. It is priced by the pieces still missing from it, so ticking one off makes the line cheaper and finishing the set makes it free. Buying the assembled set from another player is a different purchase, and the market link goes to that.',
   },
   relic: {
     label: "Relics",
@@ -80,12 +109,17 @@ export function WishlistTable({
   onPickItem,
   onPickRelic,
   onShowEndo,
+  sets,
+  setPrices,
+  onPickSet,
   endoOffers,
+  section: kind,
+  onSection: setKind,
 }: Props) {
-  const [kind, setKind] = useState<Kind>("part");
   const [noteOpen, setNoteOpen] = useState(false);
 
   const parts = entries.filter((entry) => entry.kind === "part");
+  const setLines = entries.filter((entry) => entry.kind === "set");
   const relics = entries.filter((entry) => entry.kind === "relic");
   const ducats = entries.filter((entry) => entry.kind === "ducat");
   const endo = entries.filter((entry) => entry.kind === "endo");
@@ -95,8 +129,11 @@ export function WishlistTable({
   // leave.
   const items = listTotal([...parts, ...ducats], prices);
   const sealed = relicListTotal(relics, relicPrices);
-  const total = items.total + sealed.total;
-  const unpriced = items.unpriced + sealed.unpriced;
+  // A set counts for what is left of it, so the total falls as pieces are
+  // ticked rather than only when a line is deleted.
+  const plans = setListTotal(setLines, sets);
+  const total = items.total + sealed.total + plans.total;
+  const unpriced = items.unpriced + sealed.unpriced + plans.unpriced;
   const ducatTotal = entries.reduce(
     (sum, entry) => sum + (prices?.get(entry.itemName)?.ducats ?? 0) * entry.qty,
     0,
@@ -113,7 +150,15 @@ export function WishlistTable({
   }
 
   const shown =
-    kind === "part" ? parts : kind === "relic" ? relics : kind === "ducat" ? ducats : endo;
+    kind === "part"
+      ? parts
+      : kind === "set"
+        ? setLines
+        : kind === "relic"
+          ? relics
+          : kind === "ducat"
+            ? ducats
+            : endo;
   const note = KIND_NOTE[kind];
 
   return (
@@ -174,6 +219,7 @@ export function WishlistTable({
           }}
           items={[
             { id: "part", label: `${KIND_NOTE.part.label} · ${parts.length}` },
+            { id: "set", label: `${KIND_NOTE.set.label} · ${setLines.length}` },
             { id: "relic", label: `${KIND_NOTE.relic.label} · ${relics.length}` },
             { id: "ducat", label: `${KIND_NOTE.ducat.label} · ${ducats.length}` },
             { id: "endo", label: `${KIND_NOTE.endo.label} · ${endo.length}` },
@@ -237,6 +283,13 @@ export function WishlistTable({
           />
         ) : kind === "part" ? (
           <PartRows entries={parts} prices={prices} onInfo={onInfo} onPick={onPickItem} />
+        ) : kind === "set" ? (
+          <WishlistSetRows
+            entries={setLines}
+            sets={sets}
+            setPrices={setPrices}
+            onPick={onPickSet}
+          />
         ) : kind === "relic" ? (
           <RelicLineRows entries={relics} relicPrices={relicPrices} onPick={onPickRelic} />
         ) : kind === "ducat" ? (

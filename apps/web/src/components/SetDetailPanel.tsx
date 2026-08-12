@@ -100,137 +100,144 @@ export function SetDetailPanel({
     >
       <Divider />
 
-      <p className="rf-text-overline rf-fg-muted rf-label-row">
-        Buy or farm
-        <button
-          type="button"
-          onClick={() => setHintOpen((was) => !was)}
-          aria-expanded={hintOpen}
-          aria-label={hintOpen ? "Hide the explanation" : "How the two routes compare"}
-          style={{
-            display: "inline-flex",
-            padding: 0,
-            border: 0,
-            background: "none",
-            cursor: "pointer",
-            color: hintOpen ? "var(--rf-gold-500)" : "inherit",
-          }}
-        >
-          <InfoIcon width={13} height={13} />
-        </button>
-      </p>
-
-      {hintOpen && (
-        <div
-          style={{
-            textTransform: "none",
-            letterSpacing: "normal",
-            fontSize: 12,
-            lineHeight: 1.55,
-            color: "var(--rf-fg-secondary)",
-            background: "var(--rf-surface-3)",
-            borderLeft: "2px solid var(--rf-gold-500)",
-            padding: "10px 12px",
-            marginBottom: 12,
-          }}
-        >
-          <p className="rf-flush">
-            <strong>Buy</strong> is what the finished piece sells for. <strong>Farm</strong> is the
-            relic with the best odds at the chosen refinement, the runs that takes on average, and
-            what those runs cost <em>net</em> — the price of the relics minus everything else they
-            drop along the way, which you keep.
+      {/* The controls on one side, the pieces on the other: the two are read
+          together — tick a piece and the total beside it moves — and stacked,
+          a six-piece set pushed the total off the bottom of the panel. */}
+      <div className="rf-panel-cols rf-panel-cols-lead">
+        <div className="rf-panel-col">
+          <p className="rf-text-overline rf-fg-muted rf-label-row">
+            Buy or farm
+            <button
+              type="button"
+              onClick={() => setHintOpen((was) => !was)}
+              aria-expanded={hintOpen}
+              aria-label={hintOpen ? "Hide the explanation" : "How the two routes compare"}
+              style={{
+                display: "inline-flex",
+                padding: 0,
+                border: 0,
+                background: "none",
+                cursor: "pointer",
+                color: hintOpen ? "var(--rf-gold-500)" : "inherit",
+              }}
+            >
+              <InfoIcon width={13} height={13} />
+            </button>
           </p>
-          <p className="rf-panel-note">
-            That subtraction is the whole point: a relic worth more than it sells for pays for its
-            own farming, and "pays for itself" means the runs turn a profit before the piece even
-            arrives.
-          </p>
-          <p className="rf-panel-note">
-            Runs are a mean, not a promise: at 25% it is four on average, and a long tail says it
-            can be twelve. The verdict weighs platinum against platinum — what an evening is worth
-            is the part only you can price.
-          </p>
-        </div>
-      )}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            onToggleAll(
-              set.parts.map((part) => part.itemName),
-              !complete,
-            )
-          }
-        >
-          {complete ? "Clear the set" : "I have all of these"}
-        </Button>
-      </div>
+          {hintOpen && (
+            <div
+              style={{
+                textTransform: "none",
+                letterSpacing: "normal",
+                fontSize: 12,
+                lineHeight: 1.55,
+                color: "var(--rf-fg-secondary)",
+                background: "var(--rf-surface-3)",
+                borderLeft: "2px solid var(--rf-gold-500)",
+                padding: "10px 12px",
+                marginBottom: 12,
+              }}
+            >
+              <p className="rf-flush">
+                <strong>Buy</strong> is what the finished piece sells for. <strong>Farm</strong> is
+                the relic with the best odds at the chosen refinement, the runs that takes on
+                average, and what those runs cost <em>net</em> — the price of the relics minus
+                everything else they drop along the way, which you keep.
+              </p>
+              <p className="rf-panel-note">
+                That subtraction is the whole point: a relic worth more than it sells for pays for
+                its own farming, and "pays for itself" means the runs turn a profit before the piece
+                even arrives.
+              </p>
+              <p className="rf-panel-note">
+                Runs are a mean, not a promise: at 25% it is four on average, and a long tail says
+                it can be twelve. The verdict weighs platinum against platinum — what an evening is
+                worth is the part only you can price.
+              </p>
+            </div>
+          )}
 
-      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Refinement</p>
-
-      <input
-        type="range"
-        min={0}
-        max={ALL_REFINEMENTS.length - 1}
-        step={1}
-        value={ALL_REFINEMENTS.indexOf(refinement)}
-        onChange={(event) => onRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")}
-        aria-label="Refinement the farming route assumes"
-        aria-valuetext={REFINEMENT_LABEL[refinement]}
-        className="rf-range"
-      />
-
-      <div className="rf-split">
-        {ALL_REFINEMENTS.map((state) => (
-          <span
-            key={state}
-            style={{
-              fontSize: 10,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: state === refinement ? "var(--rf-fg-primary)" : "var(--rf-fg-muted)",
-            }}
-          >
-            {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
-          </span>
-        ))}
-      </div>
-
-      <Divider />
-
-      <p className="rf-text-overline rf-fg-muted rf-stack-sm">Pieces</p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {set.parts.map((part) => (
-          <Piece
-            key={part.itemName}
-            part={part}
-            setName={set.setName}
-            pricesPending={pricesPending}
-            onToggle={onToggle}
-            onPickItem={onPickItem}
-            onPickRelic={onPickRelic}
-          />
-        ))}
-      </div>
-
-      {!complete && (
-        <>
-          <Divider />
-
-          <div className="rf-row-baseline">
-            <span className="rf-text-caption rf-fg-muted">
-              Buy everything missing
-              {set.costIncomplete && " (some unlisted)"}
-            </span>
-            <span className="rf-push">
-              <PlatPrice value={Math.round(set.missingCost)} size="lg" />
-            </span>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                onToggleAll(
+                  set.parts.map((part) => part.itemName),
+                  !complete,
+                )
+              }
+            >
+              {complete ? "Clear the set" : "I have all of these"}
+            </Button>
           </div>
-        </>
-      )}
+
+          {/* The slider only sets the odds the farming route is quoted at, and
+              a complete set has nothing left to farm: with every piece ticked
+              it was a control whose every position produced the same panel. */}
+          {!complete && (
+            <>
+              <p className="rf-text-overline rf-fg-muted rf-stack-sm">Refinement</p>
+
+              <input
+                type="range"
+                min={0}
+                max={ALL_REFINEMENTS.length - 1}
+                step={1}
+                value={ALL_REFINEMENTS.indexOf(refinement)}
+                onChange={(event) =>
+                  onRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
+                }
+                aria-label="Refinement the farming route assumes"
+                aria-valuetext={REFINEMENT_LABEL[refinement]}
+                className="rf-range"
+              />
+
+              <div className="rf-split">
+                {ALL_REFINEMENTS.map((state) => (
+                  <span
+                    key={state}
+                    className={
+                      state === refinement ? "rf-slider-tick rf-slider-tick-on" : "rf-slider-tick"
+                    }
+                  >
+                    {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
+                  </span>
+                ))}
+              </div>
+
+              <div className="rf-row-baseline">
+                <span className="rf-text-caption rf-fg-muted">
+                  Buy everything missing
+                  {set.costIncomplete && " (some unlisted)"}
+                </span>
+                <span className="rf-push">
+                  <PlatPrice value={Math.round(set.missingCost)} size="lg" />
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="rf-panel-col">
+          <p className="rf-text-overline rf-fg-muted rf-stack-sm">Pieces</p>
+
+          <div className="rf-stack-8">
+            {set.parts.map((part) => (
+              <Piece
+                key={part.itemName}
+                part={part}
+                setName={set.setName}
+                pricesPending={pricesPending}
+                onToggle={onToggle}
+                onPickItem={onPickItem}
+                onPickRelic={onPickRelic}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </DetailPanel>
   );
 }

@@ -40,7 +40,8 @@ const MIN_TRADES = 8;
 
 interface Props {
   prices: PriceMap | undefined;
-  onInfo: (itemName: string) => void;
+  /** Opens the part's dialog. "ducat" because this list is about selling. */
+  onInfo: (itemName: string, kind?: WishlistKind) => void;
   quantityOf: (itemName: string, kind: WishlistKind) => number;
 }
 
@@ -151,7 +152,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
               <Chip>{row.ducats} ducats</Chip>
             </span>
           }
-          onClick={() => onInfo(row.itemName)}
+          onClick={() => onInfo(row.itemName, "ducat")}
         />
       ))}
     >
@@ -222,7 +223,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                 };
 
                 return (
-                  <TableRow key={row.itemName} onClick={() => onInfo(row.itemName)}>
+                  <TableRow key={row.itemName} onClick={() => onInfo(row.itemName, "ducat")}>
                     <TableCell align="right" numeric>
                       <span className="rf-fg-muted">{virtualRow.index + 1}</span>
                     </TableCell>
@@ -262,7 +263,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                         aria-label={`More about ${row.itemName}`}
                         onClick={(event) => {
                           event.stopPropagation();
-                          onInfo(row.itemName);
+                          onInfo(row.itemName, "ducat");
                         }}
                       />
                     </TableCell>

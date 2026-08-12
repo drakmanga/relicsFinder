@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { remember, tokensAdded } from "./filterMemory";
+import type { SetStatus } from "./setCategories";
 import { emptyFilters, type Filters, type RelicSortColumn, type SortDirection } from "./rows";
 import { fromSearch, toSearch } from "./urlState";
-import type { Refinement } from "../api/types";
+import type { Refinement, SetCategory, WishlistKind } from "../api/types";
 
 export type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
 
@@ -63,18 +65,15 @@ export function useViewState() {
    */
   const [term, setTerm] = useState(initial.filters.term);
   /**
-   * Open where there is room for it, shut where there is not.
+   * Shut at every width.
    *
-   * The bar is five groups tall on a narrow screen, which on a phone is the
-   * whole viewport: opening by default meant the first thing the app showed was
-   * its filters and none of the list they filter. Read once at mount rather
-   * than watched, so resizing never yanks the bar away from someone using it.
-   * 1024px is --rf-bp-lg, the same width at which the detail panel stops being
-   * a column.
+   * The app opens on a catalogue, and the first thing it should show is the
+   * catalogue — a bar of controls above the list costs four rows of it on a
+   * laptop and the whole viewport on a phone, to answer a question nobody has
+   * asked yet. The strip that opens it stays visible and, once something is
+   * filtered, says what: see FilterSummary.
    */
-  const [filtersOpen, setFiltersOpen] = useState(
-    () => window.matchMedia("(min-width: 1024px)").matches,
-  );
+  const [filtersOpen, setFiltersOpen] = useState(false);
   /** Alphabetical: the Relics view is a catalogue, and A comes first. */
   const [sort, setSort] = useState<{ column: RelicSortColumn; direction: SortDirection }>({
     column: "relic",
@@ -85,6 +84,26 @@ export function useViewState() {
   const [view, setView] = useState<View>(initial.view as View);
   /** Item whose info dialog is open. Null closes it. */
   const [infoItem, setInfoItem] = useState<string | null>(null);
+  /**
+   * Which list the info dialog's stepper would add to.
+   *
+   * The same dialog opens from three views, and a part kept for ducats is a
+   * different wishlist line from the same part being collected. The view that
+   * opened it says which; "part" is what everything but Ducanetor means.
+   */
+  const [infoKind, setInfoKind] = useState<WishlistKind>("part");
+  const showInfo = (itemName: string | null, kind: WishlistKind = "part") => {
+    setInfoItem(itemName);
+    setInfoKind(kind);
+  };
+  /**
+   * Which section of the Wishlist view is open.
+   *
+   * Here rather than inside the table because the steppers in the panels and
+   * dialogs send the reader to it: adding a relic and landing on Parts would be
+   * the app answering a question the reader did not ask.
+   */
+  const [wishlistSection, setWishlistSection] = useState<WishlistKind>("part");
   /** Relic whose price history is open. Its own state: the two dialogs read
       different endpoints, and a single string could not say which. */
   const [infoRelic, setInfoRelic] = useState<string | null>(null);
@@ -98,6 +117,22 @@ export function useViewState() {
    * should not empty the table behind another tab.
    */
   const [setRefinement, setSetRefinement] = useState<Refinement>("intact");
+  /**
+   * Kinds of gear the Sets view is listing. Empty is every kind.
+   *
+   * Its own state rather than part of `Filters`: the catalogue filters are per
+   * view and describe relics and parts, and a tier or a refinement means
+   * nothing to a list of sets.
+   */
+  const [setCategories, setSetCategories] = useState<Set<SetCategory>>(new Set());
+  /**
+   * How far along the sets on show are.
+   *
+   * Opens on "all": the view is a catalogue before it is a to-do list, and
+   * someone arriving to look up what a set costs should not find it filtered to
+   * the ones they happen to be missing.
+   */
+  const [setStatus, setSetStatus] = useState<SetStatus>("all");
 
   /**
    * Where the panel came from, one step per jump.
@@ -127,6 +162,9 @@ export function useViewState() {
   const setFilters = (next: Filters) => {
     setTerm(next.term);
     if (isCatalogue(view)) {
+      // Every filter switched on is counted, so the shut bar can offer back the
+      // ones this browser reaches for. See lib/filterMemory.
+      remember(view, tokensAdded(filters, next));
       setViewFilters((current) => ({ ...current, [view]: { ...next, term: "" } }));
     }
   };
@@ -221,6 +259,20 @@ export function useViewState() {
     setSelectedSet(null);
   };
 
+  /**
+   * Leaves for the wishlist, on the section the line belongs to.
+   *
+   * The panel or dialog the reader was in closes behind them: they have just
+   * been taken somewhere else, and a modal still standing over the list they
+   * were sent to is the app going in two directions at once.
+   */
+  const showWishlist = (section: WishlistKind) => {
+    setWishlistSection(section);
+    setView("wishlist");
+    setInfoItem(null);
+    closePanel();
+  };
+
   return {
     view,
     setView,
@@ -237,13 +289,21 @@ export function useViewState() {
     pickedItem,
     setPickedItem,
     infoItem,
-    setInfoItem,
+    infoKind,
+    showInfo,
+    wishlistSection,
+    setWishlistSection,
+    showWishlist,
     infoRelic,
     setInfoRelic,
     selectedSet,
     setSelectedSet,
     setRefinement,
     setSetRefinement,
+    setCategories,
+    setSetCategories,
+    setStatus,
+    setSetStatus,
     trail,
     openItem,
     openRelic,

@@ -9,6 +9,7 @@ import { DucanetorTable } from "./DucanetorTable";
 import { EndoTable } from "./EndoTable";
 import { ItemsTable } from "./ItemsTable";
 import { ResultsTable } from "./ResultsTable";
+import { SetFilters } from "./SetFilters";
 import { SetsTable } from "./SetsTable";
 import { WishlistTable } from "./WishlistTable";
 import type {
@@ -17,10 +18,12 @@ import type {
   Refinement,
   RelicPriceMap,
   RelicRow,
+  SetCategory,
   WishlistKind,
 } from "../api/types";
 import type { PrimeItemRow } from "../lib/items";
 import type { PrimeSet } from "../lib/setCompletion";
+import type { SetStatus } from "../lib/setCategories";
 import type { RelicSortColumn, SortDirection } from "../lib/rows";
 import type { WishlistEntry } from "../lib/wishlist";
 
@@ -50,11 +53,32 @@ interface Props {
   onSelectItem: (itemName: string) => void;
   selectedSet: string | null;
   onSelectSet: (setName: string) => void;
-  onInfo: (itemName: string) => void;
+  onInfo: (itemName: string, kind?: WishlistKind) => void;
   /** Where a wishlist line leads when it is clicked. */
   onPickItem: (itemName: string) => void;
   onPickRelic: (relicFullName: string) => void;
   onShowEndo: () => void;
+  /** Whether a part is already in hand, for the tick in the items table. */
+  isOwned: (itemName: string) => boolean;
+  /** Ticks or unticks one part. */
+  onToggleOwned: (itemName: string) => void;
+  /** Opens a wishlist set line's panel, without leaving the wishlist. */
+  onPickSet: (setName: string) => void;
+  /** Every set the catalogue holds, for building the kind chips. */
+  allSets: PrimeSet[];
+  /** What each set sells for assembled, by set name. */
+  setPrices: Map<string, { price: number | null; slug: string | null }>;
+  /** Kinds of gear the Sets view is showing. Empty means all of them. */
+  setCategories: Set<SetCategory>;
+  onSetCategories: (next: Set<SetCategory>) => void;
+  /** All sets, the unfinished, or the done. */
+  setStatus: SetStatus;
+  onSetStatus: (next: SetStatus) => void;
+  /** Ticks or unticks every piece of a set at once. */
+  onSetOwnedAll: (itemNames: string[], owned: boolean) => void;
+  /** Which wishlist section is open. Set by whatever sent the reader there. */
+  wishlistSection: WishlistKind;
+  onWishlistSection: (section: WishlistKind) => void;
   sort: { column: RelicSortColumn; direction: SortDirection };
   onSort: (column: RelicSortColumn) => void;
 }
@@ -91,6 +115,18 @@ export function ResultsPane({
   onPickItem,
   onPickRelic,
   onShowEndo,
+  isOwned,
+  onToggleOwned,
+  onPickSet,
+  allSets,
+  setPrices,
+  setCategories,
+  onSetCategories,
+  setStatus,
+  onSetStatus,
+  onSetOwnedAll,
+  wishlistSection,
+  onWishlistSection,
   sort,
   onSort,
 }: Props) {
@@ -129,12 +165,31 @@ export function ResultsPane({
 
   if (view === "sets") {
     return (
-      <SetsTable
-        sets={sets}
-        pricesPending={pricesPending}
-        selected={selectedSet}
-        onSelect={onSelectSet}
-      />
+      <div className="rf-sets-pane">
+        {/* Above the table rather than in the filter bar: that bar belongs to
+            the two catalogue views and asks about relics and parts, neither of
+            which a list of sets has. */}
+        <SetFilters
+          sets={allSets}
+          selected={setCategories}
+          onChange={onSetCategories}
+          status={setStatus}
+          onStatus={onSetStatus}
+          shown={sets.length}
+        />
+
+        <div className="rf-sets-body">
+          <SetsTable
+            sets={sets}
+            pricesPending={pricesPending}
+            selected={selectedSet}
+            onSelect={onSelectSet}
+            onToggleOwned={onSetOwnedAll}
+            quantityOf={quantityOf}
+            setPrices={setPrices}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -149,6 +204,13 @@ export function ResultsPane({
         onPickRelic={onPickRelic}
         onShowEndo={onShowEndo}
         endoOffers={endoOffers}
+        // Every set, not the filtered list: a wishlist line has to keep its
+        // numbers whatever the Sets view happens to be showing.
+        sets={new Map(allSets.map((set) => [set.setName, set]))}
+        setPrices={setPrices}
+        onPickSet={onPickSet}
+        section={wishlistSection}
+        onSection={onWishlistSection}
       />
     );
   }
@@ -191,6 +253,8 @@ export function ResultsPane({
         selected={selectedItem}
         onSelect={onSelectItem}
         onInfo={onInfo}
+        isOwned={isOwned}
+        onToggleOwned={onToggleOwned}
       />
     );
   }

@@ -8,6 +8,7 @@ import { Button, Chip, Input, SearchIcon, TabPanel, Tabs } from "relic-finder-ui
 
 import { DetailPane } from "./components/DetailPane";
 import { FilterBar } from "./components/FilterBar";
+import { FilterSummary } from "./components/FilterSummary";
 import { ResultsPane } from "./components/ResultsPane";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
 import { RelicInfoDialog } from "./components/RelicInfoDialog";
@@ -30,13 +31,21 @@ export function App() {
     pickedItem,
     setPickedItem,
     infoItem,
-    setInfoItem,
+    infoKind,
+    showInfo,
+    wishlistSection,
+    setWishlistSection,
+    showWishlist,
     infoRelic,
     setInfoRelic,
     selectedSet,
     setSelectedSet,
     setRefinement,
     setSetRefinement,
+    setCategories,
+    setSetCategories,
+    setStatus,
+    setSetStatus,
     trail,
     openItem,
     openRelic,
@@ -61,9 +70,21 @@ export function App() {
     activeBarFilters,
     visible,
     visibleSets,
+    allSets,
+    setPriceBySet,
     selectedSetRow,
     searchedItem,
-  } = useCatalogue({ view, filters, selected, pickedItem, selectedSet, setRefinement, sort });
+  } = useCatalogue({
+    view,
+    filters,
+    selected,
+    pickedItem,
+    selectedSet,
+    setRefinement,
+    setCategories,
+    setStatus,
+    sort,
+  });
 
   const toggleSort = (column: RelicSortColumn) =>
     setSort((current) =>
@@ -168,8 +189,20 @@ export function App() {
             >
               Filters {filtersOpen ? "▴" : "▾"}
             </Button>
-            {!filtersOpen && activeBarFilters > 0 && (
-              <span className="rf-text-caption rf-fg-muted">{activeBarFilters} active</span>
+            {/* Shut, the strip is not an empty shelf: it says what the bar it
+                hides is doing, lets each of those filters go with one click,
+                and offers back the ones this browser asks for most. The count
+                is the fallback for the widths where the chips would wrap the
+                strip onto a second row. */}
+            {!filtersOpen && (
+              <>
+                <FilterSummary filters={filters} view={view} onChange={setFilters} />
+                {activeBarFilters > 0 && (
+                  <span className="rf-text-caption rf-fg-muted rf-filter-count">
+                    {activeBarFilters} active
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -212,10 +245,22 @@ export function App() {
               onSelectItem={setPickedItem}
               selectedSet={selectedSet}
               onSelectSet={setSelectedSet}
-              onInfo={setInfoItem}
+              onInfo={showInfo}
               onPickItem={openItem}
               onPickRelic={openRelic}
               onShowEndo={() => setView("endo")}
+              isOwned={ownedParts.has}
+              onToggleOwned={ownedParts.toggle}
+              onSetOwnedAll={ownedParts.setAll}
+              onPickSet={setSelectedSet}
+              allSets={allSets}
+              setPrices={setPriceBySet}
+              setCategories={setCategories}
+              onSetCategories={setSetCategories}
+              setStatus={setStatus}
+              onSetStatus={setSetStatus}
+              wishlistSection={wishlistSection}
+              onWishlistSection={setWishlistSection}
               sort={sort}
               onSort={toggleSort}
             />
@@ -242,13 +287,21 @@ export function App() {
             onPickItem={openItem}
             onPickRelic={openRelic}
             onInfoRelic={setInfoRelic}
+            onOpenWishlist={showWishlist}
             onBack={trail.length > 0 ? goBack : undefined}
             onClose={closePanel}
           />
         </TabPanel>
       </div>
 
-      <ItemInfoDialog itemName={infoItem} prices={prices.data} onClose={() => setInfoItem(null)} />
+      <ItemInfoDialog
+        itemName={infoItem}
+        kind={infoKind}
+        prices={prices.data}
+        quantityOf={wishlist.quantityOf}
+        onOpenWishlist={showWishlist}
+        onClose={() => showInfo(null)}
+      />
 
       <RelicInfoDialog relicFullName={infoRelic} onClose={() => setInfoRelic(null)} />
     </div>

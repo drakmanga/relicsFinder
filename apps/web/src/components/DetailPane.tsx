@@ -46,6 +46,8 @@ interface Props {
   onToggleAllOwned: (itemNames: string[], owned: boolean) => void;
 
   onPickItem: (itemName: string) => void;
+  /** Opens the wishlist at the section a panel's line belongs to. */
+  onOpenWishlist: (section: WishlistKind) => void;
   onPickRelic: (relicFullName: string) => void;
   onBack: (() => void) | undefined;
   onClose: () => void;
@@ -67,7 +69,10 @@ interface Props {
 export function DetailPane(props: Props) {
   const { view, onClose } = props;
 
-  if (view === "wishlist" || view === "ducats" || view === "endo") return null;
+  // The wishlist is a list of plans, and a set line is one of them: its panel
+  // opens over the list rather than instead of it, so closing hands the reader
+  // back to the line they clicked. The two rankings have nothing with a panel.
+  if (view === "ducats" || view === "endo") return null;
 
   /*
     The panel opens over the table rather than beside it, at every width.
@@ -79,14 +84,17 @@ export function DetailPane(props: Props) {
     back and the panel gets the reader's whole attention when it does appear.
   */
   const pointingAtSomething =
-    view === "sets"
+    view === "sets" || view === "wishlist"
       ? props.set !== null
       : view === "items"
         ? props.itemRow !== null
         : props.relicRow !== null;
 
   return (
-    <Modal open={pointingAtSomething} onClose={onClose} label="Details">
+    /* Wide, because the panels inside lay their sections out in columns rather
+       than in one tall stack — see .rf-panel-cols. At the default 34rem the
+       relic panel was a metre of scrolling inside a modal. */
+    <Modal open={pointingAtSomething} onClose={onClose} label="Details" className="rf-modal-wide">
       <Panel {...props} />
     </Modal>
   );
@@ -113,11 +121,12 @@ function Panel({
   onPickItem,
   onPickRelic,
   onInfoRelic,
+  onOpenWishlist,
   onBack,
   onClose,
   quantityOf,
 }: Props) {
-  if (view === "sets") {
+  if (view === "sets" || view === "wishlist") {
     return (
       <SetDetailPanel
         set={set}
@@ -143,6 +152,7 @@ function Panel({
         relics={relics}
         prices={prices}
         quantityOf={quantityOf}
+        onOpenWishlist={onOpenWishlist}
         onPickItem={onPickItem}
         onPickRelic={onPickRelic}
         onBack={onBack}
@@ -165,6 +175,7 @@ function Panel({
       price={relicPrice}
       onInfo={onInfoRelic}
       quantityOf={quantityOf}
+      onOpenWishlist={onOpenWishlist}
     />
   );
 }

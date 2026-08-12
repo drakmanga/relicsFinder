@@ -178,7 +178,13 @@ export function ItemDroppedBy({ sources, onPickRelic }: Props) {
                 color: "var(--rf-fg-primary)",
               }}
             >
-              <TierChip tier={source.tier} refinement={source.refinement} />
+              {/* The chip sits in a column of its own width, so the names start
+                  on one line. A tier chip is as wide as its label, and left to
+                  themselves Axi, Lith, Meso and Neo pushed each name to a
+                  different place — a list of nine relics arrived in an arc. */}
+              <span className="rf-tier-slot">
+                <TierChip tier={source.tier} refinement={source.refinement} />
+              </span>
               <span className="rf-fill">{source.relicFullName}</span>
               <span className="rf-text-data-sm rf-fg-muted">{source.chance.toFixed(2)}%</span>
             </button>

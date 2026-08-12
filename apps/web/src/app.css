@@ -131,6 +131,76 @@ body {
   padding-block: var(--rf-space-2) var(--rf-space-1);
 }
 
+/* Shut, the strip is a line of its own rather than the lid of the bar below it,
+   so it takes the same room under the toggle as over it. */
+.rf-filterstrip-closed .rf-filterstrip-inner {
+  padding-block: var(--rf-space-2);
+}
+
+/* The chips saying what the shut bar is filtering. They sit on the far side of
+   the toggle from the count, and never wrap: a strip that grows a second row
+   when a filter is added moves the table under it. */
+.rf-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-1);
+  min-width: 0;
+  overflow: hidden;
+  flex-wrap: nowrap;
+}
+
+.rf-filter-summary-word {
+  color: var(--rf-fg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Each chip in the strip is a control: the ones on the left switch their filter
+   off, the suggested ones switch theirs on. Bare, like the toggles in the bar
+   itself — the chip is the button. */
+.rf-filter-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--rf-fg-muted);
+  transition: filter var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-filter-summary-chip:hover {
+  filter: brightness(1.22) drop-shadow(0 0 4px var(--rf-gold-600));
+  color: var(--rf-fg-primary);
+}
+
+/* A suggestion is an offer, not a state: it sits back until it is looked at, so
+   it is never mistaken for a filter that is already on. */
+.rf-filter-summary-suggested {
+  opacity: 0.6;
+}
+
+.rf-filter-summary-suggested:hover {
+  opacity: 1;
+}
+
+.rf-filter-summary-lead {
+  margin-left: var(--rf-space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* The count is the summary's backstop, so it stays put at the end of the strip
+   whatever the chips do. */
+.rf-filter-count {
+  margin-left: auto;
+  flex: none;
+  white-space: nowrap;
+}
+
 /* ---- Filter bar band ---- */
 
 .rf-filterband {
@@ -141,14 +211,17 @@ body {
 
 /* ---- Results band ---- */
 
-/* The band takes the page ground, not the divider colour. The divider is one
-   hairline between the table and the panel; painting the whole band with it
-   made the gutters either side of the shell read as two pale margins once the
-   content was capped. */
+/* The band takes surface-2 — the same ground as the topbar and the filter
+   strip, the two bands that already run the full width of the page.
+   The content is capped at --rf-content-max, so past that width the band is all
+   there is either side of the table. On surface-0 those gutters were two black
+   strips under a page whose other bands were not black, and the table read as a
+   slab cut out of the layout. Continuing the page's own colour past the cap
+   makes the gutters part of the page again. */
 .rf-resultsband {
   flex: 1;
   min-height: 0;
-  background: var(--rf-surface-0);
+  background: var(--rf-surface-2);
 }
 
 /* One column at every width. The detail panel used to be the second one, and
@@ -226,48 +299,60 @@ body {
 } /* Market */
 
 .rf-cols-items col:nth-child(1) {
-  width: 17%;
+  width: 16%;
 } /* Item */
 .rf-cols-items col:nth-child(2) {
   width: 9%;
 } /* Set */
 .rf-cols-items col:nth-child(3) {
-  width: 8%;
+  width: 7%;
 } /* Rarity — fits "Uncommon" */
 .rf-cols-items col:nth-child(4) {
-  width: 17%;
+  width: 16%;
 } /* Relics — three tier chips and the count */
 .rf-cols-items col:nth-child(5) {
-  width: 9%;
+  width: 8%;
 } /* Best drop */
 .rf-cols-items col:nth-child(6) {
-  width: 8%;
+  width: 7%;
 } /* Ducats */
 .rf-cols-items col:nth-child(7) {
-  width: 8%;
+  width: 7%;
 } /* Price */
 .rf-cols-items col:nth-child(8) {
+  width: 7%;
+} /* Owned — a 20px tick, so the header word is what sizes it */
+.rf-cols-items col:nth-child(9) {
   width: 11%;
 } /* Wishlist — the stepper is 102px wide and does not shrink */
-.rf-cols-items col:nth-child(9) {
-  width: 6%;
-} /* Info */
 .rf-cols-items col:nth-child(10) {
+  width: 5%;
+} /* Info */
+.rf-cols-items col:nth-child(11) {
   width: 7%;
 } /* Market */
 
 .rf-cols-sets col:nth-child(1) {
-  width: 34%;
-}
+  width: 8%;
+} /* Owned — a tick under a six-letter heading */
 .rf-cols-sets col:nth-child(2) {
-  width: 26%;
-}
+  width: 23%;
+} /* Set */
 .rf-cols-sets col:nth-child(3) {
-  width: 14%;
-}
+  width: 19%;
+} /* Progress */
 .rf-cols-sets col:nth-child(4) {
-  width: 26%;
-}
+  width: 11%;
+} /* Missing */
+.rf-cols-sets col:nth-child(5) {
+  width: 14%;
+} /* To finish */
+.rf-cols-sets col:nth-child(6) {
+  width: 13%;
+} /* Whole set */
+.rf-cols-sets col:nth-child(7) {
+  width: 12%;
+} /* Wishlist — the stepper is 102px and does not shrink */
 
 .rf-cols-ducats col:nth-child(1) {
   width: 4%;
@@ -366,6 +451,19 @@ body {
   border-right: var(--rf-hairline) solid var(--rf-border-subtle);
 }
 
+/* The first group's own padding was pushing its label 16px in from the shell
+   edge, so TIER sat to the right of the Filters button that opens the bar and
+   of the search field above it — three things on the same left margin, one of
+   them not on it. The outer edges belong to the shell; the padding is only
+   there to hold the groups apart from each other. */
+.rf-filter-group:first-child {
+  padding-inline-start: 0;
+}
+
+.rf-filter-group-last {
+  padding-inline-end: 0;
+}
+
 /* Six chips against three, so a double share of whatever the row has spare.
    On an even split the tier chips wrapped onto three lines while the group
    beside them sat half empty. */
@@ -397,36 +495,75 @@ body {
   gap: var(--rf-space-1);
 }
 
-/* The off state is carried by the border and the fill, not by opacity. The
-   toggle wraps a tier chip, and an opacity here multiplies with the chip's own:
-   0.5 over the chip's 0.8 put a near-black label on a washed-out fill at 2.8:1.
-   Nothing inside a control that has to stay readable should be faded. */
+/* The chip is the control. The toggle used to draw a filled, bordered box
+   behind each one, so every tier read as a black plate with a coloured sticker
+   on it; the plate carried no information the chip was not already carrying.
+   It contributes nothing of its own — no fill, no border, no padding worth the
+   name.
+
+   Every chip keeps its colour at every state. Lith is blue and Axi is purple
+   whether or not they are switched on: that colour is how the tier is
+   recognised here, in the table, and in the panels, and draining it on the
+   unselected ones turned the row into six grey lozenges that only became
+   themselves under the pointer.
+
+   The state is light. A chip lights up under the pointer and stays lit once it
+   is on, so hovering is a preview of what switching it on looks like. The glow
+   is a `drop-shadow`, which follows the chip's cut silhouette — `box-shadow`
+   and `outline` are both cut away by clip-path, and a rectangle drawn round an
+   octagon looks like a mistake. */
 .rf-filter-toggle {
   display: flex;
   align-items: center;
   gap: var(--rf-space-1);
-  padding: 5px var(--rf-space-2);
+  padding: 3px 2px;
   cursor: pointer;
-  background: var(--rf-surface-1);
-  border: var(--rf-hairline) solid var(--rf-border-subtle);
-  transition:
-    background var(--rf-dur-fast) var(--rf-ease-standard),
-    border-color var(--rf-dur-fast) var(--rf-ease-standard);
+  background: none;
+  border: 0;
+  transition: filter var(--rf-dur-fast) var(--rf-ease-standard);
 }
 
+.rf-filter-toggle:hover,
 .rf-filter-toggle[aria-pressed="true"] {
-  background: var(--rf-surface-3);
-  border-color: var(--rf-border-interactive);
+  filter: brightness(1.22) drop-shadow(0 0 4px var(--rf-gold-600));
+}
+
+/* On, and under the pointer: the glow tightens rather than doubling. */
+.rf-filter-toggle[aria-pressed="true"]:hover {
+  filter: brightness(1.3) drop-shadow(0 0 6px var(--rf-gold-500));
+}
+
+/* The vault switches are words, not chips: nothing to light up, so the word
+   itself carries the state — muted when it is not the one in force, and
+   underlined in gold when it is. */
+.rf-filter-toggle-text:hover,
+.rf-filter-toggle-text[aria-pressed="true"],
+.rf-filter-toggle-text[aria-pressed="true"]:hover {
+  filter: none;
+}
+
+.rf-filter-toggle-text {
+  padding: 3px 2px 5px;
+}
+
+.rf-filter-toggle-text[aria-pressed="true"] {
+  box-shadow: inset 0 -2px 0 0 var(--rf-gold-500);
 }
 
 .rf-filter-vault {
   font-size: var(--rf-text-overline);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--rf-fg-secondary);
+  color: var(--rf-fg-muted);
 }
 
-.rf-filter-vault-on {
+.rf-filter-toggle-text[aria-pressed="true"] .rf-filter-vault {
+  color: var(--rf-fg-primary);
+}
+
+/* Scoped to the toggle so it outranks the pressed-state colour above: farmable
+   is green whether or not it is the one selected. */
+.rf-filter-toggle-text .rf-filter-vault-on {
   color: var(--rf-success);
 }
 
@@ -518,7 +655,7 @@ body {
   min-width: 66rem;
 }
 .rf-cols-items {
-  min-width: 74rem;
+  min-width: 78rem;
 }
 /* 68rem rather than 66: the Wishlist column is 12% of it, which is 130px, and
    the stepper inside it is 102px plus the cell's own padding. Below that the
@@ -542,6 +679,9 @@ body {
 /* Six columns rather than nine, so it needs less floor to hold its stepper. */
 .rf-cols-wl-relics {
   min-width: 56rem;
+}
+.rf-cols-wl-sets {
+  min-width: 58rem;
 }
 
 /* ------------------------------------------------------------ Ranked page -
@@ -779,6 +919,28 @@ body {
   width: 10%;
 } /* Market */
 
+.rf-cols-wl-sets col:nth-child(1) {
+  width: 30%;
+} /* Set */
+.rf-cols-wl-sets col:nth-child(2) {
+  width: 14%;
+} /* Progress */
+.rf-cols-wl-sets col:nth-child(3) {
+  width: 12%;
+} /* Missing */
+.rf-cols-wl-sets col:nth-child(4) {
+  width: 15%;
+} /* To finish */
+.rf-cols-wl-sets col:nth-child(5) {
+  width: 14%;
+} /* Whole set */
+.rf-cols-wl-sets col:nth-child(6) {
+  width: 15%;
+} /* Qty — the stepper */
+.rf-cols-wl-sets col:nth-child(7) {
+  width: 10%;
+} /* Market */
+
 .rf-cols-wl-endo col:nth-child(1) {
   width: 22%;
 } /* Sculpture */
@@ -818,6 +980,65 @@ body {
    section that follows it. */
 .rf-panel-wishlist {
   margin-block: var(--rf-space-4);
+}
+
+/* --------------------------------------------------------- Panel columns --
+   A detail panel is a set of sections that do not depend on each other's
+   position: what the relic costs, what is inside it, what it pays, where it
+   drops. Stacked, that was a 1600px column read through a scrollbar inside a
+   modal — the reader had to scroll to compare the price at the top with the
+   payout at the bottom, which is the one comparison the panel exists for.
+
+   Laid out in columns they are all on screen at once. `auto-fit` rather than a
+   fixed count because the same markup has to survive a phone, where the
+   columns fall back into the stack they used to be.
+   ----------------------------------------------------------------------- */
+
+.rf-panel-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: var(--rf-space-5);
+  /* Top, not stretch: a short column must not pad itself out to the height of
+     the tallest one. */
+  align-items: start;
+}
+
+/* Two columns of unequal weight: one is a list of pieces and the other is the
+   handful of controls that govern it. */
+.rf-panel-cols-lead {
+  grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+}
+
+/* The relic's three columns are not equals: the middle one is six drop rows,
+   each an item name, a rarity, two prices and a stepper, and on an even split
+   it was narrow enough that every row dropped its stepper onto a second line.
+   The named columns only apply where all three fit; under that the grid above
+   still collapses them. */
+@media (min-width: 64rem) {
+  .rf-panel-cols-relic {
+    grid-template-columns: 1fr 1.5fr 1.15fr;
+  }
+}
+
+.rf-panel-col {
+  min-width: 0;
+}
+
+/* A section that opens with a divider is separating itself from what came
+   above it in the stack. At the head of a column there is nothing above it, and
+   the rule read as the column having been cut off. */
+.rf-panel-col > .rf-divider:first-child {
+  display: none;
+}
+
+/* The rule between columns, drawn on the column rather than as a border on the
+   grid so it disappears with the column it separates when the grid collapses to
+   one. */
+@media (min-width: 60rem) {
+  .rf-panel-col + .rf-panel-col {
+    padding-left: var(--rf-space-5);
+    border-left: var(--rf-hairline) solid var(--rf-border-subtle);
+  }
 }
 
 /* ------------------------------------------------------- Relic contents --
@@ -871,6 +1092,18 @@ body {
   align-items: center;
   justify-content: flex-end;
   gap: 3px;
+}
+
+/* A column exactly wide enough for the widest tier chip a list of relics can
+   hold — Meso, at 70px — so the names beside them all start on the same line.
+   `min-width`, not `width`: Requiem and Vanguard are wider still and do not
+   drop prime parts, and on the day one does its own row can be the long one
+   rather than every other row carrying the space for it. In rem, so the column
+   grows with the reader's text. */
+.rf-tier-slot {
+  flex: none;
+  display: inline-flex;
+  min-width: 4.5rem;
 }
 
 /* A glyph beside the number it belongs to, or an icon beside its label. */
@@ -1086,4 +1319,177 @@ body {
 
 .rf-mt-4 {
   margin-top: var(--rf-space-4);
+}
+
+/* The wishlist stepper's own label, when it is also the way into the list.
+   A heading that is a link, so it looks like the overline beside every other
+   section until it is reached for. */
+.rf-panel-wishlist-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--rf-fg-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--rf-border-default);
+  text-underline-offset: 3px;
+  transition: color var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-panel-wishlist-link:hover {
+  color: var(--rf-gold-300);
+  text-decoration-color: var(--rf-gold-500);
+}
+
+/* ---- Owned tick ----
+   A box drawn rather than a native checkbox: it sits in a clickable row (see
+   OwnedBox), and a label tied to an input would swallow the row's own click.
+   ----------------------------------------------------------------------- */
+.rf-ownedbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--rf-gold-300);
+}
+
+.rf-ownedbox-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--rf-surface-0);
+  border: var(--rf-hairline) solid var(--rf-border-interactive);
+  transition:
+    background var(--rf-dur-fast) var(--rf-ease-standard),
+    border-color var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-ownedbox:hover .rf-ownedbox-mark,
+.rf-ownedbox-on .rf-ownedbox-mark {
+  border-color: var(--rf-gold-500);
+  background: var(--rf-surface-3);
+}
+
+/* WCAG 2.5.8 — 44x44 wherever a finger is the pointer. The box inside keeps its
+   own size; only the button around it grows. */
+@media (max-width: 1023.98px), (pointer: coarse) {
+  .rf-ownedbox {
+    width: var(--rf-touch-target);
+    height: var(--rf-touch-target);
+  }
+}
+
+/* Half a set. A bar rather than a tick, because it is not a smaller yes — it is
+   the answer "some of it", and it must not be mistaken for done at a glance. */
+.rf-ownedbox-part {
+  width: 9px;
+  height: 2px;
+  background: var(--rf-gold-300);
+}
+
+/* A part already in hand is not what the reader is hunting for: the row stays
+   readable but its name stops competing with the ones still missing. */
+.rf-row-owned td:first-child {
+  color: var(--rf-fg-muted);
+}
+
+/* ---- Sets view ----
+   The table fills what the chips above it leave. */
+.rf-sets-pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rf-sets-body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* One row: the label, the kinds, and the count of what survived them. Wraps
+   rather than scrolling — a filter you cannot see is a filter you forget is on. */
+.rf-set-filters {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--rf-space-2) var(--rf-space-3);
+  padding: var(--rf-space-3) var(--rf-space-4);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-set-filters-label {
+  margin: 0;
+  flex: none;
+}
+
+.rf-set-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rf-space-1);
+  min-width: 0;
+}
+
+/* The count sits at the far end, away from the chips it reports on, so it stays
+   in one place while they wrap. */
+.rf-set-filters-count {
+  margin-left: auto;
+  flex: none;
+  white-space: nowrap;
+}
+
+/* A word that switches on. Same idea as the tier chips in the filter bar — the
+   selected one lights rather than the others dimming — but these have no colour
+   of their own, so the light is the gold rule under them. */
+.rf-set-filter {
+  padding: 4px var(--rf-space-2) 5px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: var(--rf-text-caption);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rf-fg-muted);
+  white-space: nowrap;
+  box-shadow: inset 0 -2px 0 0 transparent;
+  transition:
+    color var(--rf-dur-fast) var(--rf-ease-standard),
+    box-shadow var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-set-filter:hover {
+  color: var(--rf-fg-secondary);
+  box-shadow: inset 0 -2px 0 0 var(--rf-border-interactive);
+}
+
+.rf-set-filter-on {
+  color: var(--rf-fg-primary);
+  box-shadow: inset 0 -2px 0 0 var(--rf-gold-500);
+}
+
+/* Not a kind, so it never takes the gold rule. */
+.rf-set-filter-clear:hover,
+.rf-set-filter-clear {
+  box-shadow: none;
+  color: var(--rf-fg-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rf-set-filter-clear:hover {
+  color: var(--rf-gold-300);
+}
+
+/* The progress switch sits with the kinds but is a different question, so it is
+   set off by a rule rather than by a gap nobody would read as a division. */
+.rf-set-filters-status {
+  padding-left: var(--rf-space-3);
+  border-left: var(--rf-hairline) solid var(--rf-border-subtle);
 }

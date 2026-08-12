@@ -12,6 +12,7 @@ import { useWishlist } from "./wishlist";
 import { useOwned } from "./owned";
 import { buildSets } from "./setCompletion";
 import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./items";
+import { filterByCategory, filterByStatus, type SetStatus } from "./setCategories";
 import {
   applyRelicPriceCeiling,
   applyVaultFilter,
@@ -21,7 +22,7 @@ import {
   type RelicSortColumn,
   type SortDirection,
 } from "./rows";
-import type { Refinement, Reward } from "../api/types";
+import type { Refinement, Reward, SetCategory } from "../api/types";
 
 interface Input {
   view: string;
@@ -31,6 +32,10 @@ interface Input {
   selectedSet: string | null;
   /** The refinement the Sets view quotes its farming route at. */
   setRefinement: Refinement;
+  /** Kinds of gear the Sets view is showing. Empty means all of them. */
+  setCategories: Set<SetCategory>;
+  /** Whether the Sets view is showing all sets, the unfinished, or the done. */
+  setStatus: SetStatus;
   sort: { column: RelicSortColumn; direction: SortDirection };
 }
 
@@ -53,6 +58,8 @@ export function useCatalogue({
   pickedItem,
   selectedSet,
   setRefinement,
+  setCategories,
+  setStatus,
   sort,
 }: Input) {
   const relics = useRelics();
@@ -242,9 +249,13 @@ export function useCatalogue({
    * and the result changes with every tick of a checkbox, so paying for it
    * behind another tab would be a re-render nobody sees.
    */
+  // Built for the wishlist as well as for the Sets view: a set line there is a
+  // name and a count, and everything it reports — how far along, what is left
+  // to buy — is read from these. Not built for the other four views, where two
+  // hundred sets would be derived and thrown away on every keystroke.
   const sets = useMemo(
     () =>
-      view === "sets"
+      view === "sets" || view === "wishlist"
         ? buildSets(
             relics.data ?? [],
             ownedParts.owned,
@@ -256,18 +267,54 @@ export function useCatalogue({
     [view, relics.data, ownedParts.owned, prices.data, relicPrices.data, setRefinement],
   );
 
+  /**
+   * What each set sells for assembled.
+   *
+   * A different item from any of its pieces: warframe.market lists "Volt Prime
+   * Set" in its own right, and it does not cost the sum of the four parts —
+   * usually a third more, because it is one trade instead of four and the
+   * seller has done the collecting. Both numbers are worth having: one says
+   * what finishing it costs, the other what skipping the collecting costs.
+   *
+   * A second batch rather than part of the first: the set names are only known
+   * once the sets are built, and the sets are built from the first batch.
+   */
+  const setItemNames = useMemo(() => sets.map((set) => `${set.setName} Set`), [sets]);
+  const setPrices = useItemPrices(setItemNames);
+
+  const setPriceBySet = useMemo(
+    () =>
+      new Map(
+        sets.map((set) => {
+          const listing = setPrices.data?.get(`${set.setName} Set`);
+          return [
+            set.setName,
+            // The slug comes back with the price rather than being rebuilt from
+            // the name: the server resolves the odd one out against the
+            // market's own item list. See lib/format.
+            { price: listing?.averagePrice ?? null, slug: listing?.slug ?? null },
+          ];
+        }),
+      ),
+    [sets, setPrices.data],
+  );
+
   const visibleSets = useMemo(() => {
+    // The kind chips first: they cut two hundred rows to a handful, and the
+    // term then searches what is left rather than the whole catalogue.
+    const byKind = filterByStatus(filterByCategory(sets, setCategories), setStatus);
+
     const term = filters.term.trim().toLowerCase();
-    if (!term) return sets;
+    if (!term) return byKind;
 
     // The set name or any piece in it: someone who remembers "Akbolto" should
     // not have to know it is the set and not the part.
-    return sets.filter(
+    return byKind.filter(
       (set) =>
         set.setName.toLowerCase().includes(term) ||
         set.parts.some((part) => part.itemName.toLowerCase().includes(term)),
     );
-  }, [sets, filters.term]);
+  }, [sets, setCategories, setStatus, filters.term]);
 
   const selectedSetRow = useMemo(
     () => sets.find((set) => set.setName === selectedSet) ?? null,
@@ -313,6 +360,10 @@ export function useCatalogue({
     activeBarFilters,
     visible,
     visibleSets,
+    /** Every set, before the kind chips: the chips themselves are built from it. */
+    allSets: sets,
+    /** What each set sells for assembled, by set name. Null while it lands. */
+    setPriceBySet,
     selectedSetRow,
     searchedItem,
   };

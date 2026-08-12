@@ -8,16 +8,32 @@ import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Skeleton, Table, TableCell, TableCols, TableHeaderCell, TableRow } from "relic-finder-ui";
 
+import { OwnedBox } from "./OwnedBox";
+import { QtyStepper } from "./QtyStepper";
 import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
+import { bump, remove } from "../lib/wishlist";
 import type { PrimeSet } from "../lib/setCompletion";
+import type { WishlistKind } from "../api/types";
 
 const ROW_HEIGHT = 40;
 const OVERSCAN = 12;
 
 interface Props {
   sets: PrimeSet[];
+  /** What each set sells for assembled, by set name. Null while it lands. */
+  setPrices: Map<string, { price: number | null; slug: string | null }>;
+  /** How many of a line the wishlist holds, for the stepper. */
+  quantityOf: (itemName: string, kind?: WishlistKind) => number;
+  /**
+   * Ticks or unticks every piece of a set at once.
+   *
+   * The fastest thing a reader can say about their collection is "I have that
+   * whole one", and until now saying it meant opening the set's panel and
+   * finding the button inside.
+   */
+  onToggleOwned: (itemNames: string[], owned: boolean) => void;
   pricesPending: boolean;
   selected: string | null;
   onSelect: (setName: string) => void;
@@ -31,7 +47,15 @@ interface Props {
  * relic contains and the other about where a part comes from, and neither knows
  * what the player already has.
  */
-export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
+export function SetsTable({
+  sets,
+  pricesPending,
+  selected,
+  onSelect,
+  onToggleOwned,
+  quantityOf,
+  setPrices,
+}: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -61,9 +85,10 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
         caption="Prime sets, with what each one still needs"
         className="rf-cols-sets"
       >
-        <TableCols count={4} />
+        <TableCols count={7} />
         <thead>
           <tr>
+            <TableHeaderCell align="center">Owned</TableHeaderCell>
             <TableHeaderCell>Set</TableHeaderCell>
             <TableHeaderCell>Progress</TableHeaderCell>
             <TableHeaderCell align="right">Missing</TableHeaderCell>
@@ -72,13 +97,22 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
                 To finish <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
+            {/* What the whole thing goes for, assembled. Beside "to finish"
+                because the two are read against each other: a set selling for
+                less than its missing pieces is a set to buy outright. */}
+            <TableHeaderCell align="right">
+              <span className="rf-inline">
+                Whole set <PlatGlyph size={12} />
+              </span>
+            </TableHeaderCell>
+            <TableHeaderCell align="center">Wishlist</TableHeaderCell>
           </tr>
         </thead>
 
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={4} className="rf-spacer" style={{ height: paddingTop }} />
+              <td colSpan={7} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -90,6 +124,17 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
             const missing = total - set.ownedCount;
             const done = missing === 0;
 
+            // A set has no tier, no relic and no refinement: it is a plan, not
+            // a drop. The fields are here because every wishlist line carries
+            // them — see lib/wishlist.
+            const seed = {
+              itemName: set.setName,
+              kind: "set" as const,
+              tier: "lith" as const,
+              relicFullName: "",
+              refinement: "intact" as const,
+            };
+
             return (
               <TableRow
                 key={set.setName}
@@ -97,6 +142,23 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
                 onClick={() => onSelect(set.setName)}
                 title={`${set.setName} — click to see the pieces`}
               >
+                {/* First, before the name: on a list read top to bottom it is
+                    the column the hand goes down. */}
+                <TableCell align="center">
+                  <OwnedBox
+                    label={set.setName}
+                    state={done ? "all" : set.ownedCount > 0 ? "some" : "none"}
+                    onToggle={() =>
+                      onToggleOwned(
+                        set.parts.map((part) => part.itemName),
+                        // Anything short of the whole set fills it in; only a
+                        // complete one clears.
+                        !done,
+                      )
+                    }
+                  />
+                </TableCell>
+
                 <TableCell>{set.setName}</TableCell>
 
                 <TableCell>
@@ -147,13 +209,30 @@ export function SetsTable({ sets, pricesPending, selected, onSelect }: Props) {
                     </span>
                   )}
                 </TableCell>
+
+                <TableCell align="right" numeric>
+                  <PlatPrice value={setPrices.get(set.setName)?.price ?? null} />
+                </TableCell>
+
+                {/* A set is a thing someone plans to finish, so it belongs on
+                    the list as one line rather than as four parts filed under
+                    Prime parts, where what they add up to is invisible. */}
+                <TableCell align="center">
+                  <QtyStepper
+                    itemName={set.setName}
+                    qty={quantityOf(set.setName, "set")}
+                    onIncrement={() => bump(seed, 1)}
+                    onDecrement={() => bump(seed, -1)}
+                    onRemove={() => remove(seed)}
+                  />
+                </TableCell>
               </TableRow>
             );
           })}
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={4} className="rf-spacer" style={{ height: paddingBottom }} />
+              <td colSpan={7} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

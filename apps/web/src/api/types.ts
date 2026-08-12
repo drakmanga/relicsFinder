@@ -104,6 +104,19 @@ export type RelicPriceMap = Map<string, number | null>;
 
 /* ------------------------------------------------------------------------- */
 
+/** The kinds of gear a Prime set can be. See lib/setCategories. */
+export type SetCategory =
+  | "warframe"
+  | "primary"
+  | "secondary"
+  | "melee"
+  | "sentinel"
+  | "sentinel-weapon"
+  | "archwing"
+  | "arch-gun"
+  | "arch-melee"
+  | "pet";
+
 export interface WireItemPrice {
   itemName: string;
   averagePrice: number | null;
@@ -113,6 +126,8 @@ export interface WireItemPrice {
   slug: string;
   ducats: number | null;
   setName: string | null;
+  /** Free-form on the wire; narrowed to SetCategory on the way in. */
+  category: SetCategory | null;
 }
 
 export interface ItemPrice {
@@ -134,6 +149,14 @@ export interface ItemPrice {
   ducats: number | null;
   /** The Prime set it completes, e.g. "Volt Prime". Null when it has none. */
   setName: string | null;
+  /**
+   * What kind of gear that set is — the Sets view filters on it.
+   *
+   * One of the slugs in lib/setCategories. Null for anything the item database
+   * does not list, which on the Sets view means "no category" rather than a
+   * guess.
+   */
+  category: SetCategory | null;
 }
 
 /**
@@ -197,7 +220,7 @@ export interface MarketStatus {
  * part's, so it is priced from the relic price map and never appears in the
  * item one. Everything else about a line works the same.
  */
-export type WishlistKind = "part" | "ducat" | "endo" | "relic";
+export type WishlistKind = "part" | "ducat" | "endo" | "relic" | "set";
 
 export interface WireWishlistEntry {
   itemName: string;

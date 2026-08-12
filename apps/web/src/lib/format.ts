@@ -53,6 +53,18 @@ export function marketUrl(itemName: string): string {
 }
 
 /**
+ * The same URL, from a slug the server has already resolved.
+ *
+ * Preferred over `marketUrl` wherever a price came back with the item's slug on
+ * it: the rule that turns a name into a slug is right for every part and for
+ * 159 sets out of 160, and the market is the only thing that knows about the
+ * one it is wrong for — Kavasa Prime is sold as `kavasa_prime_kubrow_collar_set`.
+ */
+export function marketUrlFromSlug(slug: string): string {
+  return `https://warframe.market/items/${slug}`;
+}
+
+/**
  * warframe.market URL for the relic itself, which is a tradeable item too.
  *
  * The slug carries a "_relic" suffix the part slugs do not have: `axi_a1_relic`,

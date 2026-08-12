@@ -61,6 +61,8 @@ interface Props {
   onInfo: (relicFullName: string) => void;
   /** How many of a line the wishlist holds — the relic itself, and each drop. */
   quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
+  /** Opens the wishlist at the section this panel's line belongs to. */
+  onOpenWishlist: (section: WishlistKind) => void;
   /** Steps back to whatever the panel was showing before. Absent at the start. */
   onBack?: () => void;
   /** Shuts the panel and clears the selection. */
@@ -85,6 +87,7 @@ export function RelicDetailPanel({
   price,
   onInfo,
   quantityOf,
+  onOpenWishlist,
   onBack,
   onClose,
 }: Props) {
@@ -137,135 +140,166 @@ export function RelicDetailPanel({
       }
       title={row.relicFullName}
       meta={`${rewards.length} rewards`}
+      /*
+        What the relic itself costs and how many the reader wants, beside the
+        name rather than under it. Both are properties of the relic named in the
+        heading; everything below is about what comes out of one.
+      */
+      aside={
+        <>
+          <div className="rf-row-baseline-wide">
+            <span className="rf-text-overline rf-fg-muted">Market price</span>
+            <span className="rf-push rf-inline">
+              <PlatPrice value={price ?? null} size="lg" />
+              <Button
+                variant="ghost"
+                size="sm"
+                iconOnly
+                icon={<InfoIcon />}
+                aria-label={`Price history for ${row.relicFullName}`}
+                title="Ninety days of completed trades"
+                onClick={() => onInfo(row.relicFullName)}
+              />
+            </span>
+          </div>
+
+          {/*
+            The relic itself, which is a different line from any of its drops:
+            one is bought whole on the market and cracked, the others are bought
+            finished. The steppers under Contents add those.
+          */}
+          <PanelWishlist
+            seed={{
+              itemName: row.relicFullName,
+              kind: "relic",
+              tier: row.tier,
+              relicFullName: row.relicFullName,
+              refinement: active,
+            }}
+            qty={quantityOf(row.relicFullName, "relic", active)}
+            onOpen={() => onOpenWishlist("relic")}
+          />
+        </>
+      }
     >
       <Divider />
 
       {/*
-        What the relic itself costs, which is the other half of every decision
-        in this panel: everything below says what opening one is worth, and
-        that number means nothing without the price of buying one.
+        Two columns rather than one tall stack: what is inside the relic on one
+        side, what a run of it is worth on the other. Stacked, the two were a
+        screen and a half apart. See .rf-panel-cols.
       */}
-      <div className="rf-row-baseline-wide">
-        <span className="rf-text-overline rf-fg-muted">Market price</span>
-        <span className="rf-push rf-inline">
-          <PlatPrice value={price ?? null} size="lg" />
-          <Button
-            variant="ghost"
-            size="sm"
-            iconOnly
-            icon={<InfoIcon />}
-            aria-label={`Price history for ${row.relicFullName}`}
-            title="Ninety days of completed trades"
-            onClick={() => onInfo(row.relicFullName)}
-          />
-        </span>
-      </div>
-
-      {/*
-        The relic itself, which is a different line from any of its drops: one
-        is bought whole on the market and cracked, the others are bought
-        finished. The steppers under Contents add those.
-      */}
-      <PanelWishlist
-        seed={{
-          itemName: row.relicFullName,
-          kind: "relic",
-          tier: row.tier,
-          relicFullName: row.relicFullName,
-          refinement: active,
-        }}
-        qty={quantityOf(row.relicFullName, "relic", active)}
-        hint="The relic itself, unopened. Its drops have their own steppers below."
-      />
-
-      <SectionLabel
-        hint={
-          <>
-            <p className="rf-flush">
-              Refining a relic with void traces shifts the odds towards the rare and away from the
-              commons. Four states, from Intact at no cost to Radiant at 100 traces.
-            </p>
-            <p className="rf-panel-note">
-              The star marks the state that buys the most platinum per trace on <em>this</em> relic
-              — which is often not Radiant, and on a relic whose rare is cheap is nothing at all,
-              because the trade loses money. The full working is under Refining below.
-            </p>
-          </>
-        }
-      >
-        Refinement
-      </SectionLabel>
-
-      <input
-        type="range"
-        min={0}
-        max={ALL_REFINEMENTS.length - 1}
-        step={1}
-        value={ALL_REFINEMENTS.indexOf(active)}
-        onChange={(event) => setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")}
-        aria-label="Refinement of this relic"
-        aria-valuetext={REFINEMENT_LABEL[active]}
-        className="rf-range"
-      />
-
-      <div className="rf-split">
-        {ALL_REFINEMENTS.map((state) => (
-          <span
-            key={state}
-            style={{
-              fontSize: 10,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: state === active ? "var(--rf-fg-primary)" : "var(--rf-fg-muted)",
-            }}
+      <div className="rf-panel-cols rf-panel-cols-lead">
+        <div className="rf-panel-col">
+          <SectionLabel
+            hint={
+              <>
+                <p className="rf-flush">
+                  Refining a relic with void traces shifts the odds towards the rare and away from
+                  the commons. Four states, from Intact at no cost to Radiant at 100 traces.
+                </p>
+                <p className="rf-panel-note">
+                  The star marks the state that buys the most platinum per trace on <em>this</em>{" "}
+                  relic — which is often not Radiant, and on a relic whose rare is cheap is nothing
+                  at all, because the trade loses money. The full working is under Refining below.
+                </p>
+              </>
+            }
           >
-            {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
-            {state === bestByTrace && (
-              <OrokinStar
-                width={9}
-                height={9}
-                style={{ marginLeft: 3, color: "var(--rf-gold-500)", verticalAlign: "baseline" }}
-              />
-            )}
-          </span>
-        ))}
+            Refinement
+          </SectionLabel>
+
+          <input
+            type="range"
+            min={0}
+            max={ALL_REFINEMENTS.length - 1}
+            step={1}
+            value={ALL_REFINEMENTS.indexOf(active)}
+            onChange={(event) =>
+              setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
+            }
+            aria-label="Refinement of this relic"
+            aria-valuetext={REFINEMENT_LABEL[active]}
+            className="rf-range"
+          />
+
+          <div className="rf-split">
+            {ALL_REFINEMENTS.map((state) => (
+              <span
+                key={state}
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color: state === active ? "var(--rf-fg-primary)" : "var(--rf-fg-muted)",
+                }}
+              >
+                {state === "exceptional" ? "Except." : REFINEMENT_LABEL[state]}
+                {state === bestByTrace && (
+                  <OrokinStar
+                    width={9}
+                    height={9}
+                    style={{
+                      marginLeft: 3,
+                      color: "var(--rf-gold-500)",
+                      verticalAlign: "baseline",
+                    }}
+                  />
+                )}
+              </span>
+            ))}
+          </div>
+
+          {/* Contents under the slider that governs them: moving the slider
+              rewrites every chance in the list below it, and with the two in
+              separate columns the cause and the effect were side by side
+              instead of one under the other. Its own block, because the
+              slider's scale sits on the baseline of its labels and a heading
+              directly under those read as a fifth label. */}
+          <div className="rf-mt-4">
+            <SectionLabel
+              hint={
+                <>
+                  <p className="rf-flush">
+                    Platinum is what the part sells for. The gold number next to it is its{" "}
+                    <strong>ducat value</strong> — what Baro's kiosk pays if you dissolve it
+                    instead.
+                  </p>
+                  <p className="rf-panel-note">
+                    Per part, not per relic: a run gives you one drop, so only that one can ever be
+                    dissolved.
+                  </p>
+                </>
+              }
+            >
+              Contents
+            </SectionLabel>
+
+            <RelicContents
+              row={row}
+              rewards={rewards}
+              refinement={active}
+              prices={prices}
+              highlightItem={highlightItem}
+              onPickItem={onPickItem}
+              quantityOf={quantityOf}
+            />
+          </div>
+        </div>
+
+        {/* The last column is everything about a run of this relic: what it
+            pays, what refining it costs, and where it drops. */}
+        <div className="rf-panel-col">
+          <RelicPayout rewards={rewards} states={states} prices={prices} refinement={active} />
+
+          <RelicDropSites
+            relicFullName={row.relicFullName}
+            sites={sites}
+            sitesPending={sitesPending}
+            best={best}
+          />
+        </div>
       </div>
-
-      <SectionLabel
-        hint={
-          <>
-            <p className="rf-flush">
-              Platinum is what the part sells for. The gold number next to it is its{" "}
-              <strong>ducat value</strong> — what Baro's kiosk pays if you dissolve it instead.
-            </p>
-            <p className="rf-panel-note">
-              Per part, not per relic: a run gives you one drop, so only that one can ever be
-              dissolved.
-            </p>
-          </>
-        }
-      >
-        Contents
-      </SectionLabel>
-
-      <RelicContents
-        row={row}
-        rewards={rewards}
-        refinement={active}
-        prices={prices}
-        highlightItem={highlightItem}
-        onPickItem={onPickItem}
-        quantityOf={quantityOf}
-      />
-
-      <RelicPayout rewards={rewards} states={states} prices={prices} refinement={active} />
-
-      <RelicDropSites
-        relicFullName={row.relicFullName}
-        sites={sites}
-        sitesPending={sitesPending}
-        best={best}
-      />
     </DetailPanel>
   );
 }

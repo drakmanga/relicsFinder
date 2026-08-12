@@ -68,6 +68,7 @@ export function prices(entries: Record<string, number | null>): PriceMap {
       slug: itemName.toLowerCase().replace(/\s+/g, "_"),
       ducats: null,
       setName: null,
+      category: null,
     });
   }
 

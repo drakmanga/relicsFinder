@@ -1,4 +1,4 @@
-import type { PriceMap, Relic, RelicPriceMap } from "../api/types";
+import type { PriceMap, Relic, RelicPriceMap, SetCategory } from "../api/types";
 import { expectedValue } from "./rows";
 import { setOf } from "./sets";
 
@@ -49,6 +49,15 @@ export interface SetPart {
 
 export interface PrimeSet {
   setName: string;
+  /**
+   * What kind of gear the set is — warframe, primary, and so on.
+   *
+   * Read off the parts, because that is where the item database puts it: the
+   * set itself is a name this application derives, and nothing upstream has a
+   * record of it. Null until the price batch lands, and for the handful of
+   * sets the database does not carry.
+   */
+  category: SetCategory | null;
   parts: SetPart[];
   ownedCount: number;
   /** Platinum to buy every part still missing. */
@@ -147,6 +156,10 @@ export function buildSets(
 
     sets.push({
       setName,
+      // Any part answers for the whole set: a Braton Prime Receiver and a
+      // Braton Prime Stock are both primary. The first one that knows wins,
+      // since the rest of the batch may not have arrived.
+      category: parts.map((part) => prices?.get(part.itemName)?.category).find(Boolean) ?? null,
       parts,
       ownedCount: parts.length - missing.length,
       missingCost: missing.reduce((sum, part) => sum + (part.price ?? 0), 0),

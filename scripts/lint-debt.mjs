@@ -17,7 +17,7 @@ const ROOTS = ["apps/web/src", "packages/ui/src"];
 const COUNTERS = [
   {
     name: "inline styles",
-    baseline: 66,
+    baseline: 63,
     extensions: [".tsx"],
     pattern: /style=\{\{/g,
     hint: "move visual values into a CSS class",
@@ -32,7 +32,7 @@ const COUNTERS = [
   },
   {
     name: "px fontSize in JSX",
-    baseline: 13,
+    baseline: 12,
     extensions: [".tsx"],
     pattern: /fontSize:\s*[0-9]/g,
     hint: "use a --rf-text-* token in CSS",

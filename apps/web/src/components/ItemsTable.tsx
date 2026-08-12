@@ -20,13 +20,14 @@ import {
   TierChip,
 } from "relic-finder-ui";
 
+import { OwnedBox } from "./OwnedBox";
 import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, remove } from "../lib/wishlist";
 import { marketUrl, priceOf } from "../lib/format";
-import type { PriceMap } from "../api/types";
+import type { PriceMap, WishlistKind } from "../api/types";
 import type { PrimeItemRow } from "../lib/items";
 
 const ROW_HEIGHT = 40;
@@ -38,11 +39,24 @@ interface Props {
   quantityOf: (itemName: string) => number;
   onSelect: (itemName: string) => void;
   selected: string | null;
-  onInfo: (itemName: string) => void;
+  onInfo: (itemName: string, kind?: WishlistKind) => void;
+  /** Whether the reader already has this part. */
+  isOwned: (itemName: string) => boolean;
+  /** Ticks or unticks it. The Sets view reads the same list. */
+  onToggleOwned: (itemName: string) => void;
 }
 
 /** One row per Prime part: set, rarity, which relics hold it, ducats and price. */
-export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInfo }: Props) {
+export function ItemsTable({
+  rows,
+  prices,
+  quantityOf,
+  onSelect,
+  selected,
+  onInfo,
+  isOwned,
+  onToggleOwned,
+}: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -73,7 +87,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
         caption="Prime parts, with the relics that drop them, ducats and price"
         className="rf-cols-items"
       >
-        <TableCols count={10} />
+        <TableCols count={11} />
         <thead>
           <tr>
             {/*
@@ -104,6 +118,9 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
                 Price <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
+            {/* Before Wishlist, because the two answer opposite halves of the
+                same question: what you have, and what you still want. */}
+            <TableHeaderCell align="center">Owned</TableHeaderCell>
             <TableHeaderCell align="center">Wishlist</TableHeaderCell>
             <TableHeaderCell align="center">Info</TableHeaderCell>
             <TableHeaderCell align="center">Market</TableHeaderCell>
@@ -113,7 +130,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} className="rf-spacer" style={{ height: paddingTop }} />
+              <td colSpan={11} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -133,10 +150,16 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
               refinement: "intact" as const,
             };
 
+            const owned = isOwned(row.itemName);
+
             return (
               <TableRow
                 key={row.itemName}
                 selected={row.itemName === selected}
+                // A part already in hand is not what the reader is scanning the
+                // list for, so its name steps back. It stays a full row: what
+                // it costs and what it drops from are still worth reading.
+                className={owned ? "rf-row-owned" : undefined}
                 onClick={() => onSelect(row.itemName)}
               >
                 {/* Titled because the column truncates: the longest part names
@@ -167,6 +190,17 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
                 </TableCell>
                 <TableCell align="right" numeric>
                   <PlatPrice value={priceOf(prices, row.itemName)} />
+                </TableCell>
+                {/* One click per part, from the list itself. Ticking a part
+                    used to mean opening its set's panel and finding the piece
+                    there, which is four actions for a thing that happens after
+                    every run. */}
+                <TableCell align="center">
+                  <OwnedBox
+                    label={row.itemName}
+                    state={owned ? "all" : "none"}
+                    onToggle={() => onToggleOwned(row.itemName)}
+                  />
                 </TableCell>
                 <TableCell align="center">
                   <QtyStepper
@@ -209,7 +243,7 @@ export function ItemsTable({ rows, prices, quantityOf, onSelect, selected, onInf
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} className="rf-spacer" style={{ height: paddingBottom }} />
+              <td colSpan={11} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

@@ -2,15 +2,29 @@ import { Button, Dialog, ExternalLinkIcon, PriceDelta, Skeleton } from "relic-fi
 
 import { Unlisted } from "./Unlisted";
 
+import { PanelWishlist } from "./PanelWishlist";
 import { PlatPrice } from "./Plat";
 import { PriceChart } from "./PriceChart";
 import { useItemHistory } from "../api/queries";
 import { marketUrl } from "../lib/format";
-import type { PriceMap } from "../api/types";
+import type { PriceMap, WishlistKind } from "../api/types";
 
 interface Props {
   itemName: string | null;
   prices: PriceMap | undefined;
+  /**
+   * Which list the part would join.
+   *
+   * The same dialog opens from Prime Items, from the wishlist and from
+   * Ducanetor, and a part kept to sell to Baro is a different line from the
+   * same part being collected — see lib/wishlist. The caller knows which list
+   * the reader is looking at; the dialog cannot.
+   */
+  kind?: WishlistKind;
+  /** How many of that line the wishlist already holds. */
+  quantityOf: (itemName: string, kind?: WishlistKind) => number;
+  /** Opens the wishlist at the section this line belongs to. */
+  onOpenWishlist: (section: WishlistKind) => void;
   onClose: () => void;
 }
 
@@ -21,7 +35,14 @@ interface Props {
  * doing, and it should hand them back to the same scroll position and the same
  * filters when they close it.
  */
-export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
+export function ItemInfoDialog({
+  itemName,
+  prices,
+  kind = "part",
+  quantityOf,
+  onOpenWishlist,
+  onClose,
+}: Props) {
   const history = useItemHistory(itemName);
   const meta = itemName ? prices?.get(itemName) : undefined;
 
@@ -73,6 +94,30 @@ export function ItemInfoDialog({ itemName, prices, onClose }: Props) {
           {meta?.trend == null ? <Unlisted /> : <PriceDelta value={Math.round(meta.trend)} />}
         </Stat>
       </div>
+
+      {/*
+        The dialog is where someone lands after asking "is this worth having",
+        and the answer to that question is usually "yes, add it" — but the only
+        stepper for it was back in the row they had just left, behind the
+        dialog they were reading. On Ducanetor there was no way in at all
+        without closing this first.
+      */}
+      {itemName && (
+        <PanelWishlist
+          seed={{
+            itemName,
+            kind,
+            // A part has no relic and no refinement of its own here: this is the
+            // finished piece, bought or sold as it is. Same seed the tables use.
+            tier: "lith",
+            relicFullName: "",
+            refinement: "intact",
+          }}
+          qty={quantityOf(itemName, kind)}
+          onOpen={() => onOpenWishlist(kind)}
+          hint={kind === "ducat" ? "Kept to sell to Baro, not to build with." : undefined}
+        />
+      )}
 
       <p className="rf-text-overline rf-fg-muted rf-stack-sm">Completed trades, 90 days</p>
 

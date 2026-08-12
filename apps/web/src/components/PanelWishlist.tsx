@@ -2,6 +2,14 @@ import { QtyStepper } from "./QtyStepper";
 import { bump, remove, type WishlistEntry } from "../lib/wishlist";
 
 interface Props {
+  /**
+   * Opens the wishlist at the section this line belongs to.
+   *
+   * The stepper says a number and nothing else, and "so where did that go" had
+   * no answer anywhere on the panel: the list it feeds was two clicks and a
+   * guess away — the Wishlist tab, then the right one of its four sections.
+   */
+  onOpen?: () => void;
   /** The line this stepper edits, minus the quantity it is about to set. */
   seed: Omit<WishlistEntry, "qty">;
   qty: number;
@@ -17,11 +25,22 @@ interface Props {
  * following a part through three views, and asking them to go back to the row
  * they came from to add it is asking them to leave the answer they just found.
  */
-export function PanelWishlist({ seed, qty, hint }: Props) {
+export function PanelWishlist({ seed, qty, hint, onOpen }: Props) {
   return (
     <div className="rf-panel-wishlist">
       <div className="rf-row-baseline-wide">
-        <span className="rf-text-overline rf-fg-muted">Wishlist</span>
+        {onOpen ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="rf-focus-ring rf-panel-wishlist-link rf-text-overline"
+            title="Open the wishlist at this section"
+          >
+            Wishlist
+          </button>
+        ) : (
+          <span className="rf-text-overline rf-fg-muted">Wishlist</span>
+        )}
         <span className="rf-push">
           <QtyStepper
             itemName={seed.itemName}
