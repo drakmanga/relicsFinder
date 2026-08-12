@@ -71,9 +71,7 @@ export function ItemsTable({
 
   // The rows on screen, told to the server so it prices those first.
   usePricePriority({
-    items: items
-      .map((item) => rows[item.index]?.itemName)
-      .filter((name): name is string => !!name),
+    items: items.map((item) => rows[item.index]?.itemName).filter((name): name is string => !!name),
   });
 
   const paddingTop = items.length > 0 ? (items[0]?.start ?? 0) : 0;
