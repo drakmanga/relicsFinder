@@ -3,16 +3,24 @@
    Only opacity, transform, background-color, clip-path and filter animate.
    ========================================================================= */
 
+/* The reveal is a mask, not a clip.
+   It used to animate `clip-path: inset(0 100% 0 0)` → `inset(0)`, and with
+   `animation-fill-mode: both` that final `inset(0)` stays on the element for
+   good — permanently replacing the Orokin silhouette on the very element that
+   carries it, `.rf-frame-inner`. The panel's corners were therefore square
+   under a frame whose corners were cut, so the gold diagonal was covered by the
+   panel's own background and the border read as a line snipped off at two
+   corners. A mask wipes the same way and leaves clip-path alone. */
 @keyframes rf-sweep {
   from {
     opacity: 0;
     transform: translateX(16px);
-    clip-path: inset(0 100% 0 0);
+    mask-position: 100% 0;
   }
   to {
     opacity: 1;
     transform: translateX(0);
-    clip-path: inset(0 0 0 0);
+    mask-position: 0 0;
   }
 }
 
@@ -54,8 +62,14 @@
   }
 }
 
-/* Signature 1 — the detail panel materialises inside its frame. */
+/* Signature 1 — the detail panel materialises inside its frame.
+   The mask is a hard-edged gradient twice the width of the element: at 100% the
+   transparent half covers it, at 0% the opaque half does, so moving it wipes
+   the content in from the left. */
 .rf-anim-sweep {
+  mask-image: linear-gradient(90deg, #000 50%, transparent 50%);
+  mask-size: 200% 100%;
+  mask-repeat: no-repeat;
   animation: rf-sweep var(--rf-dur-sweep) var(--rf-ease-orokin) both;
 }
 
@@ -82,7 +96,10 @@
   .rf-stagger > * {
     opacity: 1;
     transform: none;
-    clip-path: none;
+    /* The wipe is a mask, so this is what has to be cleared. Never `clip-path`:
+       the element the sweep runs on is `.rf-frame-inner`, whose clip-path IS the
+       Orokin silhouette, and clearing it squares off the panel's cut corners. */
+    mask-image: none;
   }
 
   .rf-root *,

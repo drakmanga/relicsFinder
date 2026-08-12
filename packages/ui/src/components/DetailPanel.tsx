@@ -16,6 +16,16 @@ export interface DetailPanelProps extends Omit<HTMLAttributes<HTMLElement>, "tit
   title?: ReactNode;
   /** Drop location, rotation, per-run chance. */
   meta?: ReactNode;
+  /**
+   * Figures that belong to the thing named in the title: its price, what the
+   * reader holds of it.
+   *
+   * Opposite the title rather than below it. They answer "what is this worth",
+   * which is a property of the heading, not the first of the sections under it
+   * — and in the wide layout that spot was empty while the first column carried
+   * two lines nobody had asked for yet.
+   */
+  aside?: ReactNode;
   /** Shown when no relic is selected. */
   emptyTitle?: ReactNode;
   emptyDescription?: ReactNode;
@@ -41,6 +51,7 @@ export function DetailPanel({
   actions,
   title,
   meta,
+  aside,
   empty = false,
   emptyTitle = "No relic selected",
   emptyDescription = "Pick a relic to see its drops and prices.",
@@ -77,8 +88,13 @@ export function DetailPanel({
                   )}
                 </div>
               )}
-              {title && <p className="rf-text-display-md rf-detail-title">{title}</p>}
-              {meta && <p className="rf-detail-meta">{meta}</p>}
+              <div className="rf-detail-head">
+                <div className="rf-detail-headings">
+                  {title && <p className="rf-text-display-md rf-detail-title">{title}</p>}
+                  {meta && <p className="rf-detail-meta">{meta}</p>}
+                </div>
+                {aside && <div className="rf-detail-aside">{aside}</div>}
+              </div>
               {children}
             </>
           )}

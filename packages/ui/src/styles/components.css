@@ -538,6 +538,32 @@
   white-space: nowrap;
 }
 
+/* A hairline down every column boundary, header and body alike, and round the
+   outside of the table with them.
+   The table is eight to ten columns of numbers that mean different things, and
+   with only the row rules drawn the eye had nothing to run down: a price and
+   the ducat value beside it read as one figure. The outer two were left off at
+   first, which made the first column the one with no line beside its heading —
+   the grid has to close, or the column that opens the table looks like the one
+   that was forgotten. Subtle, not default: the grid is there to be followed,
+   not read. */
+.rf-table thead th,
+.rf-table tbody td {
+  border-left: 1px solid var(--rf-border-subtle);
+}
+
+.rf-table thead th:last-child,
+.rf-table tbody td:last-child {
+  border-right: 1px solid var(--rf-border-subtle);
+}
+
+/* The virtualiser's filler row is height and nothing else — a line down it
+   would be a grid drawn across empty space. */
+.rf-table tbody td.rf-spacer {
+  border-left: 0;
+  border-right: 0;
+}
+
 /* Cells holding a control keep their overflow visible: `hidden` would clip the
    focus ring off an icon button sitting in a narrow column, and a control is
    sized by its own box anyway, so it has nothing to truncate. */
@@ -737,6 +763,29 @@
   height: 100%;
 }
 
+/* The heading and the figures that belong to it, on one line. They wrap onto
+   two the moment the panel is narrow enough that a price beside a Cinzel title
+   would crush both. */
+.rf-detail-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--rf-space-6);
+  flex-wrap: wrap;
+}
+
+.rf-detail-headings {
+  min-width: 0;
+}
+
+/* Right-aligned, and never wider than it needs: the figures read as a block
+   pinned to the corner rather than as a column of the layout. */
+.rf-detail-aside {
+  flex: none;
+  min-width: 12rem;
+  text-align: right;
+}
+
 .rf-detail-meta {
   margin-top: var(--rf-space-1);
   font-size: var(--rf-text-caption);
@@ -917,12 +966,34 @@
   animation: rf-rise var(--rf-dur-slow) var(--rf-ease-enter) both;
 }
 
-/* The panel fills the modal and scrolls inside it: the page behind must not
-   scroll while a modal surface is over it, and a relic panel is taller than a
-   laptop viewport once the mission list is open. */
+/* A panel that lays its sections out in columns instead of one tall stack. The
+   column count is the panel's own business (see .rf-panel-cols); this only
+   gives it the width to hold them, so the whole panel is readable at once
+   rather than through a scrollbar. */
+.rf-modal-wide {
+  max-width: 76rem;
+}
+
+/* The panel fills the modal, and the scrolling happens INSIDE the frame rather
+   than around it: the page behind must not scroll while a modal is over it, and
+   with the overflow on the outer element the scrollbar was drawn on top of the
+   gilded border, which read as a broken edge. */
 .rf-modal > .rf-detail {
   width: 100%;
   max-height: 100%;
+  display: flex;
+  min-height: 0;
+}
+
+.rf-modal > .rf-detail > .rf-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.rf-modal > .rf-detail .rf-detail-body {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 

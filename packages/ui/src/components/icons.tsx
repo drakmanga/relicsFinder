@@ -200,6 +200,9 @@ export const AlertTriangleIcon = strokeIcon(
 
 export const XIcon = strokeIcon(<path d="M18 6 6 18M6 6l12 12" />, "XIcon");
 
+/** A tick. The owned marker, and any other "this one is done". */
+export const CheckIcon = strokeIcon(<path d="m4 12 5 5L20 6" />, "CheckIcon");
+
 export const InfoIcon = strokeIcon(
   <>
     <circle cx="12" cy="12" r="9" />

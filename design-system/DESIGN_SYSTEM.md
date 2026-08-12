@@ -581,7 +581,7 @@ Table rows: `row-compact` 32px, `row` 40px (**default**), `row-comfortable` 48px
 
 ### 8.2 The three signatures
 
-1. **Detail panel sweep** — on opening, the panel reveals left to right with `clip-path: inset(0 100% 0 0)` → `inset(0)`, a 16px translation, 420ms `orokin`. The effect is content materialising inside a frame that is already there, rather than sliding into it.
+1. **Detail panel sweep** — on opening, the panel reveals left to right with a hard-edged `mask-image` wiping from `mask-position: 100%` to `0`, a 16px translation, 420ms `orokin`. The effect is content materialising inside a frame that is already there, rather than sliding into it. **Never animate `clip-path` here**: the sweep runs on `.rf-frame-inner`, whose `clip-path` is the Orokin silhouette, and an animation with `fill-mode: both` leaves its final value on the element for good — squaring off the two cut corners and hiding the frame's gold diagonal behind the panel's own background.
 2. **Radiant pulse** — on the chip of a Radiant relic only: `drop-shadow(0 0 6px #C9A22766)` coming and going over 2400ms. Never more than one pulsing element per view. If the list holds thirty Radiant relics, the pulse goes on the selected row **only**.
 3. **Drop stagger** — the six drop rows of a relic enter with `o-rise` (6px + fade, 180ms), offset by 40ms. Capped at six: the last starts at 200ms, still read as simultaneous. Never apply it to lists of variable length — over forty rows the last would arrive at 1.6s.
 

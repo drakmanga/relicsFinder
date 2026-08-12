@@ -84,7 +84,13 @@
 }
 
 .rf-frame-inner {
-  --rf-notch-inner: calc(var(--rf-notch) - var(--rf-frame-width));
+  /* Pulled back by f(2−√2) ≈ 0.586f, not by the whole frame width.
+     The band between the two diagonals is (2f + notch_inner − notch)/√2 wide
+     measured perpendicular to them, so subtracting a full f leaves f/√2 ≈ 0.71px
+     against 1px on the straight edges — the corner cut read as a thinning of the
+     border. 0.586f is the value that makes the diagonal exactly as thick as the
+     sides. */
+  --rf-notch-inner: calc(var(--rf-notch) - 0.586 * var(--rf-frame-width));
   background: var(--rf-surface-1);
   height: 100%;
   clip-path: polygon(
@@ -166,6 +172,20 @@
   );
 }
 
+/* The inverse silhouette cuts the OTHER diagonal — top-right and bottom-left —
+   so the gilding has to be mirrored with it. At 135deg the gold landed on the
+   two square corners and the two cut ones took border-default, which is what
+   made the diagonals read as a line that had been snipped off. */
+.rf-frame-gilded.rf-frame-inverse {
+  --rf-frame-color: linear-gradient(
+    45deg,
+    var(--rf-gold-600) 0%,
+    var(--rf-border-default) 35%,
+    var(--rf-border-default) 65%,
+    var(--rf-gold-600) 100%
+  );
+}
+
 .rf-frame-danger {
   --rf-frame-color: var(--rf-danger);
 }
@@ -180,6 +200,14 @@
 .rf-frame:has(:focus-visible):not(:has(.rf-frame :focus-visible)) {
   --rf-frame-width: 2px;
   --rf-frame-color: var(--rf-border-focus);
+  /* The ring grows outwards, not into the layout.
+     The frame's border IS its padding, so widening it to 2px made the element
+     2px taller — and focusing the search field pushed the filter strip, the
+     table and everything under it down by two pixels. A negative margin of
+     exactly the extra width keeps the box the same size as far as its
+     neighbours are concerned, so the page holds still and only the ring
+     appears. */
+  margin: calc(1px - var(--rf-frame-width));
 }
 
 .rf-frame:focus-visible {
