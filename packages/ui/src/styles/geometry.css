@@ -78,9 +78,17 @@
     0 100%,
     0 var(--rf-notch)
   );
-  transition:
-    background var(--rf-dur-base) var(--rf-ease-standard),
-    padding var(--rf-dur-fast) var(--rf-ease-standard);
+  /* Only the colour animates. The width must not.
+     Focus widens the frame from 1px to 2px and cancels the extra out with a
+     negative margin, so the layout holds still — but margin is not in this
+     list and padding was, so the compensation landed instantly while the
+     border grew over --rf-dur-fast. For that tenth of a second the box was
+     2px narrower than its own ring, which read as the field shuddering when
+     you clicked into it. The inner element's notch is cut from the same width
+     and clip-path does not interpolate at all, so the two corners stepped
+     while the sides slid. A focus ring that appears at once has neither
+     problem, and is what a focus ring is supposed to do. */
+  transition: background var(--rf-dur-base) var(--rf-ease-standard);
 }
 
 .rf-frame-inner {
