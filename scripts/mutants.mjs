@@ -113,6 +113,48 @@ const MUTANTS = [
     from: 'if (remainder.includes("prime") && !remainder.endsWith("prime")) {',
     to: 'if (remainder.includes("prime")) {',
   },
+  {
+    name: "stillFilling waits for the untraded parts too",
+    file: "apps/web/src/api/queries.ts",
+    from: "return missing > values.length * PRICE_RESIDUE;",
+    to: "return missing > 0;",
+  },
+  {
+    name: "the residue boundary lets one price too many count as a wait",
+    file: "apps/web/src/api/queries.ts",
+    from: "return missing > values.length * PRICE_RESIDUE;",
+    to: "return missing >= values.length * PRICE_RESIDUE;",
+  },
+  {
+    name: "progress forgets a first request is a wait of its own",
+    file: "apps/web/src/lib/priceProgress.ts",
+    from: "if (!prices) return { ...NOTHING, filling: pending };",
+    to: "if (!prices) return NOTHING;",
+  },
+  {
+    name: "the estimate waits for prices that never arrive",
+    file: "apps/web/src/lib/priceEta.ts",
+    from: "const target = total * (1 - PRICE_RESIDUE);",
+    to: "const target = total;",
+  },
+  {
+    name: "a stalled queue keeps promising the wait it promised before",
+    file: "apps/web/src/lib/priceEta.ts",
+    from: "if (!last || now - last.at < STALL_AFTER_MS) return samples;",
+    to: "if (!last) return samples;\n  return samples;",
+  },
+  {
+    name: "the half-poll reading stays in the window",
+    file: "apps/web/src/lib/priceEta.ts",
+    from: "const burst = last && next.at - last.at < COALESCE_MS && next.total === last.total;",
+    to: "const burst = false;",
+  },
+  {
+    name: "coalescing swallows the first reading of a new batch",
+    file: "apps/web/src/lib/priceEta.ts",
+    from: "const burst = last && next.at - last.at < COALESCE_MS && next.total === last.total;",
+    to: "const burst = last && next.at - last.at < COALESCE_MS;",
+  },
 ];
 
 let killed = 0;

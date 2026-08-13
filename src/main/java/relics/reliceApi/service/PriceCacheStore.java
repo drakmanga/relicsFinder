@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -89,7 +90,15 @@ public class PriceCacheStore {
                 // A run that failed is not worth carrying across a restart: the
                 // next sweep will ask again anyway, and reloading it would only
                 // hide a real price behind a minute of retry.
-                false);
+                false,
+                // The interval the item earned, which is the one thing here that
+                // took days of readings to work out. Absent in a file written
+                // before intervals were earned, and absent for an item that has
+                // only ever been read once — both fall back to the guess from
+                // volume, which costs one interval to correct.
+                node.hasNonNull("ttl")
+                        ? Duration.ofSeconds(node.get("ttl").asLong())
+                        : null);
     }
 
     /** Never throws: losing a save costs the next start its warm-up, nothing more. */
@@ -139,6 +148,7 @@ public class PriceCacheStore {
         // Epoch millis rather than an ISO string: no dependency on whether the
         // JavaTimeModule happens to be registered, and one less way to fail.
         json.writeNumberField("at", cached.at().toEpochMilli());
+        if (cached.earnedTtl() != null) json.writeNumberField("ttl", cached.earnedTtl().toSeconds());
 
         json.writeArrayFieldStart("history");
         for (PricePoint point : cached.history()) {

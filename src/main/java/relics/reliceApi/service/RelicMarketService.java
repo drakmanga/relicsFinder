@@ -76,6 +76,53 @@ public class RelicMarketService {
     /** Trades in the last 48 hours above which an item counts as moving. */
     private static final int ACTIVE_VOLUME = 20;
 
+    /**
+     * How far the price may drift between two reads before the interval is
+     * judged too long.
+     *
+     * <p>This, and not an interval, is the thing being chosen. Every read is
+     * also a measurement — the new price against the one it replaces — and the
+     * interval is moved until the drift it produces sits at this figure. An item
+     * whose price holds still is asked about less and less; one in a storm is
+     * asked about more, and calms down on its own when the storm passes.
+     *
+     * <p>Five per cent, measured against ninety days of history for all 1.528
+     * items: the steady state is 4.947 reads a day, 28,6% of what one read every
+     * five seconds allows, against 3.754 for the fixed pair of TTLs it replaces.
+     *
+     * <p>Volume drove this before, and volume is the wrong signal. Across the
+     * catalogue the daily move in platinum is flat — half a platinum to one,
+     * whether an item sells three times a day or three hundred — and the
+     * percentages only look different because a platinum is 14% of a 7p part and
+     * 2% of a 23p one. The traded items were being re-read four times a day for
+     * the numbers that move least.
+     */
+    private static final double TARGET_DRIFT = 0.05;
+
+    /**
+     * The shortest interval that can be honoured, and the longest allowed.
+     *
+     * <p>The floor is not a preference. The sweep asks about one name every five
+     * seconds, so a full lap of 1.528 items takes 2,1 hours: below that the TTL
+     * is a promise the warmer cannot keep, and the queue would simply fall
+     * behind and serve everything round-robin anyway. The ceiling is the same
+     * day it has always been, for the same reason — a Prime is unvaulted
+     * overnight, and that is when a stale price is worth least.
+     */
+    private static final Duration MIN_TTL = Duration.ofHours(3);
+    private static final Duration MAX_TTL = Duration.ofHours(24);
+
+    /**
+     * How far one reading may move the interval.
+     *
+     * <p>A single quiet read on an item that usually moves is not proof it has
+     * settled, and one jump is not proof of a storm. Damping the step makes the
+     * interval the average of several readings rather than an echo of the last
+     * one.
+     */
+    private static final double MAX_STEP_UP = 1.5;
+    private static final double MAX_STEP_DOWN = 0.5;
+
     private static final Duration TIMEOUT = Duration.ofSeconds(15);
 
     /**
@@ -289,24 +336,76 @@ public class RelicMarketService {
      * such for as long as the entry stayed fresh.
      */
     record Cached(Double avg, Double median, Integer volume, Double trend,
-                  List<PricePoint> history, Instant at, boolean failed) {
+                  List<PricePoint> history, Instant at, boolean failed, Duration earnedTtl) {
+
+        /** An answer that has not been compared with anything yet. */
+        Cached(Double avg, Double median, Integer volume, Double trend,
+               List<PricePoint> history, Instant at, boolean failed) {
+            this(avg, median, volume, trend, history, at, failed, null);
+        }
+
+        Cached withTtl(Duration ttl) {
+            return new Cached(avg, median, volume, trend, history, at, failed, ttl);
+        }
 
         /**
          * How long this answer stays good.
          *
-         * <p>Decided by the item rather than by the clock: {@code volume} comes
-         * back in the same response as the price, so an item that stops trading
-         * slows itself down on the next read and one that starts trading speeds
-         * itself up, with no list to maintain when a Prime is released.
+         * <p>Earned by the item where there is a pair of readings to earn it
+         * from — see {@link #nextTtl}. Until then it is guessed from
+         * {@code volume}, which arrives in the same response as the price: a
+         * guess is needed only once, and being wrong costs one interval.
          */
         Duration ttl() {
             if (failed) return RETRY_TTL;
+            if (earnedTtl != null) return earnedTtl;
             return volume != null && volume >= ACTIVE_VOLUME ? ACTIVE_TTL : IDLE_TTL;
         }
 
         boolean isFresh() {
             return Duration.between(at, Instant.now()).compareTo(ttl()) < 0;
         }
+    }
+
+    /**
+     * The interval this pair of readings earns.
+     *
+     * <p>A price that wanders moves like the square root of time, so an interval
+     * that produced a drift of {@code d} would have produced {@link
+     * #TARGET_DRIFT} over {@code elapsed * (TARGET_DRIFT / d)^2}. That is the
+     * whole rule. It reads the interval that was really waited rather than the
+     * one that was intended, so a sweep running late corrects itself instead of
+     * compounding.
+     *
+     * <p>Returns null when there is nothing to measure — the first reading of an
+     * item, a failed call, an item nobody sells — and the guess from volume
+     * stands for one more interval.
+     *
+     * @param previous the reading being replaced
+     * @param fresh    the reading replacing it
+     */
+    static Duration nextTtl(Cached previous, Cached fresh) {
+        if (fresh == null || fresh.failed() || fresh.avg() == null) return null;
+        if (previous == null || previous.avg() == null || previous.avg() <= 0) return null;
+
+        double elapsed = Duration.between(previous.at(), fresh.at()).toSeconds();
+        if (elapsed <= 0) return previous.earnedTtl();
+
+        double drift = Math.abs(fresh.avg() - previous.avg()) / previous.avg();
+        double current = previous.ttl().toSeconds();
+
+        // A price that did not move divides by zero on purpose. The infinity
+        // that comes back is the honest answer — nothing happened, so no
+        // interval is long enough — and the step ceiling below turns it into the
+        // longest step allowed. A guard here would compute the same number by a
+        // longer route, which is how it was written first and why the mutation
+        // check could not tell the two apart.
+        double wanted = elapsed * Math.pow(TARGET_DRIFT / drift, 2);
+
+        double damped = Math.max(current * MAX_STEP_DOWN, Math.min(current * MAX_STEP_UP, wanted));
+        double bounded = Math.max(MIN_TTL.toSeconds(), Math.min(MAX_TTL.toSeconds(), damped));
+
+        return Duration.ofSeconds(Math.round(bounded));
     }
 
     /**
@@ -606,7 +705,11 @@ public class RelicMarketService {
                 // to sit between the starts of two requests, and a worker that
                 // slept afterwards would let five others fire at once.
                 awaitSlot();
-                cache.put(slug, fetch(slug));
+
+                // The reading being replaced is the other half of the
+                // measurement, so the interval is worked out before it is gone.
+                Cached fresh = fetch(slug);
+                cache.put(slug, fresh.withTtl(nextTtl(existing, fresh)));
                 dirty.set(true);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

@@ -8,6 +8,7 @@ import relics.reliceApi.service.RelicMarketService.Cached;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,33 @@ class PriceCacheStoreTest {
         assertThat(last.getMinPrice()).isEqualTo(22.0);
         assertThat(last.getMaxPrice()).isEqualTo(35.0);
         assertThat(last.getVolume()).isEqualTo(47);
+    }
+
+    @Test
+    void carriesTheEarnedIntervalThroughARoundTrip() {
+        // The one thing in the file that took days of readings to work out.
+        // Losing it on a restart would put every item back on the guess from
+        // volume and throw away everything the feedback had learnt.
+        PriceCacheStore store = store();
+        Cached original = priced(28.5, 47).withTtl(Duration.ofHours(11));
+
+        store.save(Map.of("ash_prime_systems", original));
+
+        assertThat(store.load().get("ash_prime_systems").earnedTtl())
+                .isEqualTo(Duration.ofHours(11));
+    }
+
+    @Test
+    void readsAFileWrittenBeforeIntervalsWereEarned() throws Exception {
+        // Three megabytes of cache exist on disk with no ttl field in them. They
+        // must load, and fall back to the guess from volume for one interval.
+        Files.writeString(temp.resolve("price-cache.json"),
+                "{\"ash_prime_systems\":{\"avg\":28.5,\"volume\":47,\"at\":1760000000000}}");
+
+        Cached loaded = store().load().get("ash_prime_systems");
+
+        assertThat(loaded.earnedTtl()).isNull();
+        assertThat(loaded.ttl()).isEqualTo(Duration.ofHours(6));
     }
 
     @Test
