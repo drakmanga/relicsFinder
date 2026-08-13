@@ -35,10 +35,7 @@ const NOTHING: PriceProgress = { total: 0, priced: 0, filling: false };
 /** Progress over a batch of part prices. */
 export function itemPriceProgress(prices: PriceMap | undefined, pending: boolean): PriceProgress {
   if (!prices) return { ...NOTHING, filling: pending };
-  return measure(
-    [...prices.values()].map((price) => price.averagePrice),
-    pending,
-  );
+  return measure([...prices.values()].map((price) => price.averagePrice));
 }
 
 /** Progress over a batch of whole-relic prices. */
@@ -47,16 +44,19 @@ export function relicPriceProgress(
   pending: boolean,
 ): PriceProgress {
   if (!prices) return { ...NOTHING, filling: pending };
-  return measure([...prices.values()], pending);
+  return measure([...prices.values()]);
 }
 
-function measure(values: (number | null)[], pending: boolean): PriceProgress {
+// The request's own pending state is not consulted here, and cannot be: a batch
+// with data in it is a batch that has answered, and the two callers above deal
+// with the first fetch — the only case where "pending" says anything this
+// function could not work out for itself — before they ever get here. Reading it
+// again would be a condition no execution can reach, which is a condition no
+// test can defend.
+function measure(values: (number | null)[]): PriceProgress {
   return {
     total: values.length,
     priced: values.filter((value) => value !== null).length,
-    // The first fetch counts as filling even though there is nothing to count
-    // yet: an empty batch in flight is the one case where no data and no
-    // progress mean "wait", not "there is nothing to wait for".
-    filling: pending || stillFilling(values),
+    filling: stillFilling(values),
   };
 }
