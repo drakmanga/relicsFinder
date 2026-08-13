@@ -39,8 +39,17 @@ interface Props {
   wishlistEntries: WishlistEntry[];
   endoOffers: EndoOffer[] | undefined;
   prices: PriceMap | undefined;
-  pricesPending: boolean;
+  /**
+   * Whether more part prices are still expected.
+   *
+   * Not the request's own pending state: the batch answers at once and fills in
+   * afterwards, so a cell with no price has to know whether the queue behind it
+   * is still working before it can say "not listed". See lib/priceProgress.
+   */
+  pricesFilling: boolean;
   relicPrices: RelicPriceMap | undefined;
+  /** The same, for the whole-relic batch, which fills at its own speed. */
+  relicPricesFilling: boolean;
   unvaulted: Set<string> | undefined;
   term: string;
   /** Every filter currently narrowing the list, in words, for the empty state. */
@@ -68,6 +77,8 @@ interface Props {
   allSets: PrimeSet[];
   /** What each set sells for assembled, by set name. */
   setPrices: Map<string, { price: number | null; slug: string | null }>;
+  /** Whether that third batch is still landing. See lib/priceProgress. */
+  setPricesFilling: boolean;
   /** Kinds of gear the Sets view is showing. Empty means all of them. */
   setCategories: Set<SetCategory>;
   onSetCategories: (next: Set<SetCategory>) => void;
@@ -98,8 +109,9 @@ export function ResultsPane({
   wishlistEntries,
   endoOffers,
   prices,
-  pricesPending,
+  pricesFilling,
   relicPrices,
+  relicPricesFilling,
   unvaulted,
   term,
   activeFilters,
@@ -120,6 +132,7 @@ export function ResultsPane({
   onPickSet,
   allSets,
   setPrices,
+  setPricesFilling,
   setCategories,
   onSetCategories,
   setStatus,
@@ -181,12 +194,13 @@ export function ResultsPane({
         <div className="rf-sets-body">
           <SetsTable
             sets={sets}
-            pricesPending={pricesPending}
+            pricesFilling={pricesFilling}
             selected={selectedSet}
             onSelect={onSelectSet}
             onToggleOwned={onSetOwnedAll}
             quantityOf={quantityOf}
             setPrices={setPrices}
+            setPricesFilling={setPricesFilling}
           />
         </div>
       </div>
@@ -198,7 +212,9 @@ export function ResultsPane({
       <WishlistTable
         entries={wishlistEntries}
         prices={prices}
+        pricesFilling={pricesFilling}
         relicPrices={relicPrices}
+        relicPricesFilling={relicPricesFilling}
         onInfo={onInfo}
         onPickItem={onPickItem}
         onPickRelic={onPickRelic}
@@ -208,6 +224,7 @@ export function ResultsPane({
         // numbers whatever the Sets view happens to be showing.
         sets={new Map(allSets.map((set) => [set.setName, set]))}
         setPrices={setPrices}
+        setPricesFilling={setPricesFilling}
         onPickSet={onPickSet}
         section={wishlistSection}
         onSection={onWishlistSection}
@@ -249,6 +266,7 @@ export function ResultsPane({
       <ItemsTable
         rows={itemRows}
         prices={prices}
+        pricesFilling={pricesFilling}
         quantityOf={quantityOf}
         selected={selectedItem}
         onSelect={onSelectItem}
@@ -263,8 +281,9 @@ export function ResultsPane({
     <ResultsTable
       rows={relicRows}
       prices={prices}
-      pricesPending={pricesPending}
+      pricesFilling={pricesFilling}
       relicPrices={relicPrices}
+      relicPricesFilling={relicPricesFilling}
       term={term}
       unvaulted={unvaulted}
       selected={selectedRelic}

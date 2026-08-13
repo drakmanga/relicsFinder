@@ -10,6 +10,7 @@ import {
 } from "../api/queries";
 import { useWishlist } from "./wishlist";
 import { useOwned } from "./owned";
+import { itemPriceProgress, relicPriceProgress } from "./priceProgress";
 import { buildSets } from "./setCompletion";
 import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./items";
 import { filterByCategory, filterByStatus, type SetStatus } from "./setCategories";
@@ -224,9 +225,12 @@ export function useCatalogue({
   /**
    * What each relic itself sells for.
    *
-   * Asked for the rows the filters left, not the whole catalogue: the batch is
-   * a server-side queue, and asking for six hundred relics when thirty are
-   * being looked at puts the ones on screen behind the rest.
+   * The whole catalogue, not the rows the filters left — the same reason as the
+   * part prices above: sorting a column is only correct when every row has a
+   * number in it, and a request that narrows with the search term would be a new
+   * query on every keystroke. Which of those six hundred to price first is not
+   * asked here at all; the table tells the server which rows are on screen and
+   * the server puts those at the head of its queue. See lib/usePricePriority.
    */
   const relicPrices = useRelicPrices(
     // The Sets view prices relics too — the farming route is quoted in the
@@ -282,6 +286,11 @@ export function useCatalogue({
   const setItemNames = useMemo(() => sets.map((set) => `${set.setName} Set`), [sets]);
   const setPrices = useItemPrices(setItemNames);
 
+  const setPriceProgress = useMemo(
+    () => itemPriceProgress(setPrices.data, setPrices.isLoading),
+    [setPrices.data, setPrices.isLoading],
+  );
+
   const setPriceBySet = useMemo(
     () =>
       new Map(
@@ -334,6 +343,30 @@ export function useCatalogue({
    * points at which of the six it is, so the answer does not stop at "one of
    * these".
    */
+  /**
+   * How much of each price batch has landed.
+   *
+   * Derived from the maps the views already hold rather than from a second
+   * query, so it costs one pass over data that only changes when a poll comes
+   * back. The tables read `filling` to choose between a skeleton and "not
+   * listed"; the status line reads the counts.
+   *
+   * `isLoading`, not `isPending`. A query with nothing to ask for is disabled,
+   * and a disabled query is pending forever — the relic batch on the Ducats
+   * view, the set batch on any view but two. Reading `isPending` there would
+   * leave the status line saying "fetching prices" about a request that was
+   * never made. `isLoading` is `isPending` and actually in flight.
+   */
+  const priceProgress = useMemo(
+    () => itemPriceProgress(prices.data, prices.isLoading),
+    [prices.data, prices.isLoading],
+  );
+
+  const relicPriceProgressValue = useMemo(
+    () => relicPriceProgress(relicPrices.data, relicPrices.isLoading),
+    [relicPrices.data, relicPrices.isLoading],
+  );
+
   const searchedItem = useMemo(() => {
     const term = filters.term.trim().toLowerCase();
     if (!term || !selectedRow) return null;
@@ -351,6 +384,14 @@ export function useCatalogue({
     endoOffers,
     prices,
     relicPrices,
+    /** How much of the part-price batch has arrived, and whether more is coming. */
+    priceProgress,
+    /** The same, for the whole-relic prices. */
+    relicPriceProgress: relicPriceProgressValue,
+    /** And for the assembled-set prices, which are a third batch of their own. */
+    setPriceProgress,
+    /** The set-price request itself, for the status line's retry. */
+    setPricesQuery: setPrices,
     selectedRow,
     selectedStates,
     selectedSites,

@@ -12,6 +12,7 @@ import {
   ExternalLinkIcon,
   InfoIcon,
   RarityTag,
+  Skeleton,
   Table,
   TableCell,
   TableCols,
@@ -37,6 +38,8 @@ const OVERSCAN = 12;
 interface Props {
   rows: PrimeItemRow[];
   prices: PriceMap | undefined;
+  /** Whether more prices are still expected. See lib/priceProgress. */
+  pricesFilling: boolean;
   quantityOf: (itemName: string) => number;
   onSelect: (itemName: string) => void;
   selected: string | null;
@@ -51,6 +54,7 @@ interface Props {
 export function ItemsTable({
   rows,
   prices,
+  pricesFilling,
   quantityOf,
   onSelect,
   selected,
@@ -194,8 +198,16 @@ export function ItemsTable({
                     <span className="rf-ducat">{meta.ducats}</span>
                   )}
                 </TableCell>
+                {/* An em dash here is a claim that nobody sells the part.
+                    While the batch is still filling it is only a claim that the
+                    server has not got to it yet, and the two must not look the
+                    same. */}
                 <TableCell align="right" numeric>
-                  <PlatPrice value={priceOf(prices, row.itemName)} />
+                  {priceOf(prices, row.itemName) === null && pricesFilling ? (
+                    <Skeleton width={44} height={14} />
+                  ) : (
+                    <PlatPrice value={priceOf(prices, row.itemName)} />
+                  )}
                 </TableCell>
                 {/* One click per part, from the list itself. Ticking a part
                     used to mean opening its set's panel and finding the piece

@@ -45,9 +45,12 @@ const OVERSCAN = 12;
 interface Props {
   rows: RelicRow[];
   prices: PriceMap | undefined;
-  pricesPending: boolean;
+  /** Whether part prices are still landing. See lib/priceProgress. */
+  pricesFilling: boolean;
   /** What each relic itself sells for. Undefined while the batch is in flight. */
   relicPrices: RelicPriceMap | undefined;
+  /** Whether relic prices are still landing. Its own batch, its own pace. */
+  relicPricesFilling: boolean;
   /**
    * What the user typed, so a row can show why it is in the list.
    *
@@ -78,8 +81,9 @@ interface Props {
 export function ResultsTable({
   rows,
   prices,
-  pricesPending,
+  pricesFilling,
   relicPrices,
+  relicPricesFilling,
   term,
   unvaulted,
   selected,
@@ -288,8 +292,16 @@ export function ResultsTable({
                     <span className="rf-text-caption rf-fg-muted">Vaulted</span>
                   )}
                 </TableCell>
+                {/*
+                  An expected value of zero means none of the six drops has a
+                  price yet, which is a wait while the batch is filling and a
+                  fact about the market once it has settled. The test used to be
+                  the request's pending flag, which is false from the first
+                  response onwards — so every row said "not listed" for the
+                  minutes the server was still working through its queue.
+                */}
                 <TableCell align="right" numeric>
-                  {pricesPending && !prices ? (
+                  {expected === 0 && pricesFilling ? (
                     <Skeleton width={44} height={14} />
                   ) : expected === 0 ? (
                     <Unlisted />
@@ -298,14 +310,14 @@ export function ResultsTable({
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
-                  {pricesPending && !prices ? (
+                  {best === null && pricesFilling ? (
                     <Skeleton width={44} height={14} />
                   ) : (
                     <PlatPrice value={best} />
                   )}
                 </TableCell>
                 <TableCell align="right" numeric>
-                  {relicPrices === undefined ? (
+                  {cost === null && relicPricesFilling ? (
                     <Skeleton width={44} height={14} />
                   ) : (
                     <PlatPrice value={cost} />

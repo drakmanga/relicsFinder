@@ -24,7 +24,8 @@ interface Props {
   view: PaneView;
   relics: Relic[];
   prices: PriceMap | undefined;
-  pricesPending: boolean;
+  /** Whether more prices are still expected. See lib/priceProgress. */
+  pricesFilling: boolean;
 
   relicRow: RelicRow | null;
   /** What the relic on show sells for, sealed. */
@@ -105,7 +106,7 @@ function Panel({
   view,
   relics,
   prices,
-  pricesPending,
+  pricesFilling,
   relicRow,
   relicPrice,
   relicStates,
@@ -130,7 +131,7 @@ function Panel({
     return (
       <SetDetailPanel
         set={set}
-        pricesPending={pricesPending}
+        pricesFilling={pricesFilling}
         refinement={setRefinement}
         onRefinement={onSetRefinement}
         onToggle={onToggleOwned}

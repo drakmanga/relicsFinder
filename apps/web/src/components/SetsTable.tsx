@@ -34,7 +34,10 @@ interface Props {
    * finding the button inside.
    */
   onToggleOwned: (itemNames: string[], owned: boolean) => void;
-  pricesPending: boolean;
+  /** Whether more part prices are still expected. See lib/priceProgress. */
+  pricesFilling: boolean;
+  /** Whether the assembled-set prices are still landing. A batch of its own. */
+  setPricesFilling: boolean;
   selected: string | null;
   onSelect: (setName: string) => void;
 }
@@ -49,7 +52,8 @@ interface Props {
  */
 export function SetsTable({
   sets,
-  pricesPending,
+  pricesFilling,
+  setPricesFilling,
   selected,
   onSelect,
   onToggleOwned,
@@ -199,7 +203,7 @@ export function SetsTable({
                 <TableCell align="right" numeric>
                   {done ? (
                     <Unlisted />
-                  ) : pricesPending ? (
+                  ) : set.missingCost === 0 && pricesFilling ? (
                     <Skeleton width={44} height={14} />
                   ) : (
                     <span title={set.costIncomplete ? "Some pieces have no listing" : undefined}>
@@ -211,7 +215,11 @@ export function SetsTable({
                 </TableCell>
 
                 <TableCell align="right" numeric>
-                  <PlatPrice value={setPrices.get(set.setName)?.price ?? null} />
+                  {setPrices.get(set.setName)?.price == null && setPricesFilling ? (
+                    <Skeleton width={44} height={14} />
+                  ) : (
+                    <PlatPrice value={setPrices.get(set.setName)?.price ?? null} />
+                  )}
                 </TableCell>
 
                 {/* A set is a thing someone plans to finish, so it belongs on

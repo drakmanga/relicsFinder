@@ -16,8 +16,12 @@ import type { EndoOffer, PriceMap, RelicPriceMap, WishlistKind } from "../api/ty
 interface Props {
   entries: WishlistEntry[];
   prices: PriceMap | undefined;
+  /** Whether more part prices are still expected. See lib/priceProgress. */
+  pricesFilling: boolean;
   /** What a relic sells for; the item price map does not carry relics. */
   relicPrices: RelicPriceMap | undefined;
+  /** Whether the relic batch is still landing. */
+  relicPricesFilling: boolean;
   onInfo: (itemName: string, kind?: WishlistKind) => void;
   /** Opens a part in Prime Items, a relic in Relics. A line is a way back to
       the thing it names, not just a row of numbers about it. */
@@ -35,6 +39,8 @@ interface Props {
   sets: Map<string, PrimeSet>;
   /** What each set sells for assembled, by set name. */
   setPrices: Map<string, { price: number | null; slug: string | null }>;
+  /** Whether the assembled-set prices are still landing. */
+  setPricesFilling: boolean;
   /** Opens a set line's panel over the wishlist. */
   onPickSet: (setName: string) => void;
   /**
@@ -104,13 +110,16 @@ const KIND_NOTE: Record<Kind, { label: string; short: string; long: string }> = 
 export function WishlistTable({
   entries,
   prices,
+  pricesFilling,
   relicPrices,
+  relicPricesFilling,
   onInfo,
   onPickItem,
   onPickRelic,
   onShowEndo,
   sets,
   setPrices,
+  setPricesFilling,
   onPickSet,
   endoOffers,
   section: kind,
@@ -282,18 +291,36 @@ export function WishlistTable({
             description="Lines added from the other views land here."
           />
         ) : kind === "part" ? (
-          <PartRows entries={parts} prices={prices} onInfo={onInfo} onPick={onPickItem} />
+          <PartRows
+            entries={parts}
+            prices={prices}
+            pricesFilling={pricesFilling}
+            onInfo={onInfo}
+            onPick={onPickItem}
+          />
         ) : kind === "set" ? (
           <WishlistSetRows
             entries={setLines}
             sets={sets}
             setPrices={setPrices}
+            setPricesFilling={setPricesFilling}
             onPick={onPickSet}
           />
         ) : kind === "relic" ? (
-          <RelicLineRows entries={relics} relicPrices={relicPrices} onPick={onPickRelic} />
+          <RelicLineRows
+            entries={relics}
+            relicPrices={relicPrices}
+            relicPricesFilling={relicPricesFilling}
+            onPick={onPickRelic}
+          />
         ) : kind === "ducat" ? (
-          <DucatRows entries={ducats} prices={prices} onInfo={onInfo} onPick={onPickItem} />
+          <DucatRows
+            entries={ducats}
+            prices={prices}
+            pricesFilling={pricesFilling}
+            onInfo={onInfo}
+            onPick={onPickItem}
+          />
         ) : (
           <EndoRows entries={endo} offers={endoOffers} onPick={onShowEndo} />
         )}

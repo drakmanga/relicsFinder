@@ -209,6 +209,72 @@ body {
   border-bottom: var(--rf-hairline) solid var(--rf-border-default);
 }
 
+/* ---- Price status band ----
+   Only on screen while a price batch is filling, or after one has failed. The
+   band is a single line so its arrival and departure cost the table one row of
+   height, not a reflow of the layout. */
+
+.rf-pricestatus {
+  flex: none;
+  background: var(--rf-surface-2);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
+}
+
+.rf-pricestatus-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-3);
+  padding-block: var(--rf-space-2);
+}
+
+/* `<progress>` has a default appearance in every engine and no two agree, so
+   the element is reset and both of its pseudo-elements are painted by hand.
+   The width is what is left after the sentence, capped: a progress bar as wide
+   as a 1440px page reads as decoration rather than as a measurement. The 3px
+   height is protected geometry in the sense of --rf-hairline — a bar is a rule
+   thick enough to carry a colour, and a spacing token would tie it to the
+   layout scale it has nothing to do with. */
+.rf-pricestatus-bar {
+  flex: 1;
+  max-width: 240px;
+  height: 3px;
+  appearance: none;
+  border: 0;
+  background: var(--rf-surface-3);
+}
+
+.rf-pricestatus-bar::-webkit-progress-bar {
+  background: var(--rf-surface-3);
+}
+
+/* The value jumps once every fifteen seconds, when a poll comes back. Sliding
+   it is the one place in the app where the motion is the information: a bar
+   that teleports says nothing about whether it is still moving. */
+.rf-pricestatus-bar::-webkit-progress-value {
+  background: var(--rf-gold-600);
+  transition: width var(--rf-dur-base) var(--rf-ease-standard);
+}
+
+.rf-pricestatus-bar::-moz-progress-bar {
+  background: var(--rf-gold-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-pricestatus-bar::-webkit-progress-value {
+    transition: none;
+  }
+}
+
+/* Failure is not the same news as waiting, and the band says so before it is
+   read: the hairline under it goes red. */
+.rf-pricestatus-error {
+  border-bottom-color: var(--rf-border-danger);
+}
+
+.rf-pricestatus-error .rf-pricestatus-inner {
+  color: var(--rf-danger);
+}
+
 /* ---- Results band ---- */
 
 /* The band takes surface-2 — the same ground as the topbar and the filter

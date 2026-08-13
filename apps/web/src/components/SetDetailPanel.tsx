@@ -14,7 +14,8 @@ import type { Refinement } from "../api/types";
 
 interface Props {
   set: PrimeSet | null;
-  pricesPending: boolean;
+  /** Whether more prices are still expected. See lib/priceProgress. */
+  pricesFilling: boolean;
   refinement: Refinement;
   onRefinement: (next: Refinement) => void;
   /** Ticks or unticks one piece. */
@@ -39,7 +40,7 @@ interface Props {
  */
 export function SetDetailPanel({
   set,
-  pricesPending,
+  pricesFilling,
   refinement,
   onRefinement,
   onToggle,
@@ -229,7 +230,7 @@ export function SetDetailPanel({
                 key={part.itemName}
                 part={part}
                 setName={set.setName}
-                pricesPending={pricesPending}
+                pricesFilling={pricesFilling}
                 onToggle={onToggle}
                 onPickItem={onPickItem}
                 onPickRelic={onPickRelic}
