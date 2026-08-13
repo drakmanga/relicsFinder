@@ -19,6 +19,7 @@ import {
   ExternalLinkIcon,
   InfoIcon,
   PriceDelta,
+  Skeleton,
   Table,
   TableCell,
   TableCols,
@@ -39,6 +40,8 @@ import type { EndoOffer, PriceMap, WishlistKind } from "../api/types";
 interface RowsProps {
   entries: WishlistEntry[];
   prices: PriceMap | undefined;
+  /** Whether more prices are still expected. See lib/priceProgress. */
+  pricesFilling: boolean;
   /** Opens the line's dialog, on the same list the line belongs to. */
   onInfo: (itemName: string, kind?: WishlistKind) => void;
   /**
@@ -103,7 +106,7 @@ function LineActions({
   );
 }
 
-export function PartRows({ entries, prices, onInfo, onPick }: RowsProps) {
+export function PartRows({ entries, prices, pricesFilling, onInfo, onPick }: RowsProps) {
   return (
     <Table
       stickyFirstColumn
@@ -156,14 +159,24 @@ export function PartRows({ entries, prices, onInfo, onPick }: RowsProps) {
                   {entry.relicFullName}
                 </span>
               </TableCell>
+              {/* Waiting and unlisted are different answers and used to look
+                  the same here. See lib/priceProgress. */}
               <TableCell align="right" numeric>
-                <PlatPrice value={unit} />
+                {unit === null && pricesFilling ? (
+                  <Skeleton width={44} height={14} />
+                ) : (
+                  <PlatPrice value={unit} />
+                )}
               </TableCell>
               <TableCell align="right" numeric>
                 {meta?.trend == null ? <Unlisted /> : <PriceDelta value={Math.round(meta.trend)} />}
               </TableCell>
               <TableCell align="right" numeric>
-                <PlatPrice value={unit === null ? null : Math.round(unit * entry.qty)} />
+                {unit === null && pricesFilling ? (
+                  <Skeleton width={44} height={14} />
+                ) : (
+                  <PlatPrice value={unit === null ? null : Math.round(unit * entry.qty)} />
+                )}
               </TableCell>
               <LineActions entry={entry} onInfo={onInfo} />
             </TableRow>

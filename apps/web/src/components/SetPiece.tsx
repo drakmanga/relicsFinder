@@ -17,14 +17,15 @@ import type { SetPart } from "../lib/setCompletion";
 export function Piece({
   part,
   setName,
-  pricesPending,
+  pricesFilling,
   onToggle,
   onPickItem,
   onPickRelic,
 }: {
   part: SetPart;
   setName: string;
-  pricesPending: boolean;
+  /** Whether more prices are still expected. See lib/priceProgress. */
+  pricesFilling: boolean;
   onToggle: (itemName: string) => void;
   onPickItem: (itemName: string) => void;
   onPickRelic: (relicFullName: string) => void;
@@ -65,7 +66,7 @@ export function Piece({
           {part.itemName.replace(`${setName} `, "")}
         </button>
 
-        {pricesPending && part.price === null ? (
+        {part.price === null && pricesFilling ? (
           <Skeleton width={36} height={13} />
         ) : (
           <PlatPrice value={part.price} />

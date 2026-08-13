@@ -21,6 +21,8 @@ interface Props {
   entries: WishlistEntry[];
   /** What a relic itself sells for. Undefined while the batch is in flight. */
   relicPrices: RelicPriceMap | undefined;
+  /** Whether more of them are still expected. See lib/priceProgress. */
+  relicPricesFilling: boolean;
   /** Opens the relic in the Relics view, with its contents and drop sites. */
   onPick: (relicFullName: string) => void;
 }
@@ -34,7 +36,7 @@ interface Props {
  * is wanted in is part of the question: an Intact and a Radiant Axi A1 are the
  * same purchase but not the same plan.
  */
-export function RelicLineRows({ entries, relicPrices, onPick }: Props) {
+export function RelicLineRows({ entries, relicPrices, relicPricesFilling, onPick }: Props) {
   return (
     <Table
       stickyFirstColumn
@@ -87,7 +89,7 @@ export function RelicLineRows({ entries, relicPrices, onPick }: Props) {
               <TableCell align="right" numeric>
                 {/* A price that has not arrived is not a price of nothing: the
                     batch is a server-side queue, so the wait is visible. */}
-                {relicPrices === undefined ? (
+                {cost === null && relicPricesFilling ? (
                   <Skeleton width={44} height={14} />
                 ) : (
                   <PlatPrice value={cost} />

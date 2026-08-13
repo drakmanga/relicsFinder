@@ -1,6 +1,7 @@
 import {
   Button,
   ExternalLinkIcon,
+  Skeleton,
   Table,
   TableCell,
   TableCols,
@@ -21,6 +22,8 @@ interface Props {
   sets: Map<string, PrimeSet>;
   /** What each set sells for assembled, by set name. */
   setPrices: Map<string, { price: number | null; slug: string | null }>;
+  /** Whether the assembled-set prices are still landing. See lib/priceProgress. */
+  setPricesFilling: boolean;
   /** Opens the set's panel over this list. The view does not change. */
   onPick: (setName: string) => void;
 }
@@ -42,7 +45,7 @@ interface Props {
  * reader is actually planning against — the whole-set price is what someone
  * else's account would pay.
  */
-export function WishlistSetRows({ entries, sets, setPrices, onPick }: Props) {
+export function WishlistSetRows({ entries, sets, setPrices, setPricesFilling, onPick }: Props) {
   return (
     <Table
       stickyFirstColumn
@@ -117,7 +120,11 @@ export function WishlistSetRows({ entries, sets, setPrices, onPick }: Props) {
               </TableCell>
 
               <TableCell align="right" numeric>
-                <PlatPrice value={listing?.price ?? null} />
+                {listing?.price == null && setPricesFilling ? (
+                  <Skeleton width={44} height={14} />
+                ) : (
+                  <PlatPrice value={listing?.price ?? null} />
+                )}
               </TableCell>
 
               <TableCell align="center">

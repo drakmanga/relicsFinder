@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ApiError, api } from "./client";
 import type { RelicPriceMap } from "./types";
 
@@ -28,6 +28,32 @@ export const keys = {
  */
 const STATIC_DATA = { staleTime: 60 * 60_000, gcTime: 2 * 60 * 60_000 };
 const PRICE_DATA = { staleTime: 15 * 60_000, gcTime: 60 * 60_000 };
+
+/**
+ * The share of a price batch that may stay empty and still count as finished.
+ *
+ * Some parts are genuinely untraded: nobody has ever listed a Braton Prime
+ * Blueprint, and waiting for zero missing prices would be waiting forever. Past
+ * this residue the batch is treated as settled — the poll stops, and a row with
+ * no price stops saying "loading" and starts saying "not listed".
+ *
+ * Exported because the tables need the same answer the poll uses. Two thresholds
+ * would mean cells still shimmering after the polling that fills them gave up.
+ */
+export const PRICE_RESIDUE = 0.05;
+
+/**
+ * Whether a batch is still filling in, given what each entry is worth so far.
+ *
+ * `null` is "no price yet", which covers both the queue not having reached it
+ * and the market not having a listing — the two are indistinguishable from here,
+ * which is exactly why the residue exists.
+ */
+export function stillFilling(values: (number | null | undefined)[]): boolean {
+  if (values.length === 0) return false;
+  const missing = values.filter((value) => value === null || value === undefined).length;
+  return missing > values.length * PRICE_RESIDUE;
+}
 
 export function useRelics() {
   return useQuery({
@@ -95,13 +121,15 @@ export function useItemPrices(itemNames: string[]) {
     queryFn: ({ signal }) => api.itemPrices(names, signal),
     enabled: names.length > 0,
     ...PRICE_DATA,
+    // The set of names is part of the key, so adding a wishlist line or opening
+    // the Sets view starts a different query. Without this the prices already on
+    // screen would blank back to skeletons for the length of one round trip,
+    // over a change that only added to the list.
+    placeholderData: keepPreviousData,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return false;
-      const missing = data.filter((p) => p.averagePrice === null).length;
-      // Some parts are genuinely untraded and never fill in, so stop polling
-      // once only a residue is left rather than waiting for zero.
-      return missing > data.length * 0.05 ? 15_000 : false;
+      return stillFilling(data.map((p) => p.averagePrice)) ? 15_000 : false;
     },
     select: (prices) => new Map(prices.map((p) => [p.itemName, p])),
   });
@@ -124,14 +152,16 @@ export function useRelicPrices(relicNames: string[]) {
     queryFn: ({ signal }) => api.relicPrices(names, signal),
     enabled: names.length > 0,
     ...PRICE_DATA,
+    // The wishlist asks for exactly the relics it has lines for, so every line
+    // added or removed is a new key. Keeping the previous answer means the four
+    // prices already there stay put while the fifth is fetched.
+    placeholderData: keepPreviousData,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return false;
       // Relics are queued rather than waited on server-side, so the first
-      // response is mostly nulls and fills in as the warmer works through
-      // them. Some are genuinely never listed, so a residue is the stop.
-      const missing = data.filter((p) => p.averagePrice === null).length;
-      return missing > data.length * 0.05 ? 15_000 : false;
+      // response is mostly nulls and fills in as the warmer works through them.
+      return stillFilling(data.map((p) => p.averagePrice)) ? 15_000 : false;
     },
     select: (prices) => new Map(prices.map((p) => [p.relicName, p.averagePrice])) as RelicPriceMap,
   });

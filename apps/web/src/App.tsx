@@ -11,6 +11,7 @@ import { FilterBar } from "./components/FilterBar";
 import { FilterSummary } from "./components/FilterSummary";
 import { ResultsPane } from "./components/ResultsPane";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
+import { PriceStatus } from "./components/PriceStatus";
 import { RelicInfoDialog } from "./components/RelicInfoDialog";
 import { emptyFilters, type RelicSortColumn } from "./lib/rows";
 import { useCatalogue } from "./lib/useCatalogue";
@@ -61,6 +62,10 @@ export function App() {
     endoOffers,
     prices,
     relicPrices,
+    priceProgress,
+    relicPriceProgress,
+    setPriceProgress,
+    setPricesQuery,
     selectedRow,
     selectedStates,
     selectedSites,
@@ -216,6 +221,26 @@ export function App() {
         </div>
       )}
 
+      {/* Above the results rather than inside them: it speaks for every view
+          that shows a price, including the three that have no search band, and
+          a status line that moved with the tab would be a different line each
+          time. Absent at rest, so the shell is unchanged once prices land. */}
+      <PriceStatus
+        batches={[
+          { progress: priceProgress, isError: prices.isError, refetch: () => prices.refetch() },
+          {
+            progress: relicPriceProgress,
+            isError: relicPrices.isError,
+            refetch: () => relicPrices.refetch(),
+          },
+          {
+            progress: setPriceProgress,
+            isError: setPricesQuery.isError,
+            refetch: () => setPricesQuery.refetch(),
+          },
+        ]}
+      />
+
       {/* One column at every width: the detail panel opens over the table as a
           modal rather than beside it. See DetailPane. */}
       <div className="rf-band rf-resultsband">
@@ -232,8 +257,9 @@ export function App() {
               wishlistEntries={wishlist.entries}
               endoOffers={endoOffers.data}
               prices={prices.data}
-              pricesPending={prices.isPending}
+              pricesFilling={priceProgress.filling}
               relicPrices={relicPrices.data}
+              relicPricesFilling={relicPriceProgress.filling}
               unvaulted={unvaulted.data}
               term={filters.term}
               activeFilters={activeFilters}
@@ -255,6 +281,7 @@ export function App() {
               onPickSet={setSelectedSet}
               allSets={allSets}
               setPrices={setPriceBySet}
+              setPricesFilling={setPriceProgress.filling}
               setCategories={setCategories}
               onSetCategories={setSetCategories}
               setStatus={setStatus}
@@ -270,7 +297,7 @@ export function App() {
             view={view}
             relics={relics.data ?? []}
             prices={prices.data}
-            pricesPending={prices.isPending}
+            pricesFilling={priceProgress.filling}
             relicRow={selectedRow}
             relicPrice={selectedRow ? relicPrices.data?.get(selectedRow.relicFullName) : undefined}
             relicStates={selectedStates}
