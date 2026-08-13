@@ -18,7 +18,7 @@ const SERVICE = "src/main/java/relics/reliceApi/service";
 const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
-  "RelicMarketSweepTest,PriceCacheStoreTest -DfailIfNoTests=false";
+  "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest -DfailIfNoTests=false";
 
 const MUTANTS = [
   {
@@ -164,6 +164,48 @@ const MUTANTS = [
     file: `${SERVICE}/PriceCacheStore.java`,
     from: "                json.writeStartObject();\n",
     to: "                json.writeStartObject();\n                for (Map.Entry<String, RelicMarketService.Cached> old : load().entrySet()) { json.writeFieldName(old.getKey()); writeEntry(json, old.getValue()); }\n",
+  },
+  {
+    name: "the interval stops scaling with the square root of time",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        double wanted = elapsed * Math.pow(TARGET_DRIFT / drift, 2);",
+    to: "        double wanted = elapsed * (TARGET_DRIFT / drift);",
+  },
+  {
+    name: "one quiet reading is allowed to set the interval on its own",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        double damped = Math.max(current * MAX_STEP_DOWN, Math.min(current * MAX_STEP_UP, wanted));",
+    to: "        double damped = wanted;",
+  },
+  {
+    name: "the interval may drop below what the sweep can honour",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        double bounded = Math.max(MIN_TTL.toSeconds(), Math.min(MAX_TTL.toSeconds(), damped));",
+    to: "        double bounded = Math.min(MAX_TTL.toSeconds(), damped);",
+  },
+  {
+    name: "two readings taken at the same instant reach the arithmetic",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        if (elapsed <= 0) return previous.earnedTtl();",
+    to: "        if (elapsed < 0) return previous.earnedTtl();",
+  },
+  {
+    name: "the drift is judged against the interval intended, not the one waited",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        double elapsed = Duration.between(previous.at(), fresh.at()).toSeconds();",
+    to: "        double elapsed = previous.ttl().toSeconds();",
+  },
+  {
+    name: "an earned interval loses to the guess from volume",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "            if (earnedTtl != null) return earnedTtl;",
+    to: "",
+  },
+  {
+    name: "a failed call keeps the interval it earned while answering",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "            if (failed) return RETRY_TTL;\n            if (earnedTtl != null) return earnedTtl;",
+    to: "            if (earnedTtl != null) return earnedTtl;\n            if (failed) return RETRY_TTL;",
   },
 ];
 
