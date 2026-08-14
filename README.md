@@ -10,11 +10,6 @@ searches: everything you need in one place.
 ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
 ![Warframe](https://img.shields.io/badge/Warframe-0080FF?style=flat&logo=warframe&logoColor=white)
 
-### ⬇️ On Windows, [download the installer](https://github.com/drakmanga/relicsFinder/releases/latest) and double click it
-
-Nothing else has to be installed first. Everything below is for reading about it, or for
-running it another way.
-
 ## ✨ Features
 
 ### 🎯 What it does today
