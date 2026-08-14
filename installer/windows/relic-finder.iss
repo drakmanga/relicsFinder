@@ -9,7 +9,8 @@
 ;   * looks for a Java 25 already on the machine and, if it finds one, offers
 ;     to use it and leave the bundled runtime out of the installation;
 ;   * puts an entry in the Start menu, and a desktop icon if asked;
-;   * offers, when uninstalling, to delete the wishlist and the cached prices.
+;   * closes the application before uninstalling it, and offers to delete the
+;     wishlist and the cached prices.
 ;
 ; Built by installer\windows\build.ps1, which passes the three defines below.
 ; Compiling this file on its own will not work.
@@ -55,8 +56,11 @@ UninstallDisplayName={#AppName}
 
 ; The launcher holds the jar open while it runs, so an install over a running
 ; copy would fail on a locked file. This asks Windows which processes are in
-; the way and offers to close them.
+; the way and offers to close them. The jar is in the filter because the file
+; the JVM keeps open is the jar, not the launcher: the default filter of
+; executables and libraries would miss it.
 CloseApplications=yes
+CloseApplicationsFilter=*.exe,*.dll,*.chm,*.jar
 RestartApplications=no
 
 ; The runtime is a thousand small files, which is what solid compression is
@@ -135,6 +139,13 @@ Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchApp,{#AppName}}"; Flags: no
 ; folder holds nothing else worth keeping. The user's lists are not here — they
 ; are in AppData, and are only removed if asked for, in code below.
 Type: filesandordirs; Name: "{app}\app"
+
+; Every file in here was installed and is logged, so this is a net rather
+; than the means: it catches anything the runtime wrote next to itself, which
+; would otherwise keep the folder alive and produce the "some elements could
+; not be removed" ending with no list of what they were.
+Type: filesandordirs; Name: "{app}\runtime"
+
 Type: dirifempty; Name: "{app}"
 
 [Code]
@@ -390,10 +401,40 @@ end;
   Uninstalling.
   --------------------------------------------------------------------------- }
 
+{ The application sits in the tray, and the ordinary way to remove it — from
+  the installed programs list, without touching the tray first — leaves it
+  running while its own folder is being deleted. It holds the launcher, the
+  runtime's jvm.dll and the jar open; Windows will not delete an open file;
+  and the uninstaller ends on "some elements could not be removed" without
+  ever saying which ones. Closing it first is the whole fix.
+
+  Nothing is lost by ending it this way: the wishlist, the owned parts and the
+  price cache are each written to a temporary file and renamed over the real
+  one, so a copy that stops mid-write leaves the previous version intact. }
+procedure StopRunningApplication;
+var
+  Code: Integer;
+begin
+  if not Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM {#AppExe} /F', '',
+              SW_HIDE, ewWaitUntilTerminated, Code) then
+    exit;
+
+  { Anything other than zero means there was nothing to close. }
+  if Code = 0 then
+    { The process goes before its handles do. }
+    Sleep(1500);
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Data: String;
 begin
+  if CurUninstallStep = usUninstall then
+  begin
+    StopRunningApplication;
+    exit;
+  end;
+
   if CurUninstallStep <> usPostUninstall then
     exit;
 
