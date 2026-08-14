@@ -50,26 +50,29 @@ Then open **http://localhost:5173**.
 
 ## Docker Compose — both services in containers
 
-If you prefer to run everything in Docker, you can use the provided `docker-compose.yaml`:
+`docker-compose.yaml` builds what a server would run, not what a developer edits: the
+backend as a jar on a bare JRE, and the frontend as static files served by nginx.
 
 ```sh
-docker-compose up -d
+docker compose up -d
 ```
 
-This will:
-
-- Start the backend (Spring Boot) on port `8080`.
-- Start the frontend (Vite) on port `5173`, after the backend container has been created —
-  `depends_on` orders the starts, it does not wait for Spring Boot to answer, so the page
+- The backend answers on `8080`, with `./data` mounted so the wishlist survives the
+  container.
+- nginx serves the page on **80** and proxies `/api` to the backend, which is how the
+  browser sees a single origin — the same reason Vite proxies it in development.
+- `depends_on` orders the starts, it does not wait for Spring Boot to answer, so the page
   can show 500s on `/api/...` for the first minute.
 
-Access the application at **http://localhost:5173**.
-
-To stop the services:
+Access the application at **http://localhost**.
 
 ```sh
-docker-compose down
+docker compose down
 ```
+
+Nothing is mounted except `./data`, so a change to the sources needs
+`docker compose up -d --build` to reach the containers. That is what makes it a production
+build and not a second way to develop: for that, the two terminals above.
 
 ## Why two ports
 

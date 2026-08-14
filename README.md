@@ -10,6 +10,11 @@ searches: everything you need in one place.
 ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
 ![Warframe](https://img.shields.io/badge/Warframe-0080FF?style=flat&logo=warframe&logoColor=white)
 
+### ⬇️ On Windows, [download the installer](https://github.com/drakmanga/relicsFinder/releases/latest) and double click it
+
+Nothing else has to be installed first. Everything below is for reading about it, or for
+running it another way.
+
 ## ✨ Features
 
 ### 🎯 What it does today
@@ -66,114 +71,101 @@ The relic catalogue refreshes itself on startup and daily at 04:20. To run it lo
 **[RUNNING.md](RUNNING.md)**; for what is left to do, the [roadmap](#-roadmap)
 below and the [open issues](https://github.com/drakmanga/relicsFinder/issues).
 
-## 📋 Requirements
+## 🚀 Get it running
 
-On Windows, **nothing** — the installer brings its own Java. See
-[option 0](#option-0-windows--the-installer).
+### On Windows: double click, and that is all
 
-To run it from the sources:
+Download **`RelicFinder-x.y.z-setup.exe`** from the
+[latest release](https://github.com/drakmanga/relicsFinder/releases/latest) and run it.
 
-- Java 25 or later
-- Node 20+ and npm (for the frontend)
-- Maven 3.8+ (or the bundled wrapper)
-- An internet connection, for the Warframe Market API
+Nothing has to be on the machine first — no Java, no Node, no Docker. The installer carries
+its own Java 25, and if the machine already has one it offers to use that instead and skip
+the copy. It installs into your own user folder, so Windows does not even ask for
+administrator rights.
 
-Or, in place of the first three, **Docker** with Compose v2 — see
-[option 4](#option-4-docker-compose--backend-and-frontend-together).
+Then **Relic Finder** is in the Start menu, like any other program:
 
-## 🚀 Install and run
+| What you do           | What happens                                                            |
+| --------------------- | ----------------------------------------------------------------------- |
+| Open it from Start    | An icon appears by the clock and the page opens in your browser         |
+| Close the browser tab | It keeps running — click the icon by the clock to open the page again   |
+| Click the icon twice  | Nothing new starts: the same copy just shows you the page again         |
+| Right click that icon | Open, the data folder, the log, and **Quit** — which is how you stop it |
 
-### Option 0: Windows — the installer
+Your wishlist, the parts you own and the cached prices are kept in
+`%LOCALAPPDATA%\RelicFinder\data`. Uninstalling asks before deleting them.
 
-Download `RelicFinder-x.y.z-setup.exe` from the
-[releases](https://github.com/drakmanga/relicsFinder/releases) and run it. It asks nothing
-of the machine beforehand: Java 25 comes with it, and if the machine already has one the
-installer offers to use that instead and skip the copy.
+Two things Windows will do that are not faults:
 
-The installation goes into your own user folder and needs no administrator rights, unless
-you ask for the machine-wide one.
+- **"Windows protected your PC"** on first run. The installer is not signed with a
+  certificate, which costs money per year, so SmartScreen warns about it. _More info_ →
+  _Run anyway_.
+- **`Failed to find JVM`**, if the Java that was on the machine at install time has since
+  been uninstalled. Run the installer again and choose the included runtime.
 
-Afterwards **Relic Finder** is in the Start menu. Opening it puts an icon by the clock and
-opens the page in your browser. Closing the browser tab leaves it running; quitting is the
-**Quit** entry on that icon. Your wishlist, the parts you own and the cached prices live in
-`%LOCALAPPDATA%\RelicFinder\data`, and uninstalling asks before deleting them.
+### Anywhere else: Docker
 
-If a window says `Failed to find JVM`, the Java that was on the machine at install time has
-since been removed: run the installer again and pick the included runtime.
-
-### Option 1: straight from Maven
-
-```bash
-# Clone the repository
-git clone https://github.com/drakmanga/relicsFinder.git
-cd relicsFinder
-
-chmod +x mvnw
-
-# Start the backend
-./mvnw spring-boot:run
-```
-
-### Option 2: build a JAR and run it
-
-```bash
-# Build
-./mvnw clean package
-
-# Or skip the tests for a faster build
-./mvnw clean package -DskipTests
-
-# Find the JAR
-ls target/
-# Output: relicsFinder-0.0.1-SNAPSHOT.jar
-
-# Run it
-java -jar target/relicsFinder-0.0.1-SNAPSHOT.jar
-```
-
-### Option 3: with your own configuration
-
-```bash
-java -jar target/relicsFinder.jar --spring.config.location=file:/path/to/application.properties
-```
-
-✅ The API is served on `http://localhost:8080`. The frontend is a second process — see
-**[RUNNING.md](RUNNING.md)**.
-
-### Option 4: Docker Compose — backend and frontend together
-
-The only option that starts both halves at once, and the only one that needs neither Java
-nor Node installed:
+Two containers, nothing else needed:
 
 ```bash
 docker compose up -d
 ```
 
-The repository is mounted into both containers, so they build from the sources you have
-checked out. The first start is the slow one: the frontend container runs `npm install` and
-builds the design system before Vite comes up, and the backend downloads its Maven
-dependencies.
+Open **http://localhost** — nginx serves the page on port 80 and passes `/api` to the
+backend, which is why there is a single address and nothing to configure. The backend is
+also reachable on `8080` if you want to call the API directly.
 
 ```bash
 docker compose logs -f    # follow both services
 docker compose down       # stop them
 ```
 
-Open **http://localhost:5173** — the API is on `8080`, but the page reaches it through
-Vite's proxy, so there is nothing to configure.
+The first build is the slow one: the images compile the frontend and the jar from the
+sources in this repository. Afterwards only `./data` is shared with the host, and it is
+where the wishlist and the catalogue live.
 
 Two things worth knowing:
 
 - `depends_on` orders the starts, it does not wait for the backend to answer. For the first
   minute the page can show 500s on `/api/...`; reload once Spring Boot has logged
   `Started ReliceApiApplication`.
-- The containers run as root and write into the mounted repository (`target/`, `data/`,
-  the refreshed catalogue). Those files come back owned by root on the host, which a later
-  `./mvnw` or `npm` run outside Docker will trip over. `sudo chown -R "$USER" .` clears it.
-- The catalogue refresh on startup works exactly as it does outside Docker, and the
-  services restart unless stopped, so every restart runs it again. The daily 04:20 pass,
-  though, is 04:20 **in the container**, which is UTC: add `TZ=Europe/Rome` to the
-  backend's `environment` to move it back to your own clock.
+- The catalogue refreshes on startup exactly as it does outside Docker, and the services
+  restart unless stopped, so every restart runs it again. The daily 04:20 pass, though, is
+  04:20 **in the container**, which is UTC: add `TZ=Europe/Rome` to the backend's
+  `environment` to move it back to your own clock.
+
+### From the sources
+
+For working on it. Needs **Java 25+**, **Node 20+** and Maven — the bundled `./mvnw` counts
+— and an internet connection for the Warframe Market API.
+
+```bash
+git clone https://github.com/drakmanga/relicsFinder.git
+cd relicsFinder
+chmod +x mvnw
+
+./mvnw spring-boot:run      # backend on 8080
+npm install && npm run dev  # frontend on 5173, in a second terminal
+```
+
+Then open **http://localhost:5173**. In development the two halves are two processes on two
+ports, and Vite forwards `/api` to the backend; **[RUNNING.md](RUNNING.md)** explains why,
+and how to build the single-process version the installer ships.
+
+To run the jar on its own instead:
+
+```bash
+./mvnw clean package -DskipTests
+java -jar target/relicsApi-0.0.1-SNAPSHOT.jar
+
+# with configuration of your own
+java -jar target/relicsApi-0.0.1-SNAPSHOT.jar \
+  --spring.config.location=file:/path/to/application.properties
+```
+
+The catalogue defaults to a path inside `src/main/resources/`, which only exists when
+running from a checkout. Running the jar somewhere else, pass a real one:
+`--relics.catalogue.path=data/relics.json`.
 
 ## 🎯 How to use it
 
@@ -235,12 +227,13 @@ relicsFinder/
 ├── src/
 │   ├── main/
 │   │   ├── java/              # Spring Boot backend
-│   │   ├── resources/         # config and Postman collection
-│   │   └── webapp/            # static files
-│   └── test/                  # unit and integration tests
+│   │   │   └── .../desktop/   # tray icon and paths, for the Windows build only
+│   │   └── resources/         # the catalogue, config and Postman collection
+│   └── test/                  # unit tests
 ├── apps/web/                  # the interface (React + Vite)
 ├── packages/ui/               # Orokin design system (React library)
 ├── design-system/             # the design specification
+├── installer/windows/         # jpackage and Inno Setup, for the .exe
 ├── data/                      # wishlist and owned parts, written at runtime
 ├── pom.xml                    # Maven dependencies
 └── README.md                  # this file
@@ -274,16 +267,19 @@ only list.
 ```properties
 relics.wishlist.path=data/wishlist.json
 relics.owned.path=data/owned.json
+relics.price-cache.path=data/price-cache.json
 relics.catalogue.path=src/main/resources/relics.json
 ```
 
+The paths are relative to the working directory, which is fine for a checkout and wrong for
+an installed program: the Windows build points all four at
+`%LOCALAPPDATA%\RelicFinder\data` instead, since the folder it was installed into is not
+writable.
+
 ### API keys
 
-Public endpoints are used throughout, but a key raises the rate limits:
-
-```properties
-warframe.market.api.key=your_api_key
-```
+None. Every warframe.market endpoint used here is public and unauthenticated, and there is
+nothing to configure.
 
 ## 🤝 Contributing
 
