@@ -48,6 +48,27 @@ npm run dev
 
 Then open **http://localhost:5173**.
 
+## Docker Compose — both services in containers
+
+If you prefer to run everything in Docker, you can use the provided `docker-compose.yaml`:
+
+```sh
+docker-compose up -d
+```
+
+This will:
+- Start the backend (Spring Boot) on port `8080`.
+- Start the frontend (Vite) on port `5173`.
+- Automatically wait for the backend to be ready before starting the frontend.
+
+Access the application at **http://localhost:5173**.
+
+To stop the services:
+
+```sh
+docker-compose down
+```
+
 ## Why two ports
 
 Vite serves the page on 5173 and forwards anything starting with `/api` to 8080.
