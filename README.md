@@ -73,6 +73,9 @@ below and the [open issues](https://github.com/drakmanga/relicsFinder/issues).
 - Maven 3.8+ (or the bundled wrapper)
 - An internet connection, for the Warframe Market API
 
+Or, in place of the first three, **Docker** with Compose v2 — see
+[option 4](#option-4-docker-compose--backend-and-frontend-together).
+
 ## 🚀 Install and run
 
 ### Option 1: straight from Maven
@@ -113,6 +116,41 @@ java -jar target/relicsFinder.jar --spring.config.location=file:/path/to/applica
 
 ✅ The API is served on `http://localhost:8080`. The frontend is a second process — see
 **[RUNNING.md](RUNNING.md)**.
+
+### Option 4: Docker Compose — backend and frontend together
+
+The only option that starts both halves at once, and the only one that needs neither Java
+nor Node installed:
+
+```bash
+docker compose up -d
+```
+
+The repository is mounted into both containers, so they build from the sources you have
+checked out. The first start is the slow one: the frontend container runs `npm install` and
+builds the design system before Vite comes up, and the backend downloads its Maven
+dependencies.
+
+```bash
+docker compose logs -f    # follow both services
+docker compose down       # stop them
+```
+
+Open **http://localhost:5173** — the API is on `8080`, but the page reaches it through
+Vite's proxy, so there is nothing to configure.
+
+Two things worth knowing:
+
+- `depends_on` orders the starts, it does not wait for the backend to answer. For the first
+  minute the page can show 500s on `/api/...`; reload once Spring Boot has logged
+  `Started ReliceApiApplication`.
+- The containers run as root and write into the mounted repository (`target/`, `data/`,
+  the refreshed catalogue). Those files come back owned by root on the host, which a later
+  `./mvnw` or `npm` run outside Docker will trip over. `sudo chown -R "$USER" .` clears it.
+- The catalogue refresh on startup works exactly as it does outside Docker, and the
+  services restart unless stopped, so every restart runs it again. The daily 04:20 pass,
+  though, is 04:20 **in the container**, which is UTC: add `TZ=Europe/Rome` to the
+  backend's `environment` to move it back to your own clock.
 
 ## 🎯 How to use it
 

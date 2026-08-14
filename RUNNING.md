@@ -59,8 +59,9 @@ docker-compose up -d
 This will:
 
 - Start the backend (Spring Boot) on port `8080`.
-- Start the frontend (Vite) on port `5173`.
-- Automatically wait for the backend to be ready before starting the frontend.
+- Start the frontend (Vite) on port `5173`, after the backend container has been created —
+  `depends_on` orders the starts, it does not wait for Spring Boot to answer, so the page
+  can show 500s on `/api/...` for the first minute.
 
 Access the application at **http://localhost:5173**.
 
