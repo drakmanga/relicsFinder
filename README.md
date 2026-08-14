@@ -68,6 +68,11 @@ below and the [open issues](https://github.com/drakmanga/relicsFinder/issues).
 
 ## 📋 Requirements
 
+On Windows, **nothing** — the installer brings its own Java. See
+[option 0](#option-0-windows--the-installer).
+
+To run it from the sources:
+
 - Java 25 or later
 - Node 20+ and npm (for the frontend)
 - Maven 3.8+ (or the bundled wrapper)
@@ -77,6 +82,24 @@ Or, in place of the first three, **Docker** with Compose v2 — see
 [option 4](#option-4-docker-compose--backend-and-frontend-together).
 
 ## 🚀 Install and run
+
+### Option 0: Windows — the installer
+
+Download `RelicFinder-x.y.z-setup.exe` from the
+[releases](https://github.com/drakmanga/relicsFinder/releases) and run it. It asks nothing
+of the machine beforehand: Java 25 comes with it, and if the machine already has one the
+installer offers to use that instead and skip the copy.
+
+The installation goes into your own user folder and needs no administrator rights, unless
+you ask for the machine-wide one.
+
+Afterwards **Relic Finder** is in the Start menu. Opening it puts an icon by the clock and
+opens the page in your browser. Closing the browser tab leaves it running; quitting is the
+**Quit** entry on that icon. Your wishlist, the parts you own and the cached prices live in
+`%LOCALAPPDATA%\RelicFinder\data`, and uninstalling asks before deleting them.
+
+If a window says `Failed to find JVM`, the Java that was on the machine at install time has
+since been removed: run the installer again and pick the included runtime.
 
 ### Option 1: straight from Maven
 

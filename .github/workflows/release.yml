@@ -1,0 +1,228 @@
+# Builds the Windows installer, on Windows, because a .exe cannot honestly be
+# built anywhere else: jpackage bundles a runtime for the machine it is running
+# on, and Inno Setup is a Windows program.
+#
+# It runs on a tag, which is how a release is cut, and also on any pull request
+# that touches the installer or the desktop code — that part of the repository
+# is exercised by nothing else, and a mistake in it is otherwise found by a user
+# rather than by CI.
+#
+# Two smoke tests, because there are two ways the installed application finds a
+# Java and they fail differently:
+#
+#   * the application image is started as it is, which uses the runtime jpackage
+#     bundled — the path a machine with no Java takes;
+#   * the installer is run silently and the copy it installed is started, which
+#     on this runner finds the JDK setup-java put there and so exercises the
+#     configuration file rewriting instead.
+
+name: Windows installer
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    paths:
+      - "installer/**"
+      - "src/main/java/relics/reliceApi/desktop/**"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to stamp on the installer (three numbers)"
+        required: false
+        default: "0.1.0"
+
+concurrency:
+  group: installer-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  installer:
+    name: Build and smoke test
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      # Windows records three numbers and nothing else, so a tag is stripped
+      # down to them: v1.2.3 becomes 1.2.3, and a run that is not a release
+      # gets 0.0.0 rather than pretending to be one.
+      - name: Work out the version
+        id: version
+        shell: pwsh
+        run: |
+          $ref = "${{ github.ref }}"
+          if ($ref -like "refs/tags/v*") {
+            $version = $ref -replace "^refs/tags/v", ""
+          } elseif ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ github.event.inputs.version }}"
+          } else {
+            $version = "0.0.0"
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Version '$version' is not three numbers, which is all jpackage accepts."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Building $version"
+
+      # Pinned rather than taken from the runner image: the version that image
+      # happens to carry has changed under us before, and the script needs 6.3
+      # or later for its architecture identifiers.
+      - name: Inno Setup 6.7.3
+        shell: pwsh
+        run: |
+          $url = "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe"
+          Invoke-WebRequest -Uri $url -OutFile innosetup.exe
+          Start-Process -Wait -FilePath .\innosetup.exe `
+            -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-'
+          if (-not (Test-Path 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe')) {
+            throw 'Inno Setup did not install'
+          }
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -Scope Process Bypass -Force
+          .\installer\windows\build.ps1 -Version ${{ steps.version.outputs.version }}
+
+      # The application image with its own runtime, started the way a machine
+      # with no Java would start it. Proves the bundled runtime can boot Spring,
+      # that the frontend really is inside the jar, and that the launcher writes
+      # down the port it ended up on.
+      - name: Smoke test — bundled runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $home_ = "$env:LOCALAPPDATA\RelicFinder"
+          Remove-Item $home_ -Recurse -Force -ErrorAction SilentlyContinue
+
+          $exe = ".\build\windows\app-image\RelicFinder\RelicFinder.exe"
+          Start-Process -FilePath $exe -ArgumentList '--relics.desktop.browser=false'
+
+          $port = $null
+          foreach ($attempt in 1..90) {
+            if (Test-Path "$home_\port") {
+              $port = (Get-Content "$home_\port" -Raw).Trim()
+              if ($port) { break }
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $port) {
+            Write-Host '--- log ---'
+            Get-Content "$home_\logs\relic-finder.log" -ErrorAction SilentlyContinue
+            throw 'The application never recorded a port'
+          }
+          Write-Host "Answering on $port"
+
+          $api = Invoke-WebRequest "http://127.0.0.1:$port/api/relics" -UseBasicParsing
+          if ($api.StatusCode -ne 200) { throw "The API answered $($api.StatusCode)" }
+
+          # The whole point of building the frontend into the jar: one process
+          # serves both, so a page here means the static resources made it in.
+          $page = Invoke-WebRequest "http://127.0.0.1:$port/" -UseBasicParsing
+          if ($page.Content -notmatch '<div id="root"') { throw 'The page served is not the application' }
+
+          Write-Host 'Bundled runtime: the application starts and serves both.'
+          Stop-Process -Name RelicFinder -Force -ErrorAction SilentlyContinue
+
+      # The installer itself, and the copy it leaves behind. This runner has a
+      # JDK 25 with JAVA_HOME pointing at it, so the wizard takes its silent
+      # default and uses it — which is the path that rewrites the launcher's
+      # configuration file, and the one no other test covers.
+      - name: Smoke test — installed copy, using the runner's Java
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $home_ = "$env:LOCALAPPDATA\RelicFinder"
+          $target = "$env:RUNNER_TEMP\RelicFinderInstalled"
+
+          Get-Process RelicFinder -ErrorAction SilentlyContinue | Stop-Process -Force
+          Start-Sleep -Seconds 3
+          Remove-Item "$home_\port" -Force -ErrorAction SilentlyContinue
+
+          $setup = Get-ChildItem .\build\windows\installer -Filter '*.exe' | Select-Object -First 1
+          Start-Process -Wait -FilePath $setup.FullName `
+            -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/NOICONS', "/DIR=$target"
+
+          $cfg = Get-Content "$target\app\RelicFinder.cfg" -Raw
+          Write-Host "--- RelicFinder.cfg ---`n$cfg"
+
+          if ($cfg -notmatch '(?m)^app\.runtime=') {
+            throw 'The installer found no Java on a runner that has one: the detection is broken.'
+          }
+          if (Test-Path "$target\runtime") {
+            throw 'The bundled runtime was installed even though the machine Java was chosen.'
+          }
+
+          Start-Process -FilePath "$target\RelicFinder.exe" -ArgumentList '--relics.desktop.browser=false'
+
+          $port = $null
+          foreach ($attempt in 1..90) {
+            if (Test-Path "$home_\port") {
+              $port = (Get-Content "$home_\port" -Raw).Trim()
+              if ($port) { break }
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $port) {
+            Write-Host '--- log ---'
+            Get-Content "$home_\logs\relic-finder.log" -ErrorAction SilentlyContinue
+            throw 'The installed copy never recorded a port'
+          }
+
+          $api = Invoke-WebRequest "http://127.0.0.1:$port/api/relics" -UseBasicParsing
+          if ($api.StatusCode -ne 200) { throw "The API answered $($api.StatusCode)" }
+
+          Write-Host 'Installed copy: runs on the Java already on the machine.'
+          Stop-Process -Name RelicFinder -Force -ErrorAction SilentlyContinue
+
+      # The application writes its log into the user's AppData, which is outside
+      # the workspace and so out of reach of the upload — it is fetched into the
+      # workspace first. This is the only record of why a start failed, since
+      # the launcher has no console to print to.
+      - name: Collect the application log when something failed
+        if: failure()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path .\failure-logs -Force | Out-Null
+          Copy-Item "$env:LOCALAPPDATA\RelicFinder\logs\*" .\failure-logs `
+            -ErrorAction SilentlyContinue
+
+      - name: Keep the application log when something failed
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: application-log
+          path: failure-logs
+          if-no-files-found: ignore
+
+      - name: Keep the installer
+        uses: actions/upload-artifact@v5
+        with:
+          name: RelicFinder-${{ steps.version.outputs.version }}-setup
+          path: build\windows\installer\*.exe
+          if-no-files-found: error
+
+      - name: Attach it to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build\windows\installer\*.exe
+          draft: true
+          generate_release_notes: true

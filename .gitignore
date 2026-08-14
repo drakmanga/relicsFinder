@@ -59,6 +59,13 @@ BACKLOG.md
 ### Runtime state ###
 data/
 
+### The frontend built into the backend, and the Windows installer ###
+# Both are build output. The static directory only exists when the frontend was
+# built with RELICS_STATIC_DIR set, which is what packaging does; build/windows
+# is the application image and the installer.
+src/main/resources/static/
+/build/
+
 ### Generated from design-system/tokens.json by packages/ui/scripts/build-tokens.mjs ###
 packages/ui/src/styles/tokens.css
 
