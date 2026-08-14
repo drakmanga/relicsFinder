@@ -1232,6 +1232,35 @@ body {
   color: var(--rf-fg-muted);
 }
 
+/* -------------------------------------------------------- Wishlist stepper -
+   `− N +` with a clear button that appears once there is something to clear.
+   The clear button keeps its place while hidden, so the row does not jump on
+   the first add — but that place is only ever on the right, so centring the
+   row centred three buttons and an empty fourth. What the reader sees, the
+   − N +, therefore sat half a clear button left of centre in every table that
+   shows a stopper: Relics, Prime Items, Sets, Wishlist, Ducanetor and Endo.
+
+   The nudge back is a transform rather than a margin because a margin would
+   take its width out of the cell, and at the narrowest column the row has
+   nothing to spare. Half the clear button and its gap, both read from the
+   same values that draw them, so the two cannot drift apart.
+   ----------------------------------------------------------------------- */
+.rf-qty {
+  --rf-qty-gap: 2px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rf-qty-gap);
+  transform: translateX(calc((var(--rf-size-control-sm) + var(--rf-qty-gap)) / 2));
+}
+
+/* Not `display: none`: the point is to hold the space. Hidden this way the
+   button is also out of the tab order and out of the accessibility tree. */
+.rf-qty-slot {
+  visibility: hidden;
+}
+
 /* ------------------------------------------------------------ Touch size --
    WCAG 2.5.8 asks for 44×44. On a mouse the pointer is a pixel and the dense
    layout is the point, so the minimum applies where it matters: below --rf-bp-lg

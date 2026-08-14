@@ -31,7 +31,7 @@ export function QtyStepper({
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
+    <div className="rf-qty">
       <Button
         variant="outline"
         size={size}
@@ -64,7 +64,7 @@ export function QtyStepper({
       </Button>
 
       {/* Kept in the layout when hidden so the row does not shift on the first add. */}
-      <span style={{ visibility: qty > 0 ? "visible" : "hidden" }}>
+      <span className={qty > 0 ? undefined : "rf-qty-slot"}>
         <Button
           variant="ghost"
           size="sm"
