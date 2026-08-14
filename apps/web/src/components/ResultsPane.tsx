@@ -67,10 +67,6 @@ interface Props {
   onPickItem: (itemName: string) => void;
   onPickRelic: (relicFullName: string) => void;
   onShowEndo: () => void;
-  /** Whether a part is already in hand, for the tick in the items table. */
-  isOwned: (itemName: string) => boolean;
-  /** Ticks or unticks one part. */
-  onToggleOwned: (itemName: string) => void;
   /** Opens a wishlist set line's panel, without leaving the wishlist. */
   onPickSet: (setName: string) => void;
   /** Every set the catalogue holds, for building the kind chips. */
@@ -127,8 +123,6 @@ export function ResultsPane({
   onPickItem,
   onPickRelic,
   onShowEndo,
-  isOwned,
-  onToggleOwned,
   onPickSet,
   allSets,
   setPrices,
@@ -271,8 +265,6 @@ export function ResultsPane({
         selected={selectedItem}
         onSelect={onSelectItem}
         onInfo={onInfo}
-        isOwned={isOwned}
-        onToggleOwned={onToggleOwned}
       />
     );
   }

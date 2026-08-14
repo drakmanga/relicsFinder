@@ -21,7 +21,6 @@ import {
   TierChip,
 } from "relic-finder-ui";
 
-import { OwnedBox } from "./OwnedBox";
 import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
@@ -44,10 +43,6 @@ interface Props {
   onSelect: (itemName: string) => void;
   selected: string | null;
   onInfo: (itemName: string, kind?: WishlistKind) => void;
-  /** Whether the reader already has this part. */
-  isOwned: (itemName: string) => boolean;
-  /** Ticks or unticks it. The Sets view reads the same list. */
-  onToggleOwned: (itemName: string) => void;
 }
 
 /** One row per Prime part: set, rarity, which relics hold it, ducats and price. */
@@ -59,8 +54,6 @@ export function ItemsTable({
   onSelect,
   selected,
   onInfo,
-  isOwned,
-  onToggleOwned,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -97,23 +90,20 @@ export function ItemsTable({
         caption="Prime parts, with the relics that drop them, ducats and price"
         className="rf-cols-items"
       >
-        <TableCols count={11} />
+        <TableCols count={10} />
         <thead>
           <tr>
             {/*
               Widths are mandatory under the table's fixed layout — without
               them the ten columns would each take a tenth, and a part name
-              needs several times what an icon button does. The item name gets
-              the slack because it is the longest string in the view and the
-              one being read: "Volt Prime Neuroptics Blueprint" is 31
-              characters against "Rare".
+              needs several times what an icon button does. They are in
+              app.css, measured rather than guessed: under fixed layout an
+              undersized column silently eats its own content instead of
+              pushing the table wider, and what it eats first is whatever sits
+              last in the cell.
             */}
             <TableHeaderCell>Item</TableHeaderCell>
             <TableHeaderCell>Set</TableHeaderCell>
-            {/* Rarity fits "Uncommon"; Relics fits the three tier chips and the
-                count beside them. Both were sized by eye first and measured
-                after — under fixed layout an undersized column silently eats
-                its own content instead of pushing the table wider. */}
             <TableHeaderCell>Rarity</TableHeaderCell>
             <TableHeaderCell>Relics</TableHeaderCell>
             <TableHeaderCell align="right">Best drop</TableHeaderCell>
@@ -128,9 +118,6 @@ export function ItemsTable({
                 Price <PlatGlyph size={12} />
               </span>
             </TableHeaderCell>
-            {/* Before Wishlist, because the two answer opposite halves of the
-                same question: what you have, and what you still want. */}
-            <TableHeaderCell align="center">Owned</TableHeaderCell>
             <TableHeaderCell align="center">Wishlist</TableHeaderCell>
             <TableHeaderCell align="center">Info</TableHeaderCell>
             <TableHeaderCell align="center">Market</TableHeaderCell>
@@ -140,7 +127,7 @@ export function ItemsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={11} className="rf-spacer" style={{ height: paddingTop }} />
+              <td colSpan={10} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -160,16 +147,10 @@ export function ItemsTable({
               refinement: "intact" as const,
             };
 
-            const owned = isOwned(row.itemName);
-
             return (
               <TableRow
                 key={row.itemName}
                 selected={row.itemName === selected}
-                // A part already in hand is not what the reader is scanning the
-                // list for, so its name steps back. It stays a full row: what
-                // it costs and what it drops from are still worth reading.
-                className={owned ? "rf-row-owned" : undefined}
                 onClick={() => onSelect(row.itemName)}
               >
                 {/* Titled because the column truncates: the longest part names
@@ -180,12 +161,18 @@ export function ItemsTable({
                 <TableCell>
                   <RarityTag rarity={row.rarity} />
                 </TableCell>
-                <TableCell>
+                {/* Which tiers hold the part, and nothing else. There used to
+                    be a count of relics beside the chips; it answered a
+                    question nobody scanning this column was asking, and the
+                    relics themselves are one click away in the panel. The
+                    title still names them, which is what the count gestured at.
+                    All four tiers are shown: a part that drops from every tier
+                    used to lose one silently to a slice. */}
+                <TableCell title={row.relicNames.join(", ")}>
                   <span className="rf-inline">
-                    {row.tiers.slice(0, 3).map((tier) => (
+                    {row.tiers.map((tier) => (
                       <TierChip key={tier} tier={tier} />
                     ))}
-                    <span className="rf-text-caption rf-fg-muted">{row.relicNames.length}</span>
                   </span>
                 </TableCell>
                 <TableCell align="right" numeric>
@@ -208,17 +195,6 @@ export function ItemsTable({
                   ) : (
                     <PlatPrice value={priceOf(prices, row.itemName)} />
                   )}
-                </TableCell>
-                {/* One click per part, from the list itself. Ticking a part
-                    used to mean opening its set's panel and finding the piece
-                    there, which is four actions for a thing that happens after
-                    every run. */}
-                <TableCell align="center">
-                  <OwnedBox
-                    label={row.itemName}
-                    state={owned ? "all" : "none"}
-                    onToggle={() => onToggleOwned(row.itemName)}
-                  />
                 </TableCell>
                 <TableCell align="center">
                   <QtyStepper
@@ -261,7 +237,7 @@ export function ItemsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={11} className="rf-spacer" style={{ height: paddingBottom }} />
+              <td colSpan={10} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

@@ -364,38 +364,43 @@ body {
   width: 8%;
 } /* Market */
 
+/* Relics is the only cell here whose content is fixed pixels rather than text
+   that can be truncated: four tier chips and their gaps measure 255px, and
+   290px with the cell's padding — 24% of the 1248px the table is at its
+   narrowest. A chip that does not fit is cut in half, where a name that does
+   not fit truncates and keeps its full text in a title, so the width goes to
+   the chips and the item name takes what is left.
+   Every other width is its header word measured at 1248: "Best drop" and
+   "Ducats" are both wider than the numbers under them. */
 .rf-cols-items col:nth-child(1) {
-  width: 16%;
+  width: 15%;
 } /* Item */
 .rf-cols-items col:nth-child(2) {
-  width: 9%;
+  width: 10%;
 } /* Set */
 .rf-cols-items col:nth-child(3) {
-  width: 7%;
-} /* Rarity — fits "Uncommon" */
+  width: 9%;
+} /* Rarity — the dot and "Uncommon", which needs 105px at 1280 */
 .rf-cols-items col:nth-child(4) {
-  width: 16%;
-} /* Relics — three tier chips and the count */
+  width: 24%;
+} /* Relics — four tier chips */
 .rf-cols-items col:nth-child(5) {
-  width: 8%;
+  width: 7%;
 } /* Best drop */
 .rf-cols-items col:nth-child(6) {
   width: 7%;
 } /* Ducats */
 .rf-cols-items col:nth-child(7) {
-  width: 7%;
+  width: 6%;
 } /* Price */
 .rf-cols-items col:nth-child(8) {
-  width: 7%;
-} /* Owned — a 20px tick, so the header word is what sizes it */
-.rf-cols-items col:nth-child(9) {
-  width: 11%;
+  width: 12%;
 } /* Wishlist — the stepper is 102px wide and does not shrink */
-.rf-cols-items col:nth-child(10) {
-  width: 5%;
+.rf-cols-items col:nth-child(9) {
+  width: 4%;
 } /* Info */
-.rf-cols-items col:nth-child(11) {
-  width: 7%;
+.rf-cols-items col:nth-child(10) {
+  width: 6%;
 } /* Market */
 
 .rf-cols-sets col:nth-child(1) {
@@ -1458,12 +1463,6 @@ body {
   width: 9px;
   height: 2px;
   background: var(--rf-gold-300);
-}
-
-/* A part already in hand is not what the reader is hunting for: the row stays
-   readable but its name stops competing with the ones still missing. */
-.rf-row-owned td:first-child {
-  color: var(--rf-fg-muted);
 }
 
 /* ---- Sets view ----

@@ -275,8 +275,6 @@ export function App() {
               onPickItem={openItem}
               onPickRelic={openRelic}
               onShowEndo={() => setView("endo")}
-              isOwned={ownedParts.has}
-              onToggleOwned={ownedParts.toggle}
               onSetOwnedAll={ownedParts.setAll}
               onPickSet={setSelectedSet}
               allSets={allSets}
