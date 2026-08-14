@@ -1,0 +1,8 @@
+.git
+node_modules
+apps/web/node_modules
+packages/*/node_modules
+target
+apps/web/dist
+data
+*.md
