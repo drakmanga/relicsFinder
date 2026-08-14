@@ -57,6 +57,7 @@ docker-compose up -d
 ```
 
 This will:
+
 - Start the backend (Spring Boot) on port `8080`.
 - Start the frontend (Vite) on port `5173`.
 - Automatically wait for the backend to be ready before starting the frontend.
