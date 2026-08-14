@@ -95,6 +95,89 @@ mvn spring-boot:run
 
 Without `RELICS_STATIC_DIR` the build lands in `apps/web/dist/`.
 
+## The Windows installer
+
+What a player downloads is a single `.exe` that installs the application, a
+Java 25 runtime and a Start menu entry, and leaves behind something that starts
+from an icon: no console, no port to remember, an icon by the clock and the
+page in the default browser.
+
+### Cutting a release
+
+Tag it. `.github/workflows/release.yml` runs on `windows-latest`, builds the
+installer, smoke tests it twice and attaches it to a **draft** release, which is
+yours to review and publish.
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The version has to be three numbers — that is all Windows records, and jpackage
+refuses anything else. To get an installer without cutting a release, run the
+workflow by hand from the Actions tab; it uploads the same file as an artifact.
+
+### Building one by hand
+
+Needs a Windows machine with **JDK 25** (jpackage ships with it), **Node 20+**
+and **Inno Setup 6.3 or later**. It cannot be built from Linux: jpackage bundles
+a runtime for the machine it runs on, and Inno Setup is a Windows program.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File installer\windows\build.ps1 -Version 0.1.0
+```
+
+Everything lands in `build\windows\`; the installer itself in
+`build\windows\installer\`. `-SkipBuild` reuses the frontend and the jar already
+in `target\`, which is what you want when iterating on the installer rather than
+on the application.
+
+### How the pieces fit
+
+| File                                 | What it is                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| `installer/windows/build.ps1`        | frontend into the jar, jar into an application image, image into the exe |
+| `installer/windows/relic-finder.iss` | the wizard: Java detection, shortcuts, uninstaller                       |
+| `src/main/java/.../desktop/`         | what the application does differently when it was double-clicked         |
+
+Nothing in `desktop/` is active unless the launcher sets `relics.desktop`, which
+only the packaged build does. Running from source, from the jar or in Docker
+behaves exactly as it did before it existed.
+
+### The two ways it finds a Java
+
+The installer carries a Java 25 runtime, and also looks for one already
+installed — `JAVA_HOME` first, then the registry keys of every vendor that
+publishes them. When it finds one, it offers to use it and leaves the bundled
+copy uninstalled, which saves about 90 MB on disk. The download is the same size
+either way.
+
+The mechanism is one line. The jpackage launcher reads
+`app\RelicFinder.cfg` at every start and takes its runtime from the folder
+`app.runtime` names, falling back to `runtime\` beside itself; jpackage never
+writes that key, so adding it is what redirects the launcher. If the user later
+uninstalls that Java, the launcher says `Failed to find JVM` — running the
+installer again and choosing the included runtime fixes it.
+
+### Where the state goes
+
+`%LOCALAPPDATA%\RelicFinder`, not the installation folder, which is not
+writable:
+
+```
+data\      wishlist.json, owned.json, relics.json, price-cache.json
+logs\      relic-finder.log, and the previous run as .log.1
+port       the port it bound, so a second launch opens a browser instead of failing
+.lock      held while it runs, which is how the second launch knows
+```
+
+The catalogue is seeded from the copy inside the jar on first run, so a first
+launch with no connection still shows relics rather than an empty table.
+
+The server binds `127.0.0.1` and nothing else, which is why Windows Firewall
+never asks about it. The port is 8080 when it is free and any free port
+otherwise.
+
 ## The gates
 
 Everything runs on every push through `.github/workflows/ci.yml`, in three jobs:
@@ -105,7 +188,7 @@ views against a real preview build. Locally:
 npm run verify:all     # typecheck, lint, debt baselines, unit tests, render checks
 npm run format:check   # prettier
 npm run test:mutants   # proves the frontend unit tests can fail
-./mvnw verify          # backend: 40 tests
+./mvnw verify          # backend: 90 tests
 npm run test:mutants:java   # proves the backend tests can fail
 npm run axe            # accessibility, needs the two servers below
 npm run lighthouse     # performance, same
@@ -126,6 +209,15 @@ may go down, never up.
 | Page with no styles, text unreadable                    | Library not built: `npm run build:ui`                                                                              |
 | Changes in `packages/ui` do nothing                     | No watcher: rebuild with `npm run build:ui`                                                                        |
 | `Failed to resolve entry for package "relic-finder-ui"` | Library never built, so `packages/ui/dist/` is missing. `npm install` (which runs `prepare`) or `npm run build:ui` |
+
+The installed Windows copy, which has no console to print any of this to:
+
+| Symptom                                     | Cause                                                                                                          |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `Failed to find JVM in ...`                 | The Java chosen at install time is gone. Reinstall and pick the included runtime                               |
+| Nothing happens at all on the second click  | It is already running: one copy only, and the click opened the browser at the page it was already serving      |
+| Blank page or an error in the browser       | `%LOCALAPPDATA%\RelicFinder\logs\relic-finder.log` — every stack trace goes there, since there is nowhere else |
+| The page is served but the tables are empty | First launch with no connection and no seeded catalogue. Reconnect and use the tray icon to open it again      |
 
 ## The data refreshes itself
 
