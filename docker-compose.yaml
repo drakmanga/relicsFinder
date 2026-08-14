@@ -6,6 +6,8 @@ services:
     container_name: relics-finder-backend
     volumes:
       - ./data:/app/data
+    environment:
+      - RELICS_CATALOGUE_PATH=data/relics.json
     ports:
       - "8080:8080"
     networks:
