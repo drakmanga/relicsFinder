@@ -19,6 +19,8 @@ export const keys = {
   relicHistory: (name: string) => ["market", "relic", "history", name] as const,
   vaulted: (name: string) => ["relics", "vaulted", name] as const,
   endo: ["endo", "offers"] as const,
+  marketStatus: ["market", "status"] as const,
+  endoStatus: ["endo", "status"] as const,
 };
 
 /**
@@ -214,6 +216,45 @@ export function useEndoOffers(enabled: boolean) {
     enabled,
     staleTime: 4 * 60_000,
     refetchInterval: enabled ? 5 * 60_000 : false,
+  });
+}
+
+/**
+ * How old the oldest price held is — what the topbar reports.
+ *
+ * Polled rather than invalidated: the warmer moves the figure on its own
+ * schedule, server-side, with nothing the client does to trigger it. A minute
+ * is finer than the label's own resolution.
+ */
+export function useMarketStatus(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.marketStatus,
+    queryFn: ({ signal }) => api.marketStatus(signal),
+    enabled,
+    staleTime: 30_000,
+    refetchInterval: enabled ? 60_000 : false,
+  });
+}
+
+/**
+ * When the Ayatan offers were read, for the same label on the Endo tab.
+ *
+ * The key carries the offers query's own `dataUpdatedAt`, which makes this
+ * refetch at the moment a new list lands rather than up to a poll later. The
+ * extra `useEndoOffers` call costs no request: it is the same cache entry the
+ * table reads, and React Query serves both from it.
+ */
+export function useEndoStatus(enabled: boolean) {
+  const offers = useEndoOffers(enabled);
+
+  return useQuery({
+    queryKey: [...keys.endoStatus, offers.dataUpdatedAt] as const,
+    queryFn: ({ signal }) => api.endoStatus(signal),
+    enabled,
+    staleTime: 60_000,
+    // Each new list makes a new key; without this the old entries would sit in
+    // the cache for the default five minutes apiece.
+    gcTime: 60_000,
   });
 }
 

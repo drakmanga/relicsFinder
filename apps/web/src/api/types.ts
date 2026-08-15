@@ -210,6 +210,18 @@ export interface MarketStatus {
   cached: number;
   fresh: number;
   queued: number;
+  /**
+   * ISO instant of the OLDEST price held, so nothing on screen predates it.
+   * Null while the cache is empty. Deliberately not the newest: that would
+   * read as seconds old at all times while the warmer runs.
+   */
+  asOf: string | null;
+}
+
+/** When the Ayatan offers were last read. Their own clock: they expire in five
+ *  minutes, where a price may be hours old and still be the price. */
+export interface EndoStatus {
+  asOf: string | null;
 }
 
 /** One wishlist line as the server stores it. */
