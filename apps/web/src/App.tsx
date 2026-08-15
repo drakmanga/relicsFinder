@@ -11,6 +11,7 @@ import { FilterBar } from "./components/FilterBar";
 import { FilterSummary } from "./components/FilterSummary";
 import { ResultsPane } from "./components/ResultsPane";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
+import { LastUpdated } from "./components/LastUpdated";
 import { PriceStatus } from "./components/PriceStatus";
 import { RelicInfoDialog } from "./components/RelicInfoDialog";
 import { emptyFilters, type RelicSortColumn } from "./lib/rows";
@@ -139,6 +140,12 @@ export function App() {
               { id: "endo", label: "Endo" },
             ]}
           />
+
+          {/* In the masthead rather than above the table, because it answers
+              for every view including the three with no search band — and a
+              reader looking for how old a number is looks up, once, in the
+              same place each time. */}
+          <LastUpdated endo={view === "endo"} />
         </div>
       </header>
 

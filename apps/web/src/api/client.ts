@@ -2,6 +2,7 @@ import { normalizeDropInfo, normalizeRelic } from "./normalize";
 import type {
   DropInfo,
   EndoOffer,
+  EndoStatus,
   ItemPrice,
   MarketStatus,
   PricePoint,
@@ -264,6 +265,11 @@ export const api = {
   /** Ayatan offers ranked by Endo per platinum. */
   async endoOffers(signal?: AbortSignal): Promise<EndoOffer[]> {
     return await get<EndoOffer[]>("/endo/offers", signal);
+  },
+
+  /** When those offers were read. Cheap: the server holds them for five minutes. */
+  async endoStatus(signal?: AbortSignal): Promise<EndoStatus> {
+    return await get<EndoStatus>("/endo/status", signal);
   },
 
   async isVaulted(relicName: string, signal?: AbortSignal): Promise<boolean> {

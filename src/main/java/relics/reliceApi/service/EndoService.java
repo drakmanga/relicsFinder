@@ -92,6 +92,19 @@ public class EndoService {
     private volatile List<EndoOffer> cached = List.of();
     private volatile Instant fetchedAt = Instant.EPOCH;
 
+    /**
+     * When the list {@link #offers()} returns was read, or empty before the
+     * first read.
+     *
+     * <p>Kept apart from the offers themselves so that reporting it does not
+     * change the shape of {@code /offers}, which five callers already parse as
+     * a bare array.
+     */
+    public Optional<Instant> fetchedAt() {
+        Instant at = fetchedAt;
+        return at.equals(Instant.EPOCH) ? Optional.empty() : Optional.of(at);
+    }
+
     /** Every buyable offer, best Endo per platinum first. */
     public List<EndoOffer> offers() {
         if (Duration.between(fetchedAt, Instant.now()).compareTo(TTL) < 0) return cached;

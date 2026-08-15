@@ -599,10 +599,24 @@ public class RelicMarketService {
                 .filter(cached -> !cached.failed() && cached.isFresh())
                 .count();
 
-        return Map.of(
-                "cached", priced,
-                "fresh", fresh,
-                "queued", queue.size());
+        // The oldest reading held, not the newest. The label this feeds says
+        // "prices as of", which is only true of every row if it names the row
+        // furthest behind. The newest would read a few seconds old at all
+        // times while the warmer runs, over a table half an hour stale.
+        Instant oldest = cache.values().stream()
+                .filter(cached -> !cached.failed())
+                .map(Cached::at)
+                .min(Instant::compareTo)
+                .orElse(null);
+
+        // Not Map.of: asOf is null on an empty cache, and that null is the
+        // answer — the client draws nothing rather than a wrong time.
+        Map<String, Object> status = new HashMap<>();
+        status.put("cached", priced);
+        status.put("fresh", fresh);
+        status.put("queued", queue.size());
+        status.put("asOf", oldest == null ? null : oldest.toString());
+        return status;
     }
 
     /**

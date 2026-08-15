@@ -73,6 +73,17 @@ body {
   white-space: nowrap;
 }
 
+/* Pushed to the far end of the bar, away from the tab group: it answers for
+   whatever view is in front rather than being one of the things you can click.
+   `nowrap` because "Prices as of 21:04" breaking over two lines would grow the
+   topbar; below the breakpoint it scrolls out with everything else instead. */
+.rf-lastupdated {
+  flex: none;
+  margin-block: 0;
+  margin-inline-start: auto;
+  white-space: nowrap;
+}
+
 /* Below --rf-bp-md (768px) the brand and the six tabs stop fitting on one
    line. The tabs keep the full width and scroll sideways rather than wrapping
    into a second row that pushes the table off the screen. */
