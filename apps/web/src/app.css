@@ -51,11 +51,18 @@ body {
   border-bottom: var(--rf-hairline) solid var(--rf-border-default);
 }
 
+/* Scrolls sideways at every width, not only on a narrow screen. The bar holds
+   a masthead, six tabs and a timestamp, and at 200% text zoom that stops
+   fitting on a 1280 desktop just as it stops fitting on a phone — measured at
+   31px past the viewport, which put a scrollbar on the document itself. The
+   bar taking its own overflow is the behaviour it already had below the
+   breakpoint; this makes it the rule rather than the exception. */
 .rf-topbar-inner {
   display: flex;
   align-items: center;
   gap: var(--rf-space-6);
   min-height: var(--rf-size-topbar, 56px);
+  overflow-x: auto;
 }
 
 /* The masthead is the way home, so it is a real button: a click handler on a
@@ -75,8 +82,12 @@ body {
 
 /* Pushed to the far end of the bar, away from the tab group: it answers for
    whatever view is in front rather than being one of the things you can click.
-   `nowrap` because "Prices as of 21:04" breaking over two lines would grow the
-   topbar; below the breakpoint it scrolls out with everything else instead. */
+
+   It does not shrink, and it does not wrap. Letting it do either was tried
+   first and is worse: allowed to shrink it was squeezed to zero width at
+   390px and vanished without saying so, which is the one outcome a label
+   about staleness must not have. It keeps its size and the bar scrolls, as
+   the tabs beside it already do. */
 .rf-lastupdated {
   flex: none;
   margin-block: 0;
@@ -85,12 +96,11 @@ body {
 }
 
 /* Below --rf-bp-md (768px) the brand and the six tabs stop fitting on one
-   line. The tabs keep the full width and scroll sideways rather than wrapping
-   into a second row that pushes the table off the screen. */
+   line. Only the gap tightens here now: the sideways scroll that used to live
+   in this block applies at every width, above. */
 @media (max-width: 767.98px) {
   .rf-topbar-inner {
     gap: var(--rf-space-3);
-    overflow-x: auto;
   }
 }
 
