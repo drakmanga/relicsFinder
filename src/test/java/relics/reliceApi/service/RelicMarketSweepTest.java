@@ -31,10 +31,17 @@ class RelicMarketSweepTest {
 
     @BeforeEach
     void setUp() {
+        MarketRateLimiter rateLimiter = new MarketRateLimiter();
+        ColdStartOrder coldStartOrder = new ColdStartOrder();
+        // Nothing warms Endo here, so the sweep would sit on the gate for its
+        // full timeout; opened up front because this test is about the queue.
+        coldStartOrder.endoReady();
         service = new RelicMarketService(
                 new DucatService(),
-                new SetListingService(),
-                new PriceCacheStore(temp.resolve("price-cache.json").toString()));
+                new SetListingService(rateLimiter),
+                new PriceCacheStore(temp.resolve("price-cache.json").toString()),
+                rateLimiter,
+                coldStartOrder);
     }
 
     private int queued() {

@@ -133,6 +133,7 @@ public class DropTableService {
                 .uri(URI.create(MISSION_REWARDS_URL))
                 .timeout(TIMEOUT)
                 .header("Accept", "application/json")
+                .header("User-Agent", ApiIdentity.USER_AGENT)
                 .GET()
                 .build();
 

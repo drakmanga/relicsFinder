@@ -125,15 +125,6 @@ public class RelicMarketService {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(15);
 
-    /**
-     * One request every 320ms — about three a second, the documented ceiling.
-     *
-     * <p>Enforced on the start of each call rather than by sleeping after it,
-     * so the rate stays exact while several fetches are in flight. See
-     * {@link #WARMERS}.
-     */
-    private static final long SPACING_MS = 320;
-
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(TIMEOUT)
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -144,6 +135,8 @@ public class RelicMarketService {
     /** Only for how the market spells an assembled set. */
     private final SetListingService setListingService;
     private final PriceCacheStore store;
+    private final MarketRateLimiter rateLimiter;
+    private final ColdStartOrder coldStartOrder;
 
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
 
@@ -170,8 +163,10 @@ public class RelicMarketService {
      * empty for anyone who did not leave the app open.
      *
      * <p>The rate limit is still exact: workers take numbered slots from
-     * {@link #awaitSlot}, so requests start {@value #SPACING_MS}ms apart no
-     * matter how many threads are asking. Six is enough to keep a slot always
+     * {@link MarketRateLimiter}, so requests start a fixed interval apart no
+     * matter how many threads are asking — and that limiter is shared with the
+     * other services calling the same host, so six workers here cannot crowd
+     * them out. Six is enough to keep a slot always
      * ready at that latency, and small enough that a slow market does not turn
      * into a pile of sockets.
      */
@@ -182,10 +177,6 @@ public class RelicMarketService {
         thread.setDaemon(true);
         return thread;
     });
-
-    /** Guards the next free request slot, so the spacing is global. */
-    private final Object rateLock = new Object();
-    private long nextSlotAt = 0;
 
     private volatile boolean running = true;
 
@@ -227,10 +218,13 @@ public class RelicMarketService {
             });
 
     public RelicMarketService(DucatService ducatService, SetListingService setListingService,
-                              PriceCacheStore store) {
+                              PriceCacheStore store, MarketRateLimiter rateLimiter,
+                              ColdStartOrder coldStartOrder) {
         this.ducatService = ducatService;
         this.setListingService = setListingService;
         this.store = store;
+        this.rateLimiter = rateLimiter;
+        this.coldStartOrder = coldStartOrder;
     }
 
     /**
@@ -295,26 +289,6 @@ public class RelicMarketService {
     /** Writes the cache out if anything changed since the last time. */
     private void flush() {
         if (dirty.compareAndSet(true, false)) store.save(Map.copyOf(cache));
-    }
-
-    /**
-     * Waits for this worker's turn to call the market.
-     *
-     * <p>Slots are handed out in advance rather than measured after the fact:
-     * every caller books the next one and sleeps until it arrives, so the
-     * interval holds even when a fetch takes ten times longer than the spacing.
-     */
-    private void awaitSlot() throws InterruptedException {
-        long wait;
-
-        synchronized (rateLock) {
-            long now = System.currentTimeMillis();
-            long slot = Math.max(now, nextSlotAt);
-            nextSlotAt = slot + SPACING_MS;
-            wait = slot - now;
-        }
-
-        if (wait > 0) Thread.sleep(wait);
     }
 
     @PreDestroy
@@ -705,6 +679,18 @@ public class RelicMarketService {
     }
 
     private void warmLoop() {
+        try {
+            // Four seconds behind the Endo list, once, at startup. Both fill
+            // from the same budget and six of these threads against that one
+            // pass would stretch its eleven requests from four seconds to
+            // twenty-seven — with the screen empty throughout — to save the
+            // sweep four seconds of the nine minutes it runs for.
+            coldStartOrder.awaitEndo();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
         while (running) {
             try {
                 String slug = queue.poll(1, TimeUnit.SECONDS);
@@ -718,7 +704,7 @@ public class RelicMarketService {
                 // The slot is taken before the call, not after: the spacing has
                 // to sit between the starts of two requests, and a worker that
                 // slept afterwards would let five others fire at once.
-                awaitSlot();
+                rateLimiter.awaitSlot();
 
                 // The reading being replaced is the other half of the
                 // measurement, so the interval is worked out before it is gone.
@@ -755,6 +741,7 @@ public class RelicMarketService {
                     .uri(URI.create(API + slug + "/statistics"))
                     .timeout(TIMEOUT)
                     .header("accept", "application/json")
+                    .header("User-Agent", ApiIdentity.USER_AGENT)
                     .header("platform", "pc")
                     // Asked for explicitly because HttpClient neither requests
                     // nor decodes compression on its own, and this response is
