@@ -10,12 +10,15 @@
 	</parent>
 	<groupId>relics</groupId>
 	<artifactId>relicsApi</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}</version>
 	<name>reliceApi</name>
 	<description>relicsApiWarframe</description>
 	<url/>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT</name>
+			<url>https://github.com/drakmanga/relicsFinder/blob/main/LICENSE</url>
+		</license>
 	</licenses>
 	<developers>
 		<developer/>
@@ -28,6 +31,18 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
+
+		<!--
+			The version, so a release build can set it from the tag rather than
+			from here. It reaches the jar manifest, and from there the
+			User-Agent the application introduces itself to warframe.market
+			with — which used to say 0.0.1-SNAPSHOT whatever the installer had
+			just stamped 0.1.3 on the front of.
+
+			Maven's own mechanism for this, so nothing rewrites the file during
+			a build. The default is what a working copy is: not a release.
+		-->
+		<revision>0.0.1-SNAPSHOT</revision>
 	</properties>
 	<dependencies>
 		<dependency>
