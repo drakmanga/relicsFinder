@@ -206,14 +206,14 @@ jobs:
 
       - name: Keep the application log when something failed
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: application-log
           path: failure-logs
           if-no-files-found: ignore
 
       - name: Keep the installer
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: RelicFinder-${{ steps.version.outputs.version }}-setup
           path: build\windows\installer\*.exe
@@ -221,7 +221,7 @@ jobs:
 
       - name: Attach it to the release
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: build\windows\installer\*.exe
           draft: true
