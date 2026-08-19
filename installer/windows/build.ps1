@@ -100,7 +100,13 @@ try {
 
         # Tests run in CI on every push; running them again here would double
         # the time to an installer without adding a gate.
-        Invoke-Step 'Backend: jar' { & (Join-Path $root 'mvnw.cmd') -B -DskipTests package }
+        # -Drevision is what carries the version into the jar manifest, and
+        # from there into the User-Agent the application calls warframe.market
+        # with. Without it the manifest keeps the working copy's SNAPSHOT and a
+        # release introduces itself under a version that was never released.
+        Invoke-Step 'Backend: jar' {
+            & (Join-Path $root 'mvnw.cmd') -B -DskipTests "-Drevision=$Version" package
+        }
     }
 
     $jar = Get-ChildItem (Join-Path $root 'target') -Filter 'relicsApi-*.jar' |
