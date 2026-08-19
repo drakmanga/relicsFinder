@@ -113,6 +113,19 @@ try {
     # release.
     Copy-Item $jar.FullName (Join-Path $staging 'relicsApi.jar') -Force
 
+    # The terms travel with the copy. MIT asks for its notice to be in every
+    # copy of the software, and an installed application is a copy — until now
+    # the only place either file existed was the repository, which is no help
+    # to somebody who installed the exe. They land in app\ beside the jar,
+    # where the [Files] rule already recurses and where the uninstaller already
+    # deletes.
+    #
+    # The runtime brings its own: jpackage takes the JDK whole, so the
+    # GPLv2-with-Classpath-Exception texts and every module's third-party
+    # notice arrive under runtime\legal without anything being asked of us.
+    Copy-Item (Join-Path $root 'LICENSE') (Join-Path $staging 'LICENSE.txt') -Force
+    Copy-Item (Join-Path $root 'THIRD-PARTY-NOTICES.md') $staging -Force
+
     $jpackage = Resolve-Tool -Name 'jpackage' -Fallbacks @(
         (Join-Path $env:JAVA_HOME 'bin\jpackage.exe')
     ) -Hint 'It ships with the JDK — install JDK 25 and set JAVA_HOME.'
@@ -136,7 +149,7 @@ try {
             --app-version $Version `
             --vendor 'drakmanga' `
             --description 'Warframe relics, Prime parts and market prices' `
-            --copyright 'MIT' `
+            --copyright 'Copyright (c) 2025 drakmanga — MIT licensed' `
             --input $staging `
             --main-jar relicsApi.jar `
             --icon (Join-Path $PSScriptRoot 'relic-finder.ico') `

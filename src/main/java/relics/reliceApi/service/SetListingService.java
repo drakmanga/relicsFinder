@@ -49,6 +49,11 @@ public class SetListingService {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final ReentrantLock refreshLock = new ReentrantLock();
+    private final MarketRateLimiter rateLimiter;
+
+    public SetListingService(MarketRateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
 
     private volatile Snapshot snapshot;
 
@@ -120,10 +125,15 @@ public class SetListingService {
     }
 
     private Snapshot fetch() throws Exception {
+        // One call, but against the same host and the same budget as the
+        // warmer's thousands, so it queues behind them rather than beside them.
+        rateLimiter.awaitSlot();
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(ITEMS))
                 .timeout(TIMEOUT)
                 .header("Accept", "application/json")
+                .header("User-Agent", ApiIdentity.USER_AGENT)
                 .GET()
                 .build();
 

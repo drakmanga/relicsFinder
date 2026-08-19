@@ -1,0 +1,49 @@
+MIT License
+
+Copyright (c) 2025 drakmanga and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Scope
+
+The MIT grant above covers the source code of this project only.
+
+It does not, and cannot, grant any right over third-party material that this
+repository bundles or fetches at runtime:
+
+- **Warframe game data and intellectual property.** Relic, Prime part, mission
+  and drop-rate data originates from Digital Extremes' official drop tables.
+  Warframe and all associated names, marks and game content are the property of
+  Digital Extremes Ltd. This project is an unofficial fan tool, is not
+  affiliated with or endorsed by Digital Extremes, and is distributed free of
+  charge in line with the Warframe Content Policy
+  (https://www.warframe.com/en/contentpolicy).
+
+- **Market data** retrieved from the warframe.market public API belongs to
+  warframe.market and the users who post the listings. This project is not
+  affiliated with warframe.market.
+
+- **Bundled fonts.** Inter and Cinzel are licensed under the SIL Open Font
+  License 1.1, not MIT. See THIRD-PARTY-NOTICES.md and the OFL.txt files
+  distributed alongside the font binaries.
+
+- **Third-party dependencies** declared in pom.xml and package.json remain
+  under their own licenses. See THIRD-PARTY-NOTICES.md.

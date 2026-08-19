@@ -49,7 +49,7 @@ class SetListingServiceTest {
 
     @Test
     void anythingThatIsNotASetNameHasNoListing() {
-        SetListingService service = new SetListingService();
+        SetListingService service = new SetListingService(new MarketRateLimiter());
 
         // Asked about a part rather than a set: the caller falls back to the
         // plain slug, which is right for every part in the catalogue.

@@ -141,6 +141,7 @@ public class DucatService {
                     .uri(URI.create(BASE + category.getKey() + ".json"))
                     .timeout(TIMEOUT)
                     .header("Accept", "application/json")
+                    .header("User-Agent", ApiIdentity.USER_AGENT)
                     .GET()
                     .build();
 
