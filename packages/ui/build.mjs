@@ -1,5 +1,5 @@
 import { build } from "esbuild";
-import { rm, mkdir } from "node:fs/promises";
+import { rm, mkdir, copyFile } from "node:fs/promises";
 
 await rm("dist", { recursive: true, force: true });
 await mkdir("dist", { recursive: true });
@@ -30,5 +30,12 @@ await build({
   assetNames: "fonts/[name]",
   logLevel: "info",
 });
+
+// The .woff2 files are copied into dist/fonts/ by the loader above, but the
+// OFL notice that has to travel with them is not an import of any stylesheet,
+// so esbuild never sees it. package.json ships only dist/, which would put the
+// fonts in consumers' hands stripped of their licence — what OFL clause 2
+// forbids. Copied explicitly for that reason.
+await copyFile("src/styles/fonts/OFL.txt", "dist/fonts/OFL.txt");
 
 console.log("build ok");

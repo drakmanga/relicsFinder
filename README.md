@@ -8,7 +8,7 @@ searches: everything you need in one place.
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
-![Warframe](https://img.shields.io/badge/Warframe-0080FF?style=flat&logo=warframe&logoColor=white)
+![Warframe](https://img.shields.io/badge/Warframe-0080FF?style=flat)
 
 ## ✨ Features
 
@@ -323,7 +323,13 @@ Found a bug, or have an idea?
 
 ## 📄 License
 
-MIT. See `LICENSE` for details.
+MIT, for the source code of this project. See [`LICENSE`](LICENSE).
+
+The MIT grant does not extend to the third-party material this project bundles
+or fetches: Warframe game data and IP belong to Digital Extremes, market data
+belongs to warframe.market, and the bundled Inter and Cinzel fonts are under the
+SIL Open Font License 1.1. See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md)
+for the full breakdown.
 
 ## 🙏 Thanks
 
