@@ -8,10 +8,10 @@ keeps its own terms.
 
 Two font families are bundled as WOFF2 binaries and served to every visitor:
 
-| Family | Files | Copyright |
-| --- | --- | --- |
-| Inter | `inter-400-700-latin.woff2`, `inter-400-700-latin-ext.woff2` | Copyright (c) 2016 The Inter Project Authors — <https://github.com/rsms/inter> |
-| Cinzel | `cinzel-400-700-latin.woff2` | Copyright 2020 The Cinzel Project Authors — <https://github.com/NDISCOVER/Cinzel> |
+| Family | Files                                                        | Copyright                                                                         |
+| ------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Inter  | `inter-400-700-latin.woff2`, `inter-400-700-latin-ext.woff2` | Copyright (c) 2016 The Inter Project Authors — <https://github.com/rsms/inter>    |
+| Cinzel | `cinzel-400-700-latin.woff2`                                 | Copyright 2020 The Cinzel Project Authors — <https://github.com/NDISCOVER/Cinzel> |
 
 Both are licensed under the **SIL Open Font License, Version 1.1** — not MIT.
 The full licence text ships alongside the binaries at
@@ -28,7 +28,7 @@ original names.
 Note that these fonts are self-hosted rather than loaded from Google's CDN. That
 is deliberate: requesting them from `fonts.googleapis.com` would disclose every
 visitor's IP address to Google, which is the arrangement a German court found
-unlawful under the GDPR in *LG München I, 3 O 17493/20* (20 January 2022).
+unlawful under the GDPR in _LG München I, 3 O 17493/20_ (20 January 2022).
 
 ## Game data — Digital Extremes
 
