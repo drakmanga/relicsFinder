@@ -13,10 +13,11 @@ interface Props {
 /**
  * When what you are looking at was read, at the far end of the topbar.
  *
- * For prices this is the OLDEST reading held, not the newest: the sentence is
- * "prices as of", and that is only true of every row if it names the row
- * furthest behind. The newest would say a few seconds at all times while the
- * warmer works, over a table half of which is an hour old.
+ * For prices this is the NEWEST reading held, so the label moves as long as
+ * the warmer is actually fetching — an entry that dropped out of the current
+ * sweep list stays cached forever with a stale timestamp, and using the
+ * oldest reading would let one such orphan pin the label indefinitely,
+ * reading as "stopped updating" for a service that is working fine.
  *
  * Absent rather than empty before there is anything to report — a cold start
  * has no honest time to show, and a placeholder would only ask to be read.

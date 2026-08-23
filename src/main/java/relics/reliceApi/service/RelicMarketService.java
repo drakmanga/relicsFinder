@@ -573,14 +573,17 @@ public class RelicMarketService {
                 .filter(cached -> !cached.failed() && cached.isFresh())
                 .count();
 
-        // The oldest reading held, not the newest. The label this feeds says
-        // "prices as of", which is only true of every row if it names the row
-        // furthest behind. The newest would read a few seconds old at all
-        // times while the warmer runs, over a table half an hour stale.
-        Instant oldest = cache.values().stream()
+        // The newest reading held, not the oldest. This is what tells someone
+        // watching the label that the warmer is actually alive: an entry that
+        // fell out of the current sweep list (its name no longer produced by
+        // the catalogue, e.g. a set the ducat lookup stopped recognising)
+        // stays in the cache forever with a stale "at" and would otherwise
+        // pin the label to that one orphaned reading indefinitely, reading as
+        // "stopped updating" for a service that is fetching normally.
+        Instant newest = cache.values().stream()
                 .filter(cached -> !cached.failed())
                 .map(Cached::at)
-                .min(Instant::compareTo)
+                .max(Instant::compareTo)
                 .orElse(null);
 
         // Not Map.of: asOf is null on an empty cache, and that null is the
@@ -589,7 +592,7 @@ public class RelicMarketService {
         status.put("cached", priced);
         status.put("fresh", fresh);
         status.put("queued", queue.size());
-        status.put("asOf", oldest == null ? null : oldest.toString());
+        status.put("asOf", newest == null ? null : newest.toString());
         return status;
     }
 

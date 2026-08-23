@@ -211,9 +211,10 @@ export interface MarketStatus {
   fresh: number;
   queued: number;
   /**
-   * ISO instant of the OLDEST price held, so nothing on screen predates it.
-   * Null while the cache is empty. Deliberately not the newest: that would
-   * read as seconds old at all times while the warmer runs.
+   * ISO instant of the NEWEST price held, so the label reflects the warmer
+   * actually running. Null while the cache is empty. Deliberately not the
+   * oldest: an entry that fell out of the current sweep list stays cached
+   * forever and would otherwise pin the label to that one stale reading.
    */
   asOf: string | null;
 }
