@@ -210,6 +210,16 @@ export function verdictFor(part: SetPart): "buy" | "farm" | "unknown" {
  * Relic names go through `matchesRelic` rather than a substring test, for the
  * reason it exists: "Axi S1" must not drag in S10 through S19.
  *
+ * A piece already ticked as obtained never matches, on either route. Typing a
+ * relic tier is asking what the relic in the inventory builds towards, and
+ * typing a piece is asking where to get it; a component sitting in the foundry
+ * answers neither. The consequence is deliberate and will look like a bug from
+ * the outside: when every piece that would have matched is owned, the map comes
+ * back empty and `setMatchesTerm` drops the set out of the results altogether.
+ * That is the point. The Sets view is about what is still missing, and a set
+ * left in the list with nothing to mark inside it is a row on screen with no
+ * visible reason for being there — worse than not listing it at all.
+ *
  * The term arrives already trimmed and lowercased — the caller has one, and
  * lowercasing it once per keystroke beats doing it once per piece.
  */
@@ -218,6 +228,13 @@ export function searchedPartsOf(set: PrimeSet, term: string): Map<string, string
   if (!term) return marked;
 
   for (const part of set.parts) {
+    // Unconditionally, rather than only while the progress filter is on the
+    // unfinished sets: that filter chooses which sets to list, and this is the
+    // separate question of whether a piece still answers what was typed. Tying
+    // the two together would make the same term mean different things in two
+    // places, and "all sets" would go back to reporting finished collecting.
+    if (part.owned) continue;
+
     if (part.itemName.toLowerCase().includes(term)) {
       marked.set(part.itemName, null);
       continue;
@@ -234,10 +251,18 @@ export function searchedPartsOf(set: PrimeSet, term: string): Map<string, string
  * Whether the search term names the set at all.
  *
  * Three ways in, because all three are things a reader has in front of them:
- * the set's name, a piece of it — someone who remembers "Akbolto" should not
- * have to know it is the set and not the part — or a relic that drops one of
- * its pieces, which is the case of holding an Axi S18 and asking what it
- * builds towards.
+ * the set's name, a piece of it still missing — someone who remembers
+ * "Akbolto" should not have to know it is the set and not the part — or a
+ * relic that drops one of those pieces, which is the case of holding an Axi
+ * S18 and asking what it builds towards.
+ *
+ * The name is the one route owning everything does not close off, and it is
+ * checked first so `searchedPartsOf` never gets the chance to. Typing "Volt
+ * Prime" names the set rather than asking after a piece of it, and a set
+ * collected to the last component still has that name — answering an exact
+ * name with an empty list would read as the catalogue having lost it rather
+ * than as an answer. Nor does such a set need a marked piece to explain
+ * itself: the reason it is there is written across the row the reader typed.
  */
 export function setMatchesTerm(set: PrimeSet, term: string): boolean {
   if (!term) return true;

@@ -316,9 +316,12 @@ export function useCatalogue({
     const term = filters.term.trim().toLowerCase();
     if (!term) return byKind;
 
-    // The set name, any piece in it, or any relic that drops one of those
-    // pieces — see setMatchesTerm, which the panel's marker shares so that a
-    // set found by a relic always has a piece marked to say which.
+    // The set name, any piece still missing, or any relic that drops one of
+    // those pieces — see setMatchesTerm, which the panel's marker shares so
+    // that a set found by a relic always has a piece marked to say which.
+    // Owning a piece stops it matching, so the term's meaning now moves with
+    // the owned list; it arrives here inside `sets`, which is rebuilt whenever
+    // a tick changes it, so the dependencies below already carry it.
     return byKind.filter((set) => setMatchesTerm(set, term));
   }, [sets, setCategories, setStatus, filters.term]);
 
