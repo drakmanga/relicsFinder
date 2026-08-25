@@ -509,11 +509,12 @@ floating on nothing.
 </header>
 ```
 
-| Token              | Value                                     | Meaning                                                                                      |
-| ------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `--rf-content-max` | `1440px`                                  | Ceiling for the widest content — this app's eight-column tables. A **ceiling, not a target** |
-| `--rf-measure`     | `68ch`                                    | Running prose, narrower than the shell and independent of it                                 |
-| `--rf-side`        | `max(space-6, (100vw − content-max) / 2)` | The gutter, **derived**: 24px below 1488, growing above it                                   |
+| Token                  | Value                                     | Meaning                                                                                       |
+| ---------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `--rf-content-max`     | `1440px`                                  | Ceiling for the widest content — this app's eight-column tables. A **ceiling, not a target**  |
+| `--rf-measure`         | `68ch`                                    | Running prose, narrower than the shell and independent of it                                  |
+| `--rf-measure-caption` | `40ch`                                    | A caption sharing a row with other content, capped so it wraps rather than stretching the row |
+| `--rf-side`            | `max(space-6, (100vw − content-max) / 2)` | The gutter, **derived**: 24px below 1488, growing above it                                    |
 
 `--rf-side` is `.rf-shell`'s `padding-inline` and nothing else — cap and gutter
 are one rule, so moving `--rf-content-max` moves both. 1440 rather than the 1280

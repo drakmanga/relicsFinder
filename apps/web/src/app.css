@@ -599,25 +599,75 @@ body {
    unselected ones turned the row into six grey lozenges that only became
    themselves under the pointer.
 
-   The state is light. A chip lights up under the pointer and stays lit once it
-   is on, so hovering is a preview of what switching it on looks like. The glow
-   is a `drop-shadow`, which follows the chip's cut silhouette — `box-shadow`
-   and `outline` are both cut away by clip-path, and a rectangle drawn round an
-   octagon looks like a mistake. */
+   The state is light, and the light alone was not enough. The glow said "on"
+   and "the pointer is here" with the same declaration, so away from the pointer
+   an on chip was a slightly brighter off chip — 1.22 against 1.0 of brightness,
+   which is colour carrying state on its own and unreadable at a glance on a row
+   of six. What the glow is good at is the pointer: it arrives and leaves with
+   it. What it cannot do is persist, so the persisting half of the state is now
+   a structural mark, and the glow keeps only the half it was ever good at.
+
+   The mark is the gold rule under the chip, and this is the SAME mechanic as
+   the vault switches below and as `.rf-set-filter-on` on the Sets view. Three
+   controls that mean "switched on" in this application, one `inset 0 -2px 0 0`
+   in gold under all three — the two halves of the app no longer disagree about
+   what selected looks like, and the rule is now the thing a reader learns once.
+
+   The rejected reason it was not a rule before: the old comment here held that
+   `box-shadow` and `outline` are cut away by clip-path, and a rectangle drawn
+   round an octagon looks like a mistake. Both halves are still true — of the
+   CHIP. The clip-path lives on the `.rf-chip` span TierChip renders; this
+   button carries no clip-path of its own and no background or border to be cut,
+   so an inset shadow on it is drawn in full, a plain 2px band across the bottom
+   of the button box, under the octagon rather than around it. The glow stays a
+   `drop-shadow` for the original reason, which has not moved: it has to follow
+   the chip's cut silhouette.
+
+   The rule is untouched by the tier colours: Lith is still blue and Axi still
+   purple whether on or off, because that colour is how the tier is recognised
+   here, in the table, and in the panels. Draining the unselected ones turned
+   the row into six grey lozenges that only became themselves under the pointer.
+
+   Hover is a preview of on rather than a copy of it, which is what the values
+   above used to promise and fail to deliver: hovering draws the rule in the
+   dimmer interactive gold, switching it on fills it in at full gold-500. Both
+   are the same 2px band in the same place, so hovering shows you where the mark
+   will land without ever looking like it has landed. `.rf-set-filter` on the
+   Sets view already staged it in exactly those two tones, and copying that is
+   the whole of the convergence. */
 .rf-filter-toggle {
   display: flex;
   align-items: center;
   gap: var(--rf-space-1);
-  padding: 3px 2px;
+  /* The bottom 5px is room for the rule, and it is on every toggle rather than
+     only the pressed ones: padding that appeared with the state would shift the
+     chip two pixels down the moment you clicked it, and a row of six would
+     ripple as you picked through it. Same three values the vault switches were
+     already using — they wanted the room for the same reason. */
+  padding: 3px 2px 5px;
   cursor: pointer;
   background: none;
   border: 0;
-  transition: filter var(--rf-dur-fast) var(--rf-ease-standard);
+  /* Declared transparent rather than absent so the rule fades in with the glow.
+     Between `none` and a colour there is nothing to interpolate, and the mark
+     would snap on while the light around it slid. */
+  box-shadow: inset 0 -2px 0 0 transparent;
+  transition:
+    filter var(--rf-dur-fast) var(--rf-ease-standard),
+    box-shadow var(--rf-dur-fast) var(--rf-ease-standard);
 }
 
-.rf-filter-toggle:hover,
+.rf-filter-toggle:hover {
+  filter: brightness(1.22) drop-shadow(0 0 4px var(--rf-gold-600));
+  box-shadow: inset 0 -2px 0 0 var(--rf-border-interactive);
+}
+
+/* After the hover rule on purpose. The two weigh the same, so source order is
+   what decides an on chip under the pointer, and it must keep its full-gold
+   rule instead of falling back to the dimmer preview one. */
 .rf-filter-toggle[aria-pressed="true"] {
   filter: brightness(1.22) drop-shadow(0 0 4px var(--rf-gold-600));
+  box-shadow: inset 0 -2px 0 0 var(--rf-gold-500);
 }
 
 /* On, and under the pointer: the glow tightens rather than doubling. */
@@ -626,20 +676,14 @@ body {
 }
 
 /* The vault switches are words, not chips: nothing to light up, so the word
-   itself carries the state — muted when it is not the one in force, and
-   underlined in gold when it is. */
+   itself carries the state — muted when it is not the one in force, and lit
+   when it is. The rule under it comes from `.rf-filter-toggle` now, along with
+   the room to draw it in; all this has left to say is that a word does not
+   glow. */
 .rf-filter-toggle-text:hover,
 .rf-filter-toggle-text[aria-pressed="true"],
 .rf-filter-toggle-text[aria-pressed="true"]:hover {
   filter: none;
-}
-
-.rf-filter-toggle-text {
-  padding: 3px 2px 5px;
-}
-
-.rf-filter-toggle-text[aria-pressed="true"] {
-  box-shadow: inset 0 -2px 0 0 var(--rf-gold-500);
 }
 
 .rf-filter-vault {
@@ -749,6 +793,18 @@ body {
 .rf-cols-items {
   min-width: 78rem;
 }
+/* Sets was the one table here with no floor of its own, so it fell back to
+   `.rf-table`'s 40rem — and 640px is not enough for its first column. Owned is
+   8% of the table, which is 51px, and the cell's --rf-space-3 either side
+   leaves 27px for a button that is 44px square below --rf-bp-lg. WCAG 2.5.8 is
+   the one measurement here that cannot be negotiated down, so the column has to
+   grow to hold the target rather than the target shrink into the column; the
+   button was being clipped by `.rf-table tbody td { overflow: hidden }`, which
+   hid the fault without fixing it. 68rem makes that 8% into 87px, and the same
+   width carries the Wishlist stepper at 12% for the reason under Ducanetor. */
+.rf-cols-sets {
+  min-width: 68rem;
+}
 /* 68rem rather than 66: the Wishlist column is 12% of it, which is 130px, and
    the stepper inside it is 102px plus the cell's own padding. Below that the
    stepper overflowed into the Info column beside it. */
@@ -787,11 +843,18 @@ body {
   flex-direction: column;
 }
 
+/* The one rule between the heading and the table, and the section draws it —
+   full-bleed across the pane, because that is where the table's own first
+   column starts. An inset rule would leave a strip of unruled pane against a
+   table that begins at the edge, which is the seam it was meant to remove.
+   border-default rather than subtle: this is the boundary now, and the table
+   below it has stopped drawing one of its own. See components.css, .rf-table
+   thead th. */
 .rf-ranked-head {
   flex: none;
   padding: var(--rf-space-5) var(--rf-space-6) var(--rf-space-4);
   background: var(--rf-surface-1);
-  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
 }
 
 .rf-ranked-headline {
@@ -1084,11 +1147,19 @@ body {
    Laid out in columns they are all on screen at once. `auto-fit` rather than a
    fixed count because the same markup has to survive a phone, where the
    columns fall back into the stack they used to be.
+
+   `min(19rem, 100%)` rather than the bare 19rem, and the same one column down:
+   the fallback to a stack is only half of what a phone needs, because a track
+   floor is a floor even when there is one track. At 360px the modal is 312px
+   wide and the panel's single column stayed 336px, laying 41px of itself past
+   the frame — the stack arrived and brought the minimum with it. `min()` caps
+   the floor at the width actually on offer, which is what "falls back" was
+   always supposed to mean.
    ----------------------------------------------------------------------- */
 
 .rf-panel-cols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
   gap: var(--rf-space-5);
   /* Top, not stretch: a short column must not pad itself out to the height of
      the tallest one. */
@@ -1098,7 +1169,7 @@ body {
 /* Two columns of unequal weight: one is a list of pieces and the other is the
    handful of controls that govern it. */
 .rf-panel-cols-lead {
-  grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(21rem, 100%), 1fr));
 }
 
 /* The relic's three columns are not equals: the middle one is six drop rows,
@@ -1278,6 +1349,80 @@ body {
   color: var(--rf-fg-muted);
 }
 
+/* ----------------------------------------------------------- Wishlist view -
+   Four blocks stack above this table — the totals, the section tabs, the note
+   line, and the note the icon expands — and each one used to draw a rule of its
+   own, alternating border-default and border-subtle, before the table drew a
+   fifth under its column headings. Measured on a 1440 pane, two of them landed
+   a single pixel apart at different insets: the Tabs component's own rail ran
+   from the first tab to the last, x 42 to 525, and the block wrapping it ran
+   edge to edge, x 24 to 1416.
+
+   One head, one rule, at its foot. The blocks inside it are told apart by what
+   they hold and by the space around them, which is what was doing the work
+   anyway — five hairlines in 190px is not five boundaries, it is one boundary
+   drawn five times.
+   ----------------------------------------------------------------------- */
+
+.rf-wishlist {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rf-wishlist-head {
+  flex: none;
+  background: var(--rf-surface-1);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
+}
+
+/* One inset for every block in the head, declared once so the four cannot drift
+   apart. On the blocks rather than on the head itself, so the expanded note's
+   fill and its gold edge still reach the pane's edge.
+   space-4 is the inset .rf-set-filters already uses — the other section head in
+   this app that is a dense strip rather than a title — and it is the nearer of
+   the two tokens either side of the 18px this was written with, which matters
+   at 360px where the five tabs are already wider than the pane. */
+.rf-wishlist-head > * {
+  padding-inline: var(--rf-space-4);
+}
+
+.rf-wishlist-totals {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-8);
+  padding-block: var(--rf-space-4);
+}
+
+/* Capped so it wraps into a block beside the totals instead of stretching the
+   row across the pane. */
+.rf-wishlist-unpriced {
+  max-width: var(--rf-measure-caption);
+}
+
+/* The rail under the tabs is the head's rule drawn a second time, and drawn
+   only as wide as the tabs happen to be. The head owns that boundary; the strip
+   is read as tabs by the lift and the gold mark on the selected one, not by a
+   line under all of them. */
+.rf-wishlist-tabs {
+  border-bottom: 0;
+}
+
+.rf-wishlist-note {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-2);
+  padding-block: var(--rf-space-2);
+}
+
+.rf-wishlist-longnote {
+  margin: 0;
+  padding-block: var(--rf-space-3);
+  color: var(--rf-fg-secondary);
+  background: var(--rf-surface-3);
+  border-left: var(--rf-border-width-emphasis) solid var(--rf-gold-500);
+}
+
 /* -------------------------------------------------------- Wishlist stepper -
    `− N +` with a clear button that appears once there is something to clear.
    The clear button keeps its place while hidden, so the row does not jump on
@@ -1286,10 +1431,20 @@ body {
    − N +, therefore sat half a clear button left of centre in every table that
    shows a stopper: Relics, Prime Items, Sets, Wishlist, Ducanetor and Endo.
 
-   The nudge back is a transform rather than a margin because a margin would
-   take its width out of the cell, and at the narrowest column the row has
-   nothing to spare. Half the clear button and its gap, both read from the
-   same values that draw them, so the two cannot drift apart.
+   The nudge back was a transform — half a clear button and its gap — and a
+   transform moves the box, not just the paint. The row is as wide as the cell's
+   content box, so translating it 17px right put its right edge 5px past the
+   cell in EVERY table at EVERY width: 4px of permanent sideways scroll inside
+   `.rf-table-wrap` on a 1440px desktop, which is too small for anyone to report
+   and was never a narrow-screen fault at all.
+
+   The counterweight below is the same correction expressed as layout rather
+   than as paint: an empty flex item the width of the clear button, standing
+   where a second one would if the row were symmetric. `− N +` then sits at the
+   true centre of the cell with the group centred normally, and nothing leaves
+   the cell, because a flex item that does not fit shrinks instead of
+   overflowing — which is exactly what should happen in the narrowest column,
+   where being centred matters less than being whole.
    ----------------------------------------------------------------------- */
 .rf-qty {
   --rf-qty-gap: 2px;
@@ -1298,7 +1453,22 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--rf-qty-gap);
-  transform: translateX(calc((var(--rf-size-control-sm) + var(--rf-qty-gap)) / 2));
+}
+
+/* The basis carries the gap the counterweight will contribute and the negative
+   margin cancels it, so a counterweight shrunk to nothing costs the row
+   nothing: the stepper's minimum stays the 102px every column floor above was
+   measured against, and none of them has to grow to pay for the centring. */
+.rf-qty::before {
+  content: "";
+  flex: 0 1 calc(var(--rf-size-control-sm) + var(--rf-qty-gap));
+  margin-right: calc(-1 * var(--rf-qty-gap));
+}
+
+/* The buttons and the count are the row's minimum and never give any of it up;
+   the counterweight above is the only thing in here allowed to shrink. */
+.rf-qty > * {
+  flex: none;
 }
 
 /* Not `display: none`: the point is to hold the space. Hidden this way the
@@ -1554,7 +1724,11 @@ body {
 }
 
 /* One row: the label, the kinds, and the count of what survived them. Wraps
-   rather than scrolling — a filter you cannot see is a filter you forget is on. */
+   rather than scrolling — a filter you cannot see is a filter you forget is on.
+
+   border-default like every other section head in the app: this strip is what
+   sits between the Sets heading and the Sets table, and a section boundary is
+   one weight everywhere or it is not a rule. */
 .rf-set-filters {
   flex: none;
   display: flex;
@@ -1562,7 +1736,7 @@ body {
   flex-wrap: wrap;
   gap: var(--rf-space-2) var(--rf-space-3);
   padding: var(--rf-space-3) var(--rf-space-4);
-  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
 }
 
 .rf-set-filters-label {
@@ -1609,7 +1783,14 @@ body {
   box-shadow: inset 0 -2px 0 0 var(--rf-border-interactive);
 }
 
-.rf-set-filter-on {
+/* `:hover` is listed too, and it has to be: `.rf-set-filter-on` on its own
+   weighs less than `.rf-set-filter:hover` above, so an already-on kind fell
+   back to the dimmer preview tones the moment the pointer touched it — the on
+   state disappearing exactly when it is being pointed at. Same shape as
+   `.rf-filter-toggle[aria-pressed="true"]`: equal weight to the hover rule and
+   after it, so the full gold wins. */
+.rf-set-filter-on,
+.rf-set-filter-on:hover {
   color: var(--rf-fg-primary);
   box-shadow: inset 0 -2px 0 0 var(--rf-gold-500);
 }

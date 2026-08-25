@@ -479,7 +479,18 @@
 
 /* top:0 — the wrapper's overflow-x makes it the scroll container, so any
    offset above zero pushes the header down over the first rows. Topbar
-   offset belongs to the shell layout, never to these cells. */
+   offset belongs to the shell layout, never to these cells.
+
+   The header closes at border-subtle, the same hairline every row below it
+   draws, and not at border-default. A table almost never opens a screen on its
+   own: something above it — a section heading, a filter strip, a totals bar —
+   already draws the boundary at border-default, and the header row drawing a
+   second heavy line 36px under the first boxed the column headings in a strip
+   of their own, cut off from the section that named them and from the data they
+   label. One boundary belongs to the section; what the header keeps is its
+   share of the grid, at the grid's own weight. Dropping the line altogether was
+   tried and is worse: the header is sticky, so while the rows travel under it
+   the only thing left separating them would be the surface-2 fill. */
 .rf-table thead th {
   position: sticky;
   top: 0;
@@ -487,7 +498,7 @@
   height: 36px;
   padding: 0 var(--rf-space-3);
   background: var(--rf-surface-2);
-  border-bottom: 1px solid var(--rf-border-default);
+  border-bottom: 1px solid var(--rf-border-subtle);
   font-size: var(--rf-text-overline);
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -982,11 +993,28 @@
   width: 100%;
   max-height: 100%;
   display: flex;
+  min-width: 0;
   min-height: 0;
 }
 
+/* `min-width: 0` for the same reason `min-height: 0` is on both of these, and
+   it was the missing half. A flex item's automatic minimum size is its
+   min-content width, and this panel's is 370px — three columns of figures and
+   a chart that will not narrow further. At 360px the scrim's --rf-space-6
+   gutter either side leaves the modal 312px, so the frame took its 370 anyway
+   and drew 58px of itself past the gilded border. Nothing reported it: the
+   scrim is `position: fixed` with visible overflow, so the document never
+   lengthened and no scrollbar appeared — the panel simply painted outside its
+   own edge, and only below a 418px viewport (370 plus the 48 of gutter).
+
+   Zero here lets the frame take the width it is given, and what will not fit
+   is then the body's problem rather than the border's: `overflow-y: auto` on it
+   computes overflow-x to auto too, so anything left over scrolls INSIDE the
+   frame, on the same reasoning that put the vertical scrolling there. A panel
+   whose columns collapse properly at that width never reaches for it. */
 .rf-modal > .rf-detail > .rf-frame {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
 }

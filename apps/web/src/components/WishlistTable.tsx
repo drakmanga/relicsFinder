@@ -171,55 +171,38 @@ export function WishlistTable({
   const note = KIND_NOTE[kind];
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/*
-        The totals lead rather than trail. They are the reason to open the view
-        at all — "what is this list going to cost me" — and at the foot of three
-        stacked tables they were below the fold on any list worth asking about.
-      */}
-      <div
-        style={{
-          flex: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: 32,
-          padding: "14px 18px",
-          background: "var(--rf-surface-1)",
-          borderBottom: "1px solid var(--rf-border-default)",
-        }}
-      >
-        <Total label="List total">
-          <PlatPrice value={total} size="lg" />
-        </Total>
+    <div className="rf-wishlist">
+      {/* One head over the table, and it draws the single rule between the two.
+          See app.css, Wishlist view: the blocks below used to draw four. */}
+      <div className="rf-wishlist-head">
+        {/*
+          The totals lead rather than trail. They are the reason to open the view
+          at all — "what is this list going to cost me" — and at the foot of three
+          stacked tables they were below the fold on any list worth asking about.
+        */}
+        <div className="rf-wishlist-totals">
+          <Total label="List total">
+            <PlatPrice value={total} size="lg" />
+          </Total>
 
-        <Total label="Ducats">
-          <span className="rf-text-data-lg rf-ducat">{ducatTotal}</span>
-        </Total>
+          <Total label="Ducats">
+            <span className="rf-text-data-lg rf-ducat">{ducatTotal}</span>
+          </Total>
 
-        <Total label="Lines">
-          <span className="rf-text-data-lg rf-fg-secondary">{entries.length}</span>
-        </Total>
+          <Total label="Lines">
+            <span className="rf-text-data-lg rf-fg-secondary">{entries.length}</span>
+          </Total>
 
-        {unpriced > 0 && (
-          <p className="rf-text-caption rf-fg-muted" style={{ maxWidth: 240 }}>
-            {unpriced} {unpriced === 1 ? "line has" : "lines have"} no listing and{" "}
-            {unpriced === 1 ? "counts" : "count"} as nothing in the total.
-          </p>
-        )}
-      </div>
+          {unpriced > 0 && (
+            <p className="rf-text-caption rf-fg-muted rf-wishlist-unpriced">
+              {unpriced} {unpriced === 1 ? "line has" : "lines have"} no listing and{" "}
+              {unpriced === 1 ? "counts" : "count"} as nothing in the total.
+            </p>
+          )}
+        </div>
 
-      <div
-        style={{
-          flex: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "0 18px",
-          background: "var(--rf-surface-1)",
-          borderBottom: "1px solid var(--rf-border-default)",
-        }}
-      >
         <Tabs
+          className="rf-wishlist-tabs"
           label="Wishlist sections"
           value={kind}
           onChange={(id) => {
@@ -234,53 +217,27 @@ export function WishlistTable({
             { id: "endo", label: `${KIND_NOTE.endo.label} · ${endo.length}` },
           ]}
         />
-      </div>
 
-      <div
-        style={{
-          flex: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          padding: "10px 18px",
-          background: "var(--rf-surface-1)",
-          borderBottom: "1px solid var(--rf-border-subtle)",
-        }}
-      >
-        <span className="rf-text-caption rf-fg-muted">{note.short}</span>
-        <button
-          type="button"
-          onClick={() => setNoteOpen((was) => !was)}
-          aria-expanded={noteOpen}
-          aria-label={noteOpen ? "Hide the explanation" : `What ${note.label} is judged on`}
-          className={`rf-icon-button rf-focus-ring${noteOpen ? " rf-gold-mark" : ""}`}
-        >
-          <InfoIcon width={13} height={13} />
-        </button>
-        {shown.length > 0 && (
-          <Chip className="rf-push">
-            {shown.length} {shown.length === 1 ? "line" : "lines"}
-          </Chip>
-        )}
-      </div>
+        <div className="rf-wishlist-note">
+          <span className="rf-text-caption rf-fg-muted">{note.short}</span>
+          <button
+            type="button"
+            onClick={() => setNoteOpen((was) => !was)}
+            aria-expanded={noteOpen}
+            aria-label={noteOpen ? "Hide the explanation" : `What ${note.label} is judged on`}
+            className={`rf-icon-button rf-focus-ring${noteOpen ? " rf-gold-mark" : ""}`}
+          >
+            <InfoIcon width={13} height={13} />
+          </button>
+          {shown.length > 0 && (
+            <Chip className="rf-push">
+              {shown.length} {shown.length === 1 ? "line" : "lines"}
+            </Chip>
+          )}
+        </div>
 
-      {noteOpen && (
-        <p
-          className="rf-text-body-sm"
-          style={{
-            flex: "none",
-            margin: 0,
-            padding: "10px 18px",
-            maxWidth: "80ch",
-            color: "var(--rf-fg-secondary)",
-            background: "var(--rf-surface-3)",
-            borderBottom: "1px solid var(--rf-border-subtle)",
-            borderLeft: "2px solid var(--rf-gold-500)",
-          }}
-        >
-          {note.long}
-        </p>
-      )}
+        {noteOpen && <p className="rf-text-body-sm rf-prose rf-wishlist-longnote">{note.long}</p>}
+      </div>
 
       {/* The panel the section tabs point at: without it their `aria-controls`
           names an element that is not in the document. */}
