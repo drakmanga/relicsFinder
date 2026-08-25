@@ -11,7 +11,7 @@ import {
 import { useWishlist } from "./wishlist";
 import { useOwned } from "./owned";
 import { itemPriceProgress, relicPriceProgress } from "./priceProgress";
-import { buildSets } from "./setCompletion";
+import { buildSets, searchedPartsOf, setMatchesTerm } from "./setCompletion";
 import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./items";
 import { filterByCategory, filterByStatus, type SetStatus } from "./setCategories";
 import {
@@ -316,13 +316,10 @@ export function useCatalogue({
     const term = filters.term.trim().toLowerCase();
     if (!term) return byKind;
 
-    // The set name or any piece in it: someone who remembers "Akbolto" should
-    // not have to know it is the set and not the part.
-    return byKind.filter(
-      (set) =>
-        set.setName.toLowerCase().includes(term) ||
-        set.parts.some((part) => part.itemName.toLowerCase().includes(term)),
-    );
+    // The set name, any piece in it, or any relic that drops one of those
+    // pieces — see setMatchesTerm, which the panel's marker shares so that a
+    // set found by a relic always has a piece marked to say which.
+    return byKind.filter((set) => setMatchesTerm(set, term));
   }, [sets, setCategories, setStatus, filters.term]);
 
   const selectedSetRow = useMemo(
@@ -367,6 +364,22 @@ export function useCatalogue({
     [relicPrices.data, relicPrices.isLoading],
   );
 
+  /**
+   * The pieces of the open set that the search named, and why.
+   *
+   * A map rather than a name: "Axi S18" can name two pieces of the same set,
+   * and the panel marks both. The value is the relic that matched, or null
+   * when the piece matched on its own name — the panel quotes the relic, since
+   * a search for a relic that is not the piece's best source would otherwise
+   * mark a row that names a different relic entirely.
+   */
+  const searchedSetParts = useMemo(() => {
+    const term = filters.term.trim().toLowerCase();
+    if (!term || !selectedSetRow) return new Map<string, string | null>();
+
+    return searchedPartsOf(selectedSetRow, term);
+  }, [filters.term, selectedSetRow]);
+
   const searchedItem = useMemo(() => {
     const term = filters.term.trim().toLowerCase();
     if (!term || !selectedRow) return null;
@@ -407,5 +420,7 @@ export function useCatalogue({
     setPriceBySet,
     selectedSetRow,
     searchedItem,
+    /** Pieces of the open set the search named, mapped to the relic that matched. */
+    searchedSetParts,
   };
 }

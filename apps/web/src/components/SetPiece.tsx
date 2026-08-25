@@ -17,6 +17,8 @@ import type { SetPart } from "../lib/setCompletion";
 export function Piece({
   part,
   setName,
+  marked,
+  matchedRelic,
   pricesFilling,
   onToggle,
   onPickItem,
@@ -24,6 +26,18 @@ export function Piece({
 }: {
   part: SetPart;
   setName: string;
+  /** Whether the search named this piece, directly or through a relic. */
+  marked?: boolean;
+  /**
+   * The relic the search matched, when it was a relic that matched.
+   *
+   * Quoted beside the marker because the farming line below names the piece's
+   * *best* source, which is usually a different relic: without this the mark
+   * would point at a row that appears to have nothing to do with what was
+   * typed. Null when the piece matched on its own name, where the mark needs
+   * no explanation.
+   */
+  matchedRelic?: string | null;
   /** Whether more prices are still expected. See lib/priceProgress. */
   pricesFilling: boolean;
   onToggle: (itemName: string) => void;
@@ -33,7 +47,10 @@ export function Piece({
   const verdict = verdictFor(part);
 
   return (
-    <div style={{ opacity: part.owned ? 0.55 : 1 }}>
+    <div
+      className={marked ? "rf-set-piece rf-set-piece-marked" : "rf-set-piece"}
+      style={{ opacity: part.owned ? 0.55 : 1 }}
+    >
       <div className="rf-row">
         <input
           type="checkbox"
@@ -65,6 +82,12 @@ export function Piece({
               spends the width that tells them apart. */}
           {part.itemName.replace(`${setName} `, "")}
         </button>
+
+        {marked && matchedRelic && (
+          <span className="rf-text-caption rf-fg-muted rf-set-piece-match">
+            from {matchedRelic}
+          </span>
+        )}
 
         {part.price === null && pricesFilling ? (
           <Skeleton width={36} height={13} />

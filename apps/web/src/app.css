@@ -1174,6 +1174,31 @@ body {
   box-shadow: inset 2px 0 0 0 var(--rf-void-400);
 }
 
+/* A piece of a set. Neutral until the search names it: the padding is here so
+   the marked state has room for its bar rather than gaining width when it
+   lights up and shifting the six rows sideways. */
+.rf-set-piece {
+  padding: 3px 6px;
+  margin-left: -6px;
+  margin-right: -6px;
+}
+
+/* The piece the search named — by its own name, or through a relic that drops
+   it. Same fill and marker as a marked drop in the relic panel, since it
+   answers the same question: this is the one you asked about. */
+.rf-set-piece-marked {
+  background: var(--rf-state-row-selected);
+  box-shadow: inset 2px 0 0 0 var(--rf-void-400);
+}
+
+/* Which relic matched, when it was a relic. Pushed against the price rather
+   than the name so it does not move with the length of the piece's name. */
+.rf-set-piece-match {
+  flex: none;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 /* Sized to its widest real value — three digits and the glyph — so the figures
    line up down the six rows instead of drifting with the item names. In rem,
    like the drop row's own columns, so it still holds them at 200% text. */

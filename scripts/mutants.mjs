@@ -96,6 +96,30 @@ const MUTANTS = [
     to: "",
   },
   {
+    name: "the set search forgets the relics that drop each piece",
+    file: "apps/web/src/lib/setCompletion.ts",
+    from: "          relicNames: relicsByItem.get(itemName) ?? [],",
+    to: "          relicNames: [],",
+  },
+  {
+    name: "searchedPartsOf marks a piece by the relic it does not name",
+    file: "apps/web/src/lib/setCompletion.ts",
+    from: "    const relic = part.relicNames.find((name) => matchesRelic(name, term));",
+    to: "    const relic = part.relicNames[0];",
+  },
+  {
+    name: "searchedPartsOf loses which relic matched",
+    file: "apps/web/src/lib/setCompletion.ts",
+    from: "    if (relic) marked.set(part.itemName, relic);",
+    to: "    if (relic) marked.set(part.itemName, null);",
+  },
+  {
+    name: "setMatchesTerm goes back to the set name and its pieces only",
+    file: "apps/web/src/lib/setCompletion.ts",
+    from: "  return set.setName.toLowerCase().includes(term) || searchedPartsOf(set, term).size > 0;",
+    to: "  return set.setName.toLowerCase().includes(term);",
+  },
+  {
     name: "fromSearch trusts a view name it does not know",
     file: "apps/web/src/lib/urlState.ts",
     from: '(allowed as readonly string[]).includes(raw ?? "") ? (raw as T) : fallback;',
