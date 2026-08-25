@@ -21,6 +21,7 @@
     "format:check": "prettier --check .",
     "verify:all": "npm run typecheck && npm run lint && npm run lint:debt && npm run test && npm run verify",
     "axe": "node scripts/axe-check.mjs",
+    "reflow": "node scripts/reflow-check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:mutants": "node scripts/mutants.mjs",
