@@ -132,13 +132,24 @@ public final class DesktopRuntime {
         return base.resolve("RelicFinder");
     }
 
-    /** Points the four state files at the per-user directory. */
+    /**
+     * Points the five files this application writes at the per-user directory.
+     *
+     * <p>The unknown-item report belongs here with the four state files even
+     * though it is a diagnostic rather than state: its configured default is
+     * the relative {@code data/}, which under an installed build resolves
+     * against the install directory — Program Files on Windows, where the user
+     * running the app cannot write. The report would then fail to save on every
+     * flush beat for the life of the process, and the one place it is looked
+     * for would be empty.
+     */
     private static void placeState(Path home) {
         Path data = home.resolve("data");
         setIfAbsent("relics.catalogue.path", data.resolve("relics.json").toString());
         setIfAbsent("relics.wishlist.path", data.resolve("wishlist.json").toString());
         setIfAbsent("relics.owned.path", data.resolve("owned.json").toString());
         setIfAbsent("relics.price-cache.path", data.resolve("price-cache.json").toString());
+        setIfAbsent("relics.unknown-items.path", data.resolve("unknown-items.txt").toString());
     }
 
     /**

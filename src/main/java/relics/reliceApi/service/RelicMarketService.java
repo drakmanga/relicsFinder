@@ -137,8 +137,30 @@ public class RelicMarketService {
     private final PriceCacheStore store;
     private final MarketRateLimiter rateLimiter;
     private final ColdStartOrder coldStartOrder;
+    /** Only for the slugs the market turns out to have no item for. */
+    private final UnknownItemReport unknownItems;
 
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+
+    /**
+     * The name each slug was built from.
+     *
+     * <p>The queue, the cache and the sweep all key on the slug, which is right
+     * — the slug is what the market is asked for — but a slug is lossy in the
+     * one direction that matters here. "cobra_and_crane_prime_hilt" does not
+     * give back the ampersand that made the earlier spelling wrong, and
+     * "lith_v9_relic" does not say whether the catalogue calls it "Lith V9" or
+     * something else. When a slug comes back 404 the thing to correct is the
+     * name, so the name is kept beside it rather than reconstructed from the
+     * slug, which cannot be done.
+     *
+     * <p>Bounded by the catalogue in practice: names arrive from the warm-up
+     * runner and from the tables, both of which ask by catalogue name. A client
+     * can add an entry by asking for a name that is in no catalogue, and the
+     * service is self-hosted and single-tenant, so that is somebody filling
+     * their own map with their own typing.
+     */
+    private final Map<String, String> namesBySlug = new ConcurrentHashMap<>();
 
     /**
      * Items waiting to be fetched, soonest first.
@@ -219,12 +241,13 @@ public class RelicMarketService {
 
     public RelicMarketService(DucatService ducatService, SetListingService setListingService,
                               PriceCacheStore store, MarketRateLimiter rateLimiter,
-                              ColdStartOrder coldStartOrder) {
+                              ColdStartOrder coldStartOrder, UnknownItemReport unknownItems) {
         this.ducatService = ducatService;
         this.setListingService = setListingService;
         this.store = store;
         this.rateLimiter = rateLimiter;
         this.coldStartOrder = coldStartOrder;
+        this.unknownItems = unknownItems;
     }
 
     /**
@@ -289,6 +312,10 @@ public class RelicMarketService {
     /** Writes the cache out if anything changed since the last time. */
     private void flush() {
         if (dirty.compareAndSet(true, false)) store.save(Map.copyOf(cache));
+        // On the same beat rather than a beat of its own: both are the same
+        // kind of writing-down, and the report holds its own "has anything
+        // changed" so a minute in which nothing 404'd costs one boolean read.
+        unknownItems.save();
     }
 
     @PreDestroy
@@ -299,6 +326,10 @@ public class RelicMarketService {
         // Written unconditionally: the sixty-second flush may be up to sixty
         // seconds behind, and this is the one moment it cannot catch up later.
         store.save(Map.copyOf(cache));
+        // The report is read after the process has exited, so this is the beat
+        // that actually matters for it — the last minute of a run is exactly
+        // where a cold start's worth of 404s lands.
+        unknownItems.save();
     }
 
     /**
@@ -414,7 +445,7 @@ public class RelicMarketService {
      * {@link #sweep()} exists to prevent.
      */
     public ItemPrice getItemPrice(String itemName) {
-        String slug = slugFor(itemName);
+        String slug = slugOf(itemName, this::slugFor);
         Cached cached = cache.get(slug);
 
         if (isMissing(cached)) enqueue(slug);
@@ -445,7 +476,7 @@ public class RelicMarketService {
 
     /** Ninety days of completed trades. Empty until the item has been fetched. */
     public List<PricePoint> getHistory(String itemName) {
-        String slug = itemSlug(itemName);
+        String slug = slugOf(itemName, RelicMarketService::itemSlug);
         Cached cached = cache.get(slug);
 
         if (cached == null || !cached.isFresh()) {
@@ -465,7 +496,7 @@ public class RelicMarketService {
      * the item one would chart the part called "Axi A1", which does not exist.
      */
     public List<PricePoint> getRelicHistory(String relicName) {
-        String slug = relicSlug(relicName);
+        String slug = slugOf(relicName, RelicMarketService::relicSlug);
         Cached cached = cache.get(slug);
 
         if (cached == null || !cached.isFresh()) {
@@ -485,7 +516,7 @@ public class RelicMarketService {
      * null by nature — a relic cannot be dissolved and belongs to no set.
      */
     public ItemPrice getRelicPrice(String relicName) {
-        String slug = relicSlug(relicName);
+        String slug = slugOf(relicName, RelicMarketService::relicSlug);
         Cached cached = cache.get(slug);
 
         if (cached == null || !cached.isFresh()) {
@@ -514,7 +545,7 @@ public class RelicMarketService {
      *         controller was written against.
      */
     public double getAveragePrice(String relicName) {
-        String slug = relicSlug(relicName);
+        String slug = slugOf(relicName, RelicMarketService::relicSlug);
         Cached cached = cache.get(slug);
 
         if (cached == null || !cached.isFresh()) {
@@ -544,7 +575,7 @@ public class RelicMarketService {
             if (name == null || name.isBlank()) continue;
 
             String relicName = name.trim();
-            String slug = relicSlug(relicName);
+            String slug = slugOf(relicName, RelicMarketService::relicSlug);
             Cached cached = cache.get(slug);
 
             // Queued, not waited on. One slow relic must not hold up the other
@@ -616,7 +647,7 @@ public class RelicMarketService {
 
         for (String name : names) {
             if (name == null || name.isBlank()) continue;
-            String slug = toSlug.apply(name.trim());
+            String slug = slugOf(name.trim(), toSlug);
             Cached cached = cache.get(slug);
             if (cached == null || !cached.isFresh()) enqueueFirst(slug);
         }
@@ -673,12 +704,27 @@ public class RelicMarketService {
 
         for (String name : names) {
             if (name == null || name.isBlank()) continue;
-            String slug = toSlug.apply(name.trim());
+            String slug = slugOf(name.trim(), toSlug);
             slugs.add(slug);
             if (isMissing(cache.get(slug))) enqueue(slug);
         }
 
         return slugs;
+    }
+
+    /**
+     * The slug for a name, with the name written down beside it.
+     *
+     * <p>The same answer {@code derive} gives on its own — {@link #slugFor},
+     * {@link #itemSlug} or {@link #relicSlug}, depending on what is being asked
+     * about. The pairing is the point, and this exists so that there is one
+     * place where a name turns into a slug rather than eight: see
+     * {@link #namesBySlug} for what the pairing is for.
+     */
+    private String slugOf(String itemName, Function<String, String> derive) {
+        String slug = derive.apply(itemName);
+        if (itemName != null) namesBySlug.put(slug, itemName);
+        return slug;
     }
 
     private void warmLoop() {
@@ -756,8 +802,30 @@ public class RelicMarketService {
             HttpResponse<byte[]> response =
                     httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
-            // 404 means the item is not traded — an answer, not a fault.
-            if (response.statusCode() == 404) return noListing();
+            // 404 and 200-with-nothing are two different facts, and the market
+            // is precise about which it sends: 200 with empty statistics for an
+            // item it carries that nobody is selling today, 404 only for a slug
+            // it has never heard of. So this branch is exactly the case where
+            // the name the slug was built from is wrong, and it is written down
+            // rather than absorbed — nothing else in the application would ever
+            // notice.
+            //
+            // Every slug, whichever of the three derivations produced it.
+            // relicSlug and slugFor can be wrong in precisely the way itemSlug
+            // was wrong twice — a relic the drop tables spell differently, a
+            // set whose listing is not its name with "Set" on the end, which is
+            // already one known exception — and separating them here would need
+            // a slug-to-kind lookup that does not exist, to buy nothing: what
+            // gets corrected is a name, and the name is on the line either way.
+            //
+            // The record itself stays noListing(). "No listing" is still what
+            // the market said, and calling it a failure would put every wrong
+            // name on the one-minute retry — a permanent spin against the
+            // market for something no retry can fix.
+            if (response.statusCode() == 404) {
+                unknownItems.record(slug, namesBySlug.get(slug));
+                return noListing();
+            }
 
             // Anything else is the market failing to answer, which says nothing
             // about the item: recorded as a failure so it is retried in a

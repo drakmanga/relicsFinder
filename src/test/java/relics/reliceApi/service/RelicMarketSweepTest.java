@@ -41,7 +41,8 @@ class RelicMarketSweepTest {
                 new SetListingService(rateLimiter),
                 new PriceCacheStore(temp.resolve("price-cache.json").toString()),
                 rateLimiter,
-                coldStartOrder);
+                coldStartOrder,
+                new UnknownItemReport(temp.resolve("unknown-items.txt").toString()));
     }
 
     private int queued() {
