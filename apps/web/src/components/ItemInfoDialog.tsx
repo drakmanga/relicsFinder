@@ -61,7 +61,8 @@ export function ItemInfoDialog({
             variant="primary"
             icon={<ExternalLinkIcon />}
             onClick={() =>
-              itemName && window.open(marketUrl(itemName), "_blank", "noopener,noreferrer")
+              itemName &&
+              window.open(marketUrl(itemName, meta?.slug), "_blank", "noopener,noreferrer")
             }
           >
             Open on Warframe Market

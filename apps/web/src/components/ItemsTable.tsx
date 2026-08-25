@@ -227,7 +227,14 @@ export function ItemsTable({
                     aria-label={`Open ${row.itemName} on Warframe Market`}
                     onClick={(event) => {
                       event.stopPropagation();
-                      window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer");
+                      // The row's own price came back with the market's spelling
+                      // of the item on it; the name is only the fallback for a
+                      // row the price batch has not reached yet.
+                      window.open(
+                        marketUrl(row.itemName, meta?.slug),
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
                     }}
                   />
                 </TableCell>

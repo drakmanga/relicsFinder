@@ -5,14 +5,17 @@ import { prices } from "./testing";
 
 describe("marketUrl", () => {
   it("slugifies a part name", () => {
+    // The name is kept whole. `volt_prime_neuroptics` is a 301 rather than an
+    // item, and on the frames released since Hildryn — Gyre, Revenant — the
+    // shortened slug is a plain 404. Measured 2026-08-25.
     expect(marketUrl("Volt Prime Neuroptics Blueprint")).toBe(
-      "https://warframe.market/items/volt_prime_neuroptics",
+      "https://warframe.market/items/volt_prime_neuroptics_blueprint",
     );
   });
 
   it("keeps the suffix on the set's own blueprint", () => {
     // "Volt Prime Blueprint" is the main blueprint, a part in its own right:
-    // stripping the suffix would point at the set instead.
+    // dropping the suffix would point at the set instead.
     expect(marketUrl("Volt Prime Blueprint")).toBe(
       "https://warframe.market/items/volt_prime_blueprint",
     );

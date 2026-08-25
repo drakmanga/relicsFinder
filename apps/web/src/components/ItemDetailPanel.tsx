@@ -197,7 +197,9 @@ export function ItemDetailPanel({
               variant="primary"
               icon={<ExternalLinkIcon />}
               className="rf-full"
-              onClick={() => window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer")}
+              onClick={() =>
+                window.open(marketUrl(row.itemName, meta?.slug), "_blank", "noopener,noreferrer")
+              }
             >
               Open on Warframe Market
             </Button>

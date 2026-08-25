@@ -58,9 +58,16 @@ interface RowsProps {
 /** Shared by the two priced sections: name, market and info all behave the same. */
 function LineActions({
   entry,
+  slug,
   onInfo,
 }: {
   entry: WishlistEntry;
+  /**
+   * The market's spelling of the line, where the list already has it — from the
+   * price on the two priced lists, from the open offer on the sculptures.
+   * Absent while a price is still in flight, and then the name is the fallback.
+   */
+  slug?: string | null;
   onInfo?: (itemName: string, kind?: WishlistKind) => void;
 }) {
   return (
@@ -98,7 +105,7 @@ function LineActions({
           aria-label={`Open ${entry.itemName} on Warframe Market`}
           onClick={(event) => {
             event.stopPropagation();
-            window.open(marketUrl(entry.itemName), "_blank", "noopener,noreferrer");
+            window.open(marketUrl(entry.itemName, slug), "_blank", "noopener,noreferrer");
           }}
         />
       </TableCell>
@@ -178,7 +185,7 @@ export function PartRows({ entries, prices, pricesFilling, onInfo, onPick }: Row
                   <PlatPrice value={unit === null ? null : Math.round(unit * entry.qty)} />
                 )}
               </TableCell>
-              <LineActions entry={entry} onInfo={onInfo} />
+              <LineActions entry={entry} slug={meta?.slug} onInfo={onInfo} />
             </TableRow>
           );
         })}
@@ -260,7 +267,7 @@ export function DucatRows({ entries, prices, onInfo, onPick }: RowsProps) {
               <TableCell align="right" numeric>
                 <PlatPrice value={unit === null ? null : Math.round(unit * entry.qty)} />
               </TableCell>
-              <LineActions entry={entry} onInfo={onInfo} />
+              <LineActions entry={entry} slug={meta?.slug} onInfo={onInfo} />
             </TableRow>
           );
         })}
@@ -344,7 +351,7 @@ export function EndoRows({
                   {best?.seller ?? "nobody online"}
                 </span>
               </TableCell>
-              <LineActions entry={entry} />
+              <LineActions entry={entry} slug={best?.slug} />
             </TableRow>
           );
         })}

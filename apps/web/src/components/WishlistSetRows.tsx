@@ -13,7 +13,7 @@ import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { Unlisted } from "./Unlisted";
 import { bump, remove, type WishlistEntry } from "../lib/wishlist";
-import { marketUrl, marketUrlFromSlug } from "../lib/format";
+import { marketUrl } from "../lib/format";
 import type { PrimeSet } from "../lib/setCompletion";
 
 interface Props {
@@ -151,9 +151,7 @@ export function WishlistSetRows({ entries, sets, setPrices, setPricesFilling, on
                     // "Kavasa Prime Kubrow Collar Set", which no rule applied to
                     // the set's name would have guessed.
                     window.open(
-                      listing?.slug
-                        ? marketUrlFromSlug(listing.slug)
-                        : marketUrl(`${entry.itemName} Set`),
+                      marketUrl(`${entry.itemName} Set`, listing?.slug),
                       "_blank",
                       "noopener,noreferrer",
                     );

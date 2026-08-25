@@ -48,6 +48,8 @@ interface Props {
 interface Row {
   itemName: string;
   setName: string | null;
+  /** The market's own spelling of the item, carried from the price it ranks on. */
+  slug: string;
   price: number;
   ducats: number;
   /** Ducats obtained per platinum spent — what the view ranks on. */
@@ -82,6 +84,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
       out.push({
         itemName: meta.itemName,
         setName: meta.setName,
+        slug: meta.slug,
         price,
         ducats,
         ratio: Math.round((ducats / price) * 100) / 100,
@@ -276,7 +279,11 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                         aria-label={`Open ${row.itemName} on Warframe Market`}
                         onClick={(event) => {
                           event.stopPropagation();
-                          window.open(marketUrl(row.itemName), "_blank", "noopener,noreferrer");
+                          window.open(
+                            marketUrl(row.itemName, row.slug),
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
                         }}
                       />
                     </TableCell>

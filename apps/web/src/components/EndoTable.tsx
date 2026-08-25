@@ -25,6 +25,7 @@ import { QtyStepper } from "./QtyStepper";
 import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { useEndoOffers } from "../api/queries";
 import { bump, remove } from "../lib/wishlist";
+import { marketUrl } from "../lib/format";
 import type { EndoOffer, WishlistKind } from "../api/types";
 
 const ROW_HEIGHT = 48;
@@ -237,7 +238,7 @@ export function EndoTable({ active, quantityOf }: Props) {
                         aria-label={`Open ${offer.itemName} on Warframe Market`}
                         onClick={() =>
                           window.open(
-                            `https://warframe.market/items/${offer.slug}`,
+                            marketUrl(offer.itemName, offer.slug),
                             "_blank",
                             "noopener,noreferrer",
                           )
