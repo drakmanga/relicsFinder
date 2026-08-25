@@ -80,6 +80,7 @@ export function App() {
     setPriceBySet,
     selectedSetRow,
     searchedItem,
+    searchedSetParts,
   } = useCatalogue({
     view,
     filters,
@@ -311,6 +312,7 @@ export function App() {
             highlightItem={searchedItem}
             itemRow={itemPanelRow}
             set={selectedSetRow}
+            highlightParts={searchedSetParts}
             setRefinement={setRefinement}
             onSetRefinement={setSetRefinement}
             onToggleOwned={ownedParts.toggle}

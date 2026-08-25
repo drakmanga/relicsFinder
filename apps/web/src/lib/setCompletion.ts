@@ -1,5 +1,5 @@
 import type { PriceMap, Relic, RelicPriceMap, SetCategory } from "../api/types";
-import { expectedValue } from "./rows";
+import { expectedValue, matchesRelic } from "./rows";
 import { setOf } from "./sets";
 
 /**
@@ -17,6 +17,14 @@ export interface SetPart {
   price: number | null;
   /** The relic with the best odds, at the refinement being asked about. */
   bestRelic: string | null;
+  /**
+   * Every relic that drops the part, so the search can name one.
+   *
+   * `bestRelic` alone would not do: typing "Axi S18" has to find the set even
+   * when the odds are better somewhere else, and for most parts they are.
+   * Taken from Intact, since all four states hold the same item list.
+   */
+  relicNames: string[];
   /** Those odds, as a percentage. */
   bestChance: number;
   /**
@@ -89,6 +97,7 @@ export function buildSets(
   refinement: string,
 ): PrimeSet[] {
   const bySet = new Map<string, Set<string>>();
+  const relicsByItem = new Map<string, string[]>();
 
   // One pass for the best source of every item, rather than a scan of the
   // catalogue per part: 596 parts against 3,085 rows is a million comparisons
@@ -106,6 +115,10 @@ export function buildSets(
         const parts = bySet.get(setName) ?? new Set<string>();
         parts.add(reward.itemName);
         bySet.set(setName, parts);
+
+        const sources = relicsByItem.get(reward.itemName) ?? [];
+        sources.push(relic.fullName);
+        relicsByItem.set(reward.itemName, sources);
       }
     }
 
@@ -146,6 +159,7 @@ export function buildSets(
           owned: owned.has(itemName),
           price,
           bestRelic: source?.relicFullName ?? null,
+          relicNames: relicsByItem.get(itemName) ?? [],
           bestChance: source?.chance ?? 0,
           runs,
           netFarmCost,
@@ -182,4 +196,50 @@ export function buildSets(
 export function verdictFor(part: SetPart): "buy" | "farm" | "unknown" {
   if (part.price === null || part.netFarmCost === null) return "unknown";
   return part.price <= part.netFarmCost ? "buy" : "farm";
+}
+
+/**
+ * The pieces of a set the search term names, and what matched each one.
+ *
+ * The value is the relic that matched, or null when the piece matched on its
+ * own name. That distinction is what the panel marks with "from Axi S18": the
+ * farming line under a piece quotes its *best* source, which is usually a
+ * different relic, so a mark with no explanation would point at a row that
+ * appears to have nothing to do with what was typed.
+ *
+ * Relic names go through `matchesRelic` rather than a substring test, for the
+ * reason it exists: "Axi S1" must not drag in S10 through S19.
+ *
+ * The term arrives already trimmed and lowercased — the caller has one, and
+ * lowercasing it once per keystroke beats doing it once per piece.
+ */
+export function searchedPartsOf(set: PrimeSet, term: string): Map<string, string | null> {
+  const marked = new Map<string, string | null>();
+  if (!term) return marked;
+
+  for (const part of set.parts) {
+    if (part.itemName.toLowerCase().includes(term)) {
+      marked.set(part.itemName, null);
+      continue;
+    }
+
+    const relic = part.relicNames.find((name) => matchesRelic(name, term));
+    if (relic) marked.set(part.itemName, relic);
+  }
+
+  return marked;
+}
+
+/**
+ * Whether the search term names the set at all.
+ *
+ * Three ways in, because all three are things a reader has in front of them:
+ * the set's name, a piece of it — someone who remembers "Akbolto" should not
+ * have to know it is the set and not the part — or a relic that drops one of
+ * its pieces, which is the case of holding an Axi S18 and asking what it
+ * builds towards.
+ */
+export function setMatchesTerm(set: PrimeSet, term: string): boolean {
+  if (!term) return true;
+  return set.setName.toLowerCase().includes(term) || searchedPartsOf(set, term).size > 0;
 }

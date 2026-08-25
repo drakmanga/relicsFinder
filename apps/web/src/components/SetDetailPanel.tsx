@@ -14,6 +14,14 @@ import type { Refinement } from "../api/types";
 
 interface Props {
   set: PrimeSet | null;
+  /**
+   * The pieces the search named, mapped to the relic that matched it.
+   *
+   * A set can be found by a relic that drops one of its pieces — "Axi S18" —
+   * and the list of six then gives no clue which one that was. Marking it is
+   * the whole reason the search reached this set.
+   */
+  highlightParts: ReadonlyMap<string, string | null>;
   /** Whether more prices are still expected. See lib/priceProgress. */
   pricesFilling: boolean;
   refinement: Refinement;
@@ -40,6 +48,7 @@ interface Props {
  */
 export function SetDetailPanel({
   set,
+  highlightParts,
   pricesFilling,
   refinement,
   onRefinement,
@@ -230,6 +239,8 @@ export function SetDetailPanel({
                 key={part.itemName}
                 part={part}
                 setName={set.setName}
+                marked={highlightParts.has(part.itemName)}
+                matchedRelic={highlightParts.get(part.itemName) ?? null}
                 pricesFilling={pricesFilling}
                 onToggle={onToggle}
                 onPickItem={onPickItem}

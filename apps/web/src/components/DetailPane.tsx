@@ -41,6 +41,8 @@ interface Props {
   itemRow: RelicItemRow | null;
 
   set: PrimeSet | null;
+  /** Pieces of that set the search named, mapped to the relic that matched. */
+  highlightParts: ReadonlyMap<string, string | null>;
   setRefinement: Refinement;
   onSetRefinement: (refinement: Refinement) => void;
   onToggleOwned: (itemName: string) => void;
@@ -115,6 +117,7 @@ function Panel({
   highlightItem,
   itemRow,
   set,
+  highlightParts,
   setRefinement,
   onSetRefinement,
   onToggleOwned,
@@ -131,6 +134,7 @@ function Panel({
     return (
       <SetDetailPanel
         set={set}
+        highlightParts={highlightParts}
         pricesFilling={pricesFilling}
         refinement={setRefinement}
         onRefinement={onSetRefinement}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildSets, verdictFor } from "./setCompletion";
+import { buildSets, searchedPartsOf, setMatchesTerm, verdictFor } from "./setCompletion";
 import { prices, relic, reward } from "./testing";
 import type { SetPart } from "./setCompletion";
 
@@ -43,6 +43,16 @@ describe("buildSets", () => {
       "Volt Prime Chassis Blueprint",
     ]);
     expect(rest).toHaveLength(0);
+  });
+
+  it("lists every relic that drops a part, not only the one with the best odds", () => {
+    const [volt] = buildSets(catalogue, new Set(), market, relicMarket, "intact");
+    const blueprint = volt?.parts.find((p) => p.itemName === "Volt Prime Blueprint");
+
+    // Axi A1 has the better chance, so it is `bestRelic`; a search for the
+    // other source has to find the set all the same.
+    expect(blueprint?.bestRelic).toBe("Axi A1");
+    expect(blueprint?.relicNames).toEqual(["Lith V9", "Axi A1"]);
   });
 
   it("takes membership from Intact only, so a part is not counted four times", () => {
@@ -127,6 +137,7 @@ describe("verdictFor", () => {
     owned: false,
     price: 100,
     bestRelic: "Lith V9",
+    relicNames: ["Lith V9"],
     bestChance: 2,
     runs: 50,
     netFarmCost: 200,
@@ -150,5 +161,79 @@ describe("verdictFor", () => {
     // confident wrong answer costs somebody an evening.
     expect(verdictFor(part({ price: null }))).toBe("unknown");
     expect(verdictFor(part({ netFarmCost: null }))).toBe("unknown");
+  });
+});
+
+describe("the set search", () => {
+  const [volt] = buildSets(catalogue, new Set(), market, relicMarket, "intact");
+  const set = volt!;
+
+  it("finds a set by its own name", () => {
+    expect(setMatchesTerm(set, "volt")).toBe(true);
+    expect(searchedPartsOf(set, "volt").size).toBe(2);
+  });
+
+  it("finds a set by a piece of it", () => {
+    expect(setMatchesTerm(set, "chassis")).toBe(true);
+    expect([...searchedPartsOf(set, "chassis").keys()]).toEqual(["Volt Prime Chassis Blueprint"]);
+  });
+
+  it("finds a set by a relic that drops one of its pieces", () => {
+    expect(setMatchesTerm(set, "lith v9")).toBe(true);
+    expect(searchedPartsOf(set, "lith v9")).toEqual(
+      new Map([
+        ["Volt Prime Blueprint", "Lith V9"],
+        ["Volt Prime Chassis Blueprint", "Lith V9"],
+      ]),
+    );
+  });
+
+  it("names the relic that matched, so the mark can say which", () => {
+    // Axi A1 has the better odds, so it is the relic the panel's farming line
+    // quotes; a search for the other source has to mark the piece all the same
+    // and name the relic the reader actually typed.
+    expect(searchedPartsOf(set, "lith v9").get("Volt Prime Blueprint")).toBe("Lith V9");
+    expect(searchedPartsOf(set, "axi a1").get("Volt Prime Blueprint")).toBe("Axi A1");
+  });
+
+  it("leaves the relic null when the piece matched on its own name", () => {
+    expect(searchedPartsOf(set, "volt prime blueprint").get("Volt Prime Blueprint")).toBeNull();
+  });
+
+  it("does not let a relic code run into a longer one", () => {
+    // "Axi A1" is a complete code and must not drag in A10, which is a
+    // different relic holding a different piece.
+    const [wide] = buildSets(
+      [
+        relic({
+          fullName: "Axi A1",
+          tier: "axi",
+          refinement: "intact",
+          rewards: [reward({ itemName: "Volt Prime Blueprint", rarity: "rare", chance: 10 })],
+        }),
+        relic({
+          fullName: "Axi A10",
+          tier: "axi",
+          refinement: "intact",
+          rewards: [
+            reward({ itemName: "Volt Prime Chassis Blueprint", rarity: "common", chance: 25 }),
+          ],
+        }),
+      ],
+      new Set(),
+      market,
+      relicMarket,
+      "intact",
+    );
+
+    expect([...searchedPartsOf(wide!, "axi a1").keys()]).toEqual(["Volt Prime Blueprint"]);
+    expect([...searchedPartsOf(wide!, "axi a10").keys()]).toEqual(["Volt Prime Chassis Blueprint"]);
+    // Still typing: "axi a" ends mid-code and has to keep matching both.
+    expect(searchedPartsOf(wide!, "axi a").size).toBe(2);
+  });
+
+  it("matches everything on an empty term, and marks nothing", () => {
+    expect(setMatchesTerm(set, "")).toBe(true);
+    expect(searchedPartsOf(set, "").size).toBe(0);
   });
 });
