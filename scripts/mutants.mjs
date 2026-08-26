@@ -132,10 +132,17 @@ const MUTANTS = [
     to: 'if (filters.maxPrice) params.set("max", String(filters.maxPrice));',
   },
   {
-    name: "marketUrl strips the suffix off the set's own blueprint",
+    // Was "marketUrl strips the suffix off the set's own blueprint", which
+    // patched the guard inside the stripping branch. There is no branch left
+    // to patch: the name is kept whole now, because the shortened slug is a
+    // redirect on the older frames and a 404 on everything since Hildryn. So
+    // the mutation runs the other way and puts the stripping back — the same
+    // shape as "the Blueprint suffix is stripped from part slugs again" on the
+    // Java side, which is the rule this one has to stay in step with.
+    name: "marketUrl strips the Blueprint suffix off a part again",
     file: "apps/web/src/lib/format.ts",
-    from: 'if (remainder.includes("prime") && !remainder.endsWith("prime")) {',
-    to: 'if (remainder.includes("prime")) {',
+    from: '    .replace(/&/g, " and ")',
+    to: '    .replace(/ blueprint$/, "")\n    .replace(/&/g, " and ")',
   },
   {
     name: "stillFilling waits for the untraded parts too",

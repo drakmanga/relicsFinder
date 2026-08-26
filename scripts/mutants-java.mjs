@@ -60,8 +60,11 @@ const MUTANTS = [
   {
     name: "relic slugs lose the suffix that tells them from a part",
     file: `${SERVICE}/RelicMarketService.java`,
-    from: 'return baseSlug(relicName) + "_relic";',
-    to: "return baseSlug(relicName);",
+    // The suffix moved into the default arm of the overrides lookup when Axi Y2
+    // needed a listing of its own. Same rule, same thing worth breaking - only
+    // the expression it is written in changed.
+    from: 'return RELIC_LISTINGS.getOrDefault(base, base + "_relic");',
+    to: "return RELIC_LISTINGS.getOrDefault(base, base);",
   },
   {
     name: "Chattraka's multiplier is mistyped",
