@@ -78,6 +78,28 @@ export function marketUrl(itemName: string, resolvedSlug?: string | null): strin
 }
 
 /**
+ * Relics warframe.market does not spell the way it names them.
+ *
+ * The market's own inconsistency rather than ours: Axi Y2 is sold at
+ * `axi_o7_relic`, because the item was created while the relic was called O7
+ * and only its display name was corrected afterwards. Of the 772 relics the
+ * market carries, measured on 2026-08-26, it is the only one whose slug does
+ * not derive from its name.
+ *
+ * This is the same table as RELIC_LISTINGS in RelicMarketService, and it is
+ * deliberately a second copy rather than a shared one. A part's slug reaches
+ * the browser on the price payload, so the frontend can prefer what the server
+ * resolved; a relic's does not — RelicPrice carries a name and a price and
+ * nothing else — so the button here has no answer to read and has to derive
+ * one. Putting the slug on the wire would mean changing the model, the
+ * controller, the wire type and the flattened RelicPriceMap for a single
+ * relic. If a second entry ever appears, that trade is worth revisiting.
+ */
+const RELIC_LISTINGS: Record<string, string> = {
+  axi_y2: "axi_o7_relic",
+};
+
+/**
  * warframe.market URL for the relic itself, which is a tradeable item too.
  *
  * A separate rule, and it stays separate: the slug carries a "_relic" suffix
@@ -85,7 +107,8 @@ export function marketUrl(itemName: string, resolvedSlug?: string | null): strin
  * wire carries a relic's slug, so this one is always derived.
  */
 export function relicMarketUrl(relicFullName: string): string {
-  return `${MARKET_ITEMS}/${derivedSlug(relicFullName)}_relic`;
+  const base = derivedSlug(relicFullName);
+  return `${MARKET_ITEMS}/${RELIC_LISTINGS[base] ?? `${base}_relic`}`;
 }
 
 /** Platinum price of an item, or null when unlisted or not yet fetched. */

@@ -946,9 +946,31 @@ public class RelicMarketService {
     /* Slugs                                                               */
     /* ------------------------------------------------------------------ */
 
+    /**
+     * Relics warframe.market does not spell the way it names them.
+     *
+     * <p>This is the market's own inconsistency and not something to be
+     * generalised away. Axi Y2 is sold at {@code axi_o7_relic}: the item was
+     * created while the relic was called O7 and only the display name was
+     * corrected afterwards, so the slug stayed frozen at a name that no longer
+     * exists. Its {@code gameRef} is the Caliban Prime D projection, which is
+     * what confirms the two names are one relic rather than two.
+     *
+     * <p>Measured against the market's own item list on 2026-08-26: of the 772
+     * relics it carries, this is the only one whose slug does not derive from
+     * its name. One exception written down beats a lookup that fetches 3.840
+     * items to correct one of them, and {@link UnknownItemReport} is what
+     * catches the next one — a relic added here without being added to the
+     * report's reading is a relic priced at nothing in silence, which is the
+     * failure this map exists on the far side of.
+     */
+    private static final Map<String, String> RELIC_LISTINGS = Map.of(
+            "axi_y2", "axi_o7_relic");
+
     /** "Lith V9" → "lith_v9_relic". */
     static String relicSlug(String relicName) {
-        return baseSlug(relicName) + "_relic";
+        String base = baseSlug(relicName);
+        return RELIC_LISTINGS.getOrDefault(base, base + "_relic");
     }
 
     /**
