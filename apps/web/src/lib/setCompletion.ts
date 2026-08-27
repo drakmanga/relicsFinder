@@ -147,7 +147,9 @@ export function buildSets(
         const source = best.get(itemName) ?? null;
         const price = prices?.get(itemName)?.averagePrice ?? null;
         const runs = source && source.chance > 0 ? 100 / source.chance : null;
-        const relicPrice = source ? (relicPrices?.get(source.relicFullName) ?? null) : null;
+        const relicPrice = source
+          ? (relicPrices?.get(source.relicFullName)?.averagePrice ?? null)
+          : null;
 
         const netFarmCost =
           runs !== null && relicPrice !== null && price !== null && source !== null

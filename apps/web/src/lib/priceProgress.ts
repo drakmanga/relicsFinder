@@ -44,7 +44,7 @@ export function relicPriceProgress(
   pending: boolean,
 ): PriceProgress {
   if (!prices) return { ...NOTHING, filling: pending };
-  return measure([...prices.values()]);
+  return measure([...prices.values()].map((price) => price.averagePrice));
 }
 
 // The request's own pending state is not consulted here, and cannot be: a batch

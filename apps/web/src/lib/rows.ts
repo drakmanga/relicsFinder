@@ -321,7 +321,7 @@ export function sortRelicRows(
 
   const valueOf = (row: RelicRow) => {
     if (column === "expected") return expectedValue(row.rewards, prices);
-    if (column === "cost") return relicPrices?.get(row.relicFullName) ?? null;
+    if (column === "cost") return relicPrices?.get(row.relicFullName)?.averagePrice ?? null;
     return bestDropValue(row, prices);
   };
 

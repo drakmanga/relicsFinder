@@ -164,6 +164,9 @@ public class RelicMarketController {
         if (avgPrice < 0) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(new RelicPrice(relicName, avgPrice));
+        // No trade count: this endpoint answers a bare average, and the service
+        // call behind it returns a double. The batch is where the count is read
+        // from, and a caller that needs it asks there.
+        return ResponseEntity.ok(new RelicPrice(relicName, avgPrice, null));
     }
 }

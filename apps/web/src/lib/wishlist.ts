@@ -269,7 +269,7 @@ export function relicListTotal(
   let unpriced = 0;
 
   for (const entry of wishlist) {
-    const price = relicPrices?.get(entry.itemName);
+    const price = relicPrices?.get(entry.itemName)?.averagePrice;
     if (price === null || price === undefined) unpriced += 1;
     else total += price * entry.qty;
   }

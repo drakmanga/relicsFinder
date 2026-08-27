@@ -165,7 +165,7 @@ export function useRelicPrices(relicNames: string[]) {
       // response is mostly nulls and fills in as the warmer works through them.
       return stillFilling(data.map((p) => p.averagePrice)) ? 15_000 : false;
     },
-    select: (prices) => new Map(prices.map((p) => [p.relicName, p.averagePrice])) as RelicPriceMap,
+    select: (prices) => new Map(prices.map((p) => [p.relicName, p])) as RelicPriceMap,
   });
 }
 

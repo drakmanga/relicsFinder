@@ -584,10 +584,41 @@ public class RelicMarketService {
             // the reason given on getItemPrice.
             if (isMissing(cached)) enqueue(slug);
 
-            out.add(new RelicPrice(relicName, cached == null ? null : cached.avg()));
+            out.add(new RelicPrice(relicName,
+                    cached == null ? null : cached.avg(),
+                    tradeCount90d(cached)));
         }
 
         return out;
+    }
+
+    /**
+     * How many trades a relic's price is actually backed by, over ninety days.
+     *
+     * <p>Summed from {@link Cached#history}, which is the market's own
+     * {@code statistics_closed.90days} — one entry per day, each with the
+     * trades that closed on it.
+     *
+     * <p>Deliberately not {@link Cached#volume}, which the same entry already
+     * holds and which would be free: that one is the 48-hour window, or the
+     * single most recent day that sold when nothing sold in 48 hours. Relics
+     * trade about an order of magnitude more thinly than parts — a median of 6
+     * trades in ninety days against 42, with 67% of relics under ten — so read
+     * over two days most of the catalogue is indistinguishable from zero, and
+     * any threshold placed on it would be measuring the window rather than the
+     * market.
+     *
+     * <p>Null, never zero, when there is nothing to sum: no entry, no listing,
+     * or a call that failed. Zero is an answer about the relic — nobody traded
+     * it — and the caller has to be able to tell that from not having asked
+     * yet, which is the same distinction {@code averagePrice} keeps.
+     */
+    static Integer tradeCount90d(Cached cached) {
+        if (cached == null || cached.history().isEmpty()) return null;
+
+        int trades = 0;
+        for (PricePoint point : cached.history()) trades += point.getVolume();
+        return trades;
     }
 
     /**

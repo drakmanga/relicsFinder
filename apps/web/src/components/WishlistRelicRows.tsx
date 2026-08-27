@@ -67,7 +67,7 @@ export function RelicLineRows({ entries, relicPrices, relicPricesFilling, onPick
 
       <tbody>
         {entries.map((entry) => {
-          const cost = relicPrices?.get(entry.itemName) ?? null;
+          const cost = relicPrices?.get(entry.itemName)?.averagePrice ?? null;
 
           return (
             <TableRow

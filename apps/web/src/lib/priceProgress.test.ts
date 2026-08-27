@@ -10,8 +10,16 @@ const listing = (averagePrice: number | null): ItemPrice =>
 const itemMap = (prices: (number | null)[]): PriceMap =>
   new Map(prices.map((price, index) => [`item ${index}`, listing(price)]));
 
+// The trade count is real data on a RelicPrice, and progress is deliberately
+// blind to it: a relic priced from a single sale has arrived just as much as
+// one priced from fifty.
 const relicMap = (prices: (number | null)[]): RelicPriceMap =>
-  new Map(prices.map((price, index) => [`relic ${index}`, price]));
+  new Map(
+    prices.map((price, index) => [
+      `relic ${index}`,
+      { relicName: `relic ${index}`, averagePrice: price, tradeCount90d: null },
+    ]),
+  );
 
 describe("itemPriceProgress", () => {
   it("counts the prices that have arrived", () => {

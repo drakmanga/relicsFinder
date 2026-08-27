@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildSets, searchedPartsOf, setMatchesTerm, verdictFor } from "./setCompletion";
 import { prices, relic, reward } from "./testing";
 import type { SetPart } from "./setCompletion";
+import type { RelicPriceMap } from "../api/types";
 
 const catalogue = [
   relic({
@@ -28,9 +29,12 @@ const market = prices({
   "Forma Blueprint": null,
 });
 
-const relicMarket = new Map<string, number | null>([
-  ["Lith V9", 10],
-  ["Axi A1", 10],
+// The trade count is on the listing but nothing here reads it: what a set costs
+// to farm is arithmetic on prices, and how well attested a price is belongs to
+// whoever decides to trust it.
+const relicMarket: RelicPriceMap = new Map([
+  ["Lith V9", { relicName: "Lith V9", averagePrice: 10, tradeCount90d: 25 }],
+  ["Axi A1", { relicName: "Axi A1", averagePrice: 10, tradeCount90d: 25 }],
 ]);
 
 describe("buildSets", () => {

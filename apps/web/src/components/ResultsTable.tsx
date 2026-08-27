@@ -240,7 +240,7 @@ export function ResultsTable({
                 ? (row.rewards.find((r) => r.itemName.toLowerCase().includes(needle))?.itemName ??
                   null)
                 : null;
-            const cost = relicPrices?.get(row.relicFullName) ?? null;
+            const cost = relicPrices?.get(row.relicFullName)?.averagePrice ?? null;
 
             // The relic is its own line: its name is the item, and the state it
             // is wanted in is the one the table is listing it in.

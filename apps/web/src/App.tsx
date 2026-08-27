@@ -305,7 +305,11 @@ export function App() {
             prices={prices.data}
             pricesFilling={priceProgress.filling}
             relicRow={selectedRow}
-            relicPrice={selectedRow ? relicPrices.data?.get(selectedRow.relicFullName) : undefined}
+            relicPrice={
+              selectedRow
+                ? relicPrices.data?.get(selectedRow.relicFullName)?.averagePrice
+                : undefined
+            }
             relicStates={selectedStates}
             sites={selectedSites.data ?? []}
             sitesPending={selectedSites.isPending}

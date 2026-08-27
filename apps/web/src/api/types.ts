@@ -32,6 +32,19 @@ export interface WireRelicPrice {
   relicName: string;
   /** Null when the market has no listing for the relic. */
   averagePrice: number | null;
+  /**
+   * Trades completed on the relic in the last ninety days.
+   *
+   * Ninety and not the 48 hours a part's `volume` covers: relics trade far
+   * more thinly — a median of 6 trades in ninety days against 42 for items —
+   * so over two days most of the catalogue reads as zero. A price backed by
+   * one sale is barely a price, and this is the only field that says so.
+   *
+   * Null when nothing has been read yet, and 0 when ninety days really did
+   * pass without a trade. The single-relic `/market/{name}` endpoint answers a
+   * bare average and always sends null here.
+   */
+  tradeCount90d: number | null;
 }
 
 /* -------------------------------------------------------------------------
@@ -97,10 +110,27 @@ export interface RelicPrice {
   relicName: string;
   /** Platinum the relic itself trades for. Null when nobody is selling it. */
   averagePrice: number | null;
+  /**
+   * Trades completed on the relic in the last ninety days. Null when unknown.
+   *
+   * How much the price above is worth believing. Relic prices are thin — a
+   * median of 6 trades in ninety days, with two thirds of the catalogue under
+   * ten — so a relic listed at 190p is usually one lucky sale rather than a
+   * market, and anything that reads the price as a going rate has to check
+   * this first.
+   */
+  tradeCount90d: number | null;
 }
 
-/** Relic name to its own market price. Empty while the batch is in flight. */
-export type RelicPriceMap = Map<string, number | null>;
+/**
+ * Relic name to its own market listing. Empty while the batch is in flight.
+ *
+ * The whole listing rather than the bare price, mirroring `PriceMap`: the
+ * price and the trades behind it are read together by anything that judges
+ * one, and a second map keyed the same way would be one more thing to keep in
+ * step with this one.
+ */
+export type RelicPriceMap = Map<string, RelicPrice>;
 
 /* ------------------------------------------------------------------------- */
 

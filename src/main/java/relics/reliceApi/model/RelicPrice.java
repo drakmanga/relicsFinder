@@ -15,4 +15,17 @@ public class RelicPrice {
      * response as itself rather than as a stand-in number.
      */
     Double averagePrice;
+    /**
+     * Trades actually completed on this relic in the last ninety days.
+     *
+     * <p>Ninety days and not the 48-hour window {@code ItemPrice.volume}
+     * carries: relics trade far more thinly than parts — a median of 6 trades
+     * in ninety days against 42 — so over two days most of the catalogue reads
+     * as zero and a price of 190p cannot be told apart from one lucky sale.
+     *
+     * <p>Null when there is no answer yet, for the same reason
+     * {@code averagePrice} is: zero is a claim about the market, and this is a
+     * lookup table the caller joins on.
+     */
+    Integer tradeCount90d;
 }

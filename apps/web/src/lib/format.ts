@@ -89,11 +89,11 @@ export function marketUrl(itemName: string, resolvedSlug?: string | null): strin
  * This is the same table as RELIC_LISTINGS in RelicMarketService, and it is
  * deliberately a second copy rather than a shared one. A part's slug reaches
  * the browser on the price payload, so the frontend can prefer what the server
- * resolved; a relic's does not — RelicPrice carries a name and a price and
- * nothing else — so the button here has no answer to read and has to derive
- * one. Putting the slug on the wire would mean changing the model, the
- * controller, the wire type and the flattened RelicPriceMap for a single
- * relic. If a second entry ever appears, that trade is worth revisiting.
+ * resolved; a relic's does not — RelicPrice carries a name, a price and a trade
+ * count, and no slug — so the button here has no answer to read and has to
+ * derive one. Putting the slug on the wire would mean changing the model, the
+ * controller and the wire type for a single relic. If a second entry ever
+ * appears, that trade is worth revisiting.
  */
 const RELIC_LISTINGS: Record<string, string> = {
   axi_y2: "axi_o7_relic",
