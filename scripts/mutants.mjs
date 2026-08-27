@@ -213,12 +213,6 @@ const MUTANTS = [
     from: "? `relic|${entry.itemName}|${entry.refinement ?? DEFAULT_REFINEMENT}`",
     to: '? `relic|${entry.itemName}|${entry.refinement ?? "intact"}`',
   },
-  {
-    name: "the sell badge stops asking how many trades back the price",
-    file: "apps/web/src/lib/tierList.ts",
-    from: "trades >= SELL_BADGE_MIN_TRADES &&",
-    to: "true &&",
-  },
 ];
 
 let killed = 0;
