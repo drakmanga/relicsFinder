@@ -507,17 +507,20 @@ body {
 
 /* The tier list has no action column at all — it is a ranking to read, not a
    list to act on — so every width here is its header word measured at the
-   72rem floor above. "Radshare, Radiant" is the longest of them at 17
+   66rem floor above. "Radshare, Radiant" is the longest of them at 17
    characters of uppercase overline plus a sort arrow, which is 185px against
-   the 207px its 18% resolves to. */
+   the 190px its 18% resolves to.
+   The twelve percent the retired "Sell?" column held went to Relic: it is the
+   column the eye returns to, and the four columns of figures were already
+   measured against their own headers. */
 .rf-cols-tiers col:nth-child(1) {
   width: 4%;
 } /* # */
 .rf-cols-tiers col:nth-child(2) {
-  width: 10%;
+  width: 11%;
 } /* Era — fits the Vanguard chip */
 .rf-cols-tiers col:nth-child(3) {
-  width: 21%;
+  width: 32%;
 } /* Relic */
 .rf-cols-tiers col:nth-child(4) {
   width: 16%;
@@ -531,9 +534,6 @@ body {
 .rf-cols-tiers col:nth-child(7) {
   width: 9%;
 } /* Trend */
-.rf-cols-tiers col:nth-child(8) {
-  width: 12%;
-} /* Sell? */
 
 /* Sets is four wide columns and no action column, so it needs no floor of its
    own beyond `.rf-table`'s. */
@@ -845,11 +845,13 @@ body {
   min-width: 62rem;
 }
 /* The Era column holds the same chip the Relics table sizes for, and Vanguard
-   is the longest of them: 10% of 72rem is 115px, which is what that table's
-   11% of 66rem already resolves to. A chip that does not fit is cut in half
-   rather than truncated, so it is the column that has to give. */
+   is the longest of them. A chip that does not fit is cut in half rather than
+   truncated, so it is the column that has to give — which is why this table
+   takes the Relics table's floor and the Relics table's 11%, and gets a column
+   the same 115px wide. It was 72rem while the table was eight columns; seven
+   need less, and a floor is what the reader has to scroll sideways past. */
 .rf-cols-tiers {
-  min-width: 72rem;
+  min-width: 66rem;
 }
 /* The three wishlist tables had no floor at all, so they fell back to
    `.rf-table`'s 40rem: at that width a 7% Market column is 45px and the header
@@ -912,6 +914,66 @@ body {
 
 .rf-ranked-lead {
   margin: var(--rf-space-1) 0 0;
+}
+
+/* The standing note, between the lead and the cards. Held to the reading
+   measure rather than to the pane: it is running prose, and the pane is as wide
+   as the dense table under it. */
+.rf-ranked-note {
+  margin-top: var(--rf-space-4);
+  max-width: var(--rf-measure);
+}
+
+.rf-primer {
+  padding: var(--rf-space-3) var(--rf-space-4);
+}
+
+.rf-primer-title {
+  margin: 0 0 var(--rf-space-2);
+}
+
+/* Paragraphs spaced by the gap rather than by margins, so the first and the
+   last do not need a rule of their own to cancel one. */
+.rf-primer-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-2);
+}
+
+.rf-primer-body p {
+  margin: 0;
+}
+
+/* auto-fit and not two fixed columns: the note sits inside a pane whose width
+   depends on whether a detail panel is open beside it, and at 360px a term and
+   its definition need the whole line. */
+.rf-primer-terms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--rf-space-1) var(--rf-space-4);
+  margin: var(--rf-space-3) 0 0;
+  padding-top: var(--rf-space-3);
+  border-top: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+/* The term and what it means on one line where the line has room, wrapping to
+   two where it does not. Weight and tone tell the two apart on screen; the
+   dt/dd pairing is what tells them apart to a reader who hears the page, which
+   is why this is a definition list and not two spans. */
+.rf-primer-term {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rf-space-2);
+}
+
+.rf-primer-term dt {
+  font-weight: var(--rf-weight-semibold);
+}
+
+.rf-primer-term dd {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 12rem;
 }
 
 /* auto-fit rather than a fixed three: the cards sit inside a pane whose width

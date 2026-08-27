@@ -65,19 +65,6 @@ export const TIER_LETTERS: readonly TierLetter[] = [
 export const RADSHARE_PLAYERS = 4;
 
 /**
- * Trades in ninety days before the sell badge is allowed to appear.
- *
- * Relic prices are thin — a median of 6 completed trades in ninety days, two
- * thirds of the catalogue under ten — so a relic listed at 190p is usually one
- * lucky sale rather than a market. The badge tells someone to sell instead of
- * open, which is irreversible, so it may only speak where there is a market to
- * sell into. Ten is the level at which the listing stops being an anecdote; it
- * is deliberately not zero-or-more, and `tradeCount90d` being null means nobody
- * has asked yet rather than that nobody traded.
- */
-export const SELL_BADGE_MIN_TRADES = 10;
-
-/**
  * How far the expected value must have moved over ninety days to earn an arrow.
  *
  * Ten percent for the same reason the bands are multiples: below it the arrow
@@ -109,8 +96,6 @@ export interface TierListRow {
    * What the relic itself sells for. Beside the letters, never inside them.
    */
   relicPrice: number | null;
-  /** Whether selling the relic beats opening it, and is attested enough to say so. */
-  worthSelling: boolean;
   /**
    * Percent the solo expected value has moved against its ninety-day baseline,
    * or null when it has not moved enough to be worth an arrow.
@@ -396,9 +381,17 @@ export function buildTierList(
     // reads as gross value, and the reader supplies the trace cost.
     const radshareValue = squadValue(radiant, prices, RADSHARE_PLAYERS);
 
-    const listing = relicPrices?.get(relicFullName);
-    const relicPrice = listing?.averagePrice ?? null;
-    const trades = listing?.tradeCount90d ?? null;
+    // The listing's `tradeCount90d` is deliberately left unread here. It fed a
+    // "worth selling instead of opening" verdict that shipped and was taken
+    // back out: relics are acquired at roughly five platinum for six of any
+    // tier, so nobody holding one is choosing between selling it at market and
+    // opening it, and the gate was answering a question the reader never asks.
+    // It was also measured wrong — the "nearly always empty" it was designed to
+    // be was computed on 48-hour trade volume while the gate shipped on the
+    // 90-day count, and it lit up on 497 of 772 relics. The field stays on the
+    // wire for the price curve that is still to come; it is not an input to a
+    // verdict again.
+    const relicPrice = relicPrices?.get(relicFullName)?.averagePrice ?? null;
 
     return {
       relicFullName,
@@ -406,17 +399,6 @@ export function buildTierList(
       soloValue,
       radshareValue,
       relicPrice,
-      // Measured against the solo Intact column: that is the state the relic is
-      // in while it sits in the inventory, and opening it that way costs
-      // nothing beyond the run. Comparing against the radshare column instead
-      // would let the un-subtracted trace cost above decide whether the badge
-      // appears. A tie leaves it off — selling and opening paying the same is
-      // not a reason to do something different.
-      worthSelling:
-        trades !== null &&
-        trades >= SELL_BADGE_MIN_TRADES &&
-        relicPrice !== null &&
-        relicPrice > soloValue,
       // One arrow per row, on the solo expected value. Both columns move with
       // the same six prices, so a second arrow would say very nearly the same
       // thing in twice the width.

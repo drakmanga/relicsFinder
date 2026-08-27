@@ -91,6 +91,16 @@ interface PageProps {
   lead: string;
   /** Filters or toggles, right-aligned in the header. */
   controls?: ReactNode;
+  /**
+   * Standing explanation of the view's own vocabulary, under the lead.
+   *
+   * Above the highlight cards rather than below them, because the cards already
+   * use the words: a reader who meets "Radshare" on a card has met it before
+   * the note that defines it. And a slot rather than more prose in `lead` —
+   * the lead is one muted line that has to stay scannable, and this is
+   * several sentences the reader is meant to stop on.
+   */
+  note?: ReactNode;
   highlights?: ReactNode;
   footnote?: ReactNode;
   children: ReactNode;
@@ -103,7 +113,15 @@ interface PageProps {
  * of question — what is the best value right now — and should look like they
  * belong to the same tool.
  */
-export function RankedPage({ title, lead, controls, highlights, footnote, children }: PageProps) {
+export function RankedPage({
+  title,
+  lead,
+  controls,
+  note,
+  highlights,
+  footnote,
+  children,
+}: PageProps) {
   return (
     <div className="rf-ranked">
       <div className="rf-ranked-head">
@@ -114,6 +132,8 @@ export function RankedPage({ title, lead, controls, highlights, footnote, childr
           </div>
           {controls}
         </div>
+
+        {note && <div className="rf-ranked-note">{note}</div>}
 
         {highlights && <div className="rf-ranked-highlights">{highlights}</div>}
       </div>

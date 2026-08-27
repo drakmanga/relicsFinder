@@ -8,7 +8,6 @@ import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Button,
-  Chip,
   EmptyState,
   PriceDelta,
   Skeleton,
@@ -22,13 +21,13 @@ import {
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
+import { TierListPrimer } from "./TierListPrimer";
 import { Unlisted } from "./Unlisted";
 import { usePricePriority } from "../lib/usePricePriority";
 import { ALL_VAULT_FILTERS, VAULT_LABEL, type VaultFilter } from "../lib/rows";
 import {
   DEFAULT_TIER_SORT,
   RADSHARE_PLAYERS,
-  SELL_BADGE_MIN_TRADES,
   TIER_SORT_LABEL,
   sortTierRows,
   type TierLetter,
@@ -47,15 +46,13 @@ interface Props {
   /** Absent until the market answers: with no prices there is nothing to band. */
   prices: PriceMap | undefined;
   /**
-   * Whether the part batch is still landing. See lib/priceProgress.
+   * Whether the whole-relic batch is still landing. See lib/priceProgress.
    *
-   * The letters survive it — an unpriced drop counts as zero, which understates
-   * a relic rather than inventing a value for it. The "Sell" verdict does not:
-   * it compares the relic's own price against that understated number, so until
-   * the parts are in it would tell the reader to sell relics worth opening.
+   * The part batch is deliberately not a prop here, unlike everywhere else in
+   * the app: the letters survive a half-filled market — an unpriced drop counts
+   * as zero, which understates a relic rather than inventing a value for it —
+   * so nothing in this table waits on it.
    */
-  pricesFilling: boolean;
-  /** Whether the whole-relic batch is still landing. See lib/priceProgress. */
   relicPricesFilling: boolean;
   vault: VaultFilter;
   onVault: (next: VaultFilter) => void;
@@ -82,7 +79,6 @@ interface Props {
 export function TierListTable({
   tierList,
   prices,
-  pricesFilling,
   relicPricesFilling,
   vault,
   onVault,
@@ -154,6 +150,7 @@ export function TierListTable({
         title="Tier List"
         lead="Waiting for the market to be read."
         controls={controls}
+        note={<TierListPrimer />}
         highlights={<HighlightPlaceholder />}
       >
         <EmptyState
@@ -170,6 +167,7 @@ export function TierListTable({
       title="Tier List"
       lead={`Every relic ranked twice: opened alone Intact, and opened Radiant in a squad of ${RADSHARE_PLAYERS}. The two disagree more often than not.`}
       controls={controls}
+      note={<TierListPrimer />}
       footnote={<Footnote tierList={tierList} />}
       highlights={top.map((row, index) => (
         <Highlight
@@ -222,7 +220,7 @@ export function TierListTable({
             caption="Relics ranked by expected value, solo and in a radshare"
             className="rf-cols-tiers"
           >
-            <TableCols count={8} />
+            <TableCols count={7} />
             <thead>
               <tr>
                 {/* Widths are mandatory under the table's fixed layout. */}
@@ -253,19 +251,13 @@ export function TierListTable({
                 <TableHeaderCell align="right" title="Movement of the solo value over ninety days">
                   Trend
                 </TableHeaderCell>
-                <TableHeaderCell
-                  align="center"
-                  title={`Selling beats opening, on at least ${SELL_BADGE_MIN_TRADES} trades in ninety days`}
-                >
-                  Sell?
-                </TableHeaderCell>
               </tr>
             </thead>
 
             <tbody>
               {paddingTop > 0 && (
                 <tr aria-hidden="true">
-                  <td colSpan={8} className="rf-spacer" style={{ height: paddingTop }} />
+                  <td colSpan={7} className="rf-spacer" style={{ height: paddingTop }} />
                 </tr>
               )}
 
@@ -304,22 +296,13 @@ export function TierListTable({
                     <TableCell align="right" numeric>
                       <Trend percent={row.trend} />
                     </TableCell>
-                    <TableCell align="center">
-                      {pricesFilling ? (
-                        <Skeleton width={44} height={14} />
-                      ) : row.worthSelling ? (
-                        <Chip>Sell</Chip>
-                      ) : (
-                        <Unlisted what="Open it" />
-                      )}
-                    </TableCell>
                   </TableRow>
                 );
               })}
 
               {paddingBottom > 0 && (
                 <tr aria-hidden="true">
-                  <td colSpan={8} className="rf-spacer" style={{ height: paddingBottom }} />
+                  <td colSpan={7} className="rf-spacer" style={{ height: paddingBottom }} />
                 </tr>
               )}
             </tbody>
@@ -411,6 +394,11 @@ function SortHeader({ column, sort, onSort, align = "left", title }: SortHeaderP
  * where the rest of the app rounds platinum to whole numbers, because the
  * bands are multiples of this number and 5p against 5.4p is a band boundary
  * 0.8p apart.
+ *
+ * It used to close on the void traces a Radiant costs and on the relic's own
+ * price staying out of the letters. Both now sit in `TierListPrimer`, above the
+ * table rather than under it, and saying either of them twice on one screen
+ * would be two copies to keep in step.
  */
 function Footnote({ tierList }: { tierList: TierList }) {
   const { soloMedian, radshareMedian } = tierList;
@@ -420,10 +408,7 @@ function Footnote({ tierList }: { tierList: TierList }) {
       S is 2x the median of the relics on screen, A 1.5x, B 1.2x, C 0.8x, D 0.6x, F below it.{" "}
       {soloMedian === null || radshareMedian === null
         ? "There is no median yet, so nothing is banded."
-        : `Right now that median is ${soloMedian.toFixed(1)}p solo and ${radshareMedian.toFixed(1)}p in a radshare.`}{" "}
-      Both columns are gross: the hundred void traces a Radiant costs have no market price, so
-      subtracting them would mean inventing an exchange rate, and the relic's own price is a column
-      of its own rather than a thumb on the letters.
+        : `Right now that median is ${soloMedian.toFixed(1)}p solo and ${radshareMedian.toFixed(1)}p in a radshare.`}
     </p>
   );
 }

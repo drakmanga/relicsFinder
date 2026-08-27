@@ -6,7 +6,6 @@ import {
   sortTierRows,
   tierFor,
   RADSHARE_PLAYERS,
-  SELL_BADGE_MIN_TRADES,
   TIER_LETTERS,
   TREND_ARROW_THRESHOLD,
   type TierListRow,
@@ -29,7 +28,11 @@ function twoStates(fullName: string, intact: Reward[], radiant: Reward[], tier: 
 const mirrored = (fullName: string, rewards: Reward[], tier: Tier = "lith") =>
   twoStates(fullName, rewards, rewards, tier);
 
-/** `{ "Lith V9": [price, trades] }`, since the badge reads both together. */
+/**
+ * `{ "Lith V9": [price, trades] }`. The trade count is still in the tuple
+ * because `RelicPrice` still carries it on the wire — nothing in this file
+ * reads it, and the view no longer does either.
+ */
 const relicMarket = (entries: Record<string, [number | null, number | null]>): RelicPriceMap =>
   new Map(
     Object.entries(entries).map(([relicName, [averagePrice, tradeCount90d]]) => [
@@ -370,64 +373,31 @@ describe("the population the median is taken over", () => {
   });
 });
 
-describe("the sell badge", () => {
+describe("the relic's own price", () => {
   const market = prices({ common: 10, rare: 500 });
   const catalogue = mirrored("Lith V9", [drop("common", 100)]);
 
-  // The relic is worth 10p opened solo, so 30p is plainly worth selling — the
-  // only question these cases ask is whether the badge is allowed to say so.
-  const badgeOn = (price: number | null, trades: number | null) =>
-    buildTierList(catalogue, market, relicMarket({ "Lith V9": [price, trades] }), undefined, "all")
-      .rows[0]?.worthSelling;
-
-  it("appears at the trade threshold and not one trade below it", () => {
-    expect(SELL_BADGE_MIN_TRADES).toBe(10);
-    expect(badgeOn(30, 10)).toBe(true);
-    expect(badgeOn(30, 9)).toBe(false);
-  });
-
-  it("stays off where the trade count is unknown", () => {
-    // Null means nobody has asked yet, not that nobody traded. Reading it as
-    // zero would keep the badge off for the wrong reason; reading it as "no
-    // objection" would put it on a price backed by nothing.
-    expect(badgeOn(30, null)).toBe(false);
-  });
-
-  it("stays off when opening the relic pays more than selling it", () => {
-    expect(badgeOn(3, 25)).toBe(false);
-  });
-
-  it("stays off on a tie, since neither choice is better", () => {
-    expect(badgeOn(10, 25)).toBe(false);
-    expect(badgeOn(10.01, 25)).toBe(true);
-  });
-
-  it("measures against opening the relic solo, not against the radshare", () => {
-    // Worth 10p opened alone and 171.95p opened in a squad of four. A 30p
-    // listing beats the first and loses to the second, and the badge answers
-    // the first: the radshare number has a hundred void traces missing from it,
-    // and an un-subtracted cost must not be what decides whether the badge
-    // appears.
-    const { rows } = buildTierList(
-      twoStates("Lith V9", [drop("common", 100)], [drop("rare", 10)]),
+  it("carries the listing through, and says nothing where there is none", () => {
+    const listed = buildTierList(
+      catalogue,
       market,
       relicMarket({ "Lith V9": [30, 25] }),
       undefined,
       "all",
     );
 
-    expect(rows[0]?.radshareValue).toBeCloseTo(171.95, 8);
-    expect(rows[0]?.worthSelling).toBe(true);
+    expect(listed.rows[0]?.relicPrice).toBe(30);
+
+    // No relic-price map at all is the state this view opens in, and it lasts
+    // for as long as 772 relic listings take. The row still exists and is still
+    // banded — only the price column is empty.
+    const unlisted = buildTierList(catalogue, market, undefined, undefined, "all");
+
+    expect(unlisted.rows[0]?.relicPrice).toBeNull();
+    expect(unlisted.rows[0]?.soloLetter).toBe("C");
   });
 
-  it("stays off where nobody is selling the relic at all", () => {
-    expect(badgeOn(null, 25)).toBe(false);
-    expect(
-      buildTierList(catalogue, market, undefined, undefined, "all").rows[0]?.worthSelling,
-    ).toBe(false);
-  });
-
-  it("does not let the relic's own price move the letter", () => {
+  it("does not move the letter", () => {
     // A 400p relic and a 3p relic, worth exactly the same opened. The price is
     // beside the letter and never inside it — a tier list that ranked relics by
     // what they cost would be a price list.
@@ -445,7 +415,6 @@ describe("the sell badge", () => {
 
     expect(rows.map((row) => row.soloLetter)).toEqual(["C", "C"]);
     expect(rows.map((row) => row.relicPrice)).toEqual([400, 3]);
-    expect(rows.map((row) => row.worthSelling)).toEqual([true, false]);
   });
 });
 
