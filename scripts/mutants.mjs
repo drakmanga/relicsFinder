@@ -186,6 +186,30 @@ const MUTANTS = [
     from: "const burst = last && next.at - last.at < COALESCE_MS && next.total === last.total;",
     to: "const burst = last && next.at - last.at < COALESCE_MS;",
   },
+  {
+    name: "medianOf sorts the way strings sort",
+    file: "apps/web/src/lib/tierList.ts",
+    from: "const sorted = [...values].sort((a, b) => a - b);",
+    to: "const sorted = [...values].sort();",
+  },
+  {
+    name: "a band stops owning its own lower edge",
+    file: "apps/web/src/lib/tierList.ts",
+    from: "return TIER_BANDS.find((band) => value >= band.minMultiple * median)?.letter ?? LOWEST_BAND;",
+    to: "return TIER_BANDS.find((band) => value > band.minMultiple * median)?.letter ?? LOWEST_BAND;",
+  },
+  {
+    name: "both columns are ranked against the solo median",
+    file: "apps/web/src/lib/tierList.ts",
+    from: "const radshareMedian = medianOf(unranked.map((row) => row.radshareValue));",
+    to: "const radshareMedian = soloMedian;",
+  },
+  {
+    name: "the sell badge stops asking how many trades back the price",
+    file: "apps/web/src/lib/tierList.ts",
+    from: "trades >= SELL_BADGE_MIN_TRADES &&",
+    to: "true &&",
+  },
 ];
 
 let killed = 0;

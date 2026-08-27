@@ -18,7 +18,8 @@ const SERVICE = "src/main/java/relics/reliceApi/service";
 const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
-  "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest -DfailIfNoTests=false";
+  "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
+  "RelicMarketTradeCountTest -DfailIfNoTests=false";
 
 const MUTANTS = [
   {
@@ -209,6 +210,18 @@ const MUTANTS = [
     file: `${SERVICE}/RelicMarketService.java`,
     from: "            if (failed) return RETRY_TTL;\n            if (earnedTtl != null) return earnedTtl;",
     to: "            if (earnedTtl != null) return earnedTtl;\n            if (failed) return RETRY_TTL;",
+  },
+  {
+    name: "the trade count is read off the 48-hour window instead of ninety days",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        for (PricePoint point : cached.history()) trades += point.getVolume();",
+    to: "        trades = cached.volume() == null ? 0 : cached.volume();",
+  },
+  {
+    name: "a relic nobody has looked up yet is reported as untraded",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        if (cached == null || cached.history().isEmpty()) return null;",
+    to: "        if (cached == null || cached.history().isEmpty()) return 0;",
   },
 ];
 

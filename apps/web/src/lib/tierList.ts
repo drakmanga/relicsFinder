@@ -207,8 +207,14 @@ export type TierSortColumn = (typeof ALL_TIER_SORTS)[number];
  * the state every relic is already in — refining costs a hundred void traces
  * and a squad of four costs three other people — so it describes the relics as
  * they sit in the inventory. The other column is one click away.
+ *
+ * Typed without `"relic"` rather than as a bare `TierSortColumn`, because the
+ * paragraph above is a rule and not a preference: the view has to open on a
+ * ranking. That also lets the highlight cards fall back to this constant when
+ * the table is sorted by name, instead of repeating the same choice as a
+ * literal beside it.
  */
-export const DEFAULT_TIER_SORT: TierSortColumn = "solo";
+export const DEFAULT_TIER_SORT: Exclude<TierSortColumn, "relic"> = "solo";
 
 /** What each column is called, in the header and on the cards. */
 export const TIER_SORT_LABEL: Record<TierSortColumn, string> = {

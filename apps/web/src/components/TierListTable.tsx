@@ -23,8 +23,10 @@ import {
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { Unlisted } from "./Unlisted";
+import { usePricePriority } from "../lib/usePricePriority";
 import { ALL_VAULT_FILTERS, VAULT_LABEL, type VaultFilter } from "../lib/rows";
 import {
+  DEFAULT_TIER_SORT,
   RADSHARE_PLAYERS,
   SELL_BADGE_MIN_TRADES,
   TIER_SORT_LABEL,
@@ -44,6 +46,15 @@ interface Props {
   tierList: TierList;
   /** Absent until the market answers: with no prices there is nothing to band. */
   prices: PriceMap | undefined;
+  /**
+   * Whether the part batch is still landing. See lib/priceProgress.
+   *
+   * The letters survive it — an unpriced drop counts as zero, which understates
+   * a relic rather than inventing a value for it. The "Sell" verdict does not:
+   * it compares the relic's own price against that understated number, so until
+   * the parts are in it would tell the reader to sell relics worth opening.
+   */
+  pricesFilling: boolean;
   /** Whether the whole-relic batch is still landing. See lib/priceProgress. */
   relicPricesFilling: boolean;
   vault: VaultFilter;
@@ -71,6 +82,7 @@ interface Props {
 export function TierListTable({
   tierList,
   prices,
+  pricesFilling,
   relicPricesFilling,
   vault,
   onVault,
@@ -85,8 +97,9 @@ export function TierListTable({
      disagree about what "top three" means — which is why they are the head of
      the sorted list rather than a ranking of their own. Sorted by name they
      would read "Axi A1, Axi A2, Axi A3", which is not a ranking at all, so
-     that one case is ranked by the column the view opens on instead. */
-  const rankedBy: Exclude<TierSortColumn, "relic"> = sort === "relic" ? "solo" : sort;
+     that one case is ranked by the column the view opens on instead — read from
+     the same constant the view opens on, so the two cannot drift apart. */
+  const rankedBy: Exclude<TierSortColumn, "relic"> = sort === "relic" ? DEFAULT_TIER_SORT : sort;
   const top = useMemo(
     () =>
       (sort === "relic" ? sortTierRows(tierList.rows, rankedBy) : rows).slice(0, HIGHLIGHT_COUNT),
@@ -101,6 +114,16 @@ export function TierListTable({
   });
 
   const items = virtualizer.getVirtualItems();
+
+  // The rows on screen, told to the server so it prices those first. Same batch
+  // and same reason as the Relics table: this view asks for all 772 relic
+  // prices, and without the hint the ones being looked at fill in last.
+  usePricePriority({
+    relics: items
+      .map((item) => rows[item.index]?.relicFullName)
+      .filter((name): name is string => !!name),
+  });
+
   const paddingTop = items.length > 0 ? (items[0]?.start ?? 0) : 0;
   const paddingBottom =
     items.length > 0 ? virtualizer.getTotalSize() - (items[items.length - 1]?.end ?? 0) : 0;
@@ -282,7 +305,13 @@ export function TierListTable({
                       <Trend percent={row.trend} />
                     </TableCell>
                     <TableCell align="center">
-                      {row.worthSelling ? <Chip>Sell</Chip> : <Unlisted what="Open it" />}
+                      {pricesFilling ? (
+                        <Skeleton width={44} height={14} />
+                      ) : row.worthSelling ? (
+                        <Chip>Sell</Chip>
+                      ) : (
+                        <Unlisted what="Open it" />
+                      )}
                     </TableCell>
                   </TableRow>
                 );
