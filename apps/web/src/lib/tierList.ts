@@ -188,6 +188,82 @@ export function tierFor(value: number, median: number | null): TierLetter | null
 }
 
 /**
+ * What the reader can rank the table by.
+ *
+ * The letters are the answer this tab exists to give, and neither column is
+ * the answer on its own — so the ranking is a control rather than a fixed
+ * order, and which one is in force is part of the shared link.
+ */
+export const ALL_TIER_SORTS = ["solo", "radshare", "price", "relic"] as const;
+
+export type TierSortColumn = (typeof ALL_TIER_SORTS)[number];
+
+/**
+ * Solo Intact, not the relic name.
+ *
+ * A tier list that opens in alphabetical order has to be sorted before it
+ * answers anything, and the three cards above the table would read "Axi A1,
+ * Axi A2, Axi A3". Solo Intact rather than the radshare column because it is
+ * the state every relic is already in — refining costs a hundred void traces
+ * and a squad of four costs three other people — so it describes the relics as
+ * they sit in the inventory. The other column is one click away.
+ */
+export const DEFAULT_TIER_SORT: TierSortColumn = "solo";
+
+/** What each column is called, in the header and on the cards. */
+export const TIER_SORT_LABEL: Record<TierSortColumn, string> = {
+  solo: "Solo, Intact",
+  radshare: "Radshare, Radiant",
+  price: "Relic price",
+  relic: "Relic",
+};
+
+/** The number each ranking column reads. Null is an absent number, not a zero. */
+const TIER_SORT_VALUE: Record<
+  Exclude<TierSortColumn, "relic">,
+  (row: TierListRow) => number | null
+> = {
+  solo: (row) => row.soloValue,
+  radshare: (row) => row.radshareValue,
+  price: (row) => row.relicPrice,
+};
+
+/**
+ * The rows in the order the reader asked for.
+ *
+ * One direction per column rather than a header that toggles, and that follows
+ * from the URL rather than from laziness: this view writes two keys, `tvault`
+ * and `tsort`, and a direction nothing writes down is a piece of the screen a
+ * shared link would silently drop. Each column has an obvious end to start
+ * from anyway — a name starts at A, a value starts at its largest — which is
+ * the rule the Relics table already opens every column on.
+ *
+ * Ties keep the order they arrived in, which is by name: `Array.sort` is
+ * stable, and 327 relics sit between 4p and 6p, so the tie is the normal case
+ * rather than the edge one.
+ */
+export function sortTierRows(rows: TierListRow[], column: TierSortColumn): TierListRow[] {
+  // `buildTierList` already returns name order, and re-sorting a sorted list
+  // with `localeCompare` on every comparison is 772 rows of work to end up
+  // where it started.
+  if (column === "relic") return rows;
+
+  const valueOf = TIER_SORT_VALUE[column];
+
+  return [...rows].sort((a, b) => {
+    const left = valueOf(a);
+    const right = valueOf(b);
+
+    // A relic nobody has listed sinks below every relic that has a number,
+    // rather than being ranked as though it were worth nothing.
+    if (left === null) return right === null ? 0 : 1;
+    if (right === null) return -1;
+
+    return right - left;
+  });
+}
+
+/**
  * The same prices as they stood ninety days ago.
  *
  * `ItemPrice.trend` is the percent the price stands at against its ninety-day

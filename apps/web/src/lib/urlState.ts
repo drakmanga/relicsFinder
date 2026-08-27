@@ -3,10 +3,12 @@ import {
   ALL_RARITIES,
   ALL_REFINEMENTS,
   ALL_TIERS,
+  ALL_VAULT_FILTERS,
   DEFAULT_REFINEMENT,
   type Filters,
   type VaultFilter,
 } from "./rows";
+import { ALL_TIER_SORTS, DEFAULT_TIER_SORT, type TierSortColumn } from "./tierList";
 
 /**
  * The whole view, in the address bar.
@@ -18,7 +20,15 @@ import {
  * back button does nothing at all.
  */
 /** Every view the app can show. A link naming anything else opens on the first. */
-export const ALL_VIEWS = ["relics", "items", "sets", "wishlist", "ducats", "endo"] as const;
+export const ALL_VIEWS = [
+  "relics",
+  "items",
+  "sets",
+  "wishlist",
+  "ducats",
+  "endo",
+  "tiers",
+] as const;
 
 export type UrlView = (typeof ALL_VIEWS)[number];
 
@@ -27,6 +37,20 @@ export interface UrlState {
   filters: Filters;
   selected: string | null;
   pickedItem: string | null;
+  /**
+   * The tier list's own two controls, written as `tvault` and `tsort`.
+   *
+   * Its own keys rather than the `vault` one beside them, even though the
+   * population filter is the same three-way choice. `filters.vault` belongs to
+   * `Filters`, which is per-catalogue-view state — the tier list is not a
+   * catalogue view, so it would have needed either a filter set nothing else
+   * in it applies to, or a special case in the writer. Two keys and no
+   * conditional is the cheaper of the two, and it means a link can carry a
+   * relics filter and a tier-list population at once without either standing
+   * for the other.
+   */
+  tierVault: VaultFilter;
+  tierSort: TierSortColumn;
 }
 
 /** Only what differs from the default is written, so a clean view is a clean URL. */
@@ -43,6 +67,8 @@ export function toSearch(state: UrlState): string {
   if (filters.maxPrice !== null) params.set("max", String(filters.maxPrice));
   if (state.selected) params.set("relic", state.selected);
   if (state.pickedItem) params.set("item", state.pickedItem);
+  if (state.tierVault !== "all") params.set("tvault", state.tierVault);
+  if (state.tierSort !== DEFAULT_TIER_SORT) params.set("tsort", state.tierSort);
 
   const search = params.toString();
   return search ? `?${search}` : "";
@@ -69,6 +95,11 @@ export function fromSearch(search: string, base: Filters): UrlState {
     view: pickOne<UrlView>(params.get("view"), ALL_VIEWS, "relics"),
     selected: params.get("relic"),
     pickedItem: params.get("item"),
+    // Both checked the same way as everything above: the tier list ranks the
+    // population it is given, so a `tvault` nobody validated would rank the
+    // relics against a set of relics that is not on screen.
+    tierVault: pickOne<VaultFilter>(params.get("tvault"), ALL_VAULT_FILTERS, "all"),
+    tierSort: pickOne<TierSortColumn>(params.get("tsort"), ALL_TIER_SORTS, DEFAULT_TIER_SORT),
     filters: {
       ...base,
       term: params.get("q") ?? "",

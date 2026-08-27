@@ -48,6 +48,10 @@ export function App() {
     setSetCategories,
     setStatus,
     setSetStatus,
+    tierVault,
+    setTierVault,
+    tierSort,
+    setTierSort,
     trail,
     openItem,
     openRelic,
@@ -76,6 +80,7 @@ export function App() {
     activeBarFilters,
     visible,
     visibleSets,
+    tierList,
     allSets,
     setPriceBySet,
     selectedSetRow,
@@ -90,6 +95,7 @@ export function App() {
     setRefinement,
     setCategories,
     setStatus,
+    tierVault,
     sort,
   });
 
@@ -139,6 +145,10 @@ export function App() {
               { id: "wishlist", label: `Wishlist · ${wishlist.totalItems}` },
               { id: "ducats", label: "Ducanetor" },
               { id: "endo", label: "Endo" },
+              // Last, and after the two market rankings rather than beside
+              // Relics: it ranks the catalogue rather than listing it, which
+              // is the question the three tabs at this end of the row share.
+              { id: "tiers", label: "Tier List" },
             ]}
           />
 
@@ -296,6 +306,11 @@ export function App() {
               onWishlistSection={setWishlistSection}
               sort={sort}
               onSort={toggleSort}
+              tierList={tierList}
+              tierVault={tierVault}
+              onTierVault={setTierVault}
+              tierSort={tierSort}
+              onTierSort={setTierSort}
             />
           </main>
 

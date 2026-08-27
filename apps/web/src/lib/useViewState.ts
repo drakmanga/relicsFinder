@@ -2,19 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 
 import { remember, tokensAdded } from "./filterMemory";
 import type { SetStatus } from "./setCategories";
-import { emptyFilters, type Filters, type RelicSortColumn, type SortDirection } from "./rows";
+import type { TierSortColumn } from "./tierList";
+import {
+  emptyFilters,
+  type Filters,
+  type RelicSortColumn,
+  type SortDirection,
+  type VaultFilter,
+} from "./rows";
 import { fromSearch, toSearch } from "./urlState";
 import type { Refinement, SetCategory, WishlistKind } from "../api/types";
 
-export type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
+export type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers";
 
 /**
  * Views that browse the relic catalogue.
  *
  * Only these get the search box, the filter bar and the detail panel: the other
- * three are lists in their own right — a wishlist the user built, and two
- * rankings of what the market is offering right now — and none of them has
- * anything for a relic filter to act on.
+ * five are lists in their own right — a wishlist the user built, two rankings
+ * of what the market is offering right now, and a tier list that carries its
+ * own population control — and none of them has anything for a relic filter to
+ * act on.
  */
 export type CatalogueView = "relics" | "items";
 
@@ -133,6 +141,22 @@ export function useViewState() {
    * the ones they happen to be missing.
    */
   const [setStatus, setSetStatus] = useState<SetStatus>("all");
+  /**
+   * Which relics the tier list ranks, and what it ranks them by.
+   *
+   * Here rather than in `Filters` for the reason written out in urlState: the
+   * tier view is not a catalogue view, so it has no filter set of its own to
+   * put a vault choice in. It sits beside `setCategories` and `setStatus`,
+   * which are per-view state for the same reason.
+   *
+   * The population is not merely a filter here — it is the population both
+   * medians are taken over, so switching it re-bands every relic on screen.
+   * Only 34 of 772 relics are currently dropping and they cluster at the
+   * bottom, so ranking them against the whole catalogue would answer "which of
+   * the relics I can still farm is worth farming" with "none of them".
+   */
+  const [tierVault, setTierVault] = useState<VaultFilter>(initial.tierVault);
+  const [tierSort, setTierSort] = useState<TierSortColumn>(initial.tierSort);
 
   /**
    * Where the panel came from, one step per jump.
@@ -179,11 +203,11 @@ export function useViewState() {
    * the browser does create.
    */
   useEffect(() => {
-    const search = toSearch({ view, filters, selected, pickedItem });
+    const search = toSearch({ view, filters, selected, pickedItem, tierVault, tierSort });
     if (search !== window.location.search) {
       window.history.replaceState(null, "", `${window.location.pathname}${search}`);
     }
-  }, [view, filters, selected, pickedItem]);
+  }, [view, filters, selected, pickedItem, tierVault, tierSort]);
 
   useEffect(() => {
     const onPop = () => {
@@ -200,6 +224,11 @@ export function useViewState() {
       }
       setSelected(next.selected);
       setPickedItem(next.pickedItem);
+      // Unconditionally, unlike the filters above: these two belong to one view
+      // rather than to whichever view the entry names, so an entry that leaves
+      // them at their defaults is saying they were at their defaults.
+      setTierVault(next.tierVault);
+      setTierSort(next.tierSort);
     };
 
     window.addEventListener("popstate", onPop);
@@ -304,6 +333,10 @@ export function useViewState() {
     setSetCategories,
     setStatus,
     setSetStatus,
+    tierVault,
+    setTierVault,
+    tierSort,
+    setTierSort,
     trail,
     openItem,
     openRelic,

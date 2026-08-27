@@ -66,16 +66,17 @@ interface Props {
  *
  * The Relics view shows relics and the Prime Items view shows parts, so which
  * panel to draw stopped being a question about the clicked cell. The views with
- * no panel — Wishlist, Ducanetor, Endo — are lists in their own right and have
- * nothing to open beside them.
+ * no panel — Wishlist, Ducanetor, Endo, Tier List — are lists in their own
+ * right and have nothing to open beside them.
  */
 export function DetailPane(props: Props) {
   const { view, onClose } = props;
 
   // The wishlist is a list of plans, and a set line is one of them: its panel
   // opens over the list rather than instead of it, so closing hands the reader
-  // back to the line they clicked. The two rankings have nothing with a panel.
-  if (view === "ducats" || view === "endo") return null;
+  // back to the line they clicked. The three rankings have nothing with a
+  // panel — a tier list row is already the whole answer about that relic.
+  if (view === "ducats" || view === "endo" || view === "tiers") return null;
 
   /*
     The panel opens over the table rather than beside it, at every width.

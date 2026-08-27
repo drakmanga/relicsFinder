@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   buildTierList,
   medianOf,
+  sortTierRows,
   tierFor,
   RADSHARE_PLAYERS,
   SELL_BADGE_MIN_TRADES,
   TIER_LETTERS,
   TREND_ARROW_THRESHOLD,
+  type TierListRow,
 } from "./tierList";
 import { prices, relic, reward } from "./testing";
 import type { PriceMap, Relic, RelicPriceMap, Reward, Tier } from "../api/types";
@@ -509,5 +511,77 @@ describe("the ninety-day trend", () => {
     const market = withTrends(prices({ common: null }), { common: 25 });
 
     expect(trendOf(one, market)).toBeNull();
+  });
+});
+
+describe("the order the view asks for", () => {
+  const market = prices({ big: 100, small: 10 });
+
+  /**
+   * Four relics worth 10, 100, 5 and 10 — the last of them tied with the
+   * first, since a tie is the normal case on a catalogue where 327 relics sit
+   * between 4p and 6p.
+   */
+  const catalogue = [
+    ...mirrored("Lith A1", [drop("small", 100)]),
+    ...mirrored("Lith A2", [drop("big", 100)]),
+    ...mirrored("Lith A3", [drop("small", 50)]),
+    ...mirrored("Lith A4", [drop("small", 100)]),
+  ];
+
+  const built = (relicPrices?: RelicPriceMap) =>
+    buildTierList(catalogue, market, relicPrices, undefined, "all");
+
+  const names = (rows: TierListRow[]) => rows.map((row) => row.relicFullName);
+
+  it("leaves the name order exactly as it arrived", () => {
+    const { rows } = built();
+
+    expect(names(sortTierRows(rows, "relic"))).toEqual([
+      "Lith A1",
+      "Lith A2",
+      "Lith A3",
+      "Lith A4",
+    ]);
+  });
+
+  it("puts the most valuable relic first in either value column", () => {
+    const { rows } = built();
+
+    expect(names(sortTierRows(rows, "solo"))).toEqual(["Lith A2", "Lith A1", "Lith A4", "Lith A3"]);
+    expect(names(sortTierRows(rows, "radshare"))[0]).toBe("Lith A2");
+  });
+
+  it("sinks a relic nobody has listed below every relic that has a price", () => {
+    // A2 is the most valuable relic to open and the one with no listing: if an
+    // absent price were read as zero it would still sort like a cheap relic,
+    // which is a claim about a number nobody has.
+    const { rows } = built(relicMarket({ "Lith A1": [3, 20], "Lith A3": [8, 20] }));
+
+    expect(names(sortTierRows(rows, "price"))).toEqual([
+      "Lith A3",
+      "Lith A1",
+      "Lith A2",
+      "Lith A4",
+    ]);
+  });
+
+  it("breaks a tie on the name, because most of the catalogue is a tie", () => {
+    // A1 and A4 are worth the same 10p solo. The rows arrive in name order and
+    // the sort is stable, so they stay in it rather than swapping about as the
+    // prices tick.
+    const { rows } = built();
+    const tied = sortTierRows(rows, "solo").filter((row) => row.soloValue === 10);
+
+    expect(names(tied)).toEqual(["Lith A1", "Lith A4"]);
+  });
+
+  it("does not disturb the list it was given", () => {
+    // The rows are a memoised value the view re-sorts on every click; sorting
+    // in place would reorder the thing the medians were taken over.
+    const { rows } = built();
+    sortTierRows(rows, "solo");
+
+    expect(names(rows)).toEqual(["Lith A1", "Lith A2", "Lith A3", "Lith A4"]);
   });
 });

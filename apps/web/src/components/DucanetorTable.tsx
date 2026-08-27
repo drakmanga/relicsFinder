@@ -150,7 +150,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
           figureLabel="Ducats / plat"
           figure={<span className="rf-text-data-lg rf-gold">{row.ratio.toFixed(1)}</span>}
           meta={
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+            <span className="rf-highlight-meta-row">
               <PlatPrice value={row.price} />
               <Chip>{row.ducats} ducats</Chip>
             </span>

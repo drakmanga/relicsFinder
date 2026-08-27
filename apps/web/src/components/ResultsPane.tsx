@@ -1,7 +1,7 @@
 /**
- * Over 150 lines (rule 4) and it is all one decision: which of six tables the
- * current view is about. The length is the six branches and the props they
- * need, not logic that could live elsewhere.
+ * Over 150 lines (rule 4) and it is all one decision: which of seven tables
+ * the current view is about. The length is the seven branches and the props
+ * they need, not logic that could live elsewhere.
  */
 import { Button, EmptyState, Skeleton } from "relic-finder-ui";
 
@@ -11,6 +11,7 @@ import { ItemsTable } from "./ItemsTable";
 import { ResultsTable } from "./ResultsTable";
 import { SetFilters } from "./SetFilters";
 import { SetsTable } from "./SetsTable";
+import { TierListTable } from "./TierListTable";
 import { WishlistTable } from "./WishlistTable";
 import type {
   EndoOffer,
@@ -24,10 +25,11 @@ import type {
 import type { PrimeItemRow } from "../lib/items";
 import type { PrimeSet } from "../lib/setCompletion";
 import type { SetStatus } from "../lib/setCategories";
-import type { RelicSortColumn, SortDirection } from "../lib/rows";
+import type { RelicSortColumn, SortDirection, VaultFilter } from "../lib/rows";
+import type { TierList, TierSortColumn } from "../lib/tierList";
 import type { WishlistEntry } from "../lib/wishlist";
 
-export type PaneView = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo";
+export type PaneView = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers";
 
 interface Props {
   view: PaneView;
@@ -88,6 +90,13 @@ interface Props {
   onWishlistSection: (section: WishlistKind) => void;
   sort: { column: RelicSortColumn; direction: SortDirection };
   onSort: (column: RelicSortColumn) => void;
+  /** Every relic ranked twice, plus the two medians it was banded against. */
+  tierList: TierList;
+  /** Which relics the tier list ranks. Its own control, not the filter bar's. */
+  tierVault: VaultFilter;
+  onTierVault: (next: VaultFilter) => void;
+  tierSort: TierSortColumn;
+  onTierSort: (next: TierSortColumn) => void;
 }
 
 /**
@@ -136,6 +145,11 @@ export function ResultsPane({
   onWishlistSection,
   sort,
   onSort,
+  tierList,
+  tierVault,
+  onTierVault,
+  tierSort,
+  onTierSort,
 }: Props) {
   // Ayatan offers come straight from the market: nothing here waits on the
   // relic catalogue, so it must not wait on its loading state.
@@ -168,6 +182,22 @@ export function ResultsPane({
 
   if (view === "ducats") {
     return <DucanetorTable prices={prices} onInfo={onInfo} quantityOf={quantityOf} />;
+  }
+
+  // Below the two guards above, unlike Endo: this one reads the relic
+  // catalogue, so it has to wait for it the way the four catalogue views do.
+  if (view === "tiers") {
+    return (
+      <TierListTable
+        tierList={tierList}
+        prices={prices}
+        relicPricesFilling={relicPricesFilling}
+        vault={tierVault}
+        onVault={onTierVault}
+        sort={tierSort}
+        onSort={onTierSort}
+      />
+    );
   }
 
   if (view === "sets") {

@@ -129,7 +129,7 @@ export function EndoTable({ active, quantityOf }: Props) {
           figureLabel="Endo / plat"
           figure={<span className="rf-text-data-lg rf-gold">{offer.ratio.toFixed(0)}</span>}
           meta={
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+            <span className="rf-highlight-meta-row">
               <PlatPrice value={offer.platinum} />
               <Chip>{offer.endo} endo</Chip>
             </span>

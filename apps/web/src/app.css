@@ -505,6 +505,36 @@ body {
   width: 8%;
 } /* Market */
 
+/* The tier list has no action column at all — it is a ranking to read, not a
+   list to act on — so every width here is its header word measured at the
+   72rem floor above. "Radshare, Radiant" is the longest of them at 17
+   characters of uppercase overline plus a sort arrow, which is 185px against
+   the 207px its 18% resolves to. */
+.rf-cols-tiers col:nth-child(1) {
+  width: 4%;
+} /* # */
+.rf-cols-tiers col:nth-child(2) {
+  width: 10%;
+} /* Era — fits the Vanguard chip */
+.rf-cols-tiers col:nth-child(3) {
+  width: 21%;
+} /* Relic */
+.rf-cols-tiers col:nth-child(4) {
+  width: 16%;
+} /* Solo, Intact — a band letter and a value */
+.rf-cols-tiers col:nth-child(5) {
+  width: 18%;
+} /* Radshare, Radiant */
+.rf-cols-tiers col:nth-child(6) {
+  width: 10%;
+} /* Relic price */
+.rf-cols-tiers col:nth-child(7) {
+  width: 9%;
+} /* Trend */
+.rf-cols-tiers col:nth-child(8) {
+  width: 12%;
+} /* Sell? */
+
 /* Sets is four wide columns and no action column, so it needs no floor of its
    own beyond `.rf-table`'s. */
 
@@ -814,6 +844,13 @@ body {
 .rf-cols-endo {
   min-width: 62rem;
 }
+/* The Era column holds the same chip the Relics table sizes for, and Vanguard
+   is the longest of them: 10% of 72rem is 115px, which is what that table's
+   11% of 66rem already resolves to. A chip that does not fit is cut in half
+   rather than truncated, so it is the column that has to give. */
+.rf-cols-tiers {
+  min-width: 72rem;
+}
 /* The three wishlist tables had no floor at all, so they fell back to
    `.rf-table`'s 40rem: at that width a 7% Market column is 45px and the header
    read "MARKE". */
@@ -942,9 +979,95 @@ body {
   margin-top: var(--rf-space-2);
 }
 
+/* The line inside that block: a price beside a chip, or a pair of band letters
+   beside their labels. All three ranked views draw it, and all three used to
+   draw it as the same three declarations written inline — the gap was a raw
+   10, which is not a token and was therefore two different tens as far as
+   anything checking was concerned. space-2 is the nearer of the two tokens
+   either side of it and the one every other row of chips in this app uses. */
+.rf-highlight-meta-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rf-space-2);
+}
+
 .rf-highlight-figure {
   text-align: right;
   flex: none;
+}
+
+/* --------------------------------------------------------- Tier list ------
+   The seventh view: every relic banded twice, solo and radshare.
+   ----------------------------------------------------------------------- */
+
+/* The population switch, in the RankedPage header where Ducanetor and Endo put
+   their checkbox. Three buttons rather than one, because the choice is
+   three-way and exclusive. */
+.rf-tier-vault {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-1);
+  flex-wrap: wrap;
+}
+
+/* A band letter and the value it was banded from, in one cell. Spread rather
+   than hugged to the right edge: the letters then line up in a column of their
+   own down 772 rows, which is the thing this table is read by, and the numbers
+   keep the right edge the rest of the app aligns figures on. */
+.rf-tier-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rf-space-2);
+}
+
+/* The letter itself.
+   A filled badge, ink or bone text — never a coloured letter on the dark
+   surface, which is what tokens.json forbids for --rf-tier-* and forbids for
+   the same reason here. The ramp runs gold at the top to sunken at the bottom
+   rather than through hues: it is reinforcement, since the letter is what
+   carries the band (rule 5.1), and a hue scale would have made colour the
+   carrier and then needed six of them to be distinguishable.
+   Sized in rem so the badge grows with the reader's text, and square so a
+   letter is never mistaken for a tier chip. */
+.rf-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--rf-text-caption);
+  font-weight: 700;
+  --rf-notch: var(--rf-notch-xs);
+}
+
+/* Each pair is a fill and the foreground that clears 4.5:1 on it. S and A take
+   the gold the app already spends on "best"; the rest step down through bone
+   into the two surfaces, so D and F read as sunken rather than as a colour. */
+.rf-grade-s {
+  background: var(--rf-gold-300);
+  color: var(--rf-ink-950);
+}
+.rf-grade-a {
+  background: var(--rf-gold-500);
+  color: var(--rf-ink-950);
+}
+.rf-grade-b {
+  background: var(--rf-bone-300);
+  color: var(--rf-ink-950);
+}
+.rf-grade-c {
+  background: var(--rf-bone-500);
+  color: var(--rf-bone-50);
+}
+.rf-grade-d {
+  background: var(--rf-ink-600);
+  color: var(--rf-bone-200);
+}
+.rf-grade-f {
+  background: var(--rf-ink-700);
+  color: var(--rf-bone-400);
 }
 
 /* A number nobody has. fg-muted, not fg-disabled: see components/Unlisted.tsx. */

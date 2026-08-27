@@ -14,6 +14,7 @@ import { itemPriceProgress, relicPriceProgress } from "./priceProgress";
 import { buildSets, searchedPartsOf, setMatchesTerm } from "./setCompletion";
 import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./items";
 import { filterByCategory, filterByStatus, type SetStatus } from "./setCategories";
+import { buildTierList } from "./tierList";
 import {
   DEFAULT_REFINEMENT,
   applyRelicPriceCeiling,
@@ -23,6 +24,7 @@ import {
   type Filters,
   type RelicSortColumn,
   type SortDirection,
+  type VaultFilter,
 } from "./rows";
 import type { Refinement, Reward, SetCategory } from "../api/types";
 
@@ -38,6 +40,8 @@ interface Input {
   setCategories: Set<SetCategory>;
   /** Whether the Sets view is showing all sets, the unfinished, or the done. */
   setStatus: SetStatus;
+  /** Which relics the tier list ranks — and therefore what its medians are of. */
+  tierVault: VaultFilter;
   sort: { column: RelicSortColumn; direction: SortDirection };
 }
 
@@ -62,6 +66,7 @@ export function useCatalogue({
   setRefinement,
   setCategories,
   setStatus,
+  tierVault,
   sort,
 }: Input) {
   const relics = useRelics();
@@ -238,7 +243,10 @@ export function useCatalogue({
     // cost of the relics it takes — and there the whole catalogue is in play.
     // The wishlist asks for the handful it has lines for and nothing else: a
     // list of four relics must not queue six hundred behind it.
-    view === "relics" || view === "sets"
+    // The tier list prices every relic too: it says what the relic itself
+    // sells for beside the letters, and the "worth selling" badge is that
+    // price against what opening it returns.
+    view === "relics" || view === "sets" || view === "tiers"
       ? (relics.data ?? [])
           .filter((relic) => relic.refinement === "intact")
           .map((relic) => relic.fullName)
@@ -338,6 +346,23 @@ export function useCatalogue({
   }, [rows, filters.vault, unvaulted.data, filters.maxPrice, prices.data, sort, relicPrices.data]);
 
   /**
+   * Every relic ranked twice, solo and radshare.
+   *
+   * Built only for the view that shows it, the way `itemRows` and the sets are:
+   * the pass walks 772 relics twice over and re-medians them, and paying for
+   * that behind another tab would be a re-render nobody sees. The arithmetic
+   * and every decision inside it live in lib/tierList — this is only where the
+   * catalogue, the two price maps and the population choice meet.
+   */
+  const tierList = useMemo(
+    () =>
+      view === "tiers"
+        ? buildTierList(relics.data ?? [], prices.data, relicPrices.data, unvaulted.data, tierVault)
+        : { rows: [], soloMedian: null, radshareMedian: null },
+    [view, relics.data, prices.data, relicPrices.data, unvaulted.data, tierVault],
+  );
+
+  /**
    * The part the search names, if it names one.
    *
    * Searching a part in this view lists the relics that hold it; the panel then
@@ -418,6 +443,8 @@ export function useCatalogue({
     activeBarFilters,
     visible,
     visibleSets,
+    /** The seventh view's rows and the two medians they were banded against. */
+    tierList,
     /** Every set, before the kind chips: the chips themselves are built from it. */
     allSets: sets,
     /** What each set sells for assembled, by set name. Null while it lands. */

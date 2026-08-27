@@ -40,6 +40,7 @@ const VIEWS = [
   ["wishlist", "/?view=wishlist"],
   ["ducanetor", "/?view=ducats"],
   ["endo", "/?view=endo"],
+  ["tier list", "/?view=tiers"],
 ];
 
 /*
