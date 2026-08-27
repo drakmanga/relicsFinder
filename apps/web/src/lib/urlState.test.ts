@@ -35,6 +35,19 @@ describe("toSearch", () => {
     expect(search).not.toContain("vault=");
   });
 
+  it("names a refinement that is not the default, and only that one", () => {
+    // Both directions, because the writer omitting `ref` and the reader
+    // supplying it back are one pair: if they ever disagree about which state
+    // is the default, a link shared without `ref` reopens somewhere else.
+    const intact = toSearch(state({ filters: { ...emptyFilters(), refinement: "intact" } }));
+    expect(intact).toBe("?ref=intact");
+    expect(fromSearch(intact, emptyFilters()).filters.refinement).toBe("intact");
+
+    const radiant = toSearch(state({ filters: { ...emptyFilters(), refinement: "radiant" } }));
+    expect(radiant).not.toContain("ref=");
+    expect(fromSearch(radiant, emptyFilters()).filters.refinement).toBe("radiant");
+  });
+
   it("trims the search term", () => {
     expect(toSearch(state({ filters: { ...emptyFilters(), term: "  volt  " } }))).toBe("?q=volt");
   });
@@ -65,7 +78,7 @@ describe("fromSearch", () => {
 
     expect(read.view).toBe("relics");
     expect([...read.filters.tiers]).toEqual(["lith"]);
-    expect(read.filters.refinement).toBe("intact");
+    expect(read.filters.refinement).toBe("radiant");
   });
 
   it("refuses a negative or unparseable ceiling", () => {
@@ -88,7 +101,9 @@ describe("a link survives the round trip", () => {
         ...emptyFilters(),
         tiers: new Set(["lith", "axi"]),
         rarities: new Set(["rare"]),
-        refinement: "radiant",
+        // Not the default, so this case carries an explicit `ref` through the
+        // round trip rather than exercising the omission the case above covers.
+        refinement: "intact",
         vault: "farmable",
         maxPrice: 0,
       },

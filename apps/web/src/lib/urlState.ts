@@ -1,5 +1,12 @@
 import type { Rarity, Refinement, Tier } from "../api/types";
-import { ALL_RARITIES, ALL_REFINEMENTS, ALL_TIERS, type Filters, type VaultFilter } from "./rows";
+import {
+  ALL_RARITIES,
+  ALL_REFINEMENTS,
+  ALL_TIERS,
+  DEFAULT_REFINEMENT,
+  type Filters,
+  type VaultFilter,
+} from "./rows";
 
 /**
  * The whole view, in the address bar.
@@ -31,7 +38,7 @@ export function toSearch(state: UrlState): string {
   if (filters.term.trim()) params.set("q", filters.term.trim());
   if (filters.tiers.size > 0) params.set("tier", [...filters.tiers].join(","));
   if (filters.rarities.size > 0) params.set("rarity", [...filters.rarities].join(","));
-  if (filters.refinement !== "intact") params.set("ref", filters.refinement);
+  if (filters.refinement !== DEFAULT_REFINEMENT) params.set("ref", filters.refinement);
   if (filters.vault !== "all") params.set("vault", filters.vault);
   if (filters.maxPrice !== null) params.set("max", String(filters.maxPrice));
   if (state.selected) params.set("relic", state.selected);
@@ -67,7 +74,7 @@ export function fromSearch(search: string, base: Filters): UrlState {
       term: params.get("q") ?? "",
       tiers: pickMany<Tier>(params.get("tier"), ALL_TIERS),
       rarities: pickMany<Rarity>(params.get("rarity"), ALL_RARITIES),
-      refinement: pickOne<Refinement>(params.get("ref"), ALL_REFINEMENTS, "intact"),
+      refinement: pickOne<Refinement>(params.get("ref"), ALL_REFINEMENTS, DEFAULT_REFINEMENT),
       vault: pickOne<VaultFilter>(params.get("vault"), ["all", "farmable", "vaulted"], "all"),
       maxPrice: params.has("max") && Number.isFinite(max) && max >= 0 ? max : null,
     },

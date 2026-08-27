@@ -19,10 +19,19 @@ describe("tokensAdded", () => {
   });
 
   it("ignores the ends that mean 'no filter'", () => {
-    const before = { ...emptyFilters(), vault: "vaulted" as const, refinement: "radiant" as const };
+    const before = { ...emptyFilters(), vault: "vaulted" as const, refinement: "intact" as const };
     const after = emptyFilters();
 
     expect(tokensAdded(before, after)).toEqual([]);
+  });
+
+  it("counts a refinement the view does not open on", () => {
+    // The default is Radiant, so it is Intact that is now worth remembering:
+    // the state someone chose is evidence, the state they were handed is not.
+    const before = emptyFilters();
+    const after = { ...before, refinement: "intact" as const };
+
+    expect(tokensAdded(before, after)).toEqual([{ kind: "refinement", value: "intact" }]);
   });
 });
 

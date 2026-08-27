@@ -1,7 +1,7 @@
 import { RarityTag, TierChip, XIcon } from "relic-finder-ui";
 
 import { applyToken, suggestions, type FilterToken } from "../lib/filterMemory";
-import { REFINEMENT_LABEL, VAULT_LABEL, type Filters } from "../lib/rows";
+import { DEFAULT_REFINEMENT, REFINEMENT_LABEL, VAULT_LABEL, type Filters } from "../lib/rows";
 import type { CatalogueView } from "../lib/useViewState";
 
 interface Props {
@@ -105,7 +105,7 @@ function activeTokens(filters: Filters, view: CatalogueView): FilterToken[] {
       ? [...filters.rarities].map((value): FilterToken => ({ kind: "rarity", value }))
       : []),
     ...(filters.vault !== "all" ? [{ kind: "vault", value: filters.vault } as FilterToken] : []),
-    ...(filters.refinement !== "intact"
+    ...(filters.refinement !== DEFAULT_REFINEMENT
       ? [{ kind: "refinement", value: filters.refinement } as FilterToken]
       : []),
   ];
@@ -127,6 +127,6 @@ function clearToken(filters: Filters, token: FilterToken): Filters {
     case "vault":
       return { ...filters, vault: "all" };
     case "refinement":
-      return { ...filters, refinement: "intact" };
+      return { ...filters, refinement: DEFAULT_REFINEMENT };
   }
 }

@@ -28,9 +28,20 @@ const catalogue = [
   }),
 ];
 
+/**
+ * The state every assertion below is written against.
+ *
+ * The catalogue holds Lith V9 twice, once per state, so which refinement is
+ * read decides how many relics each part has. Named here rather than inherited
+ * from `emptyFilters`: the view opens on Radiant now (see DEFAULT_REFINEMENT),
+ * and a fixture that follows the default would quietly stop exercising the
+ * Intact copies it was built around.
+ */
+const readAtIntact = () => ({ ...emptyFilters(), refinement: "intact" as const });
+
 describe("buildItemRows", () => {
   it("gives one row per part however many relics hold it", () => {
-    const rows = buildItemRows(catalogue, emptyFilters());
+    const rows = buildItemRows(catalogue, readAtIntact());
     const volt = rows.filter((r) => r.itemName === "Volt Prime Neuroptics Blueprint");
 
     expect(volt).toHaveLength(1);
@@ -38,7 +49,7 @@ describe("buildItemRows", () => {
   });
 
   it("reads one refinement, so the sources are not counted four times", () => {
-    const rows = buildItemRows(catalogue, { ...emptyFilters(), refinement: "intact" });
+    const rows = buildItemRows(catalogue, readAtIntact());
     const volt = rows.find((r) => r.itemName === "Volt Prime Neuroptics Blueprint");
 
     // Lith V9 appears twice in the catalogue, once per state.
@@ -46,7 +57,7 @@ describe("buildItemRows", () => {
   });
 
   it("keeps the best chance across the relics that drop it", () => {
-    const rows = buildItemRows(catalogue, emptyFilters());
+    const rows = buildItemRows(catalogue, readAtIntact());
     const volt = rows.find((r) => r.itemName === "Volt Prime Neuroptics Blueprint");
 
     expect(volt?.bestChance).toBe(10);
@@ -59,19 +70,19 @@ describe("buildItemRows", () => {
       relic({ rewards: [reward({ itemName: "2X Forma Blueprint" })] }),
       relic({ rewards: [reward({ itemName: "Akbolto Prime Barrel" })] }),
     ];
-    const rows = buildItemRows(withQuantity, emptyFilters());
+    const rows = buildItemRows(withQuantity, readAtIntact());
 
     expect(rows.map((r) => r.itemName)).toEqual(["Akbolto Prime Barrel", "2X Forma Blueprint"]);
   });
 
   it("finds a part by the name of a relic that drops it", () => {
-    const rows = buildItemRows(catalogue, { ...emptyFilters(), term: "axi a1" });
+    const rows = buildItemRows(catalogue, { ...readAtIntact(), term: "axi a1" });
 
     expect(rows.map((r) => r.itemName)).toEqual(["Volt Prime Neuroptics Blueprint"]);
   });
 
   it("derives the set, and leaves Forma without one", () => {
-    const rows = buildItemRows(catalogue, emptyFilters());
+    const rows = buildItemRows(catalogue, readAtIntact());
 
     expect(rows.find((r) => r.itemName.startsWith("Volt"))?.setName).toBe("Volt Prime");
     expect(rows.find((r) => r.itemName === "Forma Blueprint")?.setName).toBeNull();

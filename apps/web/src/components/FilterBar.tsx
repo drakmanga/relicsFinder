@@ -11,6 +11,7 @@ import {
   ALL_REFINEMENTS,
   ALL_TIERS,
   ALL_VAULT_FILTERS,
+  DEFAULT_REFINEMENT,
   MAX_PRICE_CEILING,
   REFINEMENT_LABEL,
   VAULT_LABEL,
@@ -127,7 +128,7 @@ export function FilterBar({ id, filters, onChange, view }: Props) {
             onChange={(event) =>
               onChange({
                 ...filters,
-                refinement: ALL_REFINEMENTS[Number(event.target.value)] ?? "intact",
+                refinement: ALL_REFINEMENTS[Number(event.target.value)] ?? DEFAULT_REFINEMENT,
               })
             }
             aria-label="Refinement level"

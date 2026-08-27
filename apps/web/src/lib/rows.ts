@@ -35,10 +35,32 @@ export const ALL_TIERS: Tier[] = ["lith", "meso", "neo", "axi", "requiem", "vang
 export const ALL_RARITIES: Rarity[] = ["common", "uncommon", "rare"];
 export const ALL_REFINEMENTS: Refinement[] = ["intact", "exceptional", "flawless", "radiant"];
 
+/**
+ * The refinement the catalogue opens on.
+ *
+ * Radiant rather than Intact, because Intact is the state a relic is *found*
+ * in and Radiant is the state it is opened in: a squad running a radshare has
+ * spent the hundred traces before anyone looks at what the relic pays. Opening
+ * on Intact put the one expected value nobody was about to act on at the top of
+ * the table.
+ *
+ * Not a claim that refining is worth it — `bestRefinementByTrace` below exists
+ * because often it is not — only about which state the number is wanted in
+ * first. The slider still answers the other three.
+ *
+ * A constant rather than the literal at each site because every place that asks
+ * "is this the default" has to give the same answer, and one of them is the
+ * URL: `toSearch` omits `ref` when the refinement is the default and
+ * `fromSearch` puts it back, so the moment those two disagree a link shared
+ * without `ref` reopens on a different screen than the one that was sent. The
+ * Sets view is deliberately not one of those places — see `useViewState`.
+ */
+export const DEFAULT_REFINEMENT: Refinement = "radiant";
+
 export const emptyFilters = (): Filters => ({
   tiers: new Set(),
   rarities: new Set(),
-  refinement: "intact",
+  refinement: DEFAULT_REFINEMENT,
   maxPrice: null,
   vault: "all",
   term: "",

@@ -24,7 +24,12 @@ import { RelicPayout } from "./RelicPayout";
 import { SectionLabel } from "./SectionLabel";
 
 import type { DropInfo, PriceMap, Refinement, RelicRow, Reward, WishlistKind } from "../api/types";
-import { ALL_REFINEMENTS, REFINEMENT_LABEL, bestRefinementByTrace } from "../lib/rows";
+import {
+  ALL_REFINEMENTS,
+  DEFAULT_REFINEMENT,
+  REFINEMENT_LABEL,
+  bestRefinementByTrace,
+} from "../lib/rows";
 import { priceOf } from "../lib/format";
 
 interface Props {
@@ -216,7 +221,7 @@ export function RelicDetailPanel({
             step={1}
             value={ALL_REFINEMENTS.indexOf(active)}
             onChange={(event) =>
-              setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? "intact")
+              setRefinement(ALL_REFINEMENTS[Number(event.target.value)] ?? DEFAULT_REFINEMENT)
             }
             aria-label="Refinement of this relic"
             aria-valuetext={REFINEMENT_LABEL[active]}

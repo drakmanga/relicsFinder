@@ -1,4 +1,4 @@
-import { ALL_REFINEMENTS, type Filters, type VaultFilter } from "./rows";
+import { ALL_REFINEMENTS, DEFAULT_REFINEMENT, type Filters, type VaultFilter } from "./rows";
 import type { CatalogueView } from "./useViewState";
 import type { Rarity, Refinement, Tier } from "../api/types";
 
@@ -84,7 +84,7 @@ export function tokensAdded(before: Filters, after: Filters): FilterToken[] {
   if (after.vault !== before.vault && after.vault !== "all") {
     added.push({ kind: "vault", value: after.vault });
   }
-  if (after.refinement !== before.refinement && after.refinement !== "intact") {
+  if (after.refinement !== before.refinement && after.refinement !== DEFAULT_REFINEMENT) {
     added.push({ kind: "refinement", value: after.refinement });
   }
 

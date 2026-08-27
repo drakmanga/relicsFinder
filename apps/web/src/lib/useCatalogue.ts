@@ -15,6 +15,7 @@ import { buildSets, searchedPartsOf, setMatchesTerm } from "./setCompletion";
 import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./items";
 import { filterByCategory, filterByStatus, type SetStatus } from "./setCategories";
 import {
+  DEFAULT_REFINEMENT,
   applyRelicPriceCeiling,
   applyVaultFilter,
   buildRelicRows,
@@ -187,7 +188,7 @@ export function useCatalogue({
     if (filters.vault !== "all")
       active.push(filters.vault === "farmable" ? "droppable" : "vaulted");
     if (filters.maxPrice !== null) active.push(`a ceiling of ${filters.maxPrice}p`);
-    if (filters.refinement !== "intact") active.push(filters.refinement);
+    if (filters.refinement !== DEFAULT_REFINEMENT) active.push(filters.refinement);
 
     return active;
   }, [filters, view]);
@@ -206,7 +207,7 @@ export function useCatalogue({
     if (view === "items" && filters.rarities.size > 0) count += 1;
     if (filters.vault !== "all") count += 1;
     if (filters.maxPrice !== null) count += 1;
-    if (filters.refinement !== "intact") count += 1;
+    if (filters.refinement !== DEFAULT_REFINEMENT) count += 1;
     return count;
   }, [filters, view]);
 

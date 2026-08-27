@@ -196,14 +196,25 @@ describe("buildRelicRows", () => {
     }),
   ];
 
+  /**
+   * The state every assertion below is written against.
+   *
+   * The catalogue holds Lith V9 twice, once per state, so the refinement being
+   * read is what makes "one row per relic" testable at all. Named rather than
+   * inherited from `emptyFilters`: the view opens on Radiant now (see
+   * DEFAULT_REFINEMENT), and a fixture that followed the default would be
+   * reading the copy these assertions are not about.
+   */
+  const readAtIntact = () => ({ ...emptyFilters(), refinement: "intact" as const });
+
   it("reads one refinement, so a relic is not listed four times", () => {
-    const rows = buildRelicRows(catalogue, { ...emptyFilters(), refinement: "intact" });
+    const rows = buildRelicRows(catalogue, readAtIntact());
 
     expect(rows.map((r) => r.relicFullName)).toEqual(["Lith V9", "Axi A1"]);
   });
 
   it("keeps a relic when the search names something inside it", () => {
-    const rows = buildRelicRows(catalogue, { ...emptyFilters(), term: "volt" });
+    const rows = buildRelicRows(catalogue, { ...readAtIntact(), term: "volt" });
 
     expect(rows.map((r) => r.relicFullName)).toEqual(["Lith V9"]);
   });
@@ -211,7 +222,7 @@ describe("buildRelicRows", () => {
   it("does not trim the rewards to the matches", () => {
     // A relic that holds the Rare you want also holds five things you get
     // instead, and hiding them would misrepresent what opening it does.
-    const rows = buildRelicRows(catalogue, { ...emptyFilters(), term: "volt" });
+    const rows = buildRelicRows(catalogue, { ...readAtIntact(), term: "volt" });
 
     expect(rows[0]?.rewards).toHaveLength(catalogue[0]?.rewards.length ?? 0);
   });
@@ -220,7 +231,7 @@ describe("buildRelicRows", () => {
     // Every relic holds three commons, two uncommons and one rare, so the
     // filter would keep all of them or, with all three off, all of them again.
     const withRarity = buildRelicRows(catalogue, {
-      ...emptyFilters(),
+      ...readAtIntact(),
       rarities: new Set(["rare"] as const),
     });
 
