@@ -40,10 +40,22 @@ class WishlistServiceIdentityTest {
                 .isEqualTo(WishlistService.identityOf(entry("Axi A20", "relic", "intact")));
     }
 
-    /** A line written before the state was part of the key reads as Intact. */
+    /**
+     * A line that names no state counts as the state the catalogue opens on.
+     *
+     * <p>Radiant, not Intact: the client copies a relic line's state from the
+     * refinement the view was showing, so the state an unrecorded one meant is
+     * the view's default — and both sides have to reconstruct it the same way
+     * or one line becomes two. The second assertion is the one that matters:
+     * the fallback used to be the literal {@code "intact"} on both sides, and
+     * nothing failed when the view moved off it.
+     */
     @Test
-    void aRelicWithNoStateCountsAsIntact() {
+    void aRelicWithNoStateCountsAsTheStateTheCatalogueOpensOn() {
         assertThat(WishlistService.identityOf(entry("Axi A20", "relic", null)))
-                .isEqualTo(WishlistService.identityOf(entry("Axi A20", "relic", "intact")));
+                .isEqualTo(WishlistService.identityOf(entry("Axi A20", "relic", "radiant")));
+
+        assertThat(WishlistService.identityOf(entry("Axi A20", "relic", null)))
+                .isNotEqualTo(WishlistService.identityOf(entry("Axi A20", "relic", "intact")));
     }
 }

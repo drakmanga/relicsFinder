@@ -205,6 +205,15 @@ const MUTANTS = [
     to: "const radshareMedian = soloMedian;",
   },
   {
+    // The bug this step closed: the fallback was its own literal, so moving the
+    // catalogue's default left the wishlist keying lines under a state nothing
+    // showed any more. Its twin is on the Java side, one constant apart.
+    name: "a relic line with no state falls back to Intact instead of the catalogue's default",
+    file: "apps/web/src/lib/wishlist.ts",
+    from: "? `relic|${entry.itemName}|${entry.refinement ?? DEFAULT_REFINEMENT}`",
+    to: '? `relic|${entry.itemName}|${entry.refinement ?? "intact"}`',
+  },
+  {
     name: "the sell badge stops asking how many trades back the price",
     file: "apps/web/src/lib/tierList.ts",
     from: "trades >= SELL_BADGE_MIN_TRADES &&",

@@ -19,7 +19,7 @@ const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
-  "RelicMarketTradeCountTest -DfailIfNoTests=false";
+  "RelicMarketTradeCountTest,WishlistServiceIdentityTest -DfailIfNoTests=false";
 
 const MUTANTS = [
   {
@@ -216,6 +216,15 @@ const MUTANTS = [
     file: `${SERVICE}/RelicMarketService.java`,
     from: "        for (PricePoint point : cached.history()) trades += point.getVolume();",
     to: "        trades = cached.volume() == null ? 0 : cached.volume();",
+  },
+  {
+    // The twin of "a relic line with no state falls back to Intact instead of
+    // the catalogue's default" in scripts/mutants.mjs. The two sides key the
+    // same line, so the same bug has to be caught on each of them.
+    name: "a relic line with no state falls back to Intact instead of the catalogue's default",
+    file: `${SERVICE}/WishlistService.java`,
+    from: 'private static final String DEFAULT_REFINEMENT = "radiant";',
+    to: 'private static final String DEFAULT_REFINEMENT = "intact";',
   },
   {
     name: "a relic nobody has looked up yet is reported as untraded",

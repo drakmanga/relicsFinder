@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
+import { DEFAULT_REFINEMENT } from "./rows";
 import type {
   PriceMap,
   Refinement,
@@ -56,10 +57,23 @@ export type WishlistLineId = {
  * part — and keying on it would split one part into four lines nobody asked
  * for. The backend applies the same rule; the two must agree or a reload
  * collapses lines this side kept apart.
+ *
+ * A line that records no state falls back to `DEFAULT_REFINEMENT` rather than
+ * to a literal of its own, because a relic line never picks its state: every
+ * caller copies it from the refinement the view was showing — the table row's,
+ * the detail panel's slider — so the only state an unrecorded one can have
+ * meant is the one that view opens on. A second constant here would be a
+ * second answer to the question that broke this in the first place. The backend
+ * spells the same value in `WishlistService.DEFAULT_REFINEMENT`, and that pair
+ * is where the agreement above actually lives.
+ *
+ * Exported because it is the rule, not a detail of it: the two sides agreeing
+ * is a thing the tests have to be able to state, which is the same reason
+ * `identityOf` is package-private rather than private on the Java side.
  */
-const idOf = (entry: WishlistLineId) =>
+export const idOf = (entry: WishlistLineId) =>
   entry.kind === "relic"
-    ? `relic|${entry.itemName}|${entry.refinement ?? "intact"}`
+    ? `relic|${entry.itemName}|${entry.refinement ?? DEFAULT_REFINEMENT}`
     : `${entry.kind}|${entry.itemName}`;
 
 type Listener = (entries: WishlistEntry[]) => void;
@@ -118,7 +132,10 @@ const fromWire = (entry: WireWishlistEntry): WishlistEntry => ({
   kind: entry.kind ?? "part",
   tier: (entry.tier as Tier) ?? "lith",
   relicFullName: entry.relicFullName ?? "",
-  refinement: (entry.refinement as Refinement) ?? "intact",
+  // The same fallback as `idOf`, and not by coincidence: a stored line read
+  // back as one state while keyed under another would show a refinement the
+  // stepper beside it cannot find.
+  refinement: (entry.refinement as Refinement) ?? DEFAULT_REFINEMENT,
   qty: entry.quantity,
 });
 

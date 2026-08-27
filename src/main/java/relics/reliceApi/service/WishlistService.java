@@ -22,6 +22,23 @@ import java.util.concurrent.locks.ReentrantLock;
 @Service
 public class WishlistService {
 
+    /**
+     * The state a relic line is taken to be in when it does not name one.
+     *
+     * <p>Radiant, because a relic line never picks its own state: the client
+     * copies it from the refinement the catalogue was showing, and the
+     * catalogue opens on Radiant — Intact is the state a relic is found in,
+     * Radiant the state it is opened in. So the only state an unrecorded one
+     * can have meant is that one.
+     *
+     * <p>A domain default rather than a setting, so it is not a property: it is
+     * written once here and once as {@code DEFAULT_REFINEMENT} in
+     * {@code lib/rows.ts}, which the browser's {@code idOf} reads. The two hold
+     * the same value on purpose — see {@link #identityOf} for what a
+     * disagreement costs — and there is no third place to check.
+     */
+    private static final String DEFAULT_REFINEMENT = "radiant";
+
     private final Path file;
     private final ObjectMapper mapper = new ObjectMapper();
     private final ReentrantLock lock = new ReentrantLock();
@@ -81,15 +98,18 @@ public class WishlistService {
      * keying on it would split one part into four lines.
      *
      * <p>The client applies the same rule in {@code lib/wishlist.ts}. The two
-     * have to agree: if this one is coarser, a reload silently merges lines the
-     * user kept apart and adds their quantities together.
+     * have to agree, down to {@link #DEFAULT_REFINEMENT} for a line that names
+     * no state: if this one is coarser, a reload silently merges lines the user
+     * kept apart and adds their quantities together, and if the fallbacks
+     * differ it splits a line in two instead.
      */
     static String identityOf(WishlistEntry entry) {
         String kind = entry.getKind();
         if (!"relic".equals(kind)) return kind + "|" + entry.getItemName();
 
         String refinement = entry.getRefinement();
-        return kind + "|" + entry.getItemName() + "|" + (refinement == null ? "intact" : refinement);
+        return kind + "|" + entry.getItemName() + "|"
+                + (refinement == null ? DEFAULT_REFINEMENT : refinement);
     }
 
     private void load() {
