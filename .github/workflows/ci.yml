@@ -122,6 +122,13 @@ jobs:
       - name: axe over all six views
         run: npm run axe
 
+      # Rules 6 and 7, over every view at three thresholds, against the same
+      # servers axe just used. By hand is how the fault this gate exists to
+      # catch shipped: nobody checks a threshold on the view they were not
+      # editing, and nobody at all measures a touch target with a ruler.
+      - name: Reflow, collapsed panes and touch targets
+        run: npm run reflow
+
       - name: Keep the logs when something failed
         if: failure()
         uses: actions/upload-artifact@v7
