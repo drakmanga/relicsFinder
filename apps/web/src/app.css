@@ -946,10 +946,20 @@ body {
 
 /* auto-fit and not two fixed columns: the note sits inside a pane whose width
    depends on whether a detail panel is open beside it, and at 360px a term and
-   its definition need the whole line. */
+   its definition need the whole line.
+
+   `min(18rem, 100%)` rather than the bare 18rem, for the reason spelled out at
+   `.rf-panel-cols` below: a track floor is still a floor once auto-fit is down
+   to one track. The inset from the viewport is fixed and readable off the
+   tokens — 16px of `.rf-shell` under --rf-bp-sm, 24px of `.rf-ranked-head`, the
+   1px Frame, 16px of `.rf-primer` — so at 360px this list's box is 246px and a
+   bare 18rem track would lay 42px of every definition past the pane. And
+   `.rf-results-main` clips rather than scrolls, so the reader would lose the
+   end of each line instead of seeing it wrap: `npm run reflow` measures a
+   document scrollbar and would have called this clean. */
 .rf-primer-terms {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
   gap: var(--rf-space-1) var(--rf-space-4);
   margin: var(--rf-space-3) 0 0;
   padding-top: var(--rf-space-3);

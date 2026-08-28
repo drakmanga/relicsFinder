@@ -51,4 +51,19 @@ describe("idOf", () => {
       idOf({ itemName: "Axi A20", kind: "relic", refinement: "intact" }),
     );
   });
+
+  /**
+   * The one assertion in this file that names the value on purpose.
+   *
+   * Everything above is written in terms of `DEFAULT_REFINEMENT`, which is what
+   * makes it a statement of the rule — and it is also what lets the constant
+   * move to a third state with both suites still green, while
+   * `WishlistService.DEFAULT_REFINEMENT` stays where it is and the two sides
+   * start keying the same line differently. Java cannot import this constant,
+   * so the pin is the literal: change one side and this goes red, which is the
+   * prompt to change the other.
+   */
+  it("holds the literal the backend spells in WishlistService.DEFAULT_REFINEMENT", () => {
+    expect(DEFAULT_REFINEMENT).toBe("radiant");
+  });
 });

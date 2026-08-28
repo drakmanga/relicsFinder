@@ -216,11 +216,12 @@ export function expectedValue(rewards: Reward[], prices: PriceMap | undefined): 
 /**
  * Expected value when `players` people crack the same relic together.
  *
- * Everyone opens their own copy, all four rewards are revealed, and the squad
- * keeps one — so the payout is the best of `players` independent rolls, not the
- * average of them. That is why radshare squads exist, and it is the single
- * biggest lever on what a relic is worth: nothing else in this tool changes a
- * number by a factor of three.
+ * Everyone opens their own copy, all `players` rewards are revealed, and each
+ * player picks one of them — so the payout is the best of `players` independent
+ * rolls, not the average of them. Per player, and not per squad: that is what
+ * makes this comparable to the solo column at all. That is why radshare squads
+ * exist, and it is the single biggest lever on what a relic is worth: nothing
+ * else in this tool changes a number by a factor of three.
  *
  * P(best is reward i) = T(i)^n − T(i+1)^n, where T(i) is the chance of landing
  * reward i or anything better once the rewards are sorted by value. Exact, and

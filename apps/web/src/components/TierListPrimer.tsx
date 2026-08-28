@@ -68,11 +68,17 @@ export function TierListPrimer() {
           the reading measure, and a second cap inside the first is one of them
           nobody can find later. */}
       <div className="rf-text-body-sm rf-primer-body">
+        {/* "each player takes the best one", not "the group keeps one": the
+            column is a per-player number, the same thing the Solo column is, or
+            the two would not be comparable at all. The paragraph under this one
+            says so too, and the two have to say it the same way — a reader who
+            takes this one literally reads the Radshare figure as a squad total
+            and divides it by four. */}
         <p>
           <strong>Radshare</strong> means {RADSHARE_PLAYERS} players open the same relic, each one
-          refined to Radiant, and the group keeps the single best reward revealed. You need{" "}
-          {RADSHARE_PLAYERS - 1} other people for that column to mean anything — on your own, the
-          Solo column is your number.
+          refined to Radiant. All {RADSHARE_PLAYERS} rewards are revealed and every player takes the
+          best one on the table. You need {RADSHARE_PLAYERS - 1} other people for that column to
+          mean anything — on your own, the Solo column is your number.
         </p>
         <p>
           A squad of {RADSHARE_PLAYERS} is not {RADSHARE_PLAYERS} times the loot. Every player
