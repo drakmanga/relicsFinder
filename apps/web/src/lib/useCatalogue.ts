@@ -23,9 +23,9 @@ import {
   sortRelicRows,
   type Filters,
   type RelicSortColumn,
-  type SortDirection,
   type VaultFilter,
 } from "./rows";
+import type { SortState } from "./sorting";
 import type { Refinement, Reward, SetCategory } from "../api/types";
 
 interface Input {
@@ -42,7 +42,7 @@ interface Input {
   setStatus: SetStatus;
   /** Which relics the tier list ranks — and therefore what its medians are of. */
   tierVault: VaultFilter;
-  sort: { column: RelicSortColumn; direction: SortDirection };
+  sort: SortState<RelicSortColumn>;
 }
 
 /**
@@ -342,7 +342,7 @@ export function useCatalogue({
   const visible = useMemo(() => {
     const farmable = applyVaultFilter(rows, filters.vault, unvaulted.data);
     const ceiled = applyRelicPriceCeiling(farmable, filters.maxPrice, prices.data);
-    return sortRelicRows(ceiled, sort.column, sort.direction, prices.data, relicPrices.data);
+    return sortRelicRows(ceiled, sort, prices.data, relicPrices.data);
   }, [rows, filters.vault, unvaulted.data, filters.maxPrice, prices.data, sort, relicPrices.data]);
 
   /**

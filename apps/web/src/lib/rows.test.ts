@@ -261,21 +261,33 @@ describe("sortRelicRows", () => {
       row({ id: "9", relicFullName: "Lith A9" }),
     ];
 
-    expect(sortRelicRows(numbered, "relic", "asc", market).map((r) => r.id)).toEqual(["9", "10"]);
+    expect(
+      sortRelicRows(numbered, { column: "relic", direction: "asc" }, market).map((r) => r.id),
+    ).toEqual(["9", "10"]);
   });
 
   it("puts a relic with nothing listed last, whichever way the column points", () => {
-    const down = sortRelicRows(rows, "value", "desc", market);
-    const up = sortRelicRows(rows, "value", "asc", market);
+    const down = sortRelicRows(rows, { column: "value", direction: "desc" }, market);
+    const up = sortRelicRows(rows, { column: "value", direction: "asc" }, market);
 
     // Unknown is not the cheapest relic; it is unknown.
     expect(down.at(-1)?.id).toBe("c");
     expect(up.at(-1)?.id).toBe("c");
   });
 
+  it("falls back to relic name ascending when nothing is sorted", () => {
+    // Off on this table is the order it opens on, which is the alphabet: the
+    // same rows the name column ascending gives, reached by a third click
+    // rather than by a first one.
+    expect(sortRelicRows(rows, null, market).map((r) => r.id)).toEqual(
+      sortRelicRows(rows, { column: "relic", direction: "asc" }, market).map((r) => r.id),
+    );
+    expect(sortRelicRows(rows, null, market).map((r) => r.id)).toEqual(["a", "b", "c"]);
+  });
+
   it("leaves the input untouched", () => {
     const before = rows.map((r) => r.id);
-    sortRelicRows(rows, "value", "desc", market);
+    sortRelicRows(rows, { column: "value", direction: "desc" }, market);
 
     expect(rows.map((r) => r.id)).toEqual(before);
   });

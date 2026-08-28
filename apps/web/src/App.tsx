@@ -14,7 +14,7 @@ import { ItemInfoDialog } from "./components/ItemInfoDialog";
 import { LastUpdated } from "./components/LastUpdated";
 import { PriceStatus } from "./components/PriceStatus";
 import { RelicInfoDialog } from "./components/RelicInfoDialog";
-import { emptyFilters, type RelicSortColumn } from "./lib/rows";
+import { emptyFilters } from "./lib/rows";
 import { useCatalogue } from "./lib/useCatalogue";
 import { isCatalogue, useViewState } from "./lib/useViewState";
 
@@ -27,7 +27,7 @@ export function App() {
     filtersOpen,
     setFiltersOpen,
     sort,
-    setSort,
+    cycleSort,
     selected,
     setSelected,
     pickedItem,
@@ -51,7 +51,7 @@ export function App() {
     tierVault,
     setTierVault,
     tierSort,
-    setTierSort,
+    cycleTierSort,
     trail,
     openItem,
     openRelic,
@@ -98,15 +98,6 @@ export function App() {
     tierVault,
     sort,
   });
-
-  const toggleSort = (column: RelicSortColumn) =>
-    setSort((current) =>
-      current.column === column
-        ? { column, direction: current.direction === "desc" ? "asc" : "desc" }
-        : // A name starts at A, a number starts at its largest: nobody asks for
-          // the least valuable relic first.
-          { column, direction: column === "relic" ? "asc" : "desc" },
-    );
 
   return (
     <div className="rf-app">
@@ -305,12 +296,12 @@ export function App() {
               wishlistSection={wishlistSection}
               onWishlistSection={setWishlistSection}
               sort={sort}
-              onSort={toggleSort}
+              onSort={cycleSort}
               tierList={tierList}
               tierVault={tierVault}
               onTierVault={setTierVault}
               tierSort={tierSort}
-              onTierSort={setTierSort}
+              onTierSort={cycleTierSort}
             />
           </main>
 

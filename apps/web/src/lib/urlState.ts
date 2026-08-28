@@ -2,13 +2,16 @@ import type { Rarity, Refinement, Tier } from "../api/types";
 import {
   ALL_RARITIES,
   ALL_REFINEMENTS,
+  ALL_RELIC_SORTS,
   ALL_TIERS,
   ALL_VAULT_FILTERS,
   DEFAULT_REFINEMENT,
   type Filters,
+  type RelicSortColumn,
   type VaultFilter,
 } from "./rows";
-import { ALL_TIER_SORTS, DEFAULT_TIER_SORT, type TierSortColumn } from "./tierList";
+import { fromSortParam, toSortParam, type SortState } from "./sorting";
+import { ALL_TIER_SORTS, type TierSortState } from "./tierList";
 
 /**
  * The whole view, in the address bar.
@@ -50,7 +53,17 @@ export interface UrlState {
    * for the other.
    */
   tierVault: VaultFilter;
-  tierSort: TierSortColumn;
+  tierSort: TierSortState;
+  /**
+   * How the Relics table is ordered, written as `sort`.
+   *
+   * It was the one control on that view the address bar did not carry, which
+   * only became visible when the header grew a third state: a link handing over
+   * "the cheapest relics I can still farm" arrived ordered by name, and the
+   * reader had to re-sort a screen that had been sent to them sorted. Null is
+   * the table's own order and writes no key at all.
+   */
+  sort: SortState<RelicSortColumn>;
 }
 
 /** Only what differs from the default is written, so a clean view is a clean URL. */
@@ -68,7 +81,13 @@ export function toSearch(state: UrlState): string {
   if (state.selected) params.set("relic", state.selected);
   if (state.pickedItem) params.set("item", state.pickedItem);
   if (state.tierVault !== "all") params.set("tvault", state.tierVault);
-  if (state.tierSort !== DEFAULT_TIER_SORT) params.set("tsort", state.tierSort);
+
+  // Both sorts write one key holding the column and the direction, and write
+  // nothing at all when the table is in the order it has on arrival.
+  const tierSort = toSortParam(state.tierSort);
+  if (tierSort) params.set("tsort", tierSort);
+  const sort = toSortParam(state.sort);
+  if (sort) params.set("sort", sort);
 
   const search = params.toString();
   return search ? `?${search}` : "";
@@ -99,7 +118,8 @@ export function fromSearch(search: string, base: Filters): UrlState {
     // population it is given, so a `tvault` nobody validated would rank the
     // relics against a set of relics that is not on screen.
     tierVault: pickOne<VaultFilter>(params.get("tvault"), ALL_VAULT_FILTERS, "all"),
-    tierSort: pickOne<TierSortColumn>(params.get("tsort"), ALL_TIER_SORTS, DEFAULT_TIER_SORT),
+    tierSort: fromSortParam(params.get("tsort"), ALL_TIER_SORTS),
+    sort: fromSortParam(params.get("sort"), ALL_RELIC_SORTS),
     filters: {
       ...base,
       term: params.get("q") ?? "",

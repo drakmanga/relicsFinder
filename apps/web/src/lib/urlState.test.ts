@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { emptyFilters } from "./rows";
-import { DEFAULT_TIER_SORT } from "./tierList";
 import { fromSearch, toSearch } from "./urlState";
 import type { UrlState } from "./urlState";
 
@@ -11,7 +10,8 @@ const state = (overrides: Partial<UrlState> = {}): UrlState => ({
   selected: null,
   pickedItem: null,
   tierVault: "all",
-  tierSort: DEFAULT_TIER_SORT,
+  tierSort: null,
+  sort: null,
   ...overrides,
 });
 
@@ -70,15 +70,58 @@ describe("toSearch", () => {
   });
 
   it("names the tier list's population and ranking once they are not the default", () => {
-    const search = toSearch(state({ view: "tiers", tierVault: "farmable", tierSort: "radshare" }));
+    const search = toSearch(
+      state({
+        view: "tiers",
+        tierVault: "farmable",
+        tierSort: { column: "radshare", direction: "desc" },
+      }),
+    );
 
     expect(search).toContain("tvault=farmable");
-    expect(search).toContain("tsort=radshare");
+    // The column and the direction in one key: a link carrying one without the
+    // other describes a state no click can produce.
+    expect(search).toContain("tsort=radshare%3Adesc");
     // The catalogue views' own vault key is a different question, and setting
     // one must never write the other. Anchored, because `tvault=farmable`
     // contains `vault=farmable` and a plain substring check would pass on a
     // writer that wrote both.
     expect(search).not.toMatch(/(^|[?&])vault=/);
+  });
+});
+
+describe("the sorts in the address bar", () => {
+  it("writes nothing for a table nobody has sorted", () => {
+    expect(toSearch(state({ view: "tiers" }))).toBe("?view=tiers");
+    expect(toSearch(state())).toBe("");
+  });
+
+  it("reads a link written before the direction existed", () => {
+    // `tsort=solo` meant "solo, descending" when the column was the only half
+    // that was written down, and it still does. A link that old is somebody's
+    // bookmark.
+    expect(fromSearch("?view=tiers&tsort=solo", emptyFilters()).tierSort).toEqual({
+      column: "solo",
+      direction: "desc",
+    });
+    expect(fromSearch("?view=tiers&tsort=relic", emptyFilters()).tierSort).toEqual({
+      column: "relic",
+      direction: "asc",
+    });
+  });
+
+  it("refuses a column neither table has", () => {
+    expect(fromSearch("?view=tiers&tsort=ducats:desc", emptyFilters()).tierSort).toBeNull();
+    expect(fromSearch("?sort=trend:desc", emptyFilters()).sort).toBeNull();
+  });
+
+  it("falls back to the column's own opening direction rather than dropping it", () => {
+    // A hand-edited direction is not a reason to throw the column away: the
+    // reader asked for that column, and the direction has an obvious default.
+    expect(fromSearch("?sort=expected:sideways", emptyFilters()).sort).toEqual({
+      column: "expected",
+      direction: "desc",
+    });
   });
 });
 
@@ -112,11 +155,11 @@ describe("fromSearch", () => {
   });
 
   it("reads the tier list's own two keys", () => {
-    const read = fromSearch("?view=tiers&tvault=vaulted&tsort=price", emptyFilters());
+    const read = fromSearch("?view=tiers&tvault=vaulted&tsort=price:asc", emptyFilters());
 
     expect(read.view).toBe("tiers");
     expect(read.tierVault).toBe("vaulted");
-    expect(read.tierSort).toBe("price");
+    expect(read.tierSort).toEqual({ column: "price", direction: "asc" });
     // Untouched: the two vault keys are separate questions.
     expect(read.filters.vault).toBe("all");
   });
@@ -125,14 +168,16 @@ describe("fromSearch", () => {
     const read = fromSearch("?view=tiers&tvault=unvaulted&tsort=ducats", emptyFilters());
 
     expect(read.tierVault).toBe("all");
-    expect(read.tierSort).toBe(DEFAULT_TIER_SORT);
+    // Null rather than a column: a ranking nobody asked for is the table's own
+    // order, which is what the tab opens on anyway.
+    expect(read.tierSort).toBeNull();
   });
 
   it("falls back to the defaults when neither key is there at all", () => {
     const read = fromSearch("?view=tiers", emptyFilters());
 
     expect(read.tierVault).toBe("all");
-    expect(read.tierSort).toBe(DEFAULT_TIER_SORT);
+    expect(read.tierSort).toBeNull();
   });
 });
 
@@ -157,7 +202,14 @@ describe("a link survives the round trip", () => {
     }),
     // The seventh view, with both of its own controls off their defaults and
     // the catalogue's vault filter left alone beside them.
-    state({ view: "tiers", tierVault: "farmable", tierSort: "price" }),
+    state({
+      view: "tiers",
+      tierVault: "farmable",
+      tierSort: { column: "price", direction: "asc" },
+    }),
+    // The Relics table's own order, which the address bar carried nothing of
+    // until the header grew a third state.
+    state({ sort: { column: "expected", direction: "asc" } }),
   ];
 
   it.each(cases.map((c, index) => [index, c] as const))(
@@ -175,7 +227,8 @@ describe("a link survives the round trip", () => {
       expect([...read.filters.tiers].sort()).toEqual([...original.filters.tiers].sort());
       expect([...read.filters.rarities].sort()).toEqual([...original.filters.rarities].sort());
       expect(read.tierVault).toBe(original.tierVault);
-      expect(read.tierSort).toBe(original.tierSort);
+      expect(read.tierSort).toEqual(original.tierSort);
+      expect(read.sort).toEqual(original.sort);
     },
   );
 });

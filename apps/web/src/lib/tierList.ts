@@ -1,5 +1,6 @@
 import type { PriceMap, Relic, RelicPriceMap, Reward, Tier } from "../api/types";
 import { expectedValue, squadValue, type VaultFilter } from "./rows";
+import type { SortState } from "./sorting";
 
 /**
  * A band letter. Six of them, and E is skipped.
@@ -219,38 +220,54 @@ const TIER_SORT_VALUE: Record<
   price: (row) => row.relicPrice,
 };
 
+/** What this view is sorted by, or nothing — see `sortTierRows` for what nothing means here. */
+export type TierSortState = SortState<TierSortColumn>;
+
 /**
- * The rows in the order the reader asked for.
+ * The rows in the order the reader asked for, or in the ranking when they have
+ * asked for nothing.
  *
- * One direction per column rather than a header that toggles, and that follows
- * from the URL rather than from laziness: this view writes two keys, `tvault`
- * and `tsort`, and a direction nothing writes down is a piece of the screen a
- * shared link would silently drop. Each column has an obvious end to start
- * from anyway — a name starts at A, a value starts at its largest — which is
- * the rule the Relics table already opens every column on.
+ * Off is `DEFAULT_TIER_SORT` descending, which is the ranking the tab exists to
+ * show — so the third click on a header lands somewhere the reader actually
+ * wanted to be, rather than on a list of relics in the order they were built
+ * in. It also means arriving on the tab fresh and clicking a header three times
+ * are the same screen, which is what makes the cycle safe to try.
+ *
+ * The direction used to be fixed per column, on the grounds that this view had
+ * two URL keys and nowhere to write one down. It has somewhere now: see
+ * `toSortParam`.
  *
  * Ties keep the order they arrived in, which is by name: `Array.sort` is
  * stable, and 327 relics sit between 4p and 6p, so the tie is the normal case
  * rather than the edge one.
  */
-export function sortTierRows(rows: TierListRow[], column: TierSortColumn): TierListRow[] {
+export function sortTierRows(rows: TierListRow[], sort: TierSortState): TierListRow[] {
+  const { column, direction } = sort ?? { column: DEFAULT_TIER_SORT, direction: "desc" as const };
+
   // `buildTierList` already returns name order, and re-sorting a sorted list
   // with `localeCompare` on every comparison is 772 rows of work to end up
   // where it started.
-  if (column === "relic") return rows;
+  if (column === "relic" && direction === "asc") return rows;
+
+  if (column === "relic") {
+    return [...rows].sort((a, b) =>
+      b.relicFullName.localeCompare(a.relicFullName, "en", { numeric: true }),
+    );
+  }
 
   const valueOf = TIER_SORT_VALUE[column];
+  const sign = direction === "asc" ? 1 : -1;
 
   return [...rows].sort((a, b) => {
     const left = valueOf(a);
     const right = valueOf(b);
 
     // A relic nobody has listed sinks below every relic that has a number,
-    // rather than being ranked as though it were worth nothing.
+    // whichever way the column points — it is unknown, not worthless.
     if (left === null) return right === null ? 0 : 1;
     if (right === null) return -1;
 
-    return right - left;
+    return (left - right) * sign;
   });
 }
 

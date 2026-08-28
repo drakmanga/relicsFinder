@@ -25,8 +25,9 @@ import type {
 import type { PrimeItemRow } from "../lib/items";
 import type { PrimeSet } from "../lib/setCompletion";
 import type { SetStatus } from "../lib/setCategories";
-import type { RelicSortColumn, SortDirection, VaultFilter } from "../lib/rows";
-import type { TierList, TierSortColumn } from "../lib/tierList";
+import type { RelicSortColumn, VaultFilter } from "../lib/rows";
+import type { SortState } from "../lib/sorting";
+import type { TierList, TierSortColumn, TierSortState } from "../lib/tierList";
 import type { WishlistEntry } from "../lib/wishlist";
 
 export type PaneView = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers";
@@ -88,15 +89,16 @@ interface Props {
   /** Which wishlist section is open. Set by whatever sent the reader there. */
   wishlistSection: WishlistKind;
   onWishlistSection: (section: WishlistKind) => void;
-  sort: { column: RelicSortColumn; direction: SortDirection };
+  sort: SortState<RelicSortColumn>;
   onSort: (column: RelicSortColumn) => void;
   /** Every relic ranked twice, plus the two medians it was banded against. */
   tierList: TierList;
   /** Which relics the tier list ranks. Its own control, not the filter bar's. */
   tierVault: VaultFilter;
   onTierVault: (next: VaultFilter) => void;
-  tierSort: TierSortColumn;
-  onTierSort: (next: TierSortColumn) => void;
+  tierSort: TierSortState;
+  /** The column clicked, not the state it produces: the rule is in lib/sorting. */
+  onTierSort: (column: TierSortColumn) => void;
 }
 
 /**

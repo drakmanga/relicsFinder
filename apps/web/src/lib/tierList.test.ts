@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildTierList,
+  DEFAULT_TIER_SORT,
   medianOf,
   sortTierRows,
   tierFor,
@@ -506,7 +507,7 @@ describe("the order the view asks for", () => {
   it("leaves the name order exactly as it arrived", () => {
     const { rows } = built();
 
-    expect(names(sortTierRows(rows, "relic"))).toEqual([
+    expect(names(sortTierRows(rows, { column: "relic", direction: "asc" }))).toEqual([
       "Lith A1",
       "Lith A2",
       "Lith A3",
@@ -517,8 +518,13 @@ describe("the order the view asks for", () => {
   it("puts the most valuable relic first in either value column", () => {
     const { rows } = built();
 
-    expect(names(sortTierRows(rows, "solo"))).toEqual(["Lith A2", "Lith A1", "Lith A4", "Lith A3"]);
-    expect(names(sortTierRows(rows, "radshare"))[0]).toBe("Lith A2");
+    expect(names(sortTierRows(rows, { column: "solo", direction: "desc" }))).toEqual([
+      "Lith A2",
+      "Lith A1",
+      "Lith A4",
+      "Lith A3",
+    ]);
+    expect(names(sortTierRows(rows, { column: "radshare", direction: "desc" }))[0]).toBe("Lith A2");
   });
 
   it("sinks a relic nobody has listed below every relic that has a price", () => {
@@ -527,7 +533,7 @@ describe("the order the view asks for", () => {
     // which is a claim about a number nobody has.
     const { rows } = built(relicMarket({ "Lith A1": [3, 20], "Lith A3": [8, 20] }));
 
-    expect(names(sortTierRows(rows, "price"))).toEqual([
+    expect(names(sortTierRows(rows, { column: "price", direction: "desc" }))).toEqual([
       "Lith A3",
       "Lith A1",
       "Lith A2",
@@ -540,16 +546,53 @@ describe("the order the view asks for", () => {
     // the sort is stable, so they stay in it rather than swapping about as the
     // prices tick.
     const { rows } = built();
-    const tied = sortTierRows(rows, "solo").filter((row) => row.soloValue === 10);
+    const tied = sortTierRows(rows, { column: "solo", direction: "desc" }).filter(
+      (row) => row.soloValue === 10,
+    );
 
     expect(names(tied)).toEqual(["Lith A1", "Lith A4"]);
+  });
+
+  it("shows the ranking when nothing is sorted", () => {
+    // Off on this table is not the build order, it is the ranking the tab
+    // exists for: the third click on a header lands back where arriving on the
+    // tab does.
+    const { rows } = built();
+
+    expect(names(sortTierRows(rows, null))).toEqual(
+      names(sortTierRows(rows, { column: DEFAULT_TIER_SORT, direction: "desc" })),
+    );
+  });
+
+  it("points a value column the other way when asked", () => {
+    // The direction used to be fixed per column, so the least valuable relic
+    // was unreachable. A4 and A1 tie at 10p and keep their name order.
+    const { rows } = built();
+
+    expect(names(sortTierRows(rows, { column: "solo", direction: "asc" }))).toEqual([
+      "Lith A3",
+      "Lith A1",
+      "Lith A4",
+      "Lith A2",
+    ]);
+  });
+
+  it("reverses the name column too", () => {
+    const { rows } = built();
+
+    expect(names(sortTierRows(rows, { column: "relic", direction: "desc" }))).toEqual([
+      "Lith A4",
+      "Lith A3",
+      "Lith A2",
+      "Lith A1",
+    ]);
   });
 
   it("does not disturb the list it was given", () => {
     // The rows are a memoised value the view re-sorts on every click; sorting
     // in place would reorder the thing the medians were taken over.
     const { rows } = built();
-    sortTierRows(rows, "solo");
+    sortTierRows(rows, { column: "solo", direction: "desc" });
 
     expect(names(rows)).toEqual(["Lith A1", "Lith A2", "Lith A3", "Lith A4"]);
   });

@@ -8,6 +8,7 @@ import type {
   Reward,
   Tier,
 } from "../api/types";
+import type { SortState } from "./sorting";
 
 export interface Filters {
   tiers: Set<Tier>;
@@ -303,15 +304,36 @@ export function applyRelicPriceCeiling(
   });
 }
 
-export type RelicSortColumn = "relic" | "expected" | "value" | "cost";
+/**
+ * What the Relics table can be ordered by.
+ *
+ * A list rather than a bare union because a link carries one of these, and
+ * `fromSortParam` has to be able to refuse a column the table does not have —
+ * the same reason `ALL_TIER_SORTS` is a list.
+ */
+export const ALL_RELIC_SORTS = ["relic", "expected", "value", "cost"] as const;
 
+export type RelicSortColumn = (typeof ALL_RELIC_SORTS)[number];
+
+/**
+ * The relics in the order the reader asked for, or in the order they arrive in
+ * when nobody has asked.
+ *
+ * Off — a null state — is relic name ascending, which is what the table opens
+ * on and what a catalogue is: the answer to "where is Lith V9" is an
+ * alphabet. It is deliberately the same order as the name column pointing
+ * ascending, so on this table the third click changes the header rather than
+ * the rows. That is the honest reading of "the order it has when nobody has
+ * sorted it" here, and the Tier List, where off is the ranking, is where the
+ * third click has somewhere else to go.
+ */
 export function sortRelicRows(
   rows: RelicRow[],
-  column: RelicSortColumn,
-  direction: SortDirection,
+  sort: SortState<RelicSortColumn>,
   prices: PriceMap | undefined,
   relicPrices?: RelicPriceMap,
 ): RelicRow[] {
+  const { column, direction } = sort ?? { column: "relic" as const, direction: "asc" as const };
   const sign = direction === "asc" ? 1 : -1;
 
   if (column === "relic") {
@@ -339,8 +361,6 @@ export function sortRelicRows(
     return (av - bv) * sign;
   });
 }
-
-export type SortDirection = "asc" | "desc";
 
 export const REFINEMENT_LABEL: Record<Refinement, string> = {
   intact: "Intact",

@@ -27,7 +27,8 @@ import { relicMarketUrl } from "../lib/format";
 import { bestDropValue, expectedValue } from "../lib/rows";
 import { usePricePriority } from "../lib/usePricePriority";
 import type { PriceMap, Refinement, RelicPriceMap, RelicRow, WishlistKind } from "../api/types";
-import type { RelicSortColumn, SortDirection } from "../lib/rows";
+import type { RelicSortColumn } from "../lib/rows";
+import type { SortState } from "../lib/sorting";
 
 /**
  * Row height, fixed at the design system's 40px.
@@ -65,7 +66,7 @@ interface Props {
   onSelect: (id: string) => void;
   /** How many of a relic the wishlist holds, for the stepper on each row. */
   quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
-  sort: { column: RelicSortColumn; direction: SortDirection };
+  sort: SortState<RelicSortColumn>;
   onSort: (column: RelicSortColumn) => void;
 }
 
@@ -113,7 +114,10 @@ export function ResultsTable({
 
   const needle = term.trim().toLowerCase();
 
-  const dir = (column: RelicSortColumn) => (sort.column === column ? sort.direction : null);
+  // Null on every column but the sorted one, and on all of them when the table
+  // is in its own order: that is the third state, and the header draws it.
+  const dir = (column: RelicSortColumn) =>
+    sort !== null && sort.column === column ? sort.direction : null;
 
   // Spacers stand in for the rows that are not rendered, so the scrollbar
   // reflects the whole result set rather than the handful in the DOM.

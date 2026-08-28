@@ -33,6 +33,7 @@ import {
   type TierLetter,
   type TierList,
   type TierSortColumn,
+  type TierSortState,
 } from "../lib/tierList";
 import type { PriceMap } from "../api/types";
 
@@ -56,8 +57,10 @@ interface Props {
   relicPricesFilling: boolean;
   vault: VaultFilter;
   onVault: (next: VaultFilter) => void;
-  sort: TierSortColumn;
-  onSort: (next: TierSortColumn) => void;
+  /** Null is the ranking itself — see `sortTierRows`. */
+  sort: TierSortState;
+  /** The column clicked, not the state it produces: the rule is in lib/sorting. */
+  onSort: (column: TierSortColumn) => void;
 }
 
 /**
@@ -89,16 +92,22 @@ export function TierListTable({
 
   const rows = useMemo(() => sortTierRows(tierList.rows, sort), [tierList.rows, sort]);
 
-  /* The cards rank on whatever the table is sorted by, so the two cannot
-     disagree about what "top three" means — which is why they are the head of
-     the sorted list rather than a ranking of their own. Sorted by name they
-     would read "Axi A1, Axi A2, Axi A3", which is not a ranking at all, so
-     that one case is ranked by the column the view opens on instead — read from
-     the same constant the view opens on, so the two cannot drift apart. */
-  const rankedBy: Exclude<TierSortColumn, "relic"> = sort === "relic" ? DEFAULT_TIER_SORT : sort;
+  /* The cards are the head of the sorted list rather than a ranking of their
+     own, so the two cannot disagree about what "top three" means. Two cases
+     follow from that and both are deliberate: sorted by name they would read
+     "Axi A1, Axi A2, Axi A3", which is not a ranking at all, so that one is
+     ranked by the column the view opens on instead; and a column pointing
+     ascending puts the three lowest relics on the cards, because that is what
+     the reader asked the table for. Sorted by nothing, `rows` is already the
+     ranking. */
+  const rankedBy: Exclude<TierSortColumn, "relic"> =
+    sort === null || sort.column === "relic" ? DEFAULT_TIER_SORT : sort.column;
   const top = useMemo(
     () =>
-      (sort === "relic" ? sortTierRows(tierList.rows, rankedBy) : rows).slice(0, HIGHLIGHT_COUNT),
+      (sort !== null && sort.column === "relic"
+        ? sortTierRows(tierList.rows, { column: rankedBy, direction: "desc" })
+        : rows
+      ).slice(0, HIGHLIGHT_COUNT),
     [rows, tierList.rows, sort, rankedBy],
   );
 
@@ -352,25 +361,26 @@ function Trend({ percent }: { percent: number | null }) {
 
 interface SortHeaderProps {
   column: TierSortColumn;
-  sort: TierSortColumn;
-  onSort: (next: TierSortColumn) => void;
+  sort: TierSortState;
+  onSort: (column: TierSortColumn) => void;
   align?: "left" | "right";
   title?: string;
 }
 
 /**
- * A sortable header, with the direction its column always runs in.
+ * A sortable header, drawing whichever of the three states its column is in.
  *
- * `aria-sort` reports the fixed direction rather than "none", because the
- * column really is sorted that way — see `sortTierRows` for why there is one
- * direction per column and not a toggle.
+ * Null on every column but the sorted one, and on all of them while the table
+ * is showing the ranking — which `TableHeaderCell` renders as the two-way glyph
+ * and reports as `aria-sort="none"`. It used to report the fixed direction the
+ * column always ran in; there is no fixed direction any more.
  */
 function SortHeader({ column, sort, onSort, align = "left", title }: SortHeaderProps) {
   return (
     <TableHeaderCell
       align={align}
       sortable
-      sortDirection={sort !== column ? null : column === "relic" ? "asc" : "desc"}
+      sortDirection={sort !== null && sort.column === column ? sort.direction : null}
       onSort={() => onSort(column)}
       title={title}
     >

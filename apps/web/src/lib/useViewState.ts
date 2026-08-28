@@ -2,14 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import { remember, tokensAdded } from "./filterMemory";
 import type { SetStatus } from "./setCategories";
-import type { TierSortColumn } from "./tierList";
-import {
-  emptyFilters,
-  type Filters,
-  type RelicSortColumn,
-  type SortDirection,
-  type VaultFilter,
-} from "./rows";
+import type { TierSortColumn, TierSortState } from "./tierList";
+import { nextSortState, type SortState } from "./sorting";
+import { emptyFilters, type Filters, type RelicSortColumn, type VaultFilter } from "./rows";
 import { fromSearch, toSearch } from "./urlState";
 import type { Refinement, SetCategory, WishlistKind } from "../api/types";
 
@@ -82,11 +77,16 @@ export function useViewState() {
    * filtered, says what: see FilterSummary.
    */
   const [filtersOpen, setFiltersOpen] = useState(false);
-  /** Alphabetical: the Relics view is a catalogue, and A comes first. */
-  const [sort, setSort] = useState<{ column: RelicSortColumn; direction: SortDirection }>({
-    column: "relic",
-    direction: "asc",
-  });
+  /**
+   * How the Relics table is ordered. Null is its own order, which is
+   * alphabetical: the Relics view is a catalogue, and A comes first.
+   *
+   * Null rather than `{ relic, asc }` as the opening state, even though the two
+   * produce the same rows: one of them is a reader's answer to a header and the
+   * other is the table before anybody asked, and the header draws them
+   * differently.
+   */
+  const [sort, setSort] = useState<SortState<RelicSortColumn>>(initial.sort);
   const [selected, setSelected] = useState<string | null>(initial.selected);
   const [pickedItem, setPickedItem] = useState<string | null>(initial.pickedItem);
   const [view, setView] = useState<View>(initial.view as View);
@@ -156,7 +156,19 @@ export function useViewState() {
    * the relics I can still farm is worth farming" with "none of them".
    */
   const [tierVault, setTierVault] = useState<VaultFilter>(initial.tierVault);
-  const [tierSort, setTierSort] = useState<TierSortColumn>(initial.tierSort);
+  const [tierSort, setTierSort] = useState<TierSortState>(initial.tierSort);
+
+  /**
+   * One click on a header, on either table.
+   *
+   * Both go through the same rule in lib/sorting, which is the point of it
+   * being there: the two tables disagreed about what a header does for as long
+   * as each carried its own handler.
+   */
+  const cycleSort = (column: RelicSortColumn) =>
+    setSort((current) => nextSortState(current, column));
+  const cycleTierSort = (column: TierSortColumn) =>
+    setTierSort((current) => nextSortState(current, column));
 
   /**
    * Where the panel came from, one step per jump.
@@ -203,11 +215,11 @@ export function useViewState() {
    * the browser does create.
    */
   useEffect(() => {
-    const search = toSearch({ view, filters, selected, pickedItem, tierVault, tierSort });
+    const search = toSearch({ view, filters, selected, pickedItem, tierVault, tierSort, sort });
     if (search !== window.location.search) {
       window.history.replaceState(null, "", `${window.location.pathname}${search}`);
     }
-  }, [view, filters, selected, pickedItem, tierVault, tierSort]);
+  }, [view, filters, selected, pickedItem, tierVault, tierSort, sort]);
 
   useEffect(() => {
     const onPop = () => {
@@ -229,6 +241,7 @@ export function useViewState() {
       // them at their defaults is saying they were at their defaults.
       setTierVault(next.tierVault);
       setTierSort(next.tierSort);
+      setSort(next.sort);
     };
 
     window.addEventListener("popstate", onPop);
@@ -312,7 +325,7 @@ export function useViewState() {
     filtersOpen,
     setFiltersOpen,
     sort,
-    setSort,
+    cycleSort,
     selected,
     setSelected,
     pickedItem,
@@ -336,7 +349,7 @@ export function useViewState() {
     tierVault,
     setTierVault,
     tierSort,
-    setTierSort,
+    cycleTierSort,
     trail,
     openItem,
     openRelic,
