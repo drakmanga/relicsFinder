@@ -154,11 +154,17 @@ export function TierListTable({
        than hide rows — it is the population both medians are taken over, so
        the letters are re-banded against whatever is left. */
     <div className="rf-tier-vault" role="group" aria-label="Which relics to rank">
-      {ALL_VAULT_FILTERS.map((option) => (
+      {ALL_VAULT_FILTERS.map((option, index) => (
         <Button
           key={option}
           variant={vault === option ? "accent" : "ghost"}
           size="sm"
+          /* Rule 7. The 32px switches grow into the head's own space above and
+             below; "All" is also too short to reach 44 across, and grows
+             leftwards only — the 4px gap to "Droppable" belongs to Droppable
+             as much as to it, and the space at the group's own edge belongs to
+             nobody. */
+          className={index === 0 ? "rf-hit-block rf-hit-inline-start" : "rf-hit-block"}
           aria-pressed={vault === option}
           onClick={() => onVault(option)}
         >

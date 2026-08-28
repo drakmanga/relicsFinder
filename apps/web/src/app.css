@@ -66,9 +66,18 @@ body {
 }
 
 /* The masthead is the way home, so it is a real button: a click handler on a
-   span is unreachable by keyboard. */
+   span is unreachable by keyboard.
+
+   Its box is the 44px rule 7 asks for while its letters are the 25px they were
+   drawn at: the bar is 56px tall and the brand is centred in it, so the taller
+   box is taken out of slack the bar already had and nothing moves. No
+   transparent border needed here — the brand paints no fill to keep inside
+   one. */
 .rf-brand {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--rf-touch-target);
   padding: 0;
   border: 0;
   background: none;

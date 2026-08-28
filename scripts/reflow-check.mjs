@@ -410,15 +410,25 @@ const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent]) => {
     if (dense || sameActionAsItsRow) exempt += 1;
     if (sameActionAsItsRow) continue;
 
+    /*
+      Rounded, and compared rounded. A control drawn 28px tall inside an 8px
+      transparent border is 44 by construction and 43.59 by measurement, because
+      its height is a line box rather than a number — and holding a design to a
+      float it cannot express would force the ink to move to satisfy the gate,
+      which is the opposite of what the gate is for. Half a pixel of slack; a
+      control that is actually short still fails.
+    */
+    const width = Math.round(hit.width);
+    const height = Math.round(hit.height);
     const floor = dense ? denseMinimum : minimum;
-    if (hit.width >= floor && hit.height >= floor) continue;
+    if (width >= floor && height >= floor) continue;
 
     const classes = Array.from(element.classList);
     const marker = classes.find((name) => name.startsWith("rf-")) ?? classes[0];
     const label = `${element.tagName.toLowerCase()}${marker ? `.${marker}` : ""}`;
     // One line per kind of control, not per instance: sixty rows with the same
     // undersized row action is one fault reported sixty times.
-    const key = `${label}|${Math.round(hit.width)}x${Math.round(hit.height)}|${floor}`;
+    const key = `${label}|${width}x${height}|${floor}`;
     const seen = under.get(key);
     if (seen) {
       seen.count += 1;
@@ -426,8 +436,8 @@ const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent]) => {
     }
     under.set(key, {
       label,
-      width: Math.round(hit.width),
-      height: Math.round(hit.height),
+      width,
+      height,
       floor,
       dense,
       name: (element.textContent || element.getAttribute("aria-label") || "").trim().slice(0, 32),

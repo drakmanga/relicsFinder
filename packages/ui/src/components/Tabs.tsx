@@ -21,6 +21,10 @@ export interface TabsProps extends Omit<HTMLAttributes<HTMLDivElement>, "onChang
  * The active tab lifts to surface-2, takes the notched silhouette and carries
  * a 2px gold underline. Only the active tab is clipped — an inactive tab is
  * flat, so the cut itself reads as the selection.
+ *
+ * `rf-hit-block` grows the 36px tab to rule 7's 44px hit area. It grows into
+ * the masthead's own slack above and below the strip, which is why it is safe
+ * here and would not be inside a table.
  */
 export function Tabs({ items, value, onChange, label, className, ...rest }: TabsProps) {
   return (
@@ -41,7 +45,7 @@ export function Tabs({ items, value, onChange, label, className, ...rest }: Tabs
           */
           aria-controls={item.id === value ? `rf-tabpanel-${item.id}` : undefined}
           disabled={item.disabled}
-          className="rf-tab rf-focus-ring"
+          className="rf-tab rf-focus-ring rf-hit-block"
           onClick={() => onChange(item.id)}
         >
           {item.label}

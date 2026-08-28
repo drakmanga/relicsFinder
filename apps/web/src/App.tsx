@@ -198,6 +198,9 @@ export function App() {
             <Button
               variant={filtersOpen ? "accent" : "ghost"}
               size="sm"
+              /* 32px tall inside a 48px strip: the hit area grows into the
+                 strip's own padding and nothing moves (rule 7). */
+              className="rf-hit-block"
               onClick={() => setFiltersOpen((open) => !open)}
               aria-expanded={filtersOpen}
               aria-controls="rf-filter-bar"

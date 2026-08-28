@@ -20,9 +20,14 @@
   --rf-notch: var(--rf-notch-xl);
 }
 
-/* Default silhouette: cuts top-left and bottom-right. */
-.rf-clip {
-  clip-path: polygon(
+/* Default silhouette: cuts top-left and bottom-right.
+
+   The polygon is held in a custom property because `.rf-hit-block` below has to
+   restate it against a different geometry box, and a clip-path cannot have one
+   added to it by a second rule — the whole value is replaced or nothing is. One
+   shape, declared once, used twice. */
+:root {
+  --rf-clip-notch: polygon(
     var(--rf-notch) 0,
     100% 0,
     100% calc(100% - var(--rf-notch)),
@@ -30,6 +35,10 @@
     0 100%,
     0 var(--rf-notch)
   );
+}
+
+.rf-clip {
+  clip-path: var(--rf-clip-notch);
 }
 
 /* Mirrored half of a split layout — cuts top-right and bottom-left. */
@@ -196,6 +205,66 @@
 
 .rf-frame-danger {
   --rf-frame-color: var(--rf-danger);
+}
+
+/* ----------------------------------------------------------------------------
+   Hit area. Rule 7's 44x44, bought without redrawing anything.
+-------------------------------------------------------------------------- */
+/* The Orokin controls are drawn at 25, 27, 28, 32 and 36 pixels tall, and those
+   sizes are the design rather than an oversight: a tab as tall as a button
+   would be a different masthead. What rule 7 asks for is not a bigger control
+   though, it is a bigger box for the pointer to land in — so the box grows and
+   the ink does not.
+
+   A transparent border is what does it. The border is part of the element's hit
+   region, `background-clip: padding-box` keeps the fill inside it, and the
+   negative margin hands the flow back exactly what the border took, so nothing
+   around the control moves either. `box-sizing: content-box` is what makes the
+   arithmetic hold: with border-box a declared `height: 32px` would absorb the
+   border instead of growing past it, and the control would shrink rather than
+   its target grow.
+
+   The growth goes into whatever surrounds the control, so this belongs only on
+   one whose neighbours are inert. Never on a control inside a data cell: the
+   space above and below it is the next row, which is a target of its own, and
+   growing one there takes its neighbour's rather than adding to its own.
+
+   `--rf-hit-grow` is half the difference between the control's height and the
+   minimum, and each caller sets it — 8px suits the 28 and 32px controls, and
+   the 36px tab sets 4.
+
+   The class is doubled for weight, here and below. Every control this lands on
+   resets `border: 0` in components.css, which is imported after this file and
+   would otherwise win on order alone and take the hit area back off — and
+   neither rule should have to know the other exists. */
+.rf-hit-block.rf-hit-block {
+  box-sizing: content-box;
+  border-block: var(--rf-hit-grow, var(--rf-space-2)) solid transparent;
+  margin-block: calc(-1 * var(--rf-hit-grow, var(--rf-space-2)));
+  background-clip: padding-box;
+}
+
+/* With the notch, the cut has to follow the ink rather than the transparent
+   ring around it, or the silhouette is cut off the border box and the fill
+   keeps its square corners. */
+.rf-hit-block.rf-clip.rf-clip {
+  clip-path: var(--rf-clip-notch) padding-box;
+}
+
+/* The same trick on the inline axis, for a control whose label is too short to
+   reach the minimum on its own — "All", in both places one appears.
+
+   Towards the start only, because it is the direction with room: both of them
+   open their group, so the space before them is the group's own inset, while
+   the gap to the next control is 4px and belongs to that control as much as to
+   this one. */
+.rf-hit-inline-start.rf-hit-inline-start {
+  /* No `box-sizing` of its own, deliberately: both controls it lands on are
+     auto-width, so the border adds to the box either way — and setting one here
+     fought the block rule above, which needs the opposite value. */
+  border-inline-start: var(--rf-space-2) solid transparent;
+  margin-inline-start: calc(-1 * var(--rf-space-2));
+  background-clip: padding-box;
 }
 
 /* ----------------------------------------------------------------------------

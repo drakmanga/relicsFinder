@@ -32,6 +32,13 @@ interface Props {
  * has to open on the whole catalogue. Progress is exclusive beside them,
  * because a set cannot be both finished and not.
  */
+/* Rule 7: the chips are drawn 27.6px tall — a line box rather than a declared
+   number — and `rf-hit-block` takes the box a pointer lands in to 43.6 without
+   moving any of that ink, which the walk rounds to the 44 the design means. The
+   extra 8px reaches into the strip's own padding, which nothing else answers
+   to, and stays inside the 8px row gap when the chips wrap. */
+const CHIP = "rf-focus-ring rf-set-filter rf-hit-block";
+
 export function SetFilters({ sets, selected, onChange, status, onStatus, shown }: Props) {
   const categories = availableCategories(sets);
 
@@ -53,11 +60,7 @@ export function SetFilters({ sets, selected, onChange, status, onStatus, shown }
             key={category}
             type="button"
             aria-pressed={selected.has(category)}
-            className={
-              selected.has(category)
-                ? "rf-focus-ring rf-set-filter rf-set-filter-on"
-                : "rf-focus-ring rf-set-filter"
-            }
+            className={selected.has(category) ? `${CHIP} rf-set-filter-on` : CHIP}
             onClick={() => toggle(category)}
           >
             {SET_CATEGORY_LABEL[category]}
@@ -67,7 +70,7 @@ export function SetFilters({ sets, selected, onChange, status, onStatus, shown }
         {selected.size > 0 && (
           <button
             type="button"
-            className="rf-focus-ring rf-set-filter rf-set-filter-clear"
+            className={`${CHIP} rf-set-filter-clear`}
             onClick={() => onChange(new Set())}
           >
             Clear
@@ -82,15 +85,18 @@ export function SetFilters({ sets, selected, onChange, status, onStatus, shown }
         toggles could be set to neither, which is a filter that shows nothing.
       */}
       <div className="rf-set-filters-row rf-set-filters-status">
-        {ALL_SET_STATUSES.map((option) => (
+        {ALL_SET_STATUSES.map((option, index) => (
           <button
             key={option}
             type="button"
             aria-pressed={status === option}
+            /* "All" is too short a word to reach 44 across on its own, and
+               grows leftwards only: the 4px gap to "Unfinished" is that
+               chip's as much as this one's, while the inset that opens the
+               group is nobody's. */
             className={
-              status === option
-                ? "rf-focus-ring rf-set-filter rf-set-filter-on"
-                : "rf-focus-ring rf-set-filter"
+              (index === 0 ? `${CHIP} rf-hit-inline-start` : CHIP) +
+              (status === option ? " rf-set-filter-on" : "")
             }
             onClick={() => onStatus(option)}
           >

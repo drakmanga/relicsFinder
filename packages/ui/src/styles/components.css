@@ -237,6 +237,12 @@
   border: 0;
   outline: none;
   color: var(--rf-fg-primary);
+  /* Rule 7 on the control the reader actually clicks into. The frame around it
+     is `.rf-field-row` at a fixed height, so a taller input overflows it
+     invisibly — the input paints nothing of its own — rather than opening the
+     row up: the field looks exactly as it did and the caret lands anywhere in
+     the 44px band. */
+  min-height: var(--rf-touch-target);
 }
 
 .rf-field-input::placeholder {
@@ -842,7 +848,14 @@
   font-weight: 500;
   color: var(--rf-fg-muted);
   --rf-notch: var(--rf-notch-sm);
-  clip-path: polygon(var(--rf-notch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--rf-notch));
+  /* 4px of transparent border top and bottom takes the 36px tab to rule 7's 44
+     without moving a pixel of it: `.rf-hit-block` on the element carries the
+     rest of the mechanism, and the clip is anchored to the padding box so the
+     notch keeps cutting the fill rather than the ring around it. The tab lifts
+     its own silhouette rather than using `.rf-clip` — only the top-left corner
+     is cut here, so that the selected tab reads as a tab rather than a chip. */
+  clip-path: polygon(var(--rf-notch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--rf-notch)) padding-box;
+  --rf-hit-grow: var(--rf-space-1);
   transition:
     color var(--rf-dur-fast) var(--rf-ease-standard),
     background var(--rf-dur-fast) var(--rf-ease-standard);
@@ -1171,6 +1184,10 @@
   align-items: center;
   gap: var(--rf-space-2);
   font-size: var(--rf-text-body-sm);
+  /* Rule 7's 44px, on the element that can hold it. Half of the 24px shortfall
+     each side, handed straight back as margin, so the strip this sits in is the
+     height it always was and only the box a click lands in has changed. */
+  --rf-hit-grow: var(--rf-space-3);
 }
 
 /* The tick is the browser's own: restyling it costs a custom control and a
