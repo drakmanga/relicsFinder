@@ -907,7 +907,7 @@ body {
 
    The head is `flex: none` and the body takes what is left, which on a short or
    a narrow viewport was nothing at all: measured at 360x800 the tier list's head
-   is 1138px inside a 743px pane, so the body was sized to 0, the virtualiser had
+   is 1052px inside a 743px pane, so the body was sized to 0, the virtualiser had
    no viewport to measure and the table drew zero rows. `.rf-results-main` clips
    rather than scrolls, so nothing on screen said a table was there — the view
    read as an explainer with empty pane under it. Ducanetor and Endo collapsed
@@ -933,7 +933,21 @@ body {
 
    Where there is room this changes nothing: the floor does not bind, this
    element does not overflow, no scrollbar is drawn, and the head stays put with
-   only the table scrolling. */
+   only the table scrolling.
+
+   Where "there is room" begins is the head's height plus the floor plus the
+   footnote, and that is why shortening the head was the other half of this
+   fix rather than a separate cosmetic errand. Measured at 1869 wide, the
+   viewport height at which each view starts scrolling:
+
+   | view      | head | scrolls below |
+   | tier list | 387  | 774           |
+   | Ducanetor | 196  | 584           |
+   | Endo      | 196  | 583           |
+
+   The tier list's threshold was 944 with the old 557px head, which put it
+   inside the range of ordinary laptop windows — a reader on a 1366x768 screen
+   met a scrollbar on a view that looked as though it fitted. */
 .rf-ranked {
   height: 100%;
   display: flex;
@@ -1114,11 +1128,22 @@ body {
 /* `flex: 1` still hands it every spare pixel; the floor only decides what
    happens when there are none. 17rem is 272px at the default root size — the
    sticky header and five 48px rows, a table to read rather than a strip to
-   notice — and it is also the largest floor that leaves a roomy screen exactly
-   as it was: the tightest of the three views on the reference canvas is the tier
-   list at 1920x950 with 278px of table, and a floor above that would start
-   scrolling the canvas that must not move. In rem so it rises with the reader's
-   font size, same as the table floors above. */
+   notice. In rem so it rises with the reader's font size, same as the table
+   floors above.
+
+   Unconditional on purpose, and it costs nothing where nothing is short: the
+   floor adds height only once `flex: 1` has none left to hand over, and every
+   pixel it then adds is table. It is not a source of dead space — the three
+   ranked views were scrolled to the end at every height from 1014 down to 600
+   and the last element ends flush with the pane each time.
+
+   17rem was chosen as the largest floor that left the reference canvases
+   byte-identical: the tightest of the three there was the tier list at 1920x950
+   with 278px of table, so anything above 17.375rem would have started scrolling
+   the canvas that must not move. That headroom has grown rather than shrunk —
+   the tier list has 448px of table at 1920x950 now — and the number stays where
+   it is, because what it answers is the phone, where the head is still 1052px
+   inside a 743px pane and 272px is what stands between a table and no table. */
 .rf-ranked-body {
   flex: 1;
   min-height: 17rem;
