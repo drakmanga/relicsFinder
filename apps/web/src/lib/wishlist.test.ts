@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { idOf } from "./wishlist";
+import { coalesce, idOf, otherStates, type WishlistEntry } from "./wishlist";
 import { DEFAULT_REFINEMENT } from "./rows";
+import type { Refinement, WishlistKind } from "../api/types";
 
 /**
  * What makes two wishlist lines the same line.
@@ -65,5 +66,79 @@ describe("idOf", () => {
    */
   it("holds the literal the backend spells in WishlistService.DEFAULT_REFINEMENT", () => {
     expect(DEFAULT_REFINEMENT).toBe("radiant");
+  });
+});
+
+/**
+ * What happens to two lines that key the same.
+ *
+ * They are not a duplicate anyone typed twice. A relic line stored before the
+ * catalogue moved off Intact carries no state, and `idOf` now reconstructs one
+ * as Radiant — the key an explicit Radiant line already holds. Both quantities
+ * were entered by the reader, so both survive; `WishlistServiceCoalesceTest` is
+ * the same rule on the other side of the wire.
+ */
+describe("coalesce", () => {
+  const relicLine = (refinement: Refinement | undefined, qty: number): WishlistEntry => ({
+    itemName: "Axi A20",
+    kind: "relic",
+    tier: "axi",
+    relicFullName: "Axi A20",
+    refinement: refinement as Refinement,
+    qty,
+  });
+
+  it("adds the quantities of two lines that resolve to one key", () => {
+    const lines = coalesce([relicLine(undefined, 2), relicLine("radiant", 3)]);
+
+    expect(lines).toHaveLength(1);
+    expect(lines[0]?.qty).toBe(5);
+  });
+
+  it("keeps the state the key resolved to, so nothing is left to resolve", () => {
+    expect(coalesce([relicLine(undefined, 1)])[0]?.refinement).toBe(DEFAULT_REFINEMENT);
+  });
+
+  it("keeps two states of one relic apart", () => {
+    expect(coalesce([relicLine("intact", 2), relicLine("radiant", 3)])).toHaveLength(2);
+  });
+
+  it("leaves the input alone", () => {
+    const original = [relicLine(undefined, 2), relicLine("radiant", 3)];
+    coalesce(original);
+
+    expect(original.map((line) => line.qty)).toEqual([2, 3]);
+  });
+});
+
+/**
+ * Where a relic's other quantities went.
+ *
+ * The Relics view lists every relic at one refinement, so a line made at
+ * another one reads as 0 on the row that made it. The plan is stored and
+ * reachable — this is what the row says instead of nothing.
+ */
+describe("otherStates", () => {
+  const line = (
+    itemName: string,
+    kind: WishlistKind,
+    refinement: Refinement,
+    qty: number,
+  ): WishlistEntry => ({ itemName, kind, tier: "axi", relicFullName: itemName, refinement, qty });
+
+  it("reports the same relic wanted in another state", () => {
+    const lines = [line("Axi A20", "relic", "intact", 2), line("Axi A20", "relic", "radiant", 1)];
+
+    expect(otherStates(lines, "Axi A20", "radiant")).toEqual([{ refinement: "intact", qty: 2 }]);
+  });
+
+  it("says nothing about a kind that is not keyed on refinement", () => {
+    const lines = [line("Volt Prime Neuroptics", "part", "intact", 2)];
+
+    expect(otherStates(lines, "Volt Prime Neuroptics", "radiant")).toEqual([]);
+  });
+
+  it("says nothing when the only line is the one being asked about", () => {
+    expect(otherStates([line("Axi A20", "relic", "radiant", 2)], "Axi A20", "radiant")).toEqual([]);
   });
 });

@@ -66,26 +66,59 @@ public class WishlistService {
     public List<WishlistEntry> replace(List<WishlistEntry> next) {
         lock.lock();
         try {
-            List<WishlistEntry> cleaned = new ArrayList<>();
-            Set<String> seen = new HashSet<>();
-
-            for (WishlistEntry entry : next == null ? List.<WishlistEntry>of() : next) {
-                if (entry == null || entry.getItemName() == null || entry.getItemName().isBlank()) continue;
-                if (entry.getQuantity() <= 0) continue;
-                if (entry.getKind() == null || entry.getKind().isBlank()) entry.setKind("part");
-                // Identity is kind plus name: the same part wanted for a set and
-                // for ducats is two lines. A true duplicate would double a total
-                // silently.
-                if (!seen.add(identityOf(entry))) continue;
-                cleaned.add(entry);
-            }
-
-            entries = cleaned;
+            entries = coalesce(next);
             save();
             return List.copyOf(entries);
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * One line per identity, with the quantities of any collision added up.
+     *
+     * <p>Applied to what arrives from the browser and to what is read off disk,
+     * because the file is the copy that predates the rule: a store written
+     * while the client still spelled its own fallback can hold two lines whose
+     * keys resolve to the same string.
+     */
+    private static List<WishlistEntry> coalesce(List<WishlistEntry> next) {
+        Map<String, WishlistEntry> byIdentity = new LinkedHashMap<>();
+
+        for (WishlistEntry entry : next == null ? List.<WishlistEntry>of() : next) {
+            if (entry == null || entry.getItemName() == null || entry.getItemName().isBlank()) continue;
+            if (entry.getQuantity() <= 0) continue;
+            if (entry.getKind() == null || entry.getKind().isBlank()) entry.setKind("part");
+
+            // Identity is kind plus name — the same part wanted for a set
+            // and for ducats is two lines — plus the state, for a relic.
+            String identity = identityOf(entry);
+            WishlistEntry seen = byIdentity.get(identity);
+
+            if (seen != null) {
+                // Added rather than dropped. Two lines can key the same and
+                // mean the same plan: one written before the catalogue
+                // moved off Intact carries no state at all, which resolves
+                // to the same key an explicit Radiant line already holds.
+                // Keeping the first and discarding the second would lose a
+                // quantity the reader entered, and nothing on screen could
+                // have shown them which one went. The browser coalesces the
+                // same way in {@code lib/wishlist.ts}, so a reload cannot
+                // undo either half of it.
+                seen.setQuantity(seen.getQuantity() + entry.getQuantity());
+                continue;
+            }
+
+            // Stored under the state its key resolved to, so the ambiguity
+            // is answered once in the file rather than on every read.
+            if ("relic".equals(entry.getKind()) && entry.getRefinement() == null) {
+                entry.setRefinement(DEFAULT_REFINEMENT);
+            }
+
+            byIdentity.put(identity, entry);
+        }
+
+        return new ArrayList<>(byIdentity.values());
     }
 
     /**
@@ -115,7 +148,8 @@ public class WishlistService {
     private void load() {
         try {
             if (!Files.exists(file)) return;
-            entries = mapper.readValue(Files.readString(file), new TypeReference<List<WishlistEntry>>() {});
+            entries = coalesce(
+                    mapper.readValue(Files.readString(file), new TypeReference<List<WishlistEntry>>() {}));
         } catch (Exception e) {
             // A corrupt file must not stop the application from starting; the
             // list is a convenience, not the point of the service.

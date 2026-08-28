@@ -76,6 +76,75 @@ export const idOf = (entry: WishlistLineId) =>
     ? `relic|${entry.itemName}|${entry.refinement ?? DEFAULT_REFINEMENT}`
     : `${entry.kind}|${entry.itemName}`;
 
+/**
+ * One line per identity, with the quantities of any collision added up.
+ *
+ * Two stored lines can key the same and mean the same plan. A relic line
+ * written before the catalogue moved off Intact carries `refinement: null`,
+ * which `idOf` now resolves to Radiant — the key an explicit Radiant line
+ * already holds — so a store written across that move can hold both. Nothing
+ * on screen could tell them apart: they rendered as two identical rows, `bump`
+ * and `remove` reached only the first, and the next write dropped the other.
+ *
+ * They add up rather than one of them winning, because both are quantities the
+ * reader entered for the same line and dropping either is losing a plan they
+ * made. The wire and the mirror hold at most one line per identity after this,
+ * which is what the server's `replace` also guarantees — the two run the same
+ * rule so a reload cannot undo it.
+ *
+ * The survivor is written back under the state its key resolved to rather than
+ * under the null it arrived with, so the ambiguity resolves once and durably
+ * instead of on every read. Only a relic line is touched: for every other kind
+ * the refinement is a note about where the part was found, and rewriting it
+ * would be inventing context.
+ */
+export function coalesce(lines: WishlistEntry[]): WishlistEntry[] {
+  const byId = new Map<string, WishlistEntry>();
+
+  for (const line of lines) {
+    const id = idOf(line);
+    const seen = byId.get(id);
+
+    if (seen) {
+      seen.qty += line.qty;
+      continue;
+    }
+
+    byId.set(id, {
+      ...line,
+      refinement: line.kind === "relic" ? (line.refinement ?? DEFAULT_REFINEMENT) : line.refinement,
+    });
+  }
+
+  return [...byId.values()];
+}
+
+/**
+ * The same relic wanted in states other than the one being asked about.
+ *
+ * The Relics view lists every relic at one refinement and the stepper on the
+ * row asks the wishlist for that state alone, so a line made at another one
+ * reads as 0 — the plan is still stored and still reachable by moving the
+ * slider, but the view it was made on now shows it as unmade. This is what the
+ * view says instead of nothing: a line keeps the state it was made in, and
+ * where that state is not the one on screen the number says so.
+ *
+ * Empty for every other kind, which is not keyed on refinement and cannot have
+ * a twin in another state.
+ */
+export function otherStates(
+  lines: WishlistEntry[],
+  itemName: string,
+  refinement: Refinement,
+): { refinement: Refinement; qty: number }[] {
+  return lines
+    .filter(
+      (line) =>
+        line.kind === "relic" && line.itemName === itemName && line.refinement !== refinement,
+    )
+    .map((line) => ({ refinement: line.refinement, qty: line.qty }));
+}
+
 type Listener = (entries: WishlistEntry[]) => void;
 
 /**
@@ -99,20 +168,22 @@ function loadLocal(): WishlistEntry[] {
     if (!Array.isArray(parsed)) return [];
 
     // Hand-edited or half-migrated storage must not take the app down.
-    return parsed
-      .filter(
-        (entry): entry is WishlistEntry =>
-          !!entry &&
-          typeof entry === "object" &&
-          typeof (entry as WishlistEntry).itemName === "string" &&
-          typeof (entry as WishlistEntry).qty === "number" &&
-          (entry as WishlistEntry).qty > 0,
-      )
-      .map((entry) => ({
-        // Lines written before kinds existed are all parts.
-        ...entry,
-        kind: (entry.kind as WishlistKind) ?? "part",
-      }));
+    return coalesce(
+      parsed
+        .filter(
+          (entry): entry is WishlistEntry =>
+            !!entry &&
+            typeof entry === "object" &&
+            typeof (entry as WishlistEntry).itemName === "string" &&
+            typeof (entry as WishlistEntry).qty === "number" &&
+            (entry as WishlistEntry).qty > 0,
+        )
+        .map((entry) => ({
+          // Lines written before kinds existed are all parts.
+          ...entry,
+          kind: (entry.kind as WishlistKind) ?? "part",
+        })),
+    );
   } catch {
     return [];
   }
@@ -171,10 +242,18 @@ function commit(next: WishlistEntry[]) {
  */
 export async function syncFromServer() {
   try {
-    const remote = (await api.wishlist()).map(fromWire);
+    // Coalesced on the way in as well as on the way out of storage: a file
+    // written before the default moved holds the collision, and the server
+    // hands it over exactly as it found it until something writes it back.
+    const wire = (await api.wishlist()).map(fromWire);
+    const remote = coalesce(wire);
 
     if (remote.length > 0) {
-      publish(remote);
+      // A store that held a collision is written back resolved rather than
+      // being read as resolved on every start: `commit` sends it, `publish`
+      // would leave the server's copy ambiguous until the next edit.
+      if (remote.length < wire.length) commit(remote);
+      else publish(remote);
     } else if (entries.length > 0) {
       commit(entries);
     }
@@ -238,9 +317,14 @@ export function useWishlist() {
     [snapshot],
   );
 
+  const elsewhere = useCallback(
+    (itemName: string, refinement: Refinement) => otherStates(snapshot, itemName, refinement),
+    [snapshot],
+  );
+
   const totalItems = snapshot.reduce((sum, entry) => sum + entry.qty, 0);
 
-  return { entries: snapshot, quantityOf, totalItems };
+  return { entries: snapshot, quantityOf, elsewhere, totalItems };
 }
 
 /**

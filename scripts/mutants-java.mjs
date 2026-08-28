@@ -19,9 +19,25 @@ const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
-  "RelicMarketTradeCountTest,WishlistServiceIdentityTest -DfailIfNoTests=false";
+  "RelicMarketTradeCountTest,WishlistServiceIdentityTest,WishlistServiceCoalesceTest" +
+  " -DfailIfNoTests=false";
 
 const MUTANTS = [
+  {
+    // Two lines can key the same without anyone typing one twice: a relic line
+    // stored before the fallback moved names no state, and reconstructing one
+    // lands on the key its neighbour already holds.
+    name: "a colliding line is dropped instead of added to the one already there",
+    file: `${SERVICE}/WishlistService.java`,
+    from: "seen.setQuantity(seen.getQuantity() + entry.getQuantity());",
+    to: "",
+  },
+  {
+    name: "the resolved state is not written back, so the file stays ambiguous",
+    file: `${SERVICE}/WishlistService.java`,
+    from: 'if ("relic".equals(entry.getKind()) && entry.getRefinement() == null) {\n                entry.setRefinement(DEFAULT_REFINEMENT);\n            }',
+    to: "",
+  },
   {
     name: "the Radiant rarity table stops inverting",
     file: `${SERVICE}/RelicLoadService.java`,

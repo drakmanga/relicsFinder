@@ -230,6 +230,21 @@ const MUTANTS = [
     from: "? `relic|${entry.itemName}|${entry.refinement ?? DEFAULT_REFINEMENT}`",
     to: '? `relic|${entry.itemName}|${entry.refinement ?? "intact"}`',
   },
+  {
+    // The half of that bug the constant did not close: once the fallback moved,
+    // a stored line with no state started keying as the line beside it, and the
+    // store kept both under one key.
+    name: "two lines that key the same keep the first instead of adding up",
+    file: "apps/web/src/lib/wishlist.ts",
+    from: "      seen.qty += line.qty;",
+    to: "      seen.qty = Math.max(seen.qty, line.qty);",
+  },
+  {
+    name: "the split reports the state being asked about as though it were elsewhere",
+    file: "apps/web/src/lib/wishlist.ts",
+    from: '        line.kind === "relic" && line.itemName === itemName && line.refinement !== refinement,',
+    to: '        line.kind === "relic" && line.itemName === itemName,',
+  },
 ];
 
 let killed = 0;
