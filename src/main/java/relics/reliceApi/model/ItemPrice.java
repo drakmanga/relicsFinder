@@ -65,4 +65,18 @@ public class ItemPrice {
      * a second round trip for every part on show.
      */
     private String category;
+
+    /**
+     * How many copies of this part its set is built from.
+     *
+     * <p>Almost always one, and two for 49 components across 28 sets: Kestrel
+     * Prime is one Blueprint, one Grip and two Blades. Null when the item
+     * database says nothing, which the client reads as one — the number every
+     * set was assumed to need before this was carried.
+     *
+     * <p>Sent with the price for the same reason as the set and the category:
+     * the screen that asks what a set still needs asks all four at once, and it
+     * comes off the same node of the same file.
+     */
+    private Integer copiesPerSet;
 }

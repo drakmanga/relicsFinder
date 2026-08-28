@@ -78,8 +78,17 @@ public class DucatService {
 
     private volatile Snapshot snapshot;
 
-    /** Ducat value, set and kind of gear of one part. */
-    public record ItemMeta(Integer ducats, String setName, String category) {}
+    /**
+     * Ducat value, set, kind of gear and how many copies the set needs of one
+     * part.
+     *
+     * <p>{@code copiesPerSet} is null when the database says nothing, which is
+     * every part it does not list and every one whose entry carries no
+     * {@code itemCount}. The reader of the field decides what silence means —
+     * one copy, which is what a set asked for before this was carried — rather
+     * than this record inventing a number the source never gave.
+     */
+    public record ItemMeta(Integer ducats, String setName, String category, Integer copiesPerSet) {}
 
     private record Snapshot(Map<String, ItemMeta> byName, Instant fetchedAt) {
         boolean isFresh() {
@@ -104,7 +113,7 @@ public class DucatService {
             if (stripped != null) return stripped;
         }
 
-        return new ItemMeta(null, null, null);
+        return new ItemMeta(null, null, null, null);
     }
 
     private static String normalize(String value) {
@@ -174,9 +183,22 @@ public class DucatService {
                 // under every item and belong to none of them.
                 if (!component.hasNonNull("ducats")) continue;
 
+                // How many of this component the set is built from. Kestrel
+                // Prime is one Blueprint, one Grip and two Blades: four parts
+                // to build out of three names, and without this the set reads
+                // as finished with one Blade in the foundry. Read per
+                // component rather than compared against a number: every
+                // itemCount in the data today is 2, and nothing here should
+                // stop being true the day one is 3.
+                JsonNode copies = component.path("itemCount");
+
                 byName.put(
                         normalize(setName + " " + componentName),
-                        new ItemMeta(component.get("ducats").asInt(), setName, category));
+                        new ItemMeta(
+                                component.get("ducats").asInt(),
+                                setName,
+                                category,
+                                copies.isInt() ? copies.asInt() : null));
             }
         }
     }

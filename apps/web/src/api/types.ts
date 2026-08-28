@@ -158,6 +158,12 @@ export interface WireItemPrice {
   setName: string | null;
   /** Free-form on the wire; narrowed to SetCategory on the way in. */
   category: SetCategory | null;
+  /**
+   * Optional because the captured payload in `lib/tierListPayload.ts` predates
+   * the field, and because absent, null and 1 all mean the same thing to every
+   * reader of it: one copy per set. See `ItemPrice.copiesPerSet`.
+   */
+  copiesPerSet?: number | null;
 }
 
 export interface ItemPrice {
@@ -187,6 +193,20 @@ export interface ItemPrice {
    * guess.
    */
   category: SetCategory | null;
+  /**
+   * How many copies of this part its set is built from.
+   *
+   * One almost everywhere, and two for 49 components across 28 sets — Kestrel
+   * Prime is one Blueprint, one Grip and two Blades. Null when the item
+   * database says nothing, which `buildSets` reads as one copy: that is what
+   * every set was assumed to need before this arrived, so silence keeps the
+   * answer the application already gave rather than emptying a set.
+   *
+   * Optional for the same reason it is nullable: a payload captured before the
+   * field existed carries no key at all, and both spellings of silence have to
+   * mean one copy rather than none.
+   */
+  copiesPerSet?: number | null;
 }
 
 /**

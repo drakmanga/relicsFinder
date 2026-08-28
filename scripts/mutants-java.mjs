@@ -19,10 +19,25 @@ const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
-  "RelicMarketTradeCountTest,WishlistServiceIdentityTest,WishlistServiceCoalesceTest" +
+  "RelicMarketTradeCountTest,WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
+  "DucatServiceIndexTest" +
   " -DfailIfNoTests=false";
 
 const MUTANTS = [
+  {
+    name: "how many copies a set needs is thrown away again",
+    file: `${SERVICE}/DucatService.java`,
+    from: "copies.isInt() ? copies.asInt() : null",
+    to: "null",
+  },
+  {
+    // The count would then be read off Orokin Cell, which every item in the
+    // game lists and none of them is built out of.
+    name: "the shared crafting materials come back into the parts list",
+    file: `${SERVICE}/DucatService.java`,
+    from: 'if (!component.hasNonNull("ducats")) continue;',
+    to: "",
+  },
   {
     // Two lines can key the same without anyone typing one twice: a relic line
     // stored before the fallback moved names no state, and reconstructing one

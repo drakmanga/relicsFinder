@@ -453,7 +453,7 @@ public class RelicMarketService {
         DucatService.ItemMeta meta = ducatService.lookup(itemName);
 
         // Field order matches ItemPrice: name, price, median, volume, trend,
-        // slug, ducats, set, category.
+        // slug, ducats, set, category, copies per set.
         return new ItemPrice(
                 itemName,
                 cached == null ? null : cached.avg(),
@@ -463,7 +463,8 @@ public class RelicMarketService {
                 slug,
                 meta.ducats(),
                 meta.setName(),
-                meta.category());
+                meta.category(),
+                meta.copiesPerSet());
     }
 
     public List<ItemPrice> getItemPrices(List<String> itemNames) {
@@ -531,8 +532,9 @@ public class RelicMarketService {
                 cached == null ? null : cached.volume(),
                 cached == null ? null : cached.trend(),
                 slug,
-                // A relic has no ducat value, no set and no kind of gear: it is
-                // the container, not the contents.
+                // A relic has no ducat value, no set, no kind of gear and no
+                // place in one: it is the container, not the contents.
+                null,
                 null,
                 null,
                 null);
