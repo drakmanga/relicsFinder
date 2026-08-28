@@ -935,9 +935,22 @@ body {
   flex-wrap: wrap;
 }
 
+/* The title and its lead on one line where the line has room. Measured on the
+   tier list at 1869x1014: stacked, the two cost 69px of head — a 26px heading,
+   4px of margin and a 39px sentence — to say something that fits beside a
+   two-word title, and side by side they cost 39px. The lead asks for its own
+   reading measure as a flex-basis, so it wraps under the title the moment the
+   pane cannot hold both rather than being squeezed into a column of its own.
+   Ducanetor's lead is the longest of the three and is what that basis was
+   checked against. */
 .rf-ranked-heading {
   flex: 1;
   min-width: 260px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--rf-space-4);
+  row-gap: var(--rf-space-1);
 }
 
 .rf-ranked-title {
@@ -945,15 +958,31 @@ body {
 }
 
 .rf-ranked-lead {
-  margin: var(--rf-space-1) 0 0;
+  margin: 0;
+  flex: 1 1 var(--rf-measure);
 }
 
 /* The standing note, between the lead and the cards. Held to the reading
    measure rather than to the pane: it is running prose, and the pane is as wide
-   as the dense table under it. */
+   as the dense table under it. Two measures and the gutter between them, so the
+   block can hold two columns of text and never a third — see
+   `.rf-primer-cols`.
+
+   The font size is set here rather than left to inherit because `--rf-measure`
+   is 68ch: a cap written in ch means the width of the text it caps only if the
+   two are the same size, and the note is small print at every callsite.
+
+   The inset is part of the sum because the cap applies to the border box and
+   the columns are laid out inside it: `.rf-primer` spends --rf-space-4 either
+   side plus its frame's hairline, and capping the note at two bare measures
+   left the grid 34px short of a second track — auto-fit answered by laying the
+   prose across the whole 1078px, which is 135 characters to a line. */
 .rf-ranked-note {
   margin-top: var(--rf-space-4);
-  max-width: var(--rf-measure);
+  font-size: var(--rf-text-body-sm);
+  max-width: calc(
+    var(--rf-measure) * 2 + var(--rf-space-6) + 2 * (var(--rf-space-4) + var(--rf-hairline))
+  );
 }
 
 .rf-primer {
@@ -964,12 +993,37 @@ body {
   margin: 0 0 var(--rf-space-2);
 }
 
+/* The prose and the glossary beside each other where the pane holds two
+   reading measures, stacked where it does not. Measured on the tier list at
+   1869x1014: stacked they are 336px of head, side by side 190px, and the words
+   the paragraphs use are the words the list defines — they are read in
+   parallel, not one after the other.
+
+   auto-fit rather than a breakpoint, for the reason `.rf-primer-terms` gives
+   below: the pane is narrower whenever a detail panel is open beside it, and
+   the answer at 360px is the same as the answer at 200% text zoom on a desktop.
+   The track floor is the reading measure itself, so a second column opens only
+   when both columns can be read. */
+.rf-primer-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--rf-measure), 100%), 1fr));
+  gap: var(--rf-space-3) var(--rf-space-6);
+  align-items: start;
+}
+
 /* Paragraphs spaced by the gap rather than by margins, so the first and the
-   last do not need a rule of their own to cancel one. */
+   last do not need a rule of their own to cancel one.
+
+   The measure is capped here and not on the track, because the track is what
+   the glossary beside it also stands in and a definition list is not running
+   prose: it loses nothing by filling the line. Where only one column fits — a
+   phone, or 200% text zoom on a desktop, where the block is 1310px and one
+   measure is 1088 — an uncapped paragraph ran to 82 characters. */
 .rf-primer-body {
   display: flex;
   flex-direction: column;
   gap: var(--rf-space-2);
+  max-width: var(--rf-measure);
 }
 
 .rf-primer-body p {
@@ -993,7 +1047,10 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
   gap: var(--rf-space-1) var(--rf-space-4);
-  margin: var(--rf-space-3) 0 0;
+  /* The gap of `.rf-primer-cols` is what separates this from the prose when the
+     two are stacked; a margin of its own would be that distance twice. The rule
+     stays: beside the prose it reads as the glossary's own heading rule. */
+  margin: 0;
   padding-top: var(--rf-space-3);
   border-top: var(--rf-hairline) solid var(--rf-border-subtle);
 }
