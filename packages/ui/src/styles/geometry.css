@@ -295,10 +295,24 @@
   outline: none;
 }
 
-/* Unclipped elements (links, rows, tabs) get a real ring. */
+/* Unclipped elements (links, rows, tabs) get a real ring.
+
+   The offset is a variable because `.rf-hit-block` has to subtract it: an
+   outline is drawn from the border box, and that box is now bigger than the
+   control on everything carrying a hit area. */
 .rf-focus-ring:focus-visible {
+  --rf-focus-offset: 2px;
   outline: 2px solid var(--rf-border-focus);
-  outline-offset: 2px;
+  outline-offset: var(--rf-focus-offset);
+}
+
+/* The ring stays on the ink, not on the hit area.
+   Growing the box a pointer lands in is not a decision about how the control
+   looks, and a ring that suddenly traced a 44px box round a 28px chip would be
+   exactly that decision, taken by accident. The offset gives back what the
+   transparent border added, so the ring lands where it always did. */
+.rf-hit-block.rf-focus-ring:focus-visible {
+  outline-offset: calc(var(--rf-focus-offset) - var(--rf-hit-grow, var(--rf-space-2)));
 }
 
 /* ----------------------------------------------------------------------------

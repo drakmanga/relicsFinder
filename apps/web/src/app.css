@@ -69,15 +69,12 @@ body {
    span is unreachable by keyboard.
 
    Its box is the 44px rule 7 asks for while its letters are the 25px they were
-   drawn at: the bar is 56px tall and the brand is centred in it, so the taller
-   box is taken out of slack the bar already had and nothing moves. No
-   transparent border needed here — the brand paints no fill to keep inside
-   one. */
+   drawn at: `rf-hit-block` on the element adds 12px of transparent border above
+   and below, which the 56px bar has room for, and hands the same 12px back as
+   margin so nothing in the bar moves. */
 .rf-brand {
   flex: none;
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--rf-touch-target);
+  --rf-hit-grow: var(--rf-space-3);
   padding: 0;
   border: 0;
   background: none;

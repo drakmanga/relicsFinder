@@ -116,7 +116,7 @@ export function App() {
           */}
           <button
             type="button"
-            className="rf-brand rf-focus-ring"
+            className="rf-brand rf-focus-ring rf-hit-block"
             onClick={() => {
               setView("relics");
               closePanel();
