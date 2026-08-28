@@ -507,12 +507,39 @@ body {
 
 /* The tier list has no action column at all — it is a ranking to read, not a
    list to act on — so every width here is its header word measured at the
-   66rem floor above. "Radshare, Radiant" is the longest of them at 17
-   characters of uppercase overline plus a sort arrow, which is 185px against
-   the 190px its 18% resolves to.
-   The twelve percent the retired "Sell?" column held went to Relic: it is the
-   column the eye returns to, and the four columns of figures were already
-   measured against their own headers. */
+   66rem floor above, where the table is 1056px wide. Rendered boxes rather
+   than font arithmetic: each header was starved to its own minimum and the
+   `scrollWidth` it reported is the first column below.
+
+   | header                | minimum | at the floor |
+   | # 4%                  |      21 |           42 |
+   | Era 11%               |      39 |          116 |
+   | Relic 29%             |      71 |          306 |
+   | Solo, Intact 16%      |     142 |          169 |
+   | Radshare, Radiant 18% |     188 |          190 |
+   | Relic price 13%       |     131 |          137 |
+   | Trend 9%              |      57 |           95 |
+
+   Era is the one sized by its content rather than by its heading — the chip,
+   see the Relics table above — and Radshare has 2px to spare, which is what
+   makes 18% the number it is.
+
+   Relic price was 10%, which is 106px against the 131px "RELIC PRICE" and its
+   sort arrow need, and `thead th` is `white-space: nowrap` with no overflow
+   rule — so it did not truncate, it ran into Trend beside it. It spilled 25px
+   at this floor and was still 8px over at a 1280 viewport. 12% is 127px and
+   still short; 13% is the first that fits.
+
+   The three percent comes back off Relic, which run 003 had given the twelve
+   the retired "Sell?" column held. Relic is the column the eye returns to and
+   it keeps the largest share by far, but it is also the only one here that
+   truncates by design — a relic name is `tbody`, and `tbody td` has the hidden
+   overflow and the ellipsis that `thead th` does not.
+
+   Not solved by giving `thead th` that ellipsis instead: measured across all
+   seven views at 360px, this is the only header in the app that overflows its
+   column, and a truncated header is a column whose name the reader cannot
+   read. One column's 3% against six tables' headings is not a trade. */
 .rf-cols-tiers col:nth-child(1) {
   width: 4%;
 } /* # */
@@ -520,7 +547,7 @@ body {
   width: 11%;
 } /* Era — fits the Vanguard chip */
 .rf-cols-tiers col:nth-child(3) {
-  width: 32%;
+  width: 29%;
 } /* Relic */
 .rf-cols-tiers col:nth-child(4) {
   width: 16%;
@@ -529,7 +556,7 @@ body {
   width: 18%;
 } /* Radshare, Radiant */
 .rf-cols-tiers col:nth-child(6) {
-  width: 10%;
+  width: 13%;
 } /* Relic price */
 .rf-cols-tiers col:nth-child(7) {
   width: 9%;
