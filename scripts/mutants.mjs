@@ -205,6 +205,23 @@ const MUTANTS = [
     to: "const radshareMedian = soloMedian;",
   },
   {
+    // The two below are the fault the tier list was reported with: Trend read
+    // Steady on all 772 relics while the prices behind them carried a movement.
+    // Either mutation puts it back, and each one breaks a different half of the
+    // path — the map that is supposed to be re-priced, and the call that is
+    // supposed to read it.
+    name: "the ninety-day baseline re-prices nothing",
+    file: "apps/web/src/lib/tierList.ts",
+    from: "const factor = 1 + (item.trend ?? 0) / 100;",
+    to: "const factor = 1;",
+  },
+  {
+    name: "the trend measures today against today",
+    file: "apps/web/src/lib/tierList.ts",
+    from: "trend: trendBetween(soloValue, expectedValue(intact, baseline)),",
+    to: "trend: trendBetween(soloValue, expectedValue(intact, prices)),",
+  },
+  {
     // The bug this step closed: the fallback was its own literal, so moving the
     // catalogue's default left the wishlist keying lines under a state nothing
     // showed any more. Its twin is on the Java side, one constant apart.
