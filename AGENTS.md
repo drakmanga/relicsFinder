@@ -19,18 +19,18 @@ Never claim a task is done on the basis of "the code looks right".
 
 ## 1. The ten non-negotiables
 
-| #   | Rule                                                            | Fails when                                                                       |
-| --- | --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1   | No inline `style={{ ... }}` in JSX carrying visual values       | any `style={{}}` containing a colour, spacing, size, radius, duration or z-index |
-| 2   | No magic values                                                 | any raw hex, `px`, `ms` or unitless spacing number outside `tokens.css`          |
-| 3   | Every font-size is `rem`, never `px`                            | `font-size: 15px` anywhere, including the root                                   |
-| 4   | Components stay under ~150 LOC                                  | a `.tsx` file over 150 lines without a written justification at the top          |
-| 5   | Every interactive element is reachable and operable by keyboard | a click handler on a non-button, a missing `:focus-visible` style                |
-| 6   | Every layout survives 360px width and 200% text zoom            | horizontal scrollbar on the document, clipped or overlapping text                |
-| 7   | Touch targets are at least 44x44 CSS px                         | any button, icon button or row action below that box                             |
-| 8   | `tokens.json` is the only source of design values               | a value edited in `tokens.css` without regenerating it                           |
-| 9   | Reusable UI lives in `packages/ui`, app UI in `apps/web`        | a generic component (button, badge, layout primitive) defined inside `apps/web`  |
-| 10  | Every non-obvious decision carries its reason in a comment      | a workaround, a magic constant or an override with no `why`                      |
+| #   | Rule                                                                 | Fails when                                                                       |
+| --- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | No inline `style={{ ... }}` in JSX carrying visual values            | any `style={{}}` containing a colour, spacing, size, radius, duration or z-index |
+| 2   | No magic values                                                      | any raw hex, `px`, `ms` or unitless spacing number outside `tokens.css`          |
+| 3   | Every font-size is `rem`, never `px`                                 | `font-size: 15px` anywhere, including the root                                   |
+| 4   | Components stay under ~150 LOC                                       | a `.tsx` file over 150 lines without a written justification at the top          |
+| 5   | Every interactive element is reachable and operable by keyboard      | a click handler on a non-button, a missing `:focus-visible` style                |
+| 6   | Every layout survives 360px width and 200% text zoom                 | horizontal scrollbar on the document, clipped or overlapping text                |
+| 7   | Touch targets are at least 44x44 CSS px, §5.4's two exceptions apart | any button, icon button or row action below that box                             |
+| 8   | `tokens.json` is the only source of design values                    | a value edited in `tokens.css` without regenerating it                           |
+| 9   | Reusable UI lives in `packages/ui`, app UI in `apps/web`             | a generic component (button, badge, layout primitive) defined inside `apps/web`  |
+| 10  | Every non-obvious decision carries its reason in a comment           | a workaround, a magic constant or an override with no `why`                      |
 
 ---
 
@@ -370,6 +370,48 @@ Check every foreground/background pair that ships, in particular:
 Keep it that way: every new animation, transition over 200ms, and auto-playing effect must
 be disabled or reduced under that query.
 
+### 5.4 Touch targets — rule 7, and the two exceptions to it
+
+**Decided 2026-08-28.** Rule 7 asked for 44x44 with no exception, and the application had
+fifteen. This section is the rule change that closes that gap: what the minimum is, where it
+is lower, and why. `npm run reflow` measures all three, so none of it is on trust.
+
+**The rule.** Every interactive element measures at least 44x44 CSS px in the box a pointer
+lands on. That is WCAG 2.5.5 (AAA), and it is the box rather than the ink: a control drawn
+smaller passes by carrying a transparent border around itself, which is what `.rf-hit-block`
+in `geometry.css` is for. Growing a hit area and redrawing a control are two different
+changes, and only the first one is ever asked for by this rule.
+
+**Exception 1 — a control inside a data cell is held to 24x24.** That is WCAG 2.5.8 (AA),
+and it applies to anything inside a `<td>` or a `<th>`: the row actions, the quantity
+steppers, the owned marks, and the four sortable column headers, which move together or not
+at all. The reason is not that 24 is enough. It is that the space a target inside a table
+would have to grow into is the next row, which is itself a target: growing one there does not
+buy a bigger target, it takes its neighbour's, and a stepper that steals the clicks meant for
+the row above it is worse than a small stepper. The cell's height is the table's grid, and
+moving the grid to buy a hit area would redraw every table in the application.
+
+This is the answer to the question the rule left open — what 44x44 means for a target
+constrained by its surroundings rather than by its own design. WCAG 2.5.8's own exception is
+for a target in a sentence or otherwise constrained by flowing text. A dense table cell is
+that argument's nearest neighbour: the target's size is set by the content it sits in and not
+by a choice anybody made about the control. A standalone filter button plainly is not, which
+is why the nine chips on the Sets view and the three switches on the Tier List were grown
+rather than excused.
+
+**Exception 2 — a control whose own row performs the same action is exempt.** WCAG 2.5.8
+allows a target under the minimum when the same function is available from another control
+that clears it. The Tier List's relic name is a button only so the row is reachable by
+keyboard (rule 5.1); the row it sits in opens the same panel on a click, and is 48px tall and
+the full width of the table. The exemption is an allowlist in `scripts/reflow-check.mjs`
+(`EQUIVALENT`), never a shape, so nothing falls into it by accident. Adding to that list is a
+change to this section too.
+
+**What the gate does not measure.** The walk measures each view as it loads, plus the detail
+panel it opens. Controls behind a disclosure — the filter drawer, the panels' own steppers
+and toggles — are not measured, and several of them are known to be under the rule. That is
+a capture of its own, not a silent exception.
+
 ---
 
 ## 6. Performance
@@ -502,7 +544,13 @@ npm run typecheck
 npm run lint
 npm run lint:inline-style
 npm run build
+npm run reflow   # needs the preview build and the backend up; see the script header
 ```
+
+`npm run reflow` is what mechanises steps 1 and 2 below, over every view rather than the one
+being edited, and it measures rule 7 and collapsed panes in the same walk. A view whose data
+never arrived is reported as inconclusive and exits non-zero: a run that measured nothing is
+not a run that passed.
 
 And confirm by hand, in a browser:
 
