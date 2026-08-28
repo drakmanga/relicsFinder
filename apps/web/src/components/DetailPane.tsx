@@ -45,8 +45,8 @@ interface Props {
   highlightParts: ReadonlyMap<string, string | null>;
   setRefinement: Refinement;
   onSetRefinement: (refinement: Refinement) => void;
-  onToggleOwned: (itemName: string) => void;
-  onToggleAllOwned: (itemNames: string[], owned: boolean) => void;
+  onSetOwned: (itemName: string, copies: number) => void;
+  onSetOwnedAll: (pieces: { itemName: string; copies: number }[], owned: boolean) => void;
 
   onPickItem: (itemName: string) => void;
   /** Opens the wishlist at the section a panel's line belongs to. */
@@ -132,8 +132,8 @@ function Panel({
   highlightParts,
   setRefinement,
   onSetRefinement,
-  onToggleOwned,
-  onToggleAllOwned,
+  onSetOwned,
+  onSetOwnedAll,
   onPickItem,
   onPickRelic,
   onInfoRelic,
@@ -151,8 +151,8 @@ function Panel({
         pricesFilling={pricesFilling}
         refinement={setRefinement}
         onRefinement={onSetRefinement}
-        onToggle={onToggleOwned}
-        onToggleAll={onToggleAllOwned}
+        onSetOwned={onSetOwned}
+        onSetOwnedAll={onSetOwnedAll}
         onPickItem={onPickItem}
         onPickRelic={onPickRelic}
         onBack={onBack}

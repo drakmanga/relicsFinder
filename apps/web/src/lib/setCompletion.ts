@@ -13,7 +13,27 @@ import type { OwnedCounts } from "./owned";
  */
 export interface SetPart {
   itemName: string;
-  owned: boolean;
+  /**
+   * How many copies of this piece the set is built from.
+   *
+   * One almost everywhere, and two for 49 components across 28 sets — Kestrel
+   * Prime is one Blueprint, one Grip and two Blades. Read from the item
+   * database through the price payload, and one when it says nothing: that is
+   * what every set was assumed to need before the number was carried, so a
+   * missing answer keeps the set exactly as it read before.
+   */
+  needed: number;
+  /** How many are in hand, never more than the set needs. */
+  ownedCopies: number;
+  /**
+   * Whether the set still wants any of this piece.
+   *
+   * Carried rather than left to each caller as `ownedCopies >= needed`,
+   * because it used to be a boolean field called `owned` and every reader of
+   * it was a truthiness test: one Blade of two would have read as done in
+   * eight places at once.
+   */
+  complete: boolean;
   /** What the finished part sells for. Null when nobody is selling it. */
   price: number | null;
   /** The relic with the best odds, at the refinement being asked about. */
@@ -68,8 +88,21 @@ export interface PrimeSet {
    */
   category: SetCategory | null;
   parts: SetPart[];
+  /**
+   * Copies in hand, and copies the set is built from.
+   *
+   * Copies rather than names, and that is the decision this pair records: the
+   * Missing column counts what is still to be obtained and `missingCost`
+   * prices exactly those, so a fraction counting names would put a different
+   * denominator in the column beside them. Kestrel Prime with one Blade reads
+   * 3/4 and one to go, rather than 2/3 pieces and one to go.
+   *
+   * For the 129 sets with no doubled piece the two counts are the number of
+   * names, which is what they were before.
+   */
   ownedCount: number;
-  /** Platinum to buy every part still missing. */
+  neededCount: number;
+  /** Platinum to buy every copy still missing. */
   missingCost: number;
   /** True when a price is missing from that total, so it understates. */
   costIncomplete: boolean;
@@ -157,11 +190,17 @@ export function buildSets(
             ? runs * (relicPrice - source.expected) + price
             : null;
 
+        const needed = prices?.get(itemName)?.copiesPerSet ?? 1;
+        // Capped at what the set needs: a stepper cannot go past it, but a
+        // count stored while the database said two survives the day it says
+        // one, and 3/2 of a piece is not a state any of this can report.
+        const ownedCopies = Math.min(owned.get(itemName) ?? 0, needed);
+
         return {
           itemName,
-          // Held at all, which is what it meant while the collection was a
-          // set of names. How many copies a set needs is carried separately.
-          owned: (owned.get(itemName) ?? 0) > 0,
+          needed,
+          ownedCopies,
+          complete: ownedCopies >= needed,
           price,
           bestRelic: source?.relicFullName ?? null,
           relicNames: relicsByItem.get(itemName) ?? [],
@@ -171,7 +210,7 @@ export function buildSets(
         };
       });
 
-    const missing = parts.filter((part) => !part.owned);
+    const missing = parts.filter((part) => !part.complete);
 
     sets.push({
       setName,
@@ -180,8 +219,14 @@ export function buildSets(
       // since the rest of the batch may not have arrived.
       category: parts.map((part) => prices?.get(part.itemName)?.category).find(Boolean) ?? null,
       parts,
-      ownedCount: parts.length - missing.length,
-      missingCost: missing.reduce((sum, part) => sum + (part.price ?? 0), 0),
+      ownedCount: parts.reduce((sum, part) => sum + part.ownedCopies, 0),
+      neededCount: parts.reduce((sum, part) => sum + part.needed, 0),
+      // Every missing copy at its own price, not one copy per name: the second
+      // Blade costs what the first one did.
+      missingCost: missing.reduce(
+        (sum, part) => sum + (part.price ?? 0) * (part.needed - part.ownedCopies),
+        0,
+      ),
       // A missing price is not a free part. Saying so keeps a total that reads
       // low from being mistaken for a bargain.
       costIncomplete: missing.some((part) => part.price === null),
@@ -215,7 +260,7 @@ export function verdictFor(part: SetPart): "buy" | "farm" | "unknown" {
  * Relic names go through `matchesRelic` rather than a substring test, for the
  * reason it exists: "Axi S1" must not drag in S10 through S19.
  *
- * A piece already ticked as obtained never matches, on either route. Typing a
+ * A piece the set no longer wants never matches, on either route. Typing a
  * relic tier is asking what the relic in the inventory builds towards, and
  * typing a piece is asking where to get it; a component sitting in the foundry
  * answers neither. The consequence is deliberate and will look like a bug from
@@ -238,7 +283,7 @@ export function searchedPartsOf(set: PrimeSet, term: string): Map<string, string
     // separate question of whether a piece still answers what was typed. Tying
     // the two together would make the same term mean different things in two
     // places, and "all sets" would go back to reporting finished collecting.
-    if (part.owned) continue;
+    if (part.complete) continue;
 
     if (part.itemName.toLowerCase().includes(term)) {
       marked.set(part.itemName, null);

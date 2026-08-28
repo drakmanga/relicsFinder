@@ -251,6 +251,17 @@
   clip-path: var(--rf-clip-notch) padding-box;
 }
 
+/* Both inline edges, for a control that is square-ish and has room on either
+   side: the two stepper buttons on a set's piece, drawn at 32px and landing in
+   a 48px box. Safe there because what the growth reaches is the 16px the count
+   between them occupies — text, not a target — so the two boxes meet without
+   overlapping, and the piece's own farming line is indented past both. */
+.rf-hit-inline.rf-hit-inline {
+  border-inline: var(--rf-hit-grow, var(--rf-space-2)) solid transparent;
+  margin-inline: calc(-1 * var(--rf-hit-grow, var(--rf-space-2)));
+  background-clip: padding-box;
+}
+
 /* The same trick on the inline axis, for a control whose label is too short to
    reach the minimum on its own — "All", in both places one appears.
 

@@ -33,7 +33,7 @@ interface Props {
    * whole one", and until now saying it meant opening the set's panel and
    * finding the button inside.
    */
-  onToggleOwned: (itemNames: string[], owned: boolean) => void;
+  onSetOwnedAll: (pieces: { itemName: string; copies: number }[], owned: boolean) => void;
   /** Whether more part prices are still expected. See lib/priceProgress. */
   pricesFilling: boolean;
   /** Whether the assembled-set prices are still landing. A batch of its own. */
@@ -56,7 +56,7 @@ export function SetsTable({
   setPricesFilling,
   selected,
   onSelect,
-  onToggleOwned,
+  onSetOwnedAll,
   quantityOf,
   setPrices,
 }: Props) {
@@ -124,7 +124,10 @@ export function SetsTable({
             const set = sets[virtualRow.index];
             if (!set) return null;
 
-            const total = set.parts.length;
+            // Copies rather than names, which is what the pieces column, the
+            // platinum beside it and the unfinished filter all count: a set
+            // built from two Blades is 3/4 with one of them in hand.
+            const total = set.neededCount;
             const missing = total - set.ownedCount;
             const done = missing === 0;
 
@@ -153,8 +156,11 @@ export function SetsTable({
                     label={set.setName}
                     state={done ? "all" : set.ownedCount > 0 ? "some" : "none"}
                     onToggle={() =>
-                      onToggleOwned(
-                        set.parts.map((part) => part.itemName),
+                      onSetOwnedAll(
+                        set.parts.map((part) => ({
+                          itemName: part.itemName,
+                          copies: part.needed,
+                        })),
                         // Anything short of the whole set fills it in; only a
                         // complete one clears.
                         !done,

@@ -8,8 +8,9 @@
  * the verdict alone: the trade-off between platinum and an evening is the
  * reader's and nobody else's.
  */
-import { Skeleton } from "relic-finder-ui";
+import { cx, Skeleton } from "relic-finder-ui";
 
+import { OwnedStepper } from "./OwnedStepper";
 import { PlatPrice } from "./Plat";
 import { verdictFor } from "../lib/setCompletion";
 import type { SetPart } from "../lib/setCompletion";
@@ -20,7 +21,7 @@ export function Piece({
   marked,
   matchedRelic,
   pricesFilling,
-  onToggle,
+  onSetOwned,
   onPickItem,
   onPickRelic,
 }: {
@@ -40,7 +41,8 @@ export function Piece({
   matchedRelic?: string | null;
   /** Whether more prices are still expected. See lib/priceProgress. */
   pricesFilling: boolean;
-  onToggle: (itemName: string) => void;
+  /** Sets how many copies of this piece are in hand. */
+  onSetOwned: (itemName: string, copies: number) => void;
   onPickItem: (itemName: string) => void;
   onPickRelic: (relicFullName: string) => void;
 }) {
@@ -48,35 +50,25 @@ export function Piece({
 
   return (
     <div
-      className={marked ? "rf-set-piece rf-set-piece-marked" : "rf-set-piece"}
-      style={{ opacity: part.owned ? 0.55 : 1 }}
+      className={cx(
+        "rf-set-piece",
+        marked && "rf-set-piece-marked",
+        part.complete && "rf-set-piece-done",
+      )}
     >
-      <div className="rf-row">
-        <input
-          type="checkbox"
-          checked={part.owned}
-          onChange={() => onToggle(part.itemName)}
-          aria-label={`I have ${part.itemName}`}
-          style={{ accentColor: "var(--rf-gold-500)", width: 15, height: 15, flex: "none" }}
-        />
+      <OwnedStepper
+        itemName={part.itemName}
+        owned={part.ownedCopies}
+        needed={part.needed}
+        onChange={(copies) => onSetOwned(part.itemName, copies)}
+      />
 
+      <div className="rf-row">
         <button
           type="button"
-          className="rf-focus-ring"
+          className={cx("rf-focus-ring rf-set-piece-name", part.complete && "rf-struck")}
           onClick={() => onPickItem(part.itemName)}
           title={`${part.itemName} — open it in Prime Items`}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            textAlign: "left",
-            background: "none",
-            border: 0,
-            padding: 0,
-            cursor: "pointer",
-            fontSize: 13,
-            color: "var(--rf-fg-primary)",
-            textDecoration: part.owned ? "line-through" : undefined,
-          }}
         >
           {/* The set name is the panel title; repeating it on all six rows
               spends the width that tells them apart. */}
@@ -96,11 +88,8 @@ export function Piece({
         )}
       </div>
 
-      {!part.owned && (
-        <div
-          className="rf-text-caption rf-fg-muted"
-          style={{ display: "flex", alignItems: "baseline", gap: 6, marginLeft: 23, marginTop: 3 }}
-        >
+      {!part.complete && (
+        <div className="rf-text-caption rf-fg-muted rf-set-piece-note">
           {part.bestRelic ? (
             <>
               <button

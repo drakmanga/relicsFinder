@@ -172,18 +172,19 @@ export function setOwnedCount(itemName: string, copies: number) {
   commit(next);
 }
 
-/** In hand or not at all, for a piece a set needs one of. */
-export function toggleOwned(itemName: string) {
-  setOwnedCount(itemName, owned.has(itemName) ? 0 : 1);
-}
-
-/** Marks every part of a set at once — the "I already built this" shortcut. */
-export function setOwnedAll(itemNames: string[], value: boolean) {
+/**
+ * Fills in or clears a whole set at once — the "I already built this" shortcut.
+ *
+ * Each piece is set to the number the set is built from rather than to one,
+ * which is the difference this change makes to it: saying "I have Kestrel
+ * Prime" and being left one Blade short read as a bug, because it was one.
+ */
+export function setOwnedAll(pieces: { itemName: string; copies: number }[], value: boolean) {
   const next = new Map(owned);
 
-  for (const name of itemNames) {
-    if (value) next.set(name, 1);
-    else next.delete(name);
+  for (const piece of pieces) {
+    if (value) next.set(piece.itemName, piece.copies);
+    else next.delete(piece.itemName);
   }
 
   commit(next);
@@ -202,11 +203,5 @@ export function useOwned() {
 
   const countOf = useCallback((itemName: string) => current.get(itemName) ?? 0, [current]);
 
-  return {
-    owned: current,
-    countOf,
-    setCount: setOwnedCount,
-    toggle: toggleOwned,
-    setAll: setOwnedAll,
-  };
+  return { owned: current, countOf, setCount: setOwnedCount, setAll: setOwnedAll };
 }

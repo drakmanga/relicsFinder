@@ -26,10 +26,10 @@ interface Props {
   pricesFilling: boolean;
   refinement: Refinement;
   onRefinement: (next: Refinement) => void;
-  /** Ticks or unticks one piece. */
-  onToggle: (itemName: string) => void;
-  /** Ticks or unticks the whole set at once. */
-  onToggleAll: (itemNames: string[], value: boolean) => void;
+  /** Sets how many copies of one piece are in hand. */
+  onSetOwned: (itemName: string, copies: number) => void;
+  /** Fills in or clears the whole set at once, every copy of every piece. */
+  onSetOwnedAll: (pieces: { itemName: string; copies: number }[], value: boolean) => void;
   /** Opens the piece in Prime Items. */
   onPickItem: (itemName: string) => void;
   /** Opens the relic that drops it. */
@@ -52,8 +52,8 @@ export function SetDetailPanel({
   pricesFilling,
   refinement,
   onRefinement,
-  onToggle,
-  onToggleAll,
+  onSetOwned,
+  onSetOwnedAll,
   onPickItem,
   onPickRelic,
   onBack,
@@ -71,8 +71,11 @@ export function SetDetailPanel({
     );
   }
 
-  const missing = set.parts.filter((part) => !part.owned);
+  const missing = set.parts.filter((part) => !part.complete);
   const complete = missing.length === 0;
+  // Every copy of every piece, which is what "I have all of these" has to mean
+  // on a set built from two of one of them.
+  const pieces = set.parts.map((part) => ({ itemName: part.itemName, copies: part.needed }));
 
   return (
     <DetailPanel
@@ -81,7 +84,10 @@ export function SetDetailPanel({
       meta={
         complete
           ? "Complete"
-          : `${set.ownedCount} of ${set.parts.length} pieces — ${missing.length} to go`
+          : // Copies rather than names, the same count the table shows: a
+            // Kestrel Prime with one Blade of two is 3 of 4, and the number
+            // still to go is the number still to be obtained.
+            `${set.ownedCount} of ${set.neededCount} pieces — ${set.neededCount - set.ownedCount} to go`
       }
       actions={
         <>
@@ -169,16 +175,7 @@ export function SetDetailPanel({
           )}
 
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                onToggleAll(
-                  set.parts.map((part) => part.itemName),
-                  !complete,
-                )
-              }
-            >
+            <Button variant="outline" size="sm" onClick={() => onSetOwnedAll(pieces, !complete)}>
               {complete ? "Clear the set" : "I have all of these"}
             </Button>
           </div>
@@ -242,7 +239,7 @@ export function SetDetailPanel({
                 marked={highlightParts.has(part.itemName)}
                 matchedRelic={highlightParts.get(part.itemName) ?? null}
                 pricesFilling={pricesFilling}
-                onToggle={onToggle}
+                onSetOwned={onSetOwned}
                 onPickItem={onPickItem}
                 onPickRelic={onPickRelic}
               />

@@ -90,7 +90,7 @@ interface Props {
   setStatus: SetStatus;
   onSetStatus: (next: SetStatus) => void;
   /** Ticks or unticks every piece of a set at once. */
-  onSetOwnedAll: (itemNames: string[], owned: boolean) => void;
+  onSetOwnedAll: (pieces: { itemName: string; copies: number }[], owned: boolean) => void;
   /** Which wishlist section is open. Set by whatever sent the reader there. */
   wishlistSection: WishlistKind;
   onWishlistSection: (section: WishlistKind) => void;
@@ -234,7 +234,7 @@ export function ResultsPane({
             pricesFilling={pricesFilling}
             selected={selectedSet}
             onSelect={onSelectSet}
-            onToggleOwned={onSetOwnedAll}
+            onSetOwnedAll={onSetOwnedAll}
             quantityOf={quantityOf}
             setPrices={setPrices}
             setPricesFilling={setPricesFilling}

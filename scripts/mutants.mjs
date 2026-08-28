@@ -12,6 +12,32 @@ const ROOT = new URL("..", import.meta.url).pathname;
 
 const MUTANTS = [
   {
+    // The fault the whole step exists to close: 28 sets read as finished with a
+    // piece still missing.
+    name: "a piece is done as soon as one copy of it is in hand",
+    file: "apps/web/src/lib/setCompletion.ts",
+    from: "          complete: ownedCopies >= needed,",
+    to: "          complete: ownedCopies > 0,",
+  },
+  {
+    name: "the platinum to finish counts one copy of a doubled piece",
+    file: "apps/web/src/lib/setCompletion.ts",
+    from: "        (sum, part) => sum + (part.price ?? 0) * (part.needed - part.ownedCopies),",
+    to: "        (sum, part) => sum + (part.price ?? 0),",
+  },
+  {
+    name: "how many copies a set needs is ignored and read as one",
+    file: "apps/web/src/lib/setCompletion.ts",
+    from: "        const needed = prices?.get(itemName)?.copiesPerSet ?? 1;",
+    to: "        const needed = 1;",
+  },
+  {
+    name: "the unfinished filter goes back to counting names",
+    file: "apps/web/src/lib/setCategories.ts",
+    from: '    status === "complete" ? set.ownedCount === set.neededCount : set.ownedCount < set.neededCount,',
+    to: '    status === "complete"\n      ? set.ownedCount === set.parts.length\n      : set.ownedCount < set.parts.length,',
+  },
+  {
     // The failure this migration exists not to have: the stored list is a list
     // of names, and a name has always meant one copy.
     name: "a name stored before pieces had counts reads as nothing owned",

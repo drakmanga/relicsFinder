@@ -331,8 +331,8 @@ export function App() {
             highlightParts={searchedSetParts}
             setRefinement={setRefinement}
             onSetRefinement={setSetRefinement}
-            onToggleOwned={ownedParts.toggle}
-            onToggleAllOwned={ownedParts.setAll}
+            onSetOwned={ownedParts.setCount}
+            onSetOwnedAll={ownedParts.setAll}
             quantityOf={wishlist.quantityOf}
             elsewhere={wishlist.elsewhere}
             onPickItem={openItem}

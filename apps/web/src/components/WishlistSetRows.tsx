@@ -79,7 +79,8 @@ export function WishlistSetRows({ entries, sets, setPrices, setPricesFilling, on
         {entries.map((entry) => {
           const set = sets.get(entry.itemName) ?? null;
           const listing = setPrices.get(entry.itemName);
-          const missing = set ? set.parts.length - set.ownedCount : null;
+          // Copies, the same count the Sets table and the panel show.
+          const missing = set ? set.neededCount - set.ownedCount : null;
           const done = missing === 0;
 
           return (
@@ -93,7 +94,7 @@ export function WishlistSetRows({ entries, sets, setPrices, setPricesFilling, on
               <TableCell align="right" numeric>
                 {set ? (
                   <span className={done ? "rf-success" : undefined}>
-                    {set.ownedCount}/{set.parts.length}
+                    {set.ownedCount}/{set.neededCount}
                   </span>
                 ) : (
                   <Unlisted />
@@ -113,6 +114,9 @@ export function WishlistSetRows({ entries, sets, setPrices, setPricesFilling, on
                   <span className="rf-success">Complete</span>
                 ) : (
                   <span className="rf-inline-tight">
+                    {/* missingCost already prices every missing copy, so a
+                        line for two sets is twice a total that counts both
+                        Blades rather than twice a total that counted one. */}
                     <PlatPrice value={Math.round(set.missingCost * entry.qty)} />
                     {set.costIncomplete && <span className="rf-fg-muted">+</span>}
                   </span>

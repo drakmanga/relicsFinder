@@ -1627,10 +1627,67 @@ body {
 /* A piece of a set. Neutral until the search names it: the padding is here so
    the marked state has room for its bar rather than gaining width when it
    lights up and shifting the six rows sideways. */
+/* Two columns: the stepper, and everything the piece has to say. The farming
+   line under the name sits in the second column rather than being indented by
+   hand, which is what keeps it clear of the stepper's 48px hit box — the box
+   grows into the column beside it, where nothing is clickable. */
 .rf-set-piece {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--rf-space-2);
+  align-items: center;
   padding: 3px 6px;
   margin-left: -6px;
   margin-right: -6px;
+}
+
+/* A piece the set no longer wants: still legible, plainly done with. */
+.rf-set-piece-done {
+  opacity: 0.55;
+}
+
+.rf-set-piece-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: var(--rf-text-body-sm);
+  color: var(--rf-fg-primary);
+}
+
+.rf-struck {
+  text-decoration: line-through;
+}
+
+/* Where a piece comes from, under its name and in the name's column. */
+.rf-set-piece-note {
+  grid-column: 2;
+  display: flex;
+  align-items: baseline;
+  gap: var(--rf-space-2);
+  margin-top: 3px;
+}
+
+/* The stepper on a piece. Same shape as the wishlist's `.rf-qty` — a count
+   between two buttons — without its clear button and its counterweight, which
+   exist to centre that one inside a table cell. This one is in a panel, at the
+   start of a grid column, and has nothing to be centred against. */
+.rf-owned-qty {
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-1);
+}
+
+/* Wide enough for the widest reading it can hold — "2/2" — so the six rows of
+   a set line up rather than shifting as pieces are ticked. */
+.rf-owned-qty-count {
+  min-width: 1.6rem;
+  text-align: center;
+  font-size: var(--rf-text-caption);
+  color: var(--rf-fg-secondary);
 }
 
 /* The piece the search named — by its own name, or through a relic that drops

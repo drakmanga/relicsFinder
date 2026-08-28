@@ -85,8 +85,11 @@ export const ALL_SET_STATUSES: SetStatus[] = ["all", "missing", "complete"];
 export function filterByStatus(sets: PrimeSet[], status: SetStatus): PrimeSet[] {
   if (status === "all") return sets;
 
+  // Copies, not names: a Kestrel Prime with one Blade of two is a set that
+  // cannot be built, and the unfinished filter is the one place a reader goes
+  // to find out what they still need.
   return sets.filter((set) =>
-    status === "complete" ? set.ownedCount === set.parts.length : set.ownedCount < set.parts.length,
+    status === "complete" ? set.ownedCount === set.neededCount : set.ownedCount < set.neededCount,
   );
 }
 

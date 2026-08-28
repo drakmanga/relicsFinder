@@ -29,6 +29,20 @@ const market = prices({
   "Forma Blueprint": null,
 });
 
+/**
+ * The same catalogue, with the chassis doubled.
+ *
+ * Kestrel Prime is the real case — one Blueprint, one Grip and two Blades — and
+ * this is its shape: a set of two names built from three parts. 28 of the 157
+ * sets with tradeable components hold a piece like it.
+ */
+const doubledMarket = prices({
+  "Volt Prime Blueprint": 100,
+  "Volt Prime Chassis Blueprint": 20,
+  "Forma Blueprint": null,
+});
+doubledMarket.get("Volt Prime Chassis Blueprint")!.copiesPerSet = 2;
+
 // The trade count is on the listing but nothing here reads it: what a set costs
 // to farm is arithmetic on prices, and how well attested a price is belongs to
 // whoever decides to trust it.
@@ -96,6 +110,84 @@ describe("buildSets", () => {
     expect(volt?.missingCost).toBe(100);
   });
 
+  it("counts a doubled piece once per copy, in the fraction and in the total", () => {
+    const [volt] = buildSets(
+      catalogue,
+      new Map([["Volt Prime Chassis Blueprint", 1]]),
+      doubledMarket,
+      relicMarket,
+      "intact",
+    );
+
+    // Two names, three parts. One chassis in hand is one of the three, and the
+    // set still owes a chassis at 20 as well as the blueprint at 100.
+    expect(volt?.neededCount).toBe(3);
+    expect(volt?.ownedCount).toBe(1);
+    expect(volt?.missingCost).toBe(120);
+
+    // And with neither chassis in hand it owes two of them: 100 + 20 + 20,
+    // which is the number that used to understate by a whole part.
+    const [none] = buildSets(catalogue, new Map(), doubledMarket, relicMarket, "intact");
+    expect(none?.missingCost).toBe(140);
+  });
+
+  it("reads a doubled piece as done only when every copy is in hand", () => {
+    const [volt] = buildSets(
+      catalogue,
+      new Map([
+        ["Volt Prime Blueprint", 1],
+        ["Volt Prime Chassis Blueprint", 1],
+      ]),
+      doubledMarket,
+      relicMarket,
+      "intact",
+    );
+
+    const chassis = volt?.parts.find((p) => p.itemName === "Volt Prime Chassis Blueprint");
+    expect(chassis?.complete).toBe(false);
+    expect(volt?.ownedCount).toBe(2);
+    expect(volt?.neededCount).toBe(3);
+
+    const [finished] = buildSets(
+      catalogue,
+      new Map([
+        ["Volt Prime Blueprint", 1],
+        ["Volt Prime Chassis Blueprint", 2],
+      ]),
+      doubledMarket,
+      relicMarket,
+      "intact",
+    );
+
+    expect(finished?.ownedCount).toBe(finished?.neededCount);
+    expect(finished?.missingCost).toBe(0);
+  });
+
+  it("reads a set the database says nothing about as one copy per piece", () => {
+    // The 129 sets with no doubled piece, and Kavasa Prime, which has no match
+    // in the item database at all: both read exactly as they did before.
+    const [volt] = buildSets(catalogue, new Map(), market, relicMarket, "intact");
+
+    expect(volt?.neededCount).toBe(volt?.parts.length);
+    expect(volt?.parts.every((p) => p.needed === 1)).toBe(true);
+  });
+
+  it("never reports more copies in hand than the set is built from", () => {
+    // A count stored while the database said two survives the day it says one,
+    // and 2/1 of a piece is not a state anything downstream can render.
+    const [volt] = buildSets(
+      catalogue,
+      new Map([["Volt Prime Chassis Blueprint", 5]]),
+      market,
+      relicMarket,
+      "intact",
+    );
+
+    expect(
+      volt?.parts.find((p) => p.itemName === "Volt Prime Chassis Blueprint")?.ownedCopies,
+    ).toBe(1);
+  });
+
   it("flags a total that understates because a price is missing", () => {
     // A missing price is not a free part: without the flag a total that reads
     // low is mistaken for a bargain.
@@ -138,7 +230,9 @@ describe("buildSets", () => {
 describe("verdictFor", () => {
   const part = (overrides: Partial<SetPart>): SetPart => ({
     itemName: "Volt Prime Blueprint",
-    owned: false,
+    needed: 1,
+    ownedCopies: 0,
+    complete: false,
     price: 100,
     bestRelic: "Lith V9",
     relicNames: ["Lith V9"],
