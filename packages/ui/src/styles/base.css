@@ -224,15 +224,24 @@
  * from the accessibility tree along with the layout, which is the opposite of
  * what this is for. A table caption naming the table is the case that needs it.
  *
- * `inset-inline-start: 0` is load-bearing. With the offset left to `auto` the
- * box keeps its static position while its containing block becomes the nearest
- * positioned ancestor — usually none, so the document — and one of these inside
- * a table 1184px wide inside a 358px scroller lands 490px past the right edge
- * of the page. Anchoring it removes the escape without changing what any
- * assistive technology reads.
+ * Both insets are load-bearing, and for one reason on two axes. With an offset
+ * left to `auto` the box keeps its static position while its containing block
+ * becomes the nearest positioned ancestor — usually none, so the document — so
+ * no `overflow` between the two clips it and it enlarges the scrollable area of
+ * the ROOT. Sideways: one of these inside a table 1184px wide inside a 358px
+ * scroller landed 490px past the right edge of the page. Downwards: the tier
+ * list renders its virtualised rows at their scroll offset, so the lowest
+ * `Unlisted` on screen sat at y=1193 in a 572px viewport and gave the document a
+ * 622px vertical scrollbar with nothing in it — measured in Firefox on the built
+ * app. Chromium does not show it: Blink treats a table cell as the containing
+ * block for an absolutely positioned descendant and Gecko does not, so the same
+ * markup escapes in one engine and is contained in the other. Anchoring both
+ * offsets removes the escape in both without changing what any assistive
+ * technology reads — reading order is the DOM, not the box.
  */
 .rf-sr-only {
   position: absolute;
+  inset-block-start: 0;
   inset-inline-start: 0;
   width: 1px;
   height: 1px;
