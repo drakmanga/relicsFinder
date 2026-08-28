@@ -213,6 +213,14 @@ body {
   opacity: 1;
 }
 
+/* A note appended to a row's name — what the search matched inside the relic,
+   or the states a wishlist line is held in other than the one on show. Inline
+   with the name because the row's height is fixed at 40px for the virtualizer:
+   a second line would push the scroll position out of step with the content. */
+.rf-row-note {
+  margin-left: var(--rf-space-2);
+}
+
 .rf-filter-summary-lead {
   margin-left: var(--rf-space-2);
   text-transform: uppercase;

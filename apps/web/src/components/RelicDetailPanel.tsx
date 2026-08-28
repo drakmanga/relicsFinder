@@ -31,6 +31,7 @@ import {
   bestRefinementByTrace,
 } from "../lib/rows";
 import { priceOf } from "../lib/format";
+import { elsewhereLabel } from "../lib/wishlist";
 
 interface Props {
   row: RelicRow | null;
@@ -66,6 +67,11 @@ interface Props {
   onInfo: (relicFullName: string) => void;
   /** How many of a line the wishlist holds — the relic itself, and each drop. */
   quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
+  /** The same relic wanted in a state other than the one on the slider. */
+  elsewhere: (
+    itemName: string,
+    refinement: Refinement,
+  ) => { refinement: Refinement; qty: number }[];
   /** Opens the wishlist at the section this panel's line belongs to. */
   onOpenWishlist: (section: WishlistKind) => void;
   /** Steps back to whatever the panel was showing before. Absent at the start. */
@@ -92,6 +98,7 @@ export function RelicDetailPanel({
   price,
   onInfo,
   quantityOf,
+  elsewhere,
   onOpenWishlist,
   onBack,
   onClose,
@@ -182,6 +189,12 @@ export function RelicDetailPanel({
               refinement: active,
             }}
             qty={quantityOf(row.relicFullName, "relic", active)}
+            /*
+              A relic line keeps the state it was made in, and the slider below
+              chooses which state this stepper edits. Without the note, moving it
+              off a state that holds a line reads as the line having been lost.
+            */
+            hint={elsewhereLabel(elsewhere(row.relicFullName, active)) ?? undefined}
             onOpen={() => onOpenWishlist("relic")}
           />
         </>

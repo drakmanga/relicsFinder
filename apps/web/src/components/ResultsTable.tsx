@@ -22,7 +22,7 @@ import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
-import { bump, remove } from "../lib/wishlist";
+import { bump, elsewhereLabel, remove } from "../lib/wishlist";
 import { relicMarketUrl } from "../lib/format";
 import { bestDropValue, expectedValue } from "../lib/rows";
 import { usePricePriority } from "../lib/usePricePriority";
@@ -66,6 +66,17 @@ interface Props {
   onSelect: (id: string) => void;
   /** How many of a relic the wishlist holds, for the stepper on each row. */
   quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
+  /**
+   * The same relic wanted in a state this table is not listing.
+   *
+   * A relic line keeps the state it was made in, and this table shows one
+   * state at a time, so a line made at another one leaves the stepper on its
+   * own row reading 0. See `otherStates` in lib/wishlist.
+   */
+  elsewhere: (
+    itemName: string,
+    refinement: Refinement,
+  ) => { refinement: Refinement; qty: number }[];
   sort: SortState<RelicSortColumn>;
   onSort: (column: RelicSortColumn) => void;
 }
@@ -90,6 +101,7 @@ export function ResultsTable({
   selected,
   onSelect,
   quantityOf,
+  elsewhere,
   sort,
   onSort,
 }: Props) {
@@ -246,6 +258,11 @@ export function ResultsTable({
                 : null;
             const cost = relicPrices?.get(row.relicFullName)?.averagePrice ?? null;
 
+            // A relic line keeps the state it was made in, and this table lists
+            // one state at a time: without this the stepper on the row reads 0
+            // for a plan the reader made and can still see on the Wishlist.
+            const elsewhereNote = elsewhereLabel(elsewhere(row.relicFullName, row.refinement));
+
             // The relic is its own line: its name is the item, and the state it
             // is wanted in is the one the table is listing it in.
             const seed = {
@@ -279,6 +296,12 @@ export function ResultsTable({
                     >
                       · {matched}
                     </span>
+                  )}
+                  {elsewhereNote && (
+                    // Beside the name rather than under the stepper, for the
+                    // same reason: the row cannot grow past 40px, and the
+                    // stepper's own cell is the narrowest in the table.
+                    <span className="rf-text-caption rf-gold rf-row-note">· {elsewhereNote}</span>
                   )}
                 </TableCell>
                 {/*

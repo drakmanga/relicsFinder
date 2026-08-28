@@ -278,6 +278,7 @@ export function App() {
               activeFilters={activeFilters}
               onClearFilters={() => setFilters({ ...emptyFilters(), term: filters.term })}
               quantityOf={wishlist.quantityOf}
+              elsewhere={wishlist.elsewhere}
               selectedRelic={selected}
               onSelectRelic={setSelected}
               selectedItem={pickedItem}
@@ -333,6 +334,7 @@ export function App() {
             onToggleOwned={ownedParts.toggle}
             onToggleAllOwned={ownedParts.setAll}
             quantityOf={wishlist.quantityOf}
+            elsewhere={wishlist.elsewhere}
             onPickItem={openItem}
             onPickRelic={openRelic}
             onInfoRelic={setInfoRelic}

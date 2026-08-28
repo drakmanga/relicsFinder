@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
-import { DEFAULT_REFINEMENT } from "./rows";
+import { ALL_REFINEMENTS, DEFAULT_REFINEMENT, REFINEMENT_LABEL } from "./rows";
 import type {
   PriceMap,
   Refinement,
@@ -143,6 +143,31 @@ export function otherStates(
         line.kind === "relic" && line.itemName === itemName && line.refinement !== refinement,
     )
     .map((line) => ({ refinement: line.refinement, qty: line.qty }));
+}
+
+/**
+ * Those other states, in a sentence a row can carry.
+ *
+ * Spelled out rather than shown as a badge or hidden in a `title`: the reader
+ * is looking at a stepper reading 0 for a relic they know they added, and the
+ * answer to that is a number and the state it is under. A tooltip cannot be
+ * read on a touch screen and a badge would need explaining.
+ *
+ * Null when there is nothing to say, so a caller can leave the space empty
+ * rather than print "0 elsewhere".
+ */
+export function elsewhereLabel(states: { refinement: Refinement; qty: number }[]): string | null {
+  if (states.length === 0) return null;
+
+  // In the order the states refine, not in the order the lines were stored: the
+  // slider beside this reads left to right and the two should agree.
+  const ordered = [...states].sort(
+    (a, b) => ALL_REFINEMENTS.indexOf(a.refinement) - ALL_REFINEMENTS.indexOf(b.refinement),
+  );
+
+  return `also on the list: ${ordered
+    .map((state) => `${state.qty} ${REFINEMENT_LABEL[state.refinement]}`)
+    .join(", ")}`;
 }
 
 type Listener = (entries: WishlistEntry[]) => void;

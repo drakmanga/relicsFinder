@@ -59,6 +59,11 @@ interface Props {
   onInfoRelic: (relicFullName: string) => void;
   /** How many of a line the wishlist already holds, for the steppers inside. */
   quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
+  /** The same relic wanted in another state, for a stepper that reads 0. */
+  elsewhere: (
+    itemName: string,
+    refinement: Refinement,
+  ) => { refinement: Refinement; qty: number }[];
 }
 
 /**
@@ -136,6 +141,7 @@ function Panel({
   onBack,
   onClose,
   quantityOf,
+  elsewhere,
 }: Props) {
   if (view === "sets" || view === "wishlist") {
     return (
@@ -187,6 +193,7 @@ function Panel({
       price={relicPrice}
       onInfo={onInfoRelic}
       quantityOf={quantityOf}
+      elsewhere={elsewhere}
       onOpenWishlist={onOpenWishlist}
     />
   );

@@ -59,6 +59,11 @@ interface Props {
   activeFilters: string[];
   onClearFilters: () => void;
   quantityOf: (itemName: string, kind?: WishlistKind, refinement?: Refinement) => number;
+  /** The same relic wanted in another state, for the rows that read 0. */
+  elsewhere: (
+    itemName: string,
+    refinement: Refinement,
+  ) => { refinement: Refinement; qty: number }[];
   selectedRelic: string | null;
   onSelectRelic: (id: string) => void;
   selectedItem: string | null;
@@ -126,6 +131,7 @@ export function ResultsPane({
   activeFilters,
   onClearFilters,
   quantityOf,
+  elsewhere,
   selectedRelic,
   onSelectRelic,
   selectedItem,
@@ -318,6 +324,7 @@ export function ResultsPane({
       selected={selectedRelic}
       onSelect={onSelectRelic}
       quantityOf={quantityOf}
+      elsewhere={elsewhere}
       sort={sort}
       onSort={onSort}
     />
