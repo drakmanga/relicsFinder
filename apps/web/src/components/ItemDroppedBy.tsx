@@ -15,7 +15,7 @@
 import { useState } from "react";
 import { Divider, InfoIcon, OrokinStar, TierChip } from "relic-finder-ui";
 
-import { ALL_REFINEMENTS, REFINEMENT_LABEL } from "../lib/rows";
+import { ALL_REFINEMENTS, DEFAULT_REFINEMENT, REFINEMENT_LABEL } from "../lib/rows";
 import type { Refinement } from "../api/types";
 import type { RelicSource } from "../lib/sets";
 
@@ -26,7 +26,10 @@ interface Props {
 }
 
 export function ItemDroppedBy({ sources, onPickRelic }: Props) {
-  const [refinement, setRefinement] = useState<Refinement>("intact");
+  // The state the catalogue opens on, not a second answer to that question:
+  // the chances listed here are the ones a reader is about to act on, and they
+  // act on a refined relic. See `DEFAULT_REFINEMENT`.
+  const [refinement, setRefinement] = useState<Refinement>(DEFAULT_REFINEMENT);
   const [hintOpen, setHintOpen] = useState(false);
 
   // One refinement at a time, so a relic is not listed four times at four

@@ -20,10 +20,24 @@ const ONLY_SERVICE_TESTS =
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
   "RelicMarketTradeCountTest,WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
-  "DucatServiceIndexTest" +
+  "DucatServiceIndexTest,OwnedServiceMigrationTest" +
   " -DfailIfNoTests=false";
 
 const MUTANTS = [
+  {
+    // The failure the owned migration must not have: the file in the wild is a
+    // list of bare names, and a name has always meant one copy.
+    name: "a stored name is dropped instead of read as one copy",
+    file: `${SERVICE}/OwnedService.java`,
+    from: "if (!name.isEmpty()) parsed.add(new OwnedEntry(name, COPIES_WHEN_UNSAID));",
+    to: "",
+  },
+  {
+    name: "an entry that names no count is read as nothing owned",
+    file: `${SERVICE}/OwnedService.java`,
+    from: "name, quantity.isInt() ? quantity.asInt() : COPIES_WHEN_UNSAID));",
+    to: "name, quantity.isInt() ? quantity.asInt() : 0));",
+  },
   {
     name: "how many copies a set needs is thrown away again",
     file: `${SERVICE}/DucatService.java`,

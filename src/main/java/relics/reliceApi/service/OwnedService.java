@@ -125,8 +125,12 @@ public class OwnedService {
                 String name = node.path("itemName").asText("").trim();
                 if (name.isEmpty()) continue;
 
-                int quantity = node.path("quantity").asInt(COPIES_WHEN_UNSAID);
-                parsed.add(new OwnedEntry(name, Math.max(quantity, COPIES_WHEN_UNSAID)));
+                // Absent and zero are different answers: no count at all is
+                // the old shape wearing the new one and means one copy, while
+                // an explicit zero says nothing is held and `clean` drops it.
+                JsonNode quantity = node.path("quantity");
+                parsed.add(new OwnedEntry(
+                        name, quantity.isInt() ? quantity.asInt() : COPIES_WHEN_UNSAID));
             }
 
             owned = clean(parsed);

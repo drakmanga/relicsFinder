@@ -59,6 +59,14 @@ class OwnedServiceMigrationTest {
                 .isEqualTo(1);
     }
 
+    /** An explicit zero is not the old shape: it says nothing is held. */
+    @Test
+    void dropsAnEntryThatHoldsNothing(@TempDir Path dir) throws Exception {
+        Path file = fileWith(dir, "[{ \"itemName\": \"Kestrel Prime Blade\", \"quantity\": 0 }]");
+
+        assertThat(new OwnedService(file.toString()).all()).isEmpty();
+    }
+
     /**
      * The migration reaches the file, and only when something writes to it.
      *

@@ -5,6 +5,7 @@ import type { SetStatus } from "./setCategories";
 import type { TierSortColumn, TierSortState } from "./tierList";
 import { nextSortState, type SortState } from "./sorting";
 import {
+  DEFAULT_REFINEMENT,
   emptyFilters,
   relicRowId,
   type Filters,
@@ -129,8 +130,15 @@ export function useViewState() {
    * Its own state rather than the shared filter: the filter decides which rows
    * the relics table lists, and asking "how many Radiant runs would this take"
    * should not empty the table behind another tab.
+   *
+   * Its own state, but not its own default: it opens where the catalogue opens,
+   * because the argument on `DEFAULT_REFINEMENT` is about the state a relic is
+   * opened in and a farming route is exactly that question. Two spellings of
+   * one default is what split the wishlist's relic lines in the first place,
+   * and this one had quietly stayed on Intact since that flip — so the Sets
+   * panel quoted runs at Intact odds while the Relics table quoted Radiant.
    */
-  const [setRefinement, setSetRefinement] = useState<Refinement>("intact");
+  const [setRefinement, setSetRefinement] = useState<Refinement>(DEFAULT_REFINEMENT);
   /**
    * Kinds of gear the Sets view is listing. Empty is every kind.
    *

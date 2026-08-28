@@ -144,6 +144,9 @@ export function ItemsTable({
               kind: "part" as const,
               tier: firstTier ?? "lith",
               relicFullName: firstRelic ?? "",
+              // Not the catalogue's default and not a state anybody chose: a
+              // part line is not keyed on refinement, and the field is here
+              // only because every wishlist line carries one.
               refinement: "intact" as const,
             };
 

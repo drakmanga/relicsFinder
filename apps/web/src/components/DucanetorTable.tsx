@@ -222,6 +222,9 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                   kind: "ducat" as const,
                   tier: "lith" as const,
                   relicFullName: "",
+                  // Not the catalogue's default and not a state anybody
+                  // chose: these kinds are not keyed on refinement, and the
+                  // field is here only because every wishlist line carries one.
                   refinement: "intact" as const,
                 };
 
