@@ -876,10 +876,42 @@ body {
    so they have to look like they belong to the same tool.
    ----------------------------------------------------------------------- */
 
+/* The page scrolls HERE when it has to, and only when it has to.
+
+   The head is `flex: none` and the body takes what is left, which on a short or
+   a narrow viewport was nothing at all: measured at 360x800 the tier list's head
+   is 1138px inside a 743px pane, so the body was sized to 0, the virtualiser had
+   no viewport to measure and the table drew zero rows. `.rf-results-main` clips
+   rather than scrolls, so nothing on screen said a table was there — the view
+   read as an explainer with empty pane under it. Ducanetor and Endo collapsed
+   the same way at 720x475, which is 200% browser zoom on a 1440 window, and the
+   tier list also at 1280x630.
+
+   So the body carries a floor (below) and this element takes the overflow: once
+   the head plus that floor is taller than the pane, the head scrolls away and
+   the table keeps a box it can work in. Scroll chaining is left at its default —
+   reaching the end of the table's own scroller carries on scrolling this one,
+   which is what makes the pair usable with one gesture.
+
+   A floor rather than a breakpoint, because the condition is "the head is taller
+   than the pane can spare" and that is two dimensions plus the reader's font
+   size: 200% text zoom starves the body at 1920 wide, where no width query would
+   fire. The floor answers all three, and it stays right the next time the head
+   grows.
+
+   Not by shrinking the explainer above it. That block is the view's own
+   vocabulary, and the standing rule here is that no Warframe term reaches the
+   screen unexplained and never behind a disclosure — making it disappear on a
+   phone is the exact failure that rule exists to prevent.
+
+   Where there is room this changes nothing: the floor does not bind, this
+   element does not overflow, no scrollbar is drawn, and the head stays put with
+   only the table scrolling. */
 .rf-ranked {
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 /* The one rule between the heading and the table, and the section draws it —
@@ -995,9 +1027,17 @@ body {
   margin-top: var(--rf-space-4);
 }
 
+/* `flex: 1` still hands it every spare pixel; the floor only decides what
+   happens when there are none. 17rem is 272px at the default root size — the
+   sticky header and five 48px rows, a table to read rather than a strip to
+   notice — and it is also the largest floor that leaves a roomy screen exactly
+   as it was: the tightest of the three views on the reference canvas is the tier
+   list at 1920x950 with 278px of table, and a floor above that would start
+   scrolling the canvas that must not move. In rem so it rises with the reader's
+   font size, same as the table floors above. */
 .rf-ranked-body {
   flex: 1;
-  min-height: 0;
+  min-height: 17rem;
 }
 
 .rf-ranked-foot {
