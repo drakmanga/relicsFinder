@@ -143,6 +143,24 @@ export function matchesRelic(fullName: string, term: string): boolean {
  * matches: a relic that holds a Rare you want also holds five things you get
  * instead, and hiding them would misrepresent what opening it does.
  */
+/**
+ * A row's identity: which relic, in which state.
+ *
+ * Two things rather than one, because the same relic is a different row per
+ * refinement — the table lists one state at a time and the panel opens on the
+ * state the row was read in. Named here because four places used to write or
+ * read that pipe themselves, and the tier list, which has no rows of its own to
+ * point at, was about to be the fifth.
+ */
+export const relicRowId = (relicFullName: string, refinement: Refinement) =>
+  `${relicFullName}|${refinement}`;
+
+/** The reverse. Anything that is not a row id comes back as two empty halves. */
+export function parseRelicRowId(id: string): { relicFullName: string; refinement: string } {
+  const [relicFullName = "", refinement = ""] = id.split("|");
+  return { relicFullName, refinement };
+}
+
 export function buildRelicRows(relics: Relic[], filters: Filters): RelicRow[] {
   const term = filters.term.trim().toLowerCase();
   const rows: RelicRow[] = [];
@@ -165,7 +183,7 @@ export function buildRelicRows(relics: Relic[], filters: Filters): RelicRow[] {
     }
 
     rows.push({
-      id: `${relic.fullName}|${relic.refinement}`,
+      id: relicRowId(relic.fullName, relic.refinement),
       tier: relic.tier,
       relicFullName: relic.fullName,
       refinement: relic.refinement,

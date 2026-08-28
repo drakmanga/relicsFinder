@@ -20,6 +20,7 @@ import {
   applyRelicPriceCeiling,
   applyVaultFilter,
   buildRelicRows,
+  parseRelicRowId,
   sortRelicRows,
   type Filters,
   type RelicSortColumn,
@@ -127,9 +128,9 @@ export function useCatalogue({
     const inView = rows.find((row) => row.id === selected);
     if (inView) return inView;
 
-    const [fullName, refinement] = selected.split("|");
+    const { relicFullName, refinement } = parseRelicRowId(selected);
     const relic = (relics.data ?? []).find(
-      (r) => r.fullName === fullName && r.refinement === refinement,
+      (r) => r.fullName === relicFullName && r.refinement === refinement,
     );
     if (!relic) return null;
 

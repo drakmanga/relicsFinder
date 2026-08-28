@@ -99,6 +99,8 @@ interface Props {
   tierSort: TierSortState;
   /** The column clicked, not the state it produces: the rule is in lib/sorting. */
   onTierSort: (column: TierSortColumn) => void;
+  /** Opens a tier-list relic, in the state the column being read is about. */
+  onOpenTierRelic: (relicFullName: string, refinement: Refinement) => void;
 }
 
 /**
@@ -151,6 +153,7 @@ export function ResultsPane({
   tierVault,
   onTierVault,
   tierSort,
+  onOpenTierRelic,
   onTierSort,
 }: Props) {
   // Ayatan offers come straight from the market: nothing here waits on the
@@ -198,6 +201,8 @@ export function ResultsPane({
         onVault={onTierVault}
         sort={tierSort}
         onSort={onTierSort}
+        selected={selectedRelic}
+        onOpen={onOpenTierRelic}
       />
     );
   }

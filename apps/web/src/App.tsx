@@ -55,6 +55,7 @@ export function App() {
     trail,
     openItem,
     openRelic,
+    showRelic,
     goBack,
     closePanel,
   } = useViewState();
@@ -302,6 +303,7 @@ export function App() {
               onTierVault={setTierVault}
               tierSort={tierSort}
               onTierSort={cycleTierSort}
+              onOpenTierRelic={showRelic}
             />
           </main>
 

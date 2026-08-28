@@ -74,9 +74,15 @@ export function DetailPane(props: Props) {
 
   // The wishlist is a list of plans, and a set line is one of them: its panel
   // opens over the list rather than instead of it, so closing hands the reader
-  // back to the line they clicked. The three rankings have nothing with a
-  // panel — a tier list row is already the whole answer about that relic.
-  if (view === "ducats" || view === "endo" || view === "tiers") return null;
+  // back to the line they clicked. Ducanetor and Endo rank offers rather than
+  // relics, and what they have to say about a part is in their own dialog.
+  //
+  // The tier list used to be in that list, on the grounds that a ranking is
+  // read rather than operated and a row is already the whole answer about its
+  // relic. Using it said otherwise: a ranking is exactly where a reader wants
+  // to open the thing that ranked, and its six drops were a tab away and a
+  // search for the name they were looking at.
+  if (view === "ducats" || view === "endo") return null;
 
   /*
     The panel opens over the table rather than beside it, at every width.

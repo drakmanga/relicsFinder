@@ -24,18 +24,19 @@ import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { TierListPrimer } from "./TierListPrimer";
 import { Unlisted } from "./Unlisted";
 import { usePricePriority } from "../lib/usePricePriority";
-import { ALL_VAULT_FILTERS, VAULT_LABEL, type VaultFilter } from "../lib/rows";
+import { ALL_VAULT_FILTERS, VAULT_LABEL, relicRowId, type VaultFilter } from "../lib/rows";
 import {
   DEFAULT_TIER_SORT,
   RADSHARE_PLAYERS,
   TIER_SORT_LABEL,
+  TIER_SORT_REFINEMENT,
   sortTierRows,
   type TierLetter,
   type TierList,
   type TierSortColumn,
   type TierSortState,
 } from "../lib/tierList";
-import type { PriceMap } from "../api/types";
+import type { PriceMap, Refinement } from "../api/types";
 
 const ROW_HEIGHT = 48;
 const OVERSCAN = 10;
@@ -61,6 +62,10 @@ interface Props {
   sort: TierSortState;
   /** The column clicked, not the state it produces: the rule is in lib/sorting. */
   onSort: (column: TierSortColumn) => void;
+  /** Row id of the relic whose panel is open, or null. See `relicRowId`. */
+  selected: string | null;
+  /** Opens a relic, in the state the column being read is about. */
+  onOpen: (relicFullName: string, refinement: Refinement) => void;
 }
 
 /**
@@ -87,6 +92,8 @@ export function TierListTable({
   onVault,
   sort,
   onSort,
+  selected,
+  onOpen,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +117,14 @@ export function TierListTable({
       ).slice(0, HIGHLIGHT_COUNT),
     [rows, tierList.rows, sort, rankedBy],
   );
+
+  /*
+    The state the panel opens on, which follows the column the table is ranked
+    by: the two value columns are two different refinements, and a row read in
+    the radshare column that opened on Intact would answer a question the
+    reader did not ask. See TIER_SORT_REFINEMENT.
+  */
+  const openOn = TIER_SORT_REFINEMENT[rankedBy];
 
   const virtualizer = useVirtualizer({
     count: rows.length,
@@ -223,7 +238,7 @@ export function TierListTable({
         ) : (
           <Table
             stickyFirstColumn
-            interactive={false}
+            interactive
             framed={false}
             density="comfortable"
             caption="Relics ranked by expected value, solo and in a radshare"
@@ -274,15 +289,34 @@ export function TierListTable({
                 const row = rows[virtualRow.index];
                 if (!row) return null;
 
+                const id = relicRowId(row.relicFullName, openOn);
+
                 return (
-                  <TableRow key={row.relicFullName}>
+                  <TableRow
+                    key={row.relicFullName}
+                    selected={id === selected}
+                    onClick={() => onOpen(row.relicFullName, openOn)}
+                    title={`${row.relicFullName} — click to see everything inside`}
+                  >
                     <TableCell align="right" numeric>
                       <span className="rf-fg-muted">{virtualRow.index + 1}</span>
                     </TableCell>
                     <TableCell>
                       <TierChip tier={row.tier} />
                     </TableCell>
-                    <TableCell>{row.relicFullName}</TableCell>
+                    <TableCell>
+                      {/*
+                        The name is a real button so the row is reachable by
+                        keyboard: a click handler on the row alone is a mouse
+                        affordance and nothing else (rule 5.1). It is not an
+                        extra column — the Tier List is already short of width
+                        — and it does not stop the click bubbling to the row,
+                        because both do the same thing to the same relic.
+                      */}
+                      <button type="button" className="rf-cell-open rf-focus-ring">
+                        {row.relicFullName}
+                      </button>
+                    </TableCell>
                     <TableCell align="right" numeric>
                       <span className="rf-tier-cell">
                         <Grade letter={row.soloLetter} />

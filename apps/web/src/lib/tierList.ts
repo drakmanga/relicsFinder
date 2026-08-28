@@ -1,4 +1,4 @@
-import type { PriceMap, Relic, RelicPriceMap, Reward, Tier } from "../api/types";
+import type { PriceMap, Refinement, Relic, RelicPriceMap, Reward, Tier } from "../api/types";
 import { expectedValue, squadValue, type VaultFilter } from "./rows";
 import type { SortState } from "./sorting";
 
@@ -208,6 +208,27 @@ export const TIER_SORT_LABEL: Record<TierSortColumn, string> = {
   radshare: "Radshare, Radiant",
   price: "Relic price",
   relic: "Relic",
+};
+
+/**
+ * Which state of the relic each ranking column is about.
+ *
+ * The two value columns are fixed at solo Intact and radshare Radiant, so a
+ * reader who clicked a row in one of them has been reading that state — opening
+ * the panel on the other would answer a question they did not ask, and the two
+ * disagree: 59% of the catalogue lands in a different band depending on which
+ * column is read.
+ *
+ * The relic's own price is not a state of the relic at all, so there is nothing
+ * to follow and the panel opens on Intact. That is what the solo column reads,
+ * it is the state the view opens on, and it is the state every relic is already
+ * in — refining costs a hundred void traces. The panel's own switcher is one
+ * click from the rest.
+ */
+export const TIER_SORT_REFINEMENT: Record<Exclude<TierSortColumn, "relic">, Refinement> = {
+  solo: "intact",
+  radshare: "radiant",
+  price: "intact",
 };
 
 /** The number each ranking column reads. Null is an absent number, not a zero. */

@@ -1122,6 +1122,27 @@ body {
   flex-wrap: wrap;
 }
 
+/* The relic name in the Tier List, which is a button.
+
+   The row opens the panel and a click handler on a row is a mouse affordance
+   and nothing else, so the name inside it is a real button and the row is
+   reachable by keyboard (rule 5.1). It has to read as the cell's own text
+   rather than as a control: the row is already the thing being offered, and a
+   second affordance drawn inside it would say there are two things to press.
+   Everything here is a reset — inherit or nothing — so there is no value to
+   take from a token. */
+.rf-cell-open {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
 /* A band letter and the value it was banded from, in one cell. Spread rather
    than hugged to the right edge: the letters then line up in a column of their
    own down 772 rows, which is the thing this table is read by, and the numbers

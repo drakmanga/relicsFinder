@@ -4,7 +4,13 @@ import { remember, tokensAdded } from "./filterMemory";
 import type { SetStatus } from "./setCategories";
 import type { TierSortColumn, TierSortState } from "./tierList";
 import { nextSortState, type SortState } from "./sorting";
-import { emptyFilters, type Filters, type RelicSortColumn, type VaultFilter } from "./rows";
+import {
+  emptyFilters,
+  relicRowId,
+  type Filters,
+  type RelicSortColumn,
+  type VaultFilter,
+} from "./rows";
 import { fromSearch, toSearch } from "./urlState";
 import type { Refinement, SetCategory, WishlistKind } from "../api/types";
 
@@ -272,9 +278,25 @@ export function useViewState() {
     // The Relics view's own refinement, not the one in force where the click
     // happened: the row has to exist in the list being opened, and since the
     // filters are per view that list is filtered by its own state.
-    setSelected(`${relicFullName}|${viewFilters.relics.refinement}`);
+    setSelected(relicRowId(relicFullName, viewFilters.relics.refinement));
     setView("relics");
   };
+
+  /**
+   * Opens a relic's panel without leaving the view it was clicked on.
+   *
+   * `openRelic` above is the other move and they are not the same: that one
+   * follows a relic named somewhere else into the Relics view and remembers the
+   * way back. This one is a row in the view you are already in, so there is
+   * nowhere to go and nothing to remember — closing the panel hands the reader
+   * back the list they clicked, with its filter and its sort where they left
+   * them.
+   *
+   * The refinement is the caller's: the tier list reads two columns in two
+   * different states, and the panel opens on the one the reader was reading.
+   */
+  const showRelic = (relicFullName: string, refinement: Refinement) =>
+    setSelected(relicRowId(relicFullName, refinement));
 
   /** One step back along the trail, never further. */
   const goBack = () => {
@@ -353,6 +375,7 @@ export function useViewState() {
     trail,
     openItem,
     openRelic,
+    showRelic,
     goBack,
     closePanel,
   };
