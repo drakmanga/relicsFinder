@@ -265,8 +265,12 @@ const CELL_OVERFLOW = (slack) => {
   Ducanetor and Endo are rankings with nothing to open — DetailPane returns null
   for both — and the Wishlist opens a panel only for a set line, which an empty
   wishlist has none of. Those three are measured without a modal and say so.
+
+  The Tier List is a ranking that DOES open one now: its rows open the same
+  relic panel Relics opens, so the panel has to be measured on the narrow
+  canvas from there too.
 */
-const OPENS_A_MODAL = new Set(["relics", "prime items", "sets", "wishlist"]);
+const OPENS_A_MODAL = new Set(["relics", "prime items", "sets", "wishlist", "tier list"]);
 
 const openModal = async (page) => {
   const row = page.locator("tbody tr:not([aria-hidden='true'])").first();
