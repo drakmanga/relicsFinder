@@ -10,6 +10,7 @@ import type {
   RelicPrice,
   WireDropInfo,
   WireItemPrice,
+  WireOwnedEntry,
   WireRelic,
   WireRelicPrice,
   WireWishlistEntry,
@@ -238,13 +239,21 @@ export const api = {
     return (await res.json()) as WireWishlistEntry[];
   },
 
-  /** The parts the player already has, as stored on the server. */
-  async owned(signal?: AbortSignal): Promise<string[]> {
-    return await get<string[]>("/owned", signal);
+  /**
+   * The parts the player already has, as stored on the server.
+   *
+   * A bare string is the shape the list had before pieces carried counts. The
+   * server normalises what it holds, so this only arrives from a hand-edited
+   * file — but the browser cannot tell which server it is talking to, and
+   * reading a name as nothing owned is the one failure this migration must not
+   * have. See `parseEntry` in lib/owned.
+   */
+  async owned(signal?: AbortSignal): Promise<(WireOwnedEntry | string)[]> {
+    return await get<(WireOwnedEntry | string)[]>("/owned", signal);
   },
 
   /** Replaces the stored list with this one. */
-  async saveOwned(itemNames: string[]): Promise<string[]> {
+  async saveOwned(entries: WireOwnedEntry[]): Promise<WireOwnedEntry[]> {
     const url = `${BASE}/owned`;
     let res: Response;
 
@@ -252,14 +261,14 @@ export const api = {
       res = await fetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(itemNames),
+        body: JSON.stringify(entries),
       });
     } catch (cause) {
       throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
     }
 
     if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
-    return (await res.json()) as string[];
+    return (await res.json()) as WireOwnedEntry[];
   },
 
   /** Ayatan offers ranked by Endo per platinum. */

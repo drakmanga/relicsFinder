@@ -285,6 +285,18 @@ export interface EndoStatus {
  */
 export type WishlistKind = "part" | "ducat" | "endo" | "relic" | "set";
 
+/**
+ * One line of the owned list as the server stores it.
+ *
+ * A count rather than a bare name, because a set is not one copy of each piece.
+ * The endpoint still accepts and answers a plain string for a list written
+ * before that was true — see `lib/owned`, which reads one as one copy.
+ */
+export interface WireOwnedEntry {
+  itemName: string;
+  quantity: number;
+}
+
 export interface WireWishlistEntry {
   itemName: string;
   kind: WishlistKind;

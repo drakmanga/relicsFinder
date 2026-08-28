@@ -2,6 +2,7 @@ package relics.reliceApi.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import relics.reliceApi.model.OwnedEntry;
 import relics.reliceApi.service.OwnedService;
 
 import java.util.List;
@@ -23,13 +24,13 @@ public class OwnedController {
     }
 
     @GetMapping
-    public ResponseEntity<List<String>> get() {
+    public ResponseEntity<List<OwnedEntry>> get() {
         return ResponseEntity.ok(ownedService.all());
     }
 
     /** Replaces the whole list — see OwnedService for why it is not incremental. */
     @PutMapping
-    public ResponseEntity<List<String>> replace(@RequestBody List<String> itemNames) {
-        return ResponseEntity.ok(ownedService.replace(itemNames));
+    public ResponseEntity<List<OwnedEntry>> replace(@RequestBody List<OwnedEntry> entries) {
+        return ResponseEntity.ok(ownedService.replace(entries));
     }
 }

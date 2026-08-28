@@ -1,6 +1,7 @@
 import type { PriceMap, Relic, RelicPriceMap, SetCategory } from "../api/types";
 import { expectedValue, matchesRelic } from "./rows";
 import { setOf } from "./sets";
+import type { OwnedCounts } from "./owned";
 
 /**
  * One component of a Prime set, with both ways of getting it priced.
@@ -91,7 +92,7 @@ interface BestSource {
  */
 export function buildSets(
   relics: Relic[],
-  owned: Set<string>,
+  owned: OwnedCounts,
   prices: PriceMap | undefined,
   relicPrices: RelicPriceMap | undefined,
   refinement: string,
@@ -158,7 +159,9 @@ export function buildSets(
 
         return {
           itemName,
-          owned: owned.has(itemName),
+          // Held at all, which is what it meant while the collection was a
+          // set of names. How many copies a set needs is carried separately.
+          owned: (owned.get(itemName) ?? 0) > 0,
           price,
           bestRelic: source?.relicFullName ?? null,
           relicNames: relicsByItem.get(itemName) ?? [],

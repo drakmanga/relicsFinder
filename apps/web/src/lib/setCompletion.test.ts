@@ -39,7 +39,7 @@ const relicMarket: RelicPriceMap = new Map([
 
 describe("buildSets", () => {
   it("groups the parts that share a set, and leaves Forma out of every set", () => {
-    const [volt, ...rest] = buildSets(catalogue, new Set(), market, relicMarket, "intact");
+    const [volt, ...rest] = buildSets(catalogue, new Map(), market, relicMarket, "intact");
 
     expect(volt?.setName).toBe("Volt Prime");
     expect(volt?.parts.map((p) => p.itemName)).toEqual([
@@ -50,7 +50,7 @@ describe("buildSets", () => {
   });
 
   it("lists every relic that drops a part, not only the one with the best odds", () => {
-    const [volt] = buildSets(catalogue, new Set(), market, relicMarket, "intact");
+    const [volt] = buildSets(catalogue, new Map(), market, relicMarket, "intact");
     const blueprint = volt?.parts.find((p) => p.itemName === "Volt Prime Blueprint");
 
     // Axi A1 has the better chance, so it is `bestRelic`; a search for the
@@ -68,13 +68,13 @@ describe("buildSets", () => {
         rewards: [reward({ itemName: "Volt Prime Blueprint", rarity: "rare", chance: 20 })],
       }),
     ];
-    const [volt] = buildSets(withStates, new Set(), market, relicMarket, "intact");
+    const [volt] = buildSets(withStates, new Map(), market, relicMarket, "intact");
 
     expect(volt?.parts).toHaveLength(2);
   });
 
   it("picks the relic with the best odds at the refinement asked about", () => {
-    const [volt] = buildSets(catalogue, new Set(), market, relicMarket, "intact");
+    const [volt] = buildSets(catalogue, new Map(), market, relicMarket, "intact");
     const blueprint = volt?.parts.find((p) => p.itemName === "Volt Prime Blueprint");
 
     expect(blueprint?.bestRelic).toBe("Axi A1");
@@ -86,7 +86,7 @@ describe("buildSets", () => {
   it("counts what is owned and totals only what is missing", () => {
     const [volt] = buildSets(
       catalogue,
-      new Set(["Volt Prime Chassis Blueprint"]),
+      new Map([["Volt Prime Chassis Blueprint", 1]]),
       market,
       relicMarket,
       "intact",
@@ -109,7 +109,7 @@ describe("buildSets", () => {
       }),
     ];
     const partial = prices({ "Ash Prime Blueprint": 50, "Ash Prime Helmet Blueprint": null });
-    const [ash] = buildSets(withUnlisted, new Set(), partial, relicMarket, "intact");
+    const [ash] = buildSets(withUnlisted, new Map(), partial, relicMarket, "intact");
 
     expect(ash?.costIncomplete).toBe(true);
     expect(ash?.missingCost).toBe(50);
@@ -119,7 +119,7 @@ describe("buildSets", () => {
     // runs × (relicPrice − expectedValue) + price. Without the subtraction the
     // verdict was "buy" for 578 parts out of 596, which is a verdict that says
     // nothing.
-    const [volt] = buildSets(catalogue, new Set(), market, relicMarket, "intact");
+    const [volt] = buildSets(catalogue, new Map(), market, relicMarket, "intact");
     const chassis = volt?.parts.find((p) => p.itemName === "Volt Prime Chassis Blueprint");
 
     // Lith V9 is the only source of the chassis: 25% odds, so four runs.
@@ -129,7 +129,7 @@ describe("buildSets", () => {
   });
 
   it("leaves the farm cost undecided when a relic has no price", () => {
-    const [volt] = buildSets(catalogue, new Set(), market, undefined, "intact");
+    const [volt] = buildSets(catalogue, new Map(), market, undefined, "intact");
 
     expect(volt?.parts.every((p) => p.netFarmCost === null)).toBe(true);
   });
@@ -169,7 +169,7 @@ describe("verdictFor", () => {
 });
 
 describe("the set search", () => {
-  const [volt] = buildSets(catalogue, new Set(), market, relicMarket, "intact");
+  const [volt] = buildSets(catalogue, new Map(), market, relicMarket, "intact");
   const set = volt!;
 
   it("finds a set by its own name", () => {
@@ -224,7 +224,7 @@ describe("the set search", () => {
           ],
         }),
       ],
-      new Set(),
+      new Map(),
       market,
       relicMarket,
       "intact",

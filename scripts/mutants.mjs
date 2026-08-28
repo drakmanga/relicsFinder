@@ -12,6 +12,28 @@ const ROOT = new URL("..", import.meta.url).pathname;
 
 const MUTANTS = [
   {
+    // The failure this migration exists not to have: the stored list is a list
+    // of names, and a name has always meant one copy.
+    name: "a name stored before pieces had counts reads as nothing owned",
+    file: "apps/web/src/lib/owned.ts",
+    from: 'if (typeof entry === "string") return entry.trim() === "" ? null : [entry, 1];',
+    to: 'if (typeof entry === "string") return null;',
+  },
+  {
+    name: "an entry that names no count reads as nothing owned",
+    file: "apps/web/src/lib/owned.ts",
+    from: '    typeof quantity === "number" && Number.isFinite(quantity) ? Math.trunc(quantity) : 1;',
+    to: '    typeof quantity === "number" && Number.isFinite(quantity) ? Math.trunc(quantity) : 0;',
+  },
+  {
+    // An empty map answers "you own nothing" and the list of names is never
+    // read, so the migration silently never happens.
+    name: "an unusable storage key answers empty instead of nothing",
+    file: "apps/web/src/lib/owned.ts",
+    from: "  if (!raw) return null;",
+    to: "  if (!raw) return new Map();",
+  },
+  {
     name: "matchesRelic stops guarding a complete code",
     file: "apps/web/src/lib/rows.ts",
     from: "if (!/[0-9]$/.test(term)) return name.includes(term);",
