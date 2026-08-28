@@ -1,17 +1,37 @@
 /**
- * Measures the two thresholds AGENTS.md rule 6 names — 360px width and 200%
- * zoom — and fails when the document scrolls sideways at either.
+ * One walk over every view, measuring the three AGENTS.md rules that only a
+ * running browser can answer: rule 6 (360px and 200% zoom), rule 6 again from
+ * the other side (a pane squeezed until the table inside it has nowhere to
+ * render), and rule 7 (44x44 touch targets).
  *
- * The rule those two thresholds serve is one sentence: the page body never
- * scrolls horizontally, and wide content scrolls inside its own container. A
- * table wider than the window is fine as long as `.rf-table-wrap` takes the
- * scrollbar; the same table pushing the document sideways is a reflow failure,
- * because it drags the masthead, the filter bar and everything else off screen
- * with it.
+ * The command is still called `reflow` because CI, the docs and the operator's
+ * fingers all point at that name; what it measures is the list above.
  *
- * Section 8 asks for both by hand in a browser, and by hand is why the fault
- * that prompted this script shipped: nobody checks a threshold on the view they
- * were not editing. Three measurements per view, six views, one command.
+ * WHAT REFLOW MEANS HERE. The page body never scrolls horizontally, and wide
+ * content scrolls inside its own container. A table wider than the window is
+ * fine as long as `.rf-table-wrap` takes the scrollbar; the same table pushing
+ * the document sideways is a reflow failure, because it drags the masthead, the
+ * filter bar and everything else off screen with it.
+ *
+ * WHY A COLLAPSED CONTAINER IS MEASURED SEPARATELY. The two measurements above
+ * both look for something sticking out, and a scroll container squeezed to
+ * height 0 sticks out of nothing: it paints no rows, so no box overflows, and
+ * `.rf-results-main` is `overflow: hidden`, so nothing is visibly clipped
+ * either. The view measures perfectly clean precisely because it is empty. That
+ * is how run 002 shipped a tier list that rendered zero rows at four sizes
+ * under a green headline, with `NO ROWS` printed beside it as a footnote. A
+ * footnote under a green headline does not get read, so the container's own box
+ * is measured and a collapsed one fails by name.
+ *
+ * WHY THE ROW COUNT DECIDES NOTHING. An empty list and a collapsed pane both
+ * show zero rows, and only one of them is a fault: the Wishlist is legitimately
+ * empty until somebody adds a line. They are told apart by the container's box
+ * — an empty list has a scroller with height and no rows in it, a collapsed one
+ * has no height to put a row in.
+ *
+ * Section 8 asks for all of this by hand in a browser, and by hand is why the
+ * fault that prompted this script shipped: nobody checks a threshold on the view
+ * they were not editing.
  *
  * Against a preview build, not the dev server, for the same reason axe-check is
  * — dev injects an overlay and a client the reader never receives, and both take
@@ -20,8 +40,9 @@
  *
  * The backend DOES have to be up. Without it the views render their error
  * state, the tables are empty, and an empty table cannot overflow — the check
- * would come back clean on precisely the views it exists to measure. It says so
- * rather than passing quietly.
+ * would come back clean on precisely the views it exists to measure. A view in
+ * that state is reported as INCONCLUSIVE and exits non-zero, because a run that
+ * measured nothing is not a run that passed.
  *
  * Usage: npm run build, npm run preview, ./mvnw spring-boot:run, then
  * `node scripts/reflow-check.mjs [baseUrl]`.
@@ -80,16 +101,48 @@ const TOLERANCE = 1;
 const CULPRITS = 5;
 
 /*
-  The four functions below never run in Node. Playwright serialises each one and
+  Rule 7's box, and the two written exceptions to it. All three are stated in
+  AGENTS.md §1 and §5.4; what is here is the same rule in a form that fails a
+  build, and the two have to be changed together.
+
+  44px is WCAG 2.5.5 (AAA), which is what rule 7 asks for. 24px is WCAG 2.5.8
+  (AA), which is what a control inside a data cell is held to instead: the
+  cell's height is the table's grid, and the space above and below it belongs to
+  the next row, which is itself a target. Growing one there does not buy a
+  bigger target, it takes its neighbour's.
+
+  `EQUIVALENT` is WCAG 2.5.8's own "equivalent control" exception, and it is an
+  allowlist rather than a shape, so a new control cannot fall into it by
+  accident. The relic name in a Tier List cell is a button only so the row is
+  reachable by keyboard (rule 5.1); the row it sits in opens the same panel on a
+  click and is 48px tall and the full width of the table, so the pointer target
+  for that action already clears the rule.
+*/
+const TOUCH_MIN = 44;
+const DENSE_MIN = 24;
+const EQUIVALENT = ".rf-cell-open";
+
+/*
+  A scroll container shorter than the header row of the table it holds cannot
+  show a single line of it, whatever it is handed. Zero is the case seen in the
+  wild — `.rf-virtual-scroll` is `height: 100%` inside a pane sized to whatever
+  the head left over, and when the head is taller than the pane that is nothing
+  — but a scroller squeezed to eleven pixels is the same fault with the same
+  symptom, and reporting only the exact zero would let it back in.
+*/
+const COLLAPSED_UNDER = 36;
+
+/*
+  The six functions below never run in Node. Playwright serialises each one and
   evaluates it inside the page, which is why the ones needing two arguments take
   an array — `page.evaluate` hands over exactly one value — and why none of them
   closes over anything: a constant declared up here does not exist over there.
 
-  `document` is declared inline rather than switched on in eslint.config.mjs,
-  because this is the only script in the repo that runs code in a browser and
-  the rest have no business being handed browser globals.
+  The browser globals are declared inline rather than switched on in
+  eslint.config.mjs, because this is the only script in the repo that runs code
+  in a browser and the rest have no business being handed them.
 */
-/* global document */
+/* global document, getComputedStyle */
 
 /**
  * Walks the document for elements sticking out past the viewport's right edge
@@ -255,6 +308,136 @@ const CELL_OVERFLOW = (slack) => {
   return { escaping: unique, clipped };
 };
 
+/**
+ * The state of every scroll container on the view, and whether the view is
+ * drawing its error state.
+ *
+ * This is the measurement the document and cell ones cannot make. Both of those
+ * look for a box that is too big for what holds it; this one looks for a box
+ * that has been squeezed out of existence, which produces no symptom at all —
+ * no overflow, nothing clipped, an empty surface where the table should be.
+ *
+ * The error state is read from the icon `EmptyState tone="error"` renders,
+ * rather than from the absence of rows: a view whose request never landed and a
+ * view whose list is genuinely empty look identical from the row count, and the
+ * first proves nothing while the second is a pass.
+ *
+ * Runs inside the page.
+ */
+const SCROLLERS = () => {
+  const boxes = [];
+
+  for (const element of document.querySelectorAll(".rf-virtual-scroll")) {
+    const rect = element.getBoundingClientRect();
+    const classes = Array.from(element.classList);
+    const marker = classes.find((name) => name.startsWith("rf-")) ?? classes[0];
+    boxes.push({
+      label: `${element.tagName.toLowerCase()}${marker ? `.${marker}` : ""}`,
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      // Counted per scroller rather than per document: the Wishlist renders one
+      // panel of five, and "this scroller has rows" is what says whether the
+      // one on screen is empty.
+      rows: element.querySelectorAll("tbody tr:not([aria-hidden='true'])").length,
+    });
+  }
+
+  return { boxes, errored: document.querySelector(".rf-empty-icon-error") !== null };
+};
+
+/**
+ * Every interactive element on the view, measured against rule 7's box.
+ *
+ * What is measured is the border box, because that is the box a pointer lands
+ * on: a control drawn smaller than the rule passes by carrying a transparent
+ * border around its ink (see `.rf-hit-block` in components.css), and the border
+ * is part of the element's hit region while the padding box it paints in has
+ * not moved. Growing the hit area and redrawing the control are two different
+ * changes, and only the first one is being asked for.
+ *
+ * A `<label>` counts as the control's own box when it covers it, because
+ * clicking a label activates the control it names. That is the only thing that
+ * can give a native checkbox a hit area: Chrome ignores border and padding on
+ * one, and `width`/`height` grow the tick itself.
+ *
+ * Two things this cannot see, and both are somebody else's rule. A control
+ * covered by something drawn over it still measures its own box — occlusion is
+ * not what this measures. And a `<tr onClick>` is not an interactive element in
+ * the DOM, so a row is measured as the cells in it; whether that row is
+ * operable at all is rule 5's question, not rule 7's.
+ */
+const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent]) => {
+  const CONTROLS = [
+    "button",
+    "a[href]",
+    "input:not([type='hidden'])",
+    "select",
+    "textarea",
+    "summary",
+    "[role='button']",
+    "[tabindex]:not([tabindex='-1'])",
+  ].join(", ");
+
+  const under = new Map();
+  let exempt = 0;
+  let measured = 0;
+
+  for (const element of document.querySelectorAll(CONTROLS)) {
+    const own = element.getBoundingClientRect();
+    if (own.width === 0 || own.height === 0) continue;
+    if (getComputedStyle(element).visibility === "hidden") continue;
+
+    measured += 1;
+
+    // The biggest box that activates this control: its own, or a label drawn
+    // over it. "Over it" rather than "anywhere on the page" because a label
+    // beside the control is a second target rather than a bigger one.
+    const centreX = own.x + own.width / 2;
+    const centreY = own.y + own.height / 2;
+    let hit = own;
+    for (const label of element.labels ?? []) {
+      const rect = label.getBoundingClientRect();
+      const covers =
+        rect.left <= centreX &&
+        rect.right >= centreX &&
+        rect.top <= centreY &&
+        rect.bottom >= centreY;
+      if (covers && Math.min(rect.width, rect.height) > Math.min(hit.width, hit.height)) hit = rect;
+    }
+
+    const dense = element.closest("td, th") !== null;
+    const sameActionAsItsRow = element.matches(equivalent);
+    if (dense || sameActionAsItsRow) exempt += 1;
+    if (sameActionAsItsRow) continue;
+
+    const floor = dense ? denseMinimum : minimum;
+    if (hit.width >= floor && hit.height >= floor) continue;
+
+    const classes = Array.from(element.classList);
+    const marker = classes.find((name) => name.startsWith("rf-")) ?? classes[0];
+    const label = `${element.tagName.toLowerCase()}${marker ? `.${marker}` : ""}`;
+    // One line per kind of control, not per instance: sixty rows with the same
+    // undersized row action is one fault reported sixty times.
+    const key = `${label}|${Math.round(hit.width)}x${Math.round(hit.height)}|${floor}`;
+    const seen = under.get(key);
+    if (seen) {
+      seen.count += 1;
+      continue;
+    }
+    under.set(key, {
+      label,
+      width: Math.round(hit.width),
+      height: Math.round(hit.height),
+      floor,
+      dense,
+      name: (element.textContent || element.getAttribute("aria-label") || "").trim().slice(0, 32),
+      count: 1,
+    });
+  }
+
+  return { under: Array.from(under.values()), exempt, measured };
+};
+
 /*
   No view opens a detail modal on load, and the overflow was reported inside
   one — so the script has to perform the gesture a reader performs. Every table
@@ -290,8 +473,14 @@ const openModal = async (page) => {
 
 const browser = await chromium.launch();
 
-let failures = 0;
-let emptyTables = 0;
+// Counted apart so the summary can say what failed rather than only how much:
+// the three are three different rules, and the fix for one is nothing like the
+// fix for another.
+let reflowFailures = 0;
+let collapseFailures = 0;
+let touchFailures = 0;
+let inconclusive = 0;
+let exempted = 0;
 
 for (const threshold of THRESHOLDS) {
   const context = await browser.newContext({
@@ -326,21 +515,66 @@ for (const threshold of THRESHOLDS) {
       .catch(() => {});
     await page.waitForTimeout(1500);
 
-    const rows = await dataRows.count();
-    if (rows === 0) emptyTables += 1;
-
     const { scrollWidth, clientWidth } = await page.evaluate(DOCUMENT_OVERFLOW);
     const spill = scrollWidth - clientWidth;
     const bad = spill > TOLERANCE;
 
-    if (bad) failures += 1;
+    if (bad) reflowFailures += 1;
 
     const mark = bad ? "FAIL" : "ok  ";
-    const rowNote = rows === 0 ? ", NO ROWS" : "";
     console.log(
       `${mark}  ${name}: document ${scrollWidth} vs ${clientWidth}` +
-        `${bad ? ` — ${spill}px sideways` : ""}${rowNote}`,
+        `${bad ? ` — ${spill}px sideways` : ""}`,
     );
+
+    /*
+      The state of the panes, before anything inside them is measured. A view
+      drawing its error state is reported and skipped: every measurement below
+      would come back clean off an empty page, and clean is exactly the wrong
+      answer to give for a view that never received its data.
+    */
+    const { boxes, errored } = await page.evaluate(SCROLLERS);
+
+    if (errored) {
+      inconclusive += 1;
+      console.log(`??    ${name}: drawing its error state — nothing on this view was measured`);
+      continue;
+    }
+
+    for (const scroller of boxes) {
+      if (scroller.height >= COLLAPSED_UNDER) {
+        // Said out loud rather than left silent, because zero rows in a
+        // scroller that HAS height is the one shape of "nothing here" that is
+        // allowed, and the reader of a green run is owed which one this is.
+        if (scroller.rows === 0) {
+          console.log(
+            `      ${name}: no rows in a ${scroller.width}x${scroller.height} scroller — ` +
+              `an empty list, not a collapsed one`,
+          );
+        }
+        continue;
+      }
+      collapseFailures += 1;
+      console.log(
+        `FAIL  ${name}: ${scroller.label} is ${scroller.width}x${scroller.height} — collapsed, ` +
+          `so the table inside it renders nothing`,
+      );
+    }
+
+    const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT]);
+    exempted += touch.exempt;
+    if (touch.under.length > 0) {
+      touchFailures += touch.under.length;
+      console.log(`FAIL  ${name}: ${touch.under.length} control(s) under the rule 7 minimum`);
+      for (const control of touch.under) {
+        console.log(
+          `   !  ${control.label} — ${control.width}x${control.height}, needs ` +
+            `${control.floor}${control.dense ? " (in a data cell)" : ""}` +
+            `${control.count > 1 ? ` (×${control.count})` : ""}` +
+            `${control.name ? ` — "${control.name}"` : ""}`,
+        );
+      }
+    }
 
     if (bad) {
       for (const culprit of await page.evaluate(OFFENDERS, [CULPRITS, TOLERANCE])) {
@@ -350,7 +584,7 @@ for (const threshold of THRESHOLDS) {
 
     const cells = await page.evaluate(CELL_OVERFLOW, TOLERANCE);
     if (cells.escaping.length > 0) {
-      failures += 1;
+      reflowFailures += 1;
       console.log(`FAIL  ${name}: ${cells.escaping.length} column(s) with content past the cell`);
       for (const escapee of cells.escaping) {
         console.log(
@@ -385,7 +619,7 @@ for (const threshold of THRESHOLDS) {
       modal.bodyScrollWidth !== null && modal.bodyScrollWidth - modal.bodyClientWidth > TOLERANCE;
     const modalBad = modal.escaped.length > 0 || bodyScrolls;
 
-    if (modalBad) failures += 1;
+    if (modalBad) reflowFailures += 1;
 
     console.log(
       `${modalBad ? "FAIL" : "ok  "}  ${name} modal: frame ${modal.frameWidth}px in a ` +
@@ -404,7 +638,7 @@ for (const threshold of THRESHOLDS) {
     // is fixed, but what is inside it is not always contained.
     const withModal = await page.evaluate(DOCUMENT_OVERFLOW);
     if (withModal.scrollWidth - withModal.clientWidth > TOLERANCE) {
-      failures += 1;
+      reflowFailures += 1;
       console.log(
         `FAIL  ${name} modal: the document now scrolls ` +
           `${withModal.scrollWidth - withModal.clientWidth}px sideways`,
@@ -421,22 +655,41 @@ for (const threshold of THRESHOLDS) {
 await browser.close();
 
 /*
-  An empty table cannot overflow, so a view with no rows passes every
-  measurement above while proving nothing. Three ways to end up there, and the
-  reader has to be told which rather than shown a tick: the backend is down and
-  the view is drawing its error state; the list is genuinely empty, which the
-  Wishlist is until somebody adds a line; or the virtualiser has nothing in view,
-  which is what the two rankings do at 475px tall — the podium above the table
-  takes the whole viewport and the table renders none of its rows.
+  What green covers, said out loud.
+
+  Two of the three measurements above are allowed not to fail on something they
+  saw: a control inside a data cell is held to 24px rather than 44px, and a
+  scroller with height and no rows in it is an empty list rather than a
+  collapsed pane. Both are decisions rather than oversights — AGENTS.md §5.4
+  carries them — and both are the kind of decision that reads as a bug to
+  whoever finds it later without the count in front of them.
+
+  An inconclusive view exits non-zero, and that is the answer to the question
+  the brief left open. The fault this script exists to catch shipped as a
+  footnote under a green headline; a view whose data never arrived is a
+  measurement that did not happen, and CI answering "did it pass?" with yes
+  would be the same mistake in a new place. With the collapse measurement in
+  place the only remaining way to land here is a backend that never answered,
+  which in CI is a broken run rather than a passing one.
 */
-if (emptyTables > 0) {
+if (exempted > 0) {
   console.log(
-    `\n${emptyTables} measurement(s) found no rows and prove nothing. Backend down, list ` +
-      `empty, or the virtualiser had nothing in view — read them as inconclusive, not as a pass.`,
+    `\n${exempted} control measurement(s) were held to a written exception ` +
+      `(AGENTS.md §5.4): a data cell's ${DENSE_MIN}px floor, or a control whose own row ` +
+      `does the same thing.`,
   );
 }
 
+if (inconclusive > 0) {
+  console.log(
+    `${inconclusive} view(s) were drawing their error state and measured nothing. ` +
+      `Bring the backend up and run it again — this is not a pass.`,
+  );
+}
+
+const failures = reflowFailures + collapseFailures + touchFailures;
 console.log(
-  `\n${failures} reflow failure(s) across ${VIEWS.length} views and ${THRESHOLDS.length} thresholds`,
+  `\n${failures} failure(s) across ${VIEWS.length} views and ${THRESHOLDS.length} thresholds — ` +
+    `${reflowFailures} reflow, ${collapseFailures} collapsed container, ${touchFailures} touch target`,
 );
-if (failures > 0) process.exit(1);
+if (failures > 0 || inconclusive > 0) process.exit(1);
