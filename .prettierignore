@@ -9,3 +9,7 @@ design-imports
 package-lock.json
 src/main/resources/relics.json
 src/main/resources/*.postman_collection.json
+
+# Working notes rather than repository content: .planning/ is git-excluded, and
+# reflowing a brief would rewrite the wording it was composed with.
+.planning
