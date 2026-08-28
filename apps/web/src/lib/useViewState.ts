@@ -292,8 +292,10 @@ export function useViewState() {
    * back the list they clicked, with its filter and its sort where they left
    * them.
    *
-   * The refinement is the caller's: the tier list reads two columns in two
-   * different states, and the panel opens on the one the reader was reading.
+   * The refinement is the caller's, and every caller passes
+   * `DEFAULT_REFINEMENT`: a relic panel opens on Radiant wherever it is opened
+   * from. The parameter stays because the id needs one and the row being
+   * selected has to carry the same one, not because there is a second answer.
    */
   const showRelic = (relicFullName: string, refinement: Refinement) =>
     setSelected(relicRowId(relicFullName, refinement));

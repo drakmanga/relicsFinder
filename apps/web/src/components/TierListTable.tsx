@@ -24,12 +24,17 @@ import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { TierListPrimer } from "./TierListPrimer";
 import { Unlisted } from "./Unlisted";
 import { usePricePriority } from "../lib/usePricePriority";
-import { ALL_VAULT_FILTERS, VAULT_LABEL, relicRowId, type VaultFilter } from "../lib/rows";
+import {
+  ALL_VAULT_FILTERS,
+  DEFAULT_REFINEMENT,
+  VAULT_LABEL,
+  relicRowId,
+  type VaultFilter,
+} from "../lib/rows";
 import {
   DEFAULT_TIER_SORT,
   RADSHARE_PLAYERS,
   TIER_SORT_LABEL,
-  TIER_SORT_REFINEMENT,
   sortTierRows,
   type TierLetter,
   type TierList,
@@ -119,12 +124,19 @@ export function TierListTable({
   );
 
   /*
-    The state the panel opens on, which follows the column the table is ranked
-    by: the two value columns are two different refinements, and a row read in
-    the radshare column that opened on Intact would answer a question the
-    reader did not ask. See TIER_SORT_REFINEMENT.
+    The state the panel opens on is the one every relic panel opens on, whatever
+    this table is ranked by: `DEFAULT_REFINEMENT`, which is Radiant because that
+    is the state a relic is opened in rather than the state it is found in.
+
+    It used to follow the ranked column — solo and price to Intact, radshare to
+    Radiant — on the reading that a row read in one column should not open in
+    another. That is a smaller rule than the one above it: the table's default
+    ranking is Solo, so following the column meant that clicking a relic on this
+    view opened on Intact, which is the one number nobody is about to act on and
+    exactly what `DEFAULT_REFINEMENT` exists to stop. The slider still answers
+    the other three states, and it is one drag from the column's own number.
   */
-  const openOn = TIER_SORT_REFINEMENT[rankedBy];
+  const openOn = DEFAULT_REFINEMENT;
 
   const virtualizer = useVirtualizer({
     count: rows.length,
