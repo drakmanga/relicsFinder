@@ -48,6 +48,8 @@ const ROW_HEIGHT = 48;
 const OVERSCAN = 10;
 /** The cards above the table, as many as the other two ranked views show. */
 const HIGHLIGHT_COUNT = 3;
+/** One header, one instance: the view renders exactly one population group. */
+const VAULT_LABEL_ID = "rf-tier-vault-label";
 
 interface Props {
   tierList: TierList;
@@ -151,25 +153,40 @@ export function TierListTable({
     /* Three exclusive states, as on the Relics filter bar: "neither droppable
        nor vaulted" is not a thing a relic can be. Here the choice does more
        than hide rows — it is the population both medians are taken over, so
-       the letters are re-banded against whatever is left. */
-    <div className="rf-tier-vault" role="group" aria-label="Which relics to rank">
-      {ALL_VAULT_FILTERS.map((option, index) => (
-        <Button
-          key={option}
-          variant={vault === option ? "accent" : "ghost"}
-          size="sm"
-          /* Rule 7. The 32px switches grow into the head's own space above and
-             below; "All" is also too short to reach 44 across, and grows
-             leftwards only — the 4px gap to "Droppable" belongs to Droppable
-             as much as to it, and the space at the group's own edge belongs to
-             nobody. */
-          className={index === 0 ? "rf-hit-block rf-hit-inline-start" : "rf-hit-block"}
-          aria-pressed={vault === option}
-          onClick={() => onVault(option)}
-        >
-          {VAULT_LABEL[option]}
-        </Button>
-      ))}
+       the letters are re-banded against whatever is left.
+
+       That weight is why the group says its own job on screen. It used to be
+       three bare buttons in the header's whitespace with the sentence in an
+       `aria-label` nobody sees, which made the control that redefines the whole
+       ranking the lightest chrome on the tab — and the only mute one in the
+       shell, since Ducanetor and Endo pass a checkbox that states its job in
+       full into the same slot. The label is a `p` read by `aria-labelledby`
+       rather than a second `aria-label`, so the name is said once. */
+    <div className="rf-tier-vault">
+      <p id={VAULT_LABEL_ID} className="rf-text-overline rf-fg-muted rf-tier-vault-label">
+        Which relics to rank
+      </p>
+      <div className="rf-tier-vault-options" role="group" aria-labelledby={VAULT_LABEL_ID}>
+        {ALL_VAULT_FILTERS.map((option, index) => (
+          <Button
+            key={option}
+            variant={vault === option ? "accent" : "ghost"}
+            size="sm"
+            /* Rule 7. The 32px switches grow into the head's own space above and
+               below; "All" is also too short to reach 44 across, and grows
+               leftwards only — the 4px gap to "Droppable" belongs to Droppable
+               as much as to it, and the space at the group's own edge belongs to
+               nobody. The label above is text rather than a target, and the
+               group's inset is what the leftward growth reaches, so neither is
+               eaten by the wrapper this now sits in. */
+            className={index === 0 ? "rf-hit-block rf-hit-inline-start" : "rf-hit-block"}
+            aria-pressed={vault === option}
+            onClick={() => onVault(option)}
+          >
+            {VAULT_LABEL[option]}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 

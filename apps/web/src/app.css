@@ -1277,12 +1277,47 @@ body {
 
 /* The population switch, in the RankedPage header where Ducanetor and Endo put
    their checkbox. Three buttons rather than one, because the choice is
-   three-way and exclusive. */
+   three-way and exclusive.
+
+   A label over the buttons and a rule at the group's start: the same shape the
+   filter bar gives a set of related toggles, so the tab does not invent a
+   second one. Not the bar's own `.rf-filter-group`, which is a column that
+   divides a row of four and carries a flex basis to share it with — this is one
+   group at the end of a header, and the only thing the two want in common is a
+   label over its controls.
+
+   Here rather than in `RankedPage`: the shell is shared with Ducanetor and
+   Endo, and each of those passes a checkbox that already states its own job in
+   a sentence. A labelled group in the slot itself would wrap those sentences in
+   a second label. */
 .rf-tier-vault {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-2);
+  padding-inline-start: var(--rf-space-4);
+  border-inline-start: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-tier-vault-label {
+  margin: 0;
+}
+
+.rf-tier-vault-options {
   display: flex;
   align-items: center;
   gap: var(--rf-space-1);
   flex-wrap: wrap;
+}
+
+/* Below --rf-bp-md (768px) the header stacks and the group takes the whole row,
+   so its rule would sit on the pane's own left edge and divide the group from
+   nothing — the same reason the filter bar drops its dividers there. The label
+   is what bounds the group at that width, and it stays. */
+@media (max-width: 767.98px) {
+  .rf-tier-vault {
+    padding-inline-start: 0;
+    border-inline-start: none;
+  }
 }
 
 /* The relic name in the Tier List, which is a button.
