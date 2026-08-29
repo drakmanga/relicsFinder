@@ -26,7 +26,7 @@ Never claim a task is done on the basis of "the code looks right".
 | 3   | Every font-size is `rem`, never `px`                                 | `font-size: 15px` anywhere, including the root                                   |
 | 4   | Components stay under ~150 LOC                                       | a `.tsx` file over 150 lines without a written justification at the top          |
 | 5   | Every interactive element is reachable and operable by keyboard      | a click handler on a non-button, a missing `:focus-visible` style                |
-| 6   | Every layout survives 360px width and 200% text zoom                 | horizontal scrollbar on the document, clipped or overlapping text                |
+| 6   | Every layout survives 360px width and 200% text zoom                 | a scrollbar on the document in EITHER axis, clipped or overlapping text          |
 | 7   | Touch targets are at least 44x44 CSS px, §5.4's two exceptions apart | any button, icon button or row action below that box                             |
 | 8   | `tokens.json` is the only source of design values                    | a value edited in `tokens.css` without regenerating it                           |
 | 9   | Reusable UI lives in `packages/ui`, app UI in `apps/web`             | a generic component (button, badge, layout primitive) defined inside `apps/web`  |
@@ -325,6 +325,44 @@ Pick one strategy per table and write it down:
   Most readable on phones, most work to build.
 
 Do not mix strategies within one table.
+
+### 4.7 Both axes, and which renderer agreed
+
+**Decided 2026-08-29.** Rule 6 is written about horizontal reflow, and for a year that was the
+whole of it. This section is the rule change that closes what the silence cost, and both halves
+of it are a measurement rather than a preference.
+
+**The document does not scroll in either axis.** This app is a viewport-height shell whose lists
+scroll inside their own panes: at rest, on every view, at every threshold in section 8, `html`
+has no scrollable overflow. That is measured in both engines rather than assumed, which is what
+makes it a gate rather than an aspiration — and it is a rule the project has now broken twice
+before anything checked it. Run 005 shipped a Tier List that gave the document a 622px vertical
+scrollbar with nothing under it, at an ordinary window size, under a green run of `npm run reflow`.
+
+When it fails, the gate prints `html.scrollHeight` beside `body.scrollHeight`, because the two
+disagreeing is the whole diagnosis: every box in the flow measures the viewport exactly, nothing
+looks wrong from any element on the page, and the height belongs to a box positioned against the
+INITIAL containing block. Both numbers growing together is the ordinary case instead — content in
+the flow that does not fit.
+
+**Green means Chromium and Firefox both agreed.** `npm run reflow` drives both. Not a preference
+either: with `inset-block-start` taken off `.rf-sr-only`, Chromium reports a clean document on
+every populated view at 360x800, 720x475, 1440x950 and at the 1440x572 the reader saw it at,
+while Firefox fails on Sets and the Tier List at every one of them. Blink treats a table cell as
+the containing block for an absolutely positioned descendant and Gecko does not, so the same
+markup escapes every `overflow` between itself and the root in one engine and is contained in the
+other. Containing blocks are the machinery every overflow rule in this file rests on, and the two
+renderers disagree about them.
+
+The cost was stated before it was paid, and it is real: the walk is 115s per engine, so the gate
+went from ~2 minutes to ~4, locally and on every CI run, plus one more browser to install per
+runner. A cheaper Firefox pass over the two document numbers alone was weighed and dropped —
+it saves 20 of those 115 seconds, because what the walk spends is the per-view waits rather than
+the measurements.
+
+`npm run axe` still drives Chromium alone, and that is not the same decision: axe-core evaluates
+markup and computed accessibility properties, not layout, and a document that scrolls when it
+should not is not a violation it reports. It said 0 serious and 0 critical throughout run 005.
 
 ---
 

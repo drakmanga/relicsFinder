@@ -92,8 +92,13 @@ jobs:
 
       - run: npm ci
 
-      - name: Install the browser axe drives
-        run: npx playwright install --with-deps chromium
+      # Two engines, because one of them cannot see a whole class of layout
+      # fault: Blink treats a table cell as the containing block for an
+      # absolutely positioned descendant and Gecko does not. The defect that
+      # bought this second install passed every gate here twice. See ENGINES in
+      # scripts/reflow-check.mjs for what the extra ~110MB and ~2 minutes buy.
+      - name: Install the browsers the checks drive
+        run: npx playwright install --with-deps chromium firefox
 
       - run: npm run build
 
@@ -122,10 +127,11 @@ jobs:
       - name: axe over all six views
         run: npm run axe
 
-      # Rules 6 and 7, over every view at three thresholds, against the same
-      # servers axe just used. By hand is how the fault this gate exists to
-      # catch shipped: nobody checks a threshold on the view they were not
-      # editing, and nobody at all measures a touch target with a ruler.
+      # Rules 6 and 7, on both axes, over every view at three thresholds in two
+      # engines, against the same servers axe just used. By hand is how the
+      # fault this gate exists to catch shipped: nobody checks a threshold on
+      # the view they were not editing, and nobody at all measures a touch
+      # target with a ruler.
       - name: Reflow, collapsed panes and touch targets
         run: npm run reflow
 

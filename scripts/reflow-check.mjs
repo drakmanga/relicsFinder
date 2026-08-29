@@ -41,6 +41,9 @@
  * fault that prompted this script shipped: nobody checks a threshold on the view
  * they were not editing.
  *
+ * IN TWO ENGINES, and the reason is beside `ENGINES` below rather than here,
+ * because it is a cost that was weighed rather than a fact about the app.
+ *
  * Against a preview build, not the dev server, for the same reason axe-check is
  * — dev injects an overlay and a client the reader never receives, and both take
  * layout space. Vite's `preview.proxy` defaults to `server.proxy`, so a preview
@@ -58,7 +61,9 @@
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { chromium } = require("playwright");
+// Indexed by name rather than destructured: which engines run is a list
+// below, and a second one should not need a second import line.
+const playwright = require("playwright");
 
 const BASE = process.argv[2] ?? "http://localhost:4173";
 
@@ -176,6 +181,53 @@ const OFFENDERS = ([limit, slack, axis]) => {
   const edge = axis === "y" ? doc.clientHeight : doc.clientWidth;
   const out = [];
 
+  /*
+    Whether this box is one the ROOT has to make room for, or one that some
+    ancestor already clips.
+
+    Without this the vertical walk is useless rather than merely noisy: every
+    list in this app scrolls inside its own pane, so on the Tier List at 360x800
+    there are 579 boxes below the fold and 578 of them are rows inside
+    `.rf-ranked`, which is `overflow-y: auto` and contains every one of them.
+    The one box that actually lengthened the document was not in the first
+    fourteen. The horizontal walk never had to care because a table too wide for
+    its wrap is the same shape and simply never came up.
+
+    The rule is CSS's own. A clipping ancestor clips what is laid out inside it,
+    and an absolutely positioned box is laid out inside its CONTAINING BLOCK
+    rather than its parent — so an ancestor that neither clips nor establishes a
+    containing block is transparent to it, which is exactly how `.rf-sr-only`
+    walked out of a table's scroller and lengthened the page. A fixed box is out
+    of the document's flow altogether and never lengthens it.
+  */
+  const lengthensTheRoot = (element) => {
+    let box = element;
+
+    for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      const boxStyle = getComputedStyle(box);
+      if (boxStyle.position === "fixed") return false;
+
+      const style = getComputedStyle(ancestor);
+      // Anything that makes an ancestor a containing block for an absolutely
+      // positioned descendant, which is what decides whether its overflow
+      // reaches that descendant at all.
+      const holdsAbsolutes =
+        style.position !== "static" ||
+        style.transform !== "none" ||
+        style.filter !== "none" ||
+        style.willChange.includes("transform") ||
+        style.contain.includes("paint") ||
+        style.contain.includes("layout");
+
+      if (boxStyle.position === "absolute" && !holdsAbsolutes) continue;
+      if (style.overflowX !== "visible" || style.overflowY !== "visible") return false;
+
+      box = ancestor;
+    }
+
+    return true;
+  };
+
   for (const element of document.querySelectorAll("body *")) {
     const rect = element.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) continue;
@@ -184,6 +236,7 @@ const OFFENDERS = ([limit, slack, axis]) => {
     // An ancestor already reported means this is the same overflow one level
     // down. Keeping only the outermost is what makes the list readable.
     if (out.some((seen) => seen.element.contains(element))) continue;
+    if (!lengthensTheRoot(element)) continue;
     out.push({ element, past });
   }
 
@@ -560,8 +613,6 @@ const nameTheCulprits = async (page, axis, clientEdge) => {
   }
 };
 
-const browser = await chromium.launch();
-
 // Counted apart so the summary can say what failed rather than only how much:
 // the three are three different rules, and the fix for one is nothing like the
 // fix for another.
@@ -571,187 +622,220 @@ let touchFailures = 0;
 let inconclusive = 0;
 let exempted = 0;
 
-for (const threshold of THRESHOLDS) {
-  const context = await browser.newContext({
-    viewport: { width: threshold.width, height: threshold.height },
-  });
-  const page = await context.newPage();
+/*
+  Both engines, and what the second one costs.
 
-  console.log(`\n— ${threshold.name} (${threshold.width}x${threshold.height} CSS px)`);
+  Every gate in this repository drove Chromium alone, and the defect that
+  produced this measurement was invisible to Chromium by construction: Blink
+  treats a table cell as the containing block for an absolutely positioned
+  descendant and Gecko does not, so the same `.rf-sr-only` markup escapes every
+  `overflow` between itself and the root in Firefox and is contained in Chrome.
+  Containing blocks are the machinery every overflow rule in this codebase
+  rests on, and the two renderers disagree about them. A single-engine gate
+  does not measure the web; it measures one renderer.
 
-  for (const [name, path] of VIEWS) {
-    await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+  The cost was measured before it was paid, on the tree this shipped from: the
+  walk is 115s in Chromium and the same again in Firefox, plus one more browser
+  to install per runner. A Firefox pass measuring only the two document numbers
+  was weighed and dropped — it saves 20s of that 115, because what the walk
+  spends is the per-view waits rather than the measurements, so three quarters
+  of the coverage was going for a sixth of the cost.
 
-    if (threshold.rootFontSize) {
-      await page.evaluate((size) => {
-        document.documentElement.style.fontSize = size;
-      }, threshold.rootFontSize);
-    }
+  What decided it rather than a preference: with `inset-block-start` taken off
+  `.rf-sr-only`, Chromium reports a clean document on all six populated views at
+  360x800, 720x475, 1440x950 AND at the 1440x572 the operator saw it at, while
+  Firefox fails on Sets and the Tier List at every one of them. A gate that
+  cannot fail on the defect it was written for is not a gate.
+*/
+const ENGINES = ["chromium", "firefox"];
 
-    /*
-      The tables fill from a second request, and the two rankings from the price
-      cache behind it, which on a cold start answers well after `networkidle`
-      has gone quiet. A flat sleep made Ducanetor and Endo report no rows on one
-      threshold and two hundred on the next, from the same build — so wait for a
-      row and only then let the layout settle. The wait is allowed to expire:
-      the Wishlist is legitimately empty, and that is a finding rather than an
-      error.
-    */
-    const dataRows = page.locator("tbody tr:not([aria-hidden='true'])");
-    await dataRows
-      .first()
-      .waitFor({ state: "attached", timeout: 15000 })
-      .catch(() => {});
-    await page.waitForTimeout(1500);
+for (const engineName of ENGINES) {
+  const browser = await playwright[engineName].launch();
+  for (const threshold of THRESHOLDS) {
+    const context = await browser.newContext({
+      viewport: { width: threshold.width, height: threshold.height },
+    });
+    const page = await context.newPage();
 
-    const doc = await page.evaluate(DOCUMENT_OVERFLOW);
-    const sideways = doc.scrollWidth - doc.clientWidth;
-    const down = doc.scrollHeight - doc.clientHeight;
-    const badX = sideways > TOLERANCE;
-    const badY = down > TOLERANCE;
-    const bad = badX || badY;
-
-    // Two axes, two failures: they are two different faults with two different
-    // fixes, and a view that does both should not report as one.
-    if (badX) reflowFailures += 1;
-    if (badY) reflowFailures += 1;
-
-    const mark = bad ? "FAIL" : "ok  ";
     console.log(
-      `${mark}  ${name}: document ${doc.scrollWidth}x${doc.scrollHeight} in ` +
-        `${doc.clientWidth}x${doc.clientHeight}` +
-        `${badX ? ` — ${sideways}px sideways` : ""}${badY ? ` — ${down}px down` : ""}`,
+      `\n— ${engineName} · ${threshold.name} (${threshold.width}x${threshold.height} CSS px)`,
     );
 
-    if (badY) console.log(`   ?  ${diagnoseHeight(doc)}`);
+    for (const [name, path] of VIEWS) {
+      await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
 
-    /*
-      The state of the panes, before anything inside them is measured. A view
-      drawing its error state is reported and skipped: every measurement below
-      would come back clean off an empty page, and clean is exactly the wrong
-      answer to give for a view that never received its data.
-    */
-    const { boxes, errored } = await page.evaluate(SCROLLERS);
+      if (threshold.rootFontSize) {
+        await page.evaluate((size) => {
+          document.documentElement.style.fontSize = size;
+        }, threshold.rootFontSize);
+      }
 
-    if (errored) {
-      inconclusive += 1;
-      console.log(`??    ${name}: drawing its error state — nothing on this view was measured`);
-      continue;
-    }
+      /*
+        The tables fill from a second request, and the two rankings from the price
+        cache behind it, which on a cold start answers well after `networkidle`
+        has gone quiet. A flat sleep made Ducanetor and Endo report no rows on one
+        threshold and two hundred on the next, from the same build — so wait for a
+        row and only then let the layout settle. The wait is allowed to expire:
+        the Wishlist is legitimately empty, and that is a finding rather than an
+        error.
+      */
+      const dataRows = page.locator("tbody tr:not([aria-hidden='true'])");
+      await dataRows
+        .first()
+        .waitFor({ state: "attached", timeout: 15000 })
+        .catch(() => {});
+      await page.waitForTimeout(1500);
 
-    for (const scroller of boxes) {
-      if (scroller.height >= COLLAPSED_UNDER) {
-        // Said out loud rather than left silent, because zero rows in a
-        // scroller that HAS height is the one shape of "nothing here" that is
-        // allowed, and the reader of a green run is owed which one this is.
-        if (scroller.rows === 0) {
-          console.log(
-            `      ${name}: no rows in a ${scroller.width}x${scroller.height} scroller — ` +
-              `an empty list, not a collapsed one`,
-          );
-        }
+      const doc = await page.evaluate(DOCUMENT_OVERFLOW);
+      const sideways = doc.scrollWidth - doc.clientWidth;
+      const down = doc.scrollHeight - doc.clientHeight;
+      const badX = sideways > TOLERANCE;
+      const badY = down > TOLERANCE;
+      const bad = badX || badY;
+
+      // Two axes, two failures: they are two different faults with two different
+      // fixes, and a view that does both should not report as one.
+      if (badX) reflowFailures += 1;
+      if (badY) reflowFailures += 1;
+
+      const mark = bad ? "FAIL" : "ok  ";
+      console.log(
+        `${mark}  ${name}: document ${doc.scrollWidth}x${doc.scrollHeight} in ` +
+          `${doc.clientWidth}x${doc.clientHeight}` +
+          `${badX ? ` — ${sideways}px sideways` : ""}${badY ? ` — ${down}px down` : ""}`,
+      );
+
+      if (badY) console.log(`   ?  ${diagnoseHeight(doc)}`);
+
+      /*
+        The state of the panes, before anything inside them is measured. A view
+        drawing its error state is reported and skipped: every measurement below
+        would come back clean off an empty page, and clean is exactly the wrong
+        answer to give for a view that never received its data.
+      */
+      const { boxes, errored } = await page.evaluate(SCROLLERS);
+
+      if (errored) {
+        inconclusive += 1;
+        console.log(`??    ${name}: drawing its error state — nothing on this view was measured`);
         continue;
       }
-      collapseFailures += 1;
-      console.log(
-        `FAIL  ${name}: ${scroller.label} is ${scroller.width}x${scroller.height} — collapsed, ` +
-          `so the table inside it renders nothing`,
-      );
-    }
 
-    const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT]);
-    exempted += touch.exempt;
-    if (touch.under.length > 0) {
-      touchFailures += touch.under.length;
-      console.log(`FAIL  ${name}: ${touch.under.length} control(s) under the rule 7 minimum`);
-      for (const control of touch.under) {
+      for (const scroller of boxes) {
+        if (scroller.height >= COLLAPSED_UNDER) {
+          // Said out loud rather than left silent, because zero rows in a
+          // scroller that HAS height is the one shape of "nothing here" that is
+          // allowed, and the reader of a green run is owed which one this is.
+          if (scroller.rows === 0) {
+            console.log(
+              `      ${name}: no rows in a ${scroller.width}x${scroller.height} scroller — ` +
+                `an empty list, not a collapsed one`,
+            );
+          }
+          continue;
+        }
+        collapseFailures += 1;
         console.log(
-          `   !  ${control.label} — ${control.width}x${control.height}, needs ` +
-            `${control.floor}${control.dense ? " (in a data cell)" : ""}` +
-            `${control.count > 1 ? ` (×${control.count})` : ""}` +
-            `${control.name ? ` — "${control.name}"` : ""}`,
+          `FAIL  ${name}: ${scroller.label} is ${scroller.width}x${scroller.height} — collapsed, ` +
+            `so the table inside it renders nothing`,
         );
+      }
+
+      const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT]);
+      exempted += touch.exempt;
+      if (touch.under.length > 0) {
+        touchFailures += touch.under.length;
+        console.log(`FAIL  ${name}: ${touch.under.length} control(s) under the rule 7 minimum`);
+        for (const control of touch.under) {
+          console.log(
+            `   !  ${control.label} — ${control.width}x${control.height}, needs ` +
+              `${control.floor}${control.dense ? " (in a data cell)" : ""}` +
+              `${control.count > 1 ? ` (×${control.count})` : ""}` +
+              `${control.name ? ` — "${control.name}"` : ""}`,
+          );
+        }
+      }
+
+      if (badX) await nameTheCulprits(page, "x", doc.clientWidth);
+      if (badY) await nameTheCulprits(page, "y", doc.clientHeight);
+
+      const cells = await page.evaluate(CELL_OVERFLOW, TOLERANCE);
+      if (cells.escaping.length > 0) {
+        reflowFailures += 1;
+        console.log(`FAIL  ${name}: ${cells.escaping.length} column(s) with content past the cell`);
+        for (const escapee of cells.escaping) {
+          console.log(
+            `   !  ${escapee.table} col ${escapee.column} (${escapee.heading}): ` +
+              `${escapee.label} overflows by ${escapee.over}px`,
+          );
+        }
+      }
+      if (cells.clipped > 0) {
+        console.log(
+          `      ${cells.clipped} cell(s) with text ellipsised — by design, see .rf-table`,
+        );
+      }
+
+      if (!OPENS_A_MODAL.has(name)) continue;
+
+      const why = await openModal(page);
+      if (why) {
+        console.log(`      modal: ${why}`);
+        continue;
+      }
+
+      const modal = await page.evaluate(MODAL_OVERFLOW, [CULPRITS, TOLERANCE]);
+      // `MODAL_OVERFLOW` answers null when there is no `.rf-modal` to measure,
+      // which openModal's wait normally rules out — but a panel that unmounts
+      // while its own requests land would otherwise take the whole run down with
+      // a TypeError on the next line, and losing five views to one flake is
+      // worse than saying the measurement did not happen.
+      if (!modal) {
+        console.log(`      modal: it closed before it could be measured`);
+        continue;
+      }
+      const bodyScrolls =
+        modal.bodyScrollWidth !== null && modal.bodyScrollWidth - modal.bodyClientWidth > TOLERANCE;
+      const modalBad = modal.escaped.length > 0 || bodyScrolls;
+
+      if (modalBad) reflowFailures += 1;
+
+      console.log(
+        `${modalBad ? "FAIL" : "ok  "}  ${name} modal: frame ${modal.frameWidth}px in a ` +
+          `${modal.viewportWidth}px viewport, body ${modal.bodyScrollWidth} vs ` +
+          `${modal.bodyClientWidth}`,
+      );
+
+      for (const escapee of modal.escaped) {
+        console.log(
+          `   !  ${escapee.label} — ${escapee.width}px wide, right edge ${escapee.right} ` +
+            `past the frame's ${modal.frameRight}`,
+        );
+      }
+
+      // The document can start scrolling only once the modal is open: the scrim
+      // is fixed, but what is inside it is not always contained.
+      const withModal = await page.evaluate(DOCUMENT_OVERFLOW);
+      const modalSideways = withModal.scrollWidth - withModal.clientWidth;
+      const modalDown = withModal.scrollHeight - withModal.clientHeight;
+
+      if (modalSideways > TOLERANCE) {
+        reflowFailures += 1;
+        console.log(`FAIL  ${name} modal: the document now scrolls ${modalSideways}px sideways`);
+        await nameTheCulprits(page, "x", withModal.clientWidth);
+      }
+      if (modalDown > TOLERANCE) {
+        reflowFailures += 1;
+        console.log(`FAIL  ${name} modal: the document now scrolls ${modalDown}px down`);
+        console.log(`   ?  ${diagnoseHeight(withModal)}`);
+        await nameTheCulprits(page, "y", withModal.clientHeight);
       }
     }
 
-    if (badX) await nameTheCulprits(page, "x", doc.clientWidth);
-    if (badY) await nameTheCulprits(page, "y", doc.clientHeight);
-
-    const cells = await page.evaluate(CELL_OVERFLOW, TOLERANCE);
-    if (cells.escaping.length > 0) {
-      reflowFailures += 1;
-      console.log(`FAIL  ${name}: ${cells.escaping.length} column(s) with content past the cell`);
-      for (const escapee of cells.escaping) {
-        console.log(
-          `   !  ${escapee.table} col ${escapee.column} (${escapee.heading}): ` +
-            `${escapee.label} overflows by ${escapee.over}px`,
-        );
-      }
-    }
-    if (cells.clipped > 0) {
-      console.log(`      ${cells.clipped} cell(s) with text ellipsised — by design, see .rf-table`);
-    }
-
-    if (!OPENS_A_MODAL.has(name)) continue;
-
-    const why = await openModal(page);
-    if (why) {
-      console.log(`      modal: ${why}`);
-      continue;
-    }
-
-    const modal = await page.evaluate(MODAL_OVERFLOW, [CULPRITS, TOLERANCE]);
-    // `MODAL_OVERFLOW` answers null when there is no `.rf-modal` to measure,
-    // which openModal's wait normally rules out — but a panel that unmounts
-    // while its own requests land would otherwise take the whole run down with
-    // a TypeError on the next line, and losing five views to one flake is
-    // worse than saying the measurement did not happen.
-    if (!modal) {
-      console.log(`      modal: it closed before it could be measured`);
-      continue;
-    }
-    const bodyScrolls =
-      modal.bodyScrollWidth !== null && modal.bodyScrollWidth - modal.bodyClientWidth > TOLERANCE;
-    const modalBad = modal.escaped.length > 0 || bodyScrolls;
-
-    if (modalBad) reflowFailures += 1;
-
-    console.log(
-      `${modalBad ? "FAIL" : "ok  "}  ${name} modal: frame ${modal.frameWidth}px in a ` +
-        `${modal.viewportWidth}px viewport, body ${modal.bodyScrollWidth} vs ` +
-        `${modal.bodyClientWidth}`,
-    );
-
-    for (const escapee of modal.escaped) {
-      console.log(
-        `   !  ${escapee.label} — ${escapee.width}px wide, right edge ${escapee.right} ` +
-          `past the frame's ${modal.frameRight}`,
-      );
-    }
-
-    // The document can start scrolling only once the modal is open: the scrim
-    // is fixed, but what is inside it is not always contained.
-    const withModal = await page.evaluate(DOCUMENT_OVERFLOW);
-    const modalSideways = withModal.scrollWidth - withModal.clientWidth;
-    const modalDown = withModal.scrollHeight - withModal.clientHeight;
-
-    if (modalSideways > TOLERANCE) {
-      reflowFailures += 1;
-      console.log(`FAIL  ${name} modal: the document now scrolls ${modalSideways}px sideways`);
-      await nameTheCulprits(page, "x", withModal.clientWidth);
-    }
-    if (modalDown > TOLERANCE) {
-      reflowFailures += 1;
-      console.log(`FAIL  ${name} modal: the document now scrolls ${modalDown}px down`);
-      console.log(`   ?  ${diagnoseHeight(withModal)}`);
-      await nameTheCulprits(page, "y", withModal.clientHeight);
-    }
+    await context.close();
   }
-
-  await context.close();
+  await browser.close();
 }
-
-await browser.close();
 
 /*
   What green covers, said out loud.
@@ -788,7 +872,8 @@ if (inconclusive > 0) {
 
 const failures = reflowFailures + collapseFailures + touchFailures;
 console.log(
-  `\n${failures} failure(s) across ${VIEWS.length} views and ${THRESHOLDS.length} thresholds — ` +
-    `${reflowFailures} reflow, ${collapseFailures} collapsed container, ${touchFailures} touch target`,
+  `\n${failures} failure(s) across ${VIEWS.length} views, ${THRESHOLDS.length} thresholds and ` +
+    `${ENGINES.length} engine(s) (${ENGINES.join(", ")}) — ${reflowFailures} reflow, ` +
+    `${collapseFailures} collapsed container, ${touchFailures} touch target`,
 );
 if (failures > 0 || inconclusive > 0) process.exit(1);
