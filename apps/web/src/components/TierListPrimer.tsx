@@ -158,7 +158,7 @@ export function TierListPrimer() {
         <dl className="rf-text-caption rf-primer-terms">
           {TERMS.map(({ term, means }) => (
             <div key={term} className="rf-primer-term">
-              <dt className="rf-fg-secondary">{term}</dt>
+              <dt>{term}</dt>
               <dd className="rf-fg-muted">{means}</dd>
             </div>
           ))}
