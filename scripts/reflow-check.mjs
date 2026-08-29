@@ -13,6 +13,14 @@
  * the document sideways is a reflow failure, because it drags the masthead, the
  * filter bar and everything else off screen with it.
  *
+ * AND THE SAME DOWNWARDS. Rule 6 is written about horizontal reflow, so the
+ * vertical axis was left unmeasured — and run 005 shipped a Tier List that gave
+ * the document a 622px scrollbar with nothing under it, at an ordinary window
+ * size, under a green run of this script. This app is a viewport-height shell
+ * whose lists scroll inside their own panes: at rest the document does not
+ * scroll in either axis, on any view, at any of the thresholds below. That is a
+ * measured fact rather than an aspiration, which is what makes it a gate.
+ *
  * WHY A COLLAPSED CONTAINER IS MEASURED SEPARATELY. The two measurements above
  * both look for something sticking out, and a scroll container squeezed to
  * height 0 sticks out of nothing: it paints no rows, so no box overflows, and
@@ -145,8 +153,8 @@ const COLLAPSED_UNDER = 36;
 /* global document, getComputedStyle */
 
 /**
- * Walks the document for elements sticking out past the viewport's right edge
- * and returns the outermost ones.
+ * Walks the document for elements sticking out past the viewport's edge on one
+ * axis and returns the outermost ones.
  *
  * A number on its own — "1180 > 720" — says a view fails and nothing about what
  * to change, and the whole point of this script is to hand the next reader an
@@ -154,40 +162,79 @@ const COLLAPSED_UNDER = 36;
  * takes every cell in it out of bounds too, and a list of forty `td`s buries
  * the one line that matters.
  *
+ * The axis is a parameter rather than two functions because the walk is the
+ * same walk: what changes is which edge of the rect is compared against which
+ * client dimension. On the vertical axis the outermost-first filter usually
+ * has nothing to do — a box that lengthens the document without lengthening
+ * any ancestor is exactly the fault this is looking for, and it is a leaf.
+ *
  * Runs inside the page: `getBoundingClientRect` is the only thing that knows
  * where an element actually landed.
  */
-const OFFENDERS = ([limit, slack]) => {
-  const clientWidth = document.documentElement.clientWidth;
+const OFFENDERS = ([limit, slack, axis]) => {
+  const doc = document.documentElement;
+  const edge = axis === "y" ? doc.clientHeight : doc.clientWidth;
   const out = [];
 
   for (const element of document.querySelectorAll("body *")) {
     const rect = element.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) continue;
-    if (rect.right <= clientWidth + slack) continue;
+    const past = axis === "y" ? rect.bottom : rect.right;
+    if (past <= edge + slack) continue;
     // An ancestor already reported means this is the same overflow one level
     // down. Keeping only the outermost is what makes the list readable.
     if (out.some((seen) => seen.element.contains(element))) continue;
-    out.push({ element, right: rect.right });
+    out.push({ element, past });
   }
 
-  return out.slice(0, limit).map(({ element, right }) => {
+  // One line per kind of box, not per instance, on the same reading as the
+  // touch measurement below: the vertical case is one hidden label per
+  // virtualised row on screen, so naming each one buries the class name that
+  // is the whole finding under twenty copies of itself.
+  const kinds = new Map();
+  for (const { element, past } of out) {
     const classes = Array.from(element.classList);
     // The rf-* class is the one a stylesheet in this repo is keyed on; a
     // utility class or a generated one identifies nothing.
     const marker = classes.find((name) => name.startsWith("rf-")) ?? classes[0];
-    return {
-      label: `${element.tagName.toLowerCase()}${marker ? `.${marker}` : ""}`,
-      classes: classes.join(" "),
-      right: Math.round(right),
-    };
-  });
+    const label = `${element.tagName.toLowerCase()}${marker ? `.${marker}` : ""}`;
+    const seen = kinds.get(label);
+    if (seen) {
+      seen.count += 1;
+      seen.past = Math.max(seen.past, past);
+      continue;
+    }
+    kinds.set(label, { label, classes: classes.join(" "), past, count: 1 });
+  }
+
+  return Array.from(kinds.values())
+    .slice(0, limit)
+    .map((kind) => ({ ...kind, past: Math.round(kind.past) }));
 };
 
-/** Whether the document scrolls sideways, and by how much. */
+/**
+ * Whether the document scrolls, on either axis, and by how much.
+ *
+ * `body.scrollHeight` comes back beside the root's own because the two
+ * disagreeing is the signature of one whole class of fault, and it is nearly
+ * impossible to recover from the overflow number alone. A box positioned
+ * against the INITIAL containing block — `position: absolute` with no
+ * positioned ancestor — is clipped by no `overflow` between itself and the
+ * root, so it enlarges the root's scrollable area while every box in the flow,
+ * `body` included, measures exactly the viewport. That is what put 622px of
+ * empty page under the Tier List in run 005, and printing the two numbers
+ * beside each other is what named the element in under a minute after two
+ * passes of measurement had failed to.
+ */
 const DOCUMENT_OVERFLOW = () => {
   const doc = document.documentElement;
-  return { scrollWidth: doc.scrollWidth, clientWidth: doc.clientWidth };
+  return {
+    scrollWidth: doc.scrollWidth,
+    clientWidth: doc.clientWidth,
+    scrollHeight: doc.scrollHeight,
+    clientHeight: doc.clientHeight,
+    bodyScrollHeight: document.body.scrollHeight,
+  };
 };
 
 /**
@@ -481,6 +528,38 @@ const openModal = async (page) => {
   return null;
 };
 
+/**
+ * The line to print under a vertical overflow, and the reason the two numbers
+ * in it are worth the space.
+ *
+ * `html` counting more than `body` is not a bigger version of "something is too
+ * tall": it is a different fault. Every box in the flow measures the viewport
+ * exactly, so nothing looks wrong from any element on the page, and the height
+ * comes from a box whose containing block is the INITIAL one — absolutely
+ * positioned with no positioned ancestor, clipped by no `overflow` between
+ * itself and the root. Both numbers growing together is the ordinary case
+ * instead: content in the flow that does not fit, which the offender walk
+ * below names directly.
+ */
+const diagnoseHeight = ({ scrollHeight, bodyScrollHeight, clientHeight }) =>
+  bodyScrollHeight - clientHeight <= TOLERANCE
+    ? `html.scrollHeight ${scrollHeight} against body.scrollHeight ${bodyScrollHeight} — the body ` +
+      `does not count what the root counts, so this is a box positioned against the initial ` +
+      `containing block, not content in the flow`
+    : `html.scrollHeight ${scrollHeight} against body.scrollHeight ${bodyScrollHeight} — both grew, ` +
+      `so this is content in the flow that does not fit`;
+
+/** Names the boxes past one edge of the viewport, one line per kind. */
+const nameTheCulprits = async (page, axis, clientEdge) => {
+  const edge = axis === "y" ? "bottom" : "right";
+  for (const culprit of await page.evaluate(OFFENDERS, [CULPRITS, TOLERANCE, axis])) {
+    console.log(
+      `   !  ${culprit.label} — ${edge} edge ${culprit.past} past ${clientEdge}` +
+        `${culprit.count > 1 ? ` (×${culprit.count})` : ""} (${culprit.classes})`,
+    );
+  }
+};
+
 const browser = await chromium.launch();
 
 // Counted apart so the summary can say what failed rather than only how much:
@@ -525,17 +604,26 @@ for (const threshold of THRESHOLDS) {
       .catch(() => {});
     await page.waitForTimeout(1500);
 
-    const { scrollWidth, clientWidth } = await page.evaluate(DOCUMENT_OVERFLOW);
-    const spill = scrollWidth - clientWidth;
-    const bad = spill > TOLERANCE;
+    const doc = await page.evaluate(DOCUMENT_OVERFLOW);
+    const sideways = doc.scrollWidth - doc.clientWidth;
+    const down = doc.scrollHeight - doc.clientHeight;
+    const badX = sideways > TOLERANCE;
+    const badY = down > TOLERANCE;
+    const bad = badX || badY;
 
-    if (bad) reflowFailures += 1;
+    // Two axes, two failures: they are two different faults with two different
+    // fixes, and a view that does both should not report as one.
+    if (badX) reflowFailures += 1;
+    if (badY) reflowFailures += 1;
 
     const mark = bad ? "FAIL" : "ok  ";
     console.log(
-      `${mark}  ${name}: document ${scrollWidth} vs ${clientWidth}` +
-        `${bad ? ` — ${spill}px sideways` : ""}`,
+      `${mark}  ${name}: document ${doc.scrollWidth}x${doc.scrollHeight} in ` +
+        `${doc.clientWidth}x${doc.clientHeight}` +
+        `${badX ? ` — ${sideways}px sideways` : ""}${badY ? ` — ${down}px down` : ""}`,
     );
+
+    if (badY) console.log(`   ?  ${diagnoseHeight(doc)}`);
 
     /*
       The state of the panes, before anything inside them is measured. A view
@@ -586,11 +674,8 @@ for (const threshold of THRESHOLDS) {
       }
     }
 
-    if (bad) {
-      for (const culprit of await page.evaluate(OFFENDERS, [CULPRITS, TOLERANCE])) {
-        console.log(`   !  ${culprit.label} — right edge ${culprit.right} (${culprit.classes})`);
-      }
-    }
+    if (badX) await nameTheCulprits(page, "x", doc.clientWidth);
+    if (badY) await nameTheCulprits(page, "y", doc.clientHeight);
 
     const cells = await page.evaluate(CELL_OVERFLOW, TOLERANCE);
     if (cells.escaping.length > 0) {
@@ -647,15 +732,19 @@ for (const threshold of THRESHOLDS) {
     // The document can start scrolling only once the modal is open: the scrim
     // is fixed, but what is inside it is not always contained.
     const withModal = await page.evaluate(DOCUMENT_OVERFLOW);
-    if (withModal.scrollWidth - withModal.clientWidth > TOLERANCE) {
+    const modalSideways = withModal.scrollWidth - withModal.clientWidth;
+    const modalDown = withModal.scrollHeight - withModal.clientHeight;
+
+    if (modalSideways > TOLERANCE) {
       reflowFailures += 1;
-      console.log(
-        `FAIL  ${name} modal: the document now scrolls ` +
-          `${withModal.scrollWidth - withModal.clientWidth}px sideways`,
-      );
-      for (const culprit of await page.evaluate(OFFENDERS, [CULPRITS, TOLERANCE])) {
-        console.log(`   !  ${culprit.label} — right edge ${culprit.right} (${culprit.classes})`);
-      }
+      console.log(`FAIL  ${name} modal: the document now scrolls ${modalSideways}px sideways`);
+      await nameTheCulprits(page, "x", withModal.clientWidth);
+    }
+    if (modalDown > TOLERANCE) {
+      reflowFailures += 1;
+      console.log(`FAIL  ${name} modal: the document now scrolls ${modalDown}px down`);
+      console.log(`   ?  ${diagnoseHeight(withModal)}`);
+      await nameTheCulprits(page, "y", withModal.clientHeight);
     }
   }
 
