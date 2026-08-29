@@ -1078,16 +1078,22 @@ body {
 }
 
 /* The prose and the glossary beside each other where the pane holds two
-   reading measures, stacked where it does not. Measured on the tier list at
-   1869x1014: stacked they are 336px of head, side by side 190px, and the words
-   the paragraphs use are the words the list defines — they are read in
-   parallel, not one after the other.
+   reading measures, stacked where it does not. The words the paragraphs use are
+   the words the list defines, so they are read in parallel rather than one
+   after the other.
+
+   Measured on the tier list at 1920x1080, with the prose open: 200px of head
+   side by side against 387px stacked. The old note here said "every phone,
+   every open detail panel and every 200% text zoom", and the middle case has
+   been gone since the panel became a modal over the table — see `.rf-results`.
+   What is left is the phone and the reader who raised their font size, which is
+   why the prose folds at all: shut, this block is 140px at the same size, and
+   the glossary that stays takes the whole width instead of a column of it.
 
    auto-fit rather than a breakpoint, for the reason `.rf-primer-terms` gives
-   below: the pane is narrower whenever a detail panel is open beside it, and
-   the answer at 360px is the same as the answer at 200% text zoom on a desktop.
-   The track floor is the reading measure itself, so a second column opens only
-   when both columns can be read. */
+   below: the answer at 360px is the same as the answer at 200% text zoom on a
+   desktop. The track floor is the reading measure itself, so a second column
+   opens only when both columns can be read. */
 .rf-primer-cols {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(var(--rf-measure), 100%), 1fr));
@@ -1114,9 +1120,9 @@ body {
   margin: 0;
 }
 
-/* auto-fit and not two fixed columns: the note sits inside a pane whose width
-   depends on whether a detail panel is open beside it, and at 360px a term and
-   its definition need the whole line.
+/* auto-fit and not two fixed columns: with the prose folded away the list has
+   the note's whole width to lay six terms across, with it open it has one
+   column of it, and at 360px a term and its definition need the whole line.
 
    `min(18rem, 100%)` rather than the bare 18rem, for the reason spelled out at
    `.rf-panel-cols` below: a track floor is still a floor once auto-fit is down
@@ -1170,8 +1176,10 @@ body {
   flex: 1 1 12rem;
 }
 
-/* auto-fit rather than a fixed three: the cards sit inside a pane whose width
-   depends on whether a detail panel is open beside them. */
+/* auto-fit rather than a fixed three: the cards sit inside a pane that is a
+   phone's width as readily as a desktop's. It used to say "whether a detail
+   panel is open beside them", which stopped being true when the panel became a
+   modal over the table — see `.rf-results`. */
 .rf-ranked-highlights {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

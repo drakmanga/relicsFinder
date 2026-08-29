@@ -6,9 +6,10 @@
  * open on the grounds that "whoever dismissed it in March is the same reader
  * coming back in April", which is true of the glossary beside it and not of the
  * prose: a lookup is needed again, a paragraph is not. What that pinning cost
- * was the head, and the head is what the table needs — 190px of it side by side
- * and 336px stacked, which is every phone, every open detail panel and every
- * 200% text zoom.
+ * was the head, and the head is what the table needs — 200px of it side by side
+ * and 387px stacked, measured at 1920x1080, which is every phone and every
+ * reader who has raised their font size. Folded, the same block is 140px and
+ * the table gets a row back.
  *
  * So the prose folds and the glossary does not, and the fold is remembered.
  *
