@@ -1048,6 +1048,35 @@ body {
   margin: 0 0 var(--rf-space-2);
 }
 
+/* The heading of the primer is the control that folds its prose.
+
+   A reset rather than a `Button`: this is a heading a reader can press, not a
+   thing that looks pressable sitting next to the words. `--rf-hit-grow` is 16
+   because the ink is a 13px line of overline text and the rule wants 44 —
+   `.rf-hit-block` hands the 16 back as negative margin, so the head is exactly
+   as tall as it was before the control existed. The growth reaches the frame's
+   own padding above and the title's own margin below; both are gaps rather
+   than targets, so nothing is stolen from a neighbour. */
+.rf-primer-toggle {
+  --rf-hit-grow: var(--rf-space-4);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rf-space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* `hidden` is display:none in the user agent sheet, which a display of our own
+   overrides on specificity alone — the same trap `.rf-slider-value[hidden]`
+   answers from the other side. Said here so the attribute stays the one place
+   the fold is expressed. */
+.rf-primer-body[hidden] {
+  display: none;
+}
+
 /* The prose and the glossary beside each other where the pane holds two
    reading measures, stacked where it does not. Measured on the tier list at
    1869x1014: stacked they are 336px of head, side by side 190px, and the words

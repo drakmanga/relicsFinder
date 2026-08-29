@@ -288,6 +288,20 @@ const MUTANTS = [
     to: "      seen.qty = Math.max(seen.qty, line.qty);",
   },
   {
+    // A reader who has never met the two columns sees them disagree and
+    // concludes a squad earns double. The first visit is what answers that.
+    name: "a browser that has stored nothing gets the primer folded shut",
+    file: "apps/web/src/lib/primerMemory.ts",
+    from: "  if (raw === null) return PRIMER_DEFAULT_OPEN;",
+    to: "  if (raw === null) return false;",
+  },
+  {
+    name: "storage the primer cannot read is treated as a choice to fold",
+    file: "apps/web/src/lib/primerMemory.ts",
+    from: '  return typeof open === "boolean" ? open : PRIMER_DEFAULT_OPEN;',
+    to: "  return open === true;",
+  },
+  {
     // The reversal this run made: the podium was the head of whatever the table
     // was sorted by, so an ascending column put the three worst relics on it.
     name: "the podium follows the table's own sort again",

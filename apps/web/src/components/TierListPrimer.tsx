@@ -1,10 +1,32 @@
+/**
+ * Over 150 lines (rule 4). Two thirds of this file is the copy itself and the
+ * reasoning behind the wording, and the two halves it would split into — an
+ * argument that folds and a glossary that does not — are laid out in one grid
+ * and read in parallel, so splitting them would put a layout in one file and
+ * both of its columns in two others.
+ */
+import { useState } from "react";
 import { Frame } from "relic-finder-ui";
 
+import { primerOpen, rememberPrimerOpen } from "../lib/primerMemory";
 import { VAULT_LABEL } from "../lib/rows";
 import { RADSHARE_PLAYERS } from "../lib/tierList";
 
 /** One heading, one instance: the view renders exactly one of these. */
 const TITLE_ID = "rf-tier-primer-title";
+const PROSE_ID = "rf-tier-primer-prose";
+
+/**
+ * The question the prose answers, as the label on the control that hides it.
+ *
+ * "How to read this" was the old heading and it teaches nobody: shut, it names
+ * a section rather than a question, so a reader who folded it in March has
+ * nothing to act on in April. This names the one thing behind it that cannot be
+ * worked out from the table — the two columns are per-player numbers that
+ * disagree — and both words in it are defined in the glossary below, which
+ * stays on screen whether the prose is open or not.
+ */
+const PROSE_LABEL = "Why the Solo and Radshare columns disagree";
 
 /**
  * The words on this screen, defined on this screen.
@@ -23,6 +45,13 @@ const TERMS: readonly { readonly term: string; readonly means: string }[] = [
     term: "Radiant",
     means: "the same relic fully refined, for 100 void traces. Better odds on the rare drop.",
   },
+  {
+    /* Added when the prose learned to fold. The word is on screen in both
+       states — it is a column header and half the label on the control — and
+       with the paragraphs shut this line is the only thing defining it. */
+    term: "Radshare",
+    means: `${RADSHARE_PLAYERS} players open the same relic Radiant, and each keeps the best of the ${RADSHARE_PLAYERS} rewards.`,
+  },
   { term: VAULT_LABEL.farmable, means: "the relic is still in the drop tables." },
   { term: VAULT_LABEL.vaulted, means: "it is not. Another player is the only source." },
   {
@@ -34,11 +63,14 @@ const TERMS: readonly { readonly term: string; readonly means: string }[] = [
 /**
  * What a radshare is and what it is not.
  *
- * Always on screen, never a tooltip and never behind a disclosure. Every word
- * this tab uses is vocabulary the game teaches and the screen does not, and a
- * title attribute teaches nobody: touch has no hover, and a reader does not
- * point at a table header hoping something appears. Not dismissible either —
- * whoever dismissed it in March is the same reader coming back in April.
+ * Never a tooltip: touch has no hover, and a reader does not point at a table
+ * header hoping something appears. Behind a disclosure, though, which reverses
+ * what stood here — "never behind a disclosure" and "not dismissible either".
+ * Both were written about the whole block and are true of half of it. The
+ * glossary is a lookup somebody needs again in April and it never folds; the
+ * prose is an argument, read once, and pinning it open cost the table the head
+ * it needs. Which half is which is the whole of the change, and the fold is
+ * remembered per browser — see `primerMemory`.
  *
  * The second paragraph is the load-bearing one. Without it the reader sees 30p
  * beside 17p and concludes that a squad earns double, which is false in the
@@ -62,6 +94,17 @@ const TERMS: readonly { readonly term: string; readonly means: string }[] = [
  * another app could use, and it is already there.
  */
 export function TierListPrimer() {
+  /* Read once, on mount, and written on every click: the store is where the
+     next visit reads its answer, not where this one keeps its state. */
+  const [open, setOpen] = useState(primerOpen);
+
+  const fold = () => {
+    setOpen((wasOpen) => {
+      rememberPrimerOpen(!wasOpen);
+      return !wasOpen;
+    });
+  };
+
   return (
     <Frame
       as="section"
@@ -70,15 +113,29 @@ export function TierListPrimer() {
       aria-labelledby={TITLE_ID}
       innerClassName="rf-primer"
     >
-      <h3 id={TITLE_ID} className="rf-text-overline rf-fg-muted rf-primer-title">
-        How to read this
+      <h3 id={TITLE_ID} className="rf-primer-title">
+        {/* The heading is the control. A separate toggle beside it would put
+            two things on the head's tightest line to say one thing, and the
+            heading is already the sentence a reader would click. */}
+        <button
+          type="button"
+          /* 20px of text inside a 44px box, grown into the frame's own padding
+             (rule 7). See .rf-primer-toggle for the inline half of it. */
+          className="rf-text-overline rf-fg-muted rf-primer-toggle rf-hit-block rf-focus-ring"
+          aria-expanded={open}
+          aria-controls={PROSE_ID}
+          onClick={fold}
+        >
+          {PROSE_LABEL}
+          <span aria-hidden="true">{open ? "▴" : "▾"}</span>
+        </button>
       </h3>
 
       <div className="rf-primer-cols">
         {/* No `rf-prose` here: `.rf-primer-body` holds this to the reading
             measure itself, in the font it is actually set in — `rf-prose` caps
             in ch against whatever size it inherits. */}
-        <div className="rf-text-body-sm rf-primer-body">
+        <div id={PROSE_ID} hidden={!open} className="rf-text-body-sm rf-primer-body">
           {/* "each player takes the best one", not "the group keeps one": the
               column is a per-player number, the same thing the Solo column is,
               or the two would not be comparable at all. The paragraph under
