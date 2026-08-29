@@ -1,8 +1,16 @@
 /**
  * One walk over every view, measuring the three AGENTS.md rules that only a
- * running browser can answer: rule 6 (360px and 200% zoom), rule 6 again from
- * the other side (a pane squeezed until the table inside it has nowhere to
- * render), and rule 7 (44x44 touch targets).
+ * running browser can answer: rule 6 (360px and 200% zoom, both axes), rule 6
+ * again from the other side (a pane squeezed until the table inside it has
+ * nowhere to render), and rule 7 (44x44 touch targets).
+ *
+ * IN EVERY STATE A READER CAN PUT A VIEW IN, which for a year meant the one it
+ * loads in. The controls behind a disclosure are the densest in the
+ * application and none of them had ever been measured; neither had the layout
+ * with a filter drawer open, which is a whole band of it appearing above a
+ * results pane that has to give up the height. Each measurement is reported
+ * under the name of the state it was taken in, so a failure says which state
+ * it was in without being read in context.
  *
  * The command is still called `reflow` because CI, the docs and the operator's
  * fingers all point at that name; what it measures is the list above.
@@ -146,7 +154,7 @@ const EQUIVALENT = ".rf-cell-open";
 const COLLAPSED_UNDER = 36;
 
 /*
-  The six functions below never run in Node. Playwright serialises each one and
+  The functions in capitals below never run in Node. Playwright serialises each one and
   evaluates it inside the page, which is why the ones needing two arguments take
   an array — `page.evaluate` hands over exactly one value — and why none of them
   closes over anything: a constant declared up here does not exist over there.
@@ -565,6 +573,33 @@ const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent]) => {
 */
 const OPENS_A_MODAL = new Set(["relics", "prime items", "sets", "wishlist", "tier list"]);
 
+/*
+  The other thing a reader opens, and the second half of what "as it loads" was
+  hiding. `Filters` is a disclosure on the two catalogue views, shut on first
+  paint (useViewState starts it false), and behind it are two sliders, nine
+  toggles and a chip set that nothing in this walk had ever measured — plus a
+  whole band of layout appearing above a results pane that has to give up the
+  height for it.
+
+  Found by the button's own `aria-controls` rather than by a list of views:
+  a third view growing a filter drawer should be measured because it has one,
+  not because somebody remembered to add it here.
+*/
+const FILTER_TOGGLE = 'button[aria-controls="rf-filter-bar"]';
+
+const openFilters = async (page) => {
+  const toggle = page.locator(FILTER_TOGGLE);
+  if ((await toggle.count()) === 0) return "no filter drawer on this view";
+
+  await toggle.click();
+  try {
+    await page.locator("#rf-filter-bar").waitFor({ state: "visible", timeout: 3000 });
+  } catch {
+    return "clicked Filters, no drawer appeared";
+  }
+  return null;
+};
+
 const openModal = async (page) => {
   const row = page.locator("tbody tr:not([aria-hidden='true'])").first();
   if ((await row.count()) === 0) return "no rows to click";
@@ -601,6 +636,81 @@ const diagnoseHeight = ({ scrollHeight, bodyScrollHeight, clientHeight }) =>
       `containing block, not content in the flow`
     : `html.scrollHeight ${scrollHeight} against body.scrollHeight ${bodyScrollHeight} — both grew, ` +
       `so this is content in the flow that does not fit`;
+
+/**
+ * The document's own box, reported under the name of the state it was measured
+ * in, and how many failures that is.
+ *
+ * A function rather than a block in the walk because a view has more than one
+ * state and the same three sentences are true of all of them: the reader opens
+ * a filter drawer, the reader opens a panel, and neither of those was ever
+ * measured. The state's name goes in the line rather than in a header above it,
+ * so a failure says which state it was in without being read in context.
+ */
+const measureDocument = async (page, where) => {
+  const doc = await page.evaluate(DOCUMENT_OVERFLOW);
+  const sideways = doc.scrollWidth - doc.clientWidth;
+  const down = doc.scrollHeight - doc.clientHeight;
+  const badX = sideways > TOLERANCE;
+  const badY = down > TOLERANCE;
+
+  console.log(
+    `${badX || badY ? "FAIL" : "ok  "}  ${where}: document ${doc.scrollWidth}x${doc.scrollHeight} ` +
+      `in ${doc.clientWidth}x${doc.clientHeight}` +
+      `${badX ? ` — ${sideways}px sideways` : ""}${badY ? ` — ${down}px down` : ""}`,
+  );
+  if (badY) console.log(`   ?  ${diagnoseHeight(doc)}`);
+
+  // Two axes, two failures: they are two different faults with two different
+  // fixes, and a view that does both should not report as one.
+  return { ...doc, badX, badY, failures: (badX ? 1 : 0) + (badY ? 1 : 0) };
+};
+
+/** The panes' boxes, and how many of them have been squeezed out of existence. */
+const reportScrollers = (boxes, where) => {
+  let collapsed = 0;
+
+  for (const scroller of boxes) {
+    if (scroller.height >= COLLAPSED_UNDER) {
+      // Said out loud rather than left silent, because zero rows in a scroller
+      // that HAS height is the one shape of "nothing here" that is allowed, and
+      // the reader of a green run is owed which one this is.
+      if (scroller.rows === 0) {
+        console.log(
+          `      ${where}: no rows in a ${scroller.width}x${scroller.height} scroller — ` +
+            `an empty list, not a collapsed one`,
+        );
+      }
+      continue;
+    }
+    collapsed += 1;
+    console.log(
+      `FAIL  ${where}: ${scroller.label} is ${scroller.width}x${scroller.height} — collapsed, ` +
+        `so the table inside it renders nothing`,
+    );
+  }
+
+  return collapsed;
+};
+
+/** Rule 7 over whatever is on screen, under the name of the state it is in. */
+const measureTouch = async (page, where) => {
+  const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT]);
+
+  if (touch.under.length > 0) {
+    console.log(`FAIL  ${where}: ${touch.under.length} control(s) under the rule 7 minimum`);
+    for (const control of touch.under) {
+      console.log(
+        `   !  ${control.label} — ${control.width}x${control.height}, needs ` +
+          `${control.floor}${control.dense ? " (in a data cell)" : ""}` +
+          `${control.count > 1 ? ` (×${control.count})` : ""}` +
+          `${control.name ? ` — "${control.name}"` : ""}`,
+      );
+    }
+  }
+
+  return { exempt: touch.exempt, failures: touch.under.length };
+};
 
 /** Names the boxes past one edge of the viewport, one line per kind. */
 const nameTheCulprits = async (page, axis, clientEdge) => {
@@ -686,26 +796,8 @@ for (const engineName of ENGINES) {
         .catch(() => {});
       await page.waitForTimeout(1500);
 
-      const doc = await page.evaluate(DOCUMENT_OVERFLOW);
-      const sideways = doc.scrollWidth - doc.clientWidth;
-      const down = doc.scrollHeight - doc.clientHeight;
-      const badX = sideways > TOLERANCE;
-      const badY = down > TOLERANCE;
-      const bad = badX || badY;
-
-      // Two axes, two failures: they are two different faults with two different
-      // fixes, and a view that does both should not report as one.
-      if (badX) reflowFailures += 1;
-      if (badY) reflowFailures += 1;
-
-      const mark = bad ? "FAIL" : "ok  ";
-      console.log(
-        `${mark}  ${name}: document ${doc.scrollWidth}x${doc.scrollHeight} in ` +
-          `${doc.clientWidth}x${doc.clientHeight}` +
-          `${badX ? ` — ${sideways}px sideways` : ""}${badY ? ` — ${down}px down` : ""}`,
-      );
-
-      if (badY) console.log(`   ?  ${diagnoseHeight(doc)}`);
+      const doc = await measureDocument(page, name);
+      reflowFailures += doc.failures;
 
       /*
         The state of the panes, before anything inside them is measured. A view
@@ -721,43 +813,37 @@ for (const engineName of ENGINES) {
         continue;
       }
 
-      for (const scroller of boxes) {
-        if (scroller.height >= COLLAPSED_UNDER) {
-          // Said out loud rather than left silent, because zero rows in a
-          // scroller that HAS height is the one shape of "nothing here" that is
-          // allowed, and the reader of a green run is owed which one this is.
-          if (scroller.rows === 0) {
-            console.log(
-              `      ${name}: no rows in a ${scroller.width}x${scroller.height} scroller — ` +
-                `an empty list, not a collapsed one`,
-            );
-          }
-          continue;
-        }
-        collapseFailures += 1;
-        console.log(
-          `FAIL  ${name}: ${scroller.label} is ${scroller.width}x${scroller.height} — collapsed, ` +
-            `so the table inside it renders nothing`,
-        );
-      }
+      collapseFailures += reportScrollers(boxes, name);
 
-      const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT]);
+      const touch = await measureTouch(page, name);
       exempted += touch.exempt;
-      if (touch.under.length > 0) {
-        touchFailures += touch.under.length;
-        console.log(`FAIL  ${name}: ${touch.under.length} control(s) under the rule 7 minimum`);
-        for (const control of touch.under) {
-          console.log(
-            `   !  ${control.label} — ${control.width}x${control.height}, needs ` +
-              `${control.floor}${control.dense ? " (in a data cell)" : ""}` +
-              `${control.count > 1 ? ` (×${control.count})` : ""}` +
-              `${control.name ? ` — "${control.name}"` : ""}`,
-          );
-        }
-      }
+      touchFailures += touch.failures;
 
-      if (badX) await nameTheCulprits(page, "x", doc.clientWidth);
-      if (badY) await nameTheCulprits(page, "y", doc.clientHeight);
+      if (doc.badX) await nameTheCulprits(page, "x", doc.clientWidth);
+      if (doc.badY) await nameTheCulprits(page, "y", doc.clientHeight);
+
+      /*
+        The filter drawer, measured and then shut again. Shut again because
+        everything below this measures the panel, and a panel opened over an
+        open drawer is a third state rather than the second one — the modal
+        numbers would stop being comparable with the run before it.
+      */
+      const noDrawer = await openFilters(page);
+      if (noDrawer === null) {
+        const drawer = `${name} · filters open`;
+        const drawerDoc = await measureDocument(page, drawer);
+        reflowFailures += drawerDoc.failures;
+        if (drawerDoc.badX) await nameTheCulprits(page, "x", drawerDoc.clientWidth);
+        if (drawerDoc.badY) await nameTheCulprits(page, "y", drawerDoc.clientHeight);
+
+        collapseFailures += reportScrollers((await page.evaluate(SCROLLERS)).boxes, drawer);
+
+        const drawerTouch = await measureTouch(page, drawer);
+        exempted += drawerTouch.exempt;
+        touchFailures += drawerTouch.failures;
+
+        await page.locator(FILTER_TOGGLE).click();
+      }
 
       const cells = await page.evaluate(CELL_OVERFLOW, TOLERANCE);
       if (cells.escaping.length > 0) {
@@ -812,6 +898,18 @@ for (const engineName of ENGINES) {
             `past the frame's ${modal.frameRight}`,
         );
       }
+
+      /*
+        Rule 7 inside the panel, which is where the densest controls in the
+        application are: the info toggles beside every heading, the quantity
+        steppers up to fourteen at a time, the close, the owned marks on a set.
+        None of them is inside a `<td>`, so §5.4's data-cell exception does not
+        reach them — they are exactly the standalone shape it says is not
+        excused, and until now nothing had ever measured one.
+      */
+      const panelTouch = await measureTouch(page, `${name} · panel open`);
+      exempted += panelTouch.exempt;
+      touchFailures += panelTouch.failures;
 
       // The document can start scrolling only once the modal is open: the scrim
       // is fixed, but what is inside it is not always contained.
