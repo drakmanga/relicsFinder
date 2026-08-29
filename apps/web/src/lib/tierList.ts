@@ -272,6 +272,29 @@ export function sortTierRows(rows: TierListRow[], sort: TierSortState): TierList
 }
 
 /**
+ * The three best relics in the population, and not the head of what is on screen.
+ *
+ * Always `DEFAULT_TIER_SORT` descending, whatever column the table is sorted by
+ * and whichever way its arrow points. The cards used to be the head of the
+ * sorted list "so the two cannot disagree about what top three means", which
+ * read the arrow as a question about the whole page. It is not: it reorders a
+ * table, and a second click on a header put the three WORST relics on a podium
+ * still numbered 1, 2, 3 — the app asserting a rank that is not true, with
+ * nothing on screen to tell the two states apart.
+ *
+ * One fixed column also fixes the figure on the cards: they carry the number
+ * they are ranked by and never the sorted column's own.
+ *
+ * The population is the one thing that still moves them, and it is not a sort:
+ * it decides which relics are in the running at all, and it already re-bands
+ * every letter by moving both medians. A card naming a relic absent from the
+ * table under it would be worse than one that moves.
+ */
+export function topOfRanking(rows: TierListRow[], count: number): TierListRow[] {
+  return sortTierRows(rows, { column: DEFAULT_TIER_SORT, direction: "desc" }).slice(0, count);
+}
+
+/**
  * The same prices as they stood ninety days ago.
  *
  * `ItemPrice.trend` is the percent the price stands at against its ninety-day

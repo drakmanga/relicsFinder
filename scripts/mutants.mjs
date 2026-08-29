@@ -288,6 +288,14 @@ const MUTANTS = [
     to: "      seen.qty = Math.max(seen.qty, line.qty);",
   },
   {
+    // The reversal this run made: the podium was the head of whatever the table
+    // was sorted by, so an ascending column put the three worst relics on it.
+    name: "the podium follows the table's own sort again",
+    file: "apps/web/src/lib/tierList.ts",
+    from: '  return sortTierRows(rows, { column: DEFAULT_TIER_SORT, direction: "desc" }).slice(0, count);',
+    to: "  return rows.slice(0, count);",
+  },
+  {
     name: "the split reports the state being asked about as though it were elsewhere",
     file: "apps/web/src/lib/wishlist.ts",
     from: '        line.kind === "relic" && line.itemName === itemName && line.refinement !== refinement,',

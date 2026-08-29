@@ -36,6 +36,7 @@ import {
   RADSHARE_PLAYERS,
   TIER_SORT_LABEL,
   sortTierRows,
+  topOfRanking,
   type TierLetter,
   type TierList,
   type TierSortColumn,
@@ -104,24 +105,10 @@ export function TierListTable({
 
   const rows = useMemo(() => sortTierRows(tierList.rows, sort), [tierList.rows, sort]);
 
-  /* The cards are the head of the sorted list rather than a ranking of their
-     own, so the two cannot disagree about what "top three" means. Two cases
-     follow from that and both are deliberate: sorted by name they would read
-     "Axi A1, Axi A2, Axi A3", which is not a ranking at all, so that one is
-     ranked by the column the view opens on instead; and a column pointing
-     ascending puts the three lowest relics on the cards, because that is what
-     the reader asked the table for. Sorted by nothing, `rows` is already the
-     ranking. */
-  const rankedBy: Exclude<TierSortColumn, "relic"> =
-    sort === null || sort.column === "relic" ? DEFAULT_TIER_SORT : sort.column;
-  const top = useMemo(
-    () =>
-      (sort !== null && sort.column === "relic"
-        ? sortTierRows(tierList.rows, { column: rankedBy, direction: "desc" })
-        : rows
-      ).slice(0, HIGHLIGHT_COUNT),
-    [rows, tierList.rows, sort, rankedBy],
-  );
+  /* The cards are a standing answer to "which relics are worth opening" and the
+     sort arrows do not touch them — see `topOfRanking`, which carries why that
+     was reversed. The population does, and it is the only thing that does. */
+  const top = useMemo(() => topOfRanking(tierList.rows, HIGHLIGHT_COUNT), [tierList.rows]);
 
   /*
     The state the panel opens on is the one every relic panel opens on, whatever
@@ -216,16 +203,8 @@ export function TierListTable({
           key={row.relicFullName}
           rank={index + 1}
           title={row.relicFullName}
-          figureLabel={TIER_SORT_LABEL[rankedBy]}
-          figure={
-            <span className="rf-text-data-lg rf-gold">
-              {rankedBy === "price" ? (
-                <PlatPrice value={row.relicPrice} size="lg" />
-              ) : (
-                `${(rankedBy === "solo" ? row.soloValue : row.radshareValue).toFixed(1)}p`
-              )}
-            </span>
-          }
+          figureLabel={TIER_SORT_LABEL[DEFAULT_TIER_SORT]}
+          figure={<span className="rf-text-data-lg rf-gold">{row.soloValue.toFixed(1)}p</span>}
           meta={
             <span className="rf-highlight-meta-row">
               <span className="rf-inline">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ALL_TIER_SORTS,
   buildTierList,
   DEFAULT_TIER_SORT,
   medianOf,
@@ -8,6 +9,7 @@ import {
   tierFor,
   RADSHARE_PLAYERS,
   TIER_LETTERS,
+  topOfRanking,
   TREND_ARROW_THRESHOLD,
   type TierListRow,
 } from "./tierList";
@@ -595,5 +597,56 @@ describe("the order the view asks for", () => {
     sortTierRows(rows, { column: "solo", direction: "desc" });
 
     expect(names(rows)).toEqual(["Lith A1", "Lith A2", "Lith A3", "Lith A4"]);
+  });
+});
+
+describe("the podium above the table", () => {
+  const market = prices({ big: 100, small: 10 });
+
+  /** Four relics worth 100, 10, 8 and 5, all different: a podium has an order. */
+  const catalogue = [
+    ...mirrored("Lith A1", [drop("small", 100)]),
+    ...mirrored("Lith A2", [drop("big", 100)]),
+    ...mirrored("Lith A3", [drop("small", 50)]),
+    ...mirrored("Lith A4", [drop("small", 80)]),
+  ];
+
+  const names = (rows: TierListRow[]) => rows.map((row) => row.relicFullName);
+
+  it("names the three best of the population, by the column the view opens on", () => {
+    const { rows } = buildTierList(catalogue, market, undefined, undefined, "all");
+
+    expect(names(topOfRanking(rows, 3))).toEqual(["Lith A2", "Lith A1", "Lith A4"]);
+  });
+
+  it("stands still under every sort the table offers, in both directions", () => {
+    // The defect this closes: the cards were the head of the sorted list, so a
+    // second click on a header put the three WORST relics on a podium still
+    // numbered 1, 2, 3. The sorted list is passed in here because that is the
+    // list the cards used to be taken from.
+    const { rows } = buildTierList(
+      catalogue,
+      market,
+      relicMarket({ "Lith A1": [3, 20], "Lith A3": [8, 20] }),
+      undefined,
+      "all",
+    );
+    const podium = names(topOfRanking(rows, 3));
+
+    for (const column of ALL_TIER_SORTS) {
+      for (const direction of ["asc", "desc"] as const) {
+        expect(names(topOfRanking(sortTierRows(rows, { column, direction }), 3))).toEqual(podium);
+      }
+    }
+  });
+
+  it("does move with the population, which is not a sort", () => {
+    // The population decides which relics are in the running at all and moves
+    // both medians with it. A card naming a relic absent from the table under
+    // it would be worse than one that moves.
+    const droppable = new Set(["Lith A1", "Lith A3", "Lith A4"]);
+    const { rows } = buildTierList(catalogue, market, undefined, droppable, "farmable");
+
+    expect(names(topOfRanking(rows, 3))).toEqual(["Lith A1", "Lith A4", "Lith A3"]);
   });
 });
