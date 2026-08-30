@@ -58,6 +58,16 @@ const TERMS: readonly { readonly term: string; readonly means: string }[] = [
     term: "Relic price",
     means: "what the relic itself sells for. It sits beside the letters and never moves them.",
   },
+  {
+    /* The last column, and the only one that answers in words. It says
+       "Steady", "Nothing to compare" or a percentage, and the header's own
+       one-line hint is a `title` nobody on a touch screen can reach — so what
+       the number is measured against is said here instead. */
+    term: "Trend",
+    means:
+      "how the Solo column has moved against its average over the last 90 days. " +
+      "An arrow appears past 10%.",
+  },
 ];
 
 /**
