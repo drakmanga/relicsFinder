@@ -19,7 +19,7 @@ const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
-  "RelicMarketTradeCountTest,RelicMarketTrendGapTest," +
+  "RelicMarketTradeCountTest,RelicMarketTrendGapTest,RankSensitivityTest," +
   "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
   "DucatServiceIndexTest,OwnedServiceMigrationTest" +
   " -DfailIfNoTests=false";
@@ -178,6 +178,34 @@ const MUTANTS = [
     to: "static final int MIN_TREND_DAYS = 6;",
   },
   {
+    // The four below are the rank-aware allocation. The first three break the
+    // signal — every part named, the head swallowing the crowd, a target of
+    // zero seconds — and the fourth breaks what the signal is for: a floor that
+    // does not follow the target is a target that cannot buy anything.
+    name: "every part in the head is called sensitive",
+    file: `${SERVICE}/RankSensitivity.java`,
+    from: "                if (flip >= RelicMarketService.TARGET_DRIFT) continue;\n",
+    to: "",
+  },
+  {
+    name: "the ranked head reaches into the crowd",
+    file: `${SERVICE}/RankSensitivity.java`,
+    from: "static final int RANKED_HEAD = 50;",
+    to: "static final int RANKED_HEAD = 60;",
+  },
+  {
+    name: "two relics at the same value ask for an interval of nothing",
+    file: `${SERVICE}/RankSensitivity.java`,
+    from: "double target = Math.max(SENSITIVE_FLOOR, flip);",
+    to: "double target = flip;",
+  },
+  {
+    name: "the shorter floor stops following the target",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "Duration floor = target < TARGET_DRIFT ? SENSITIVE_MIN_TTL : MIN_TTL;",
+    to: "Duration floor = MIN_TTL;",
+  },
+  {
     name: "a traded item is re-read as rarely as a dead one",
     file: `${SERVICE}/RelicMarketService.java`,
     from: "return volume != null && volume >= ACTIVE_VOLUME ? ACTIVE_TTL : IDLE_TTL;",
@@ -234,8 +262,8 @@ const MUTANTS = [
   {
     name: "the interval stops scaling with the square root of time",
     file: `${SERVICE}/RelicMarketService.java`,
-    from: "        double wanted = elapsed * Math.pow(TARGET_DRIFT / drift, 2);",
-    to: "        double wanted = elapsed * (TARGET_DRIFT / drift);",
+    from: "        double wanted = elapsed * Math.pow(target / drift, 2);",
+    to: "        double wanted = elapsed * (target / drift);",
   },
   {
     name: "one quiet reading is allowed to set the interval on its own",
@@ -246,7 +274,7 @@ const MUTANTS = [
   {
     name: "the interval may drop below what the sweep can honour",
     file: `${SERVICE}/RelicMarketService.java`,
-    from: "        double bounded = Math.max(MIN_TTL.toSeconds(), Math.min(MAX_TTL.toSeconds(), damped));",
+    from: "        double bounded = Math.max(floor.toSeconds(), Math.min(MAX_TTL.toSeconds(), damped));",
     to: "        double bounded = Math.min(MAX_TTL.toSeconds(), damped);",
   },
   {

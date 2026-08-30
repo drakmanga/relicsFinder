@@ -38,6 +38,8 @@ public class PriceWarmupRunner implements ApplicationRunner {
 
     private final RelicLoadService relicLoadService;
     private final RelicMarketService marketService;
+    /** Only for telling the warmer which prices can reorder the Tier List. */
+    private final RankSensitivity rankSensitivity;
     /** Only for the set a part belongs to — the assembled set is priced too. */
     private final DucatService ducatService;
     /** Only for what to price first. */
@@ -47,11 +49,13 @@ public class PriceWarmupRunner implements ApplicationRunner {
             RelicLoadService relicLoadService,
             RelicMarketService marketService,
             DucatService ducatService,
-            WishlistService wishlistService) {
+            WishlistService wishlistService,
+            RankSensitivity rankSensitivity) {
         this.relicLoadService = relicLoadService;
         this.marketService = marketService;
         this.ducatService = ducatService;
         this.wishlistService = wishlistService;
+        this.rankSensitivity = rankSensitivity;
     }
 
     @Override
@@ -116,6 +120,7 @@ public class PriceWarmupRunner implements ApplicationRunner {
         try {
             Set<String> itemNames = new LinkedHashSet<>();
             Set<String> relicNames = new LinkedHashSet<>();
+            List<Relic> intact = new ArrayList<>();
 
             for (Relic relic : relicLoadService.loadRelicsWithCheckData()) {
                 // One refinement is enough: the four states share an item list,
@@ -127,6 +132,7 @@ public class PriceWarmupRunner implements ApplicationRunner {
                 }
 
                 if (relic.getRewards() == null) continue;
+                intact.add(relic);
 
                 for (Rewards reward : relic.getRewards()) {
                     if (reward.getItemName() == null) continue;
@@ -149,8 +155,15 @@ public class PriceWarmupRunner implements ApplicationRunner {
             slugs.addAll(marketService.enqueueAllRelics(relicNames));
             marketService.setSweepList(slugs);
 
+            // Which of those prices can reorder the head of the Tier List, on
+            // the same beat and out of the same catalogue read. It costs no
+            // request: the prices it reads are the ones already in the cache,
+            // and a part with none simply counts as nothing until it has one.
+            rankSensitivity.measure(intact, marketService.getItemPrices(new ArrayList<>(itemNames)));
+
             System.out.println("price-warmup: " + itemNames.size() + " items and "
-                    + relicNames.size() + " relics in rotation");
+                    + relicNames.size() + " relics in rotation, "
+                    + rankSensitivity.sensitiveCount() + " of them read faster for the ranking");
 
         } catch (Exception e) {
             System.err.println("price-warmup failed: " + e.getMessage());

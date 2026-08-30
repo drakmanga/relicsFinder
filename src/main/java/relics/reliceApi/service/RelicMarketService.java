@@ -114,6 +114,29 @@ public class RelicMarketService {
     private static final Duration MAX_TTL = Duration.ofHours(24);
 
     /**
+     * The floor for the handful of parts that decide the order of the Tier
+     * List's head — see {@link RankSensitivity}.
+     *
+     * <p>The 3h floor above is a statement about the sweep as a whole and this
+     * does not contradict it: the sweep's cost is one fetch per five seconds,
+     * 17.280 a day, and its lap only takes 2,1 hours in the worst case where
+     * every entry is expired at once. One tick walks past as many fresh names
+     * as it needs to, so a name that expires hourly is reached within minutes
+     * while the catalogue around it is quiet.
+     *
+     * <p>What pays for it, measured on the live cache on 2026-08-30 rather than
+     * projected: the catalogue asks for 1.992 reads a day today, of which 1.079
+     * entries of 1.512 already sit at the 24h ceiling. The tail therefore
+     * cannot pay — there is nothing left to give up — and the increase comes
+     * out of the sweep's own idle capacity, which is 15.288 reads a day. With
+     * this floor and a head of fifty relics the catalogue asks for about 3.400
+     * a day: 1,7x today, 20% of what the sweep can serve, and 1,4% of the rate
+     * {@link MarketRateLimiter} allows. Neither the sweep interval nor the
+     * limiter moves.
+     */
+    private static final Duration SENSITIVE_MIN_TTL = Duration.ofHours(1);
+
+    /**
      * How far one reading may move the interval.
      *
      * <p>A single quiet read on an item that usually moves is not proof it has
@@ -157,6 +180,8 @@ public class RelicMarketService {
     private final ColdStartOrder coldStartOrder;
     /** Only for the slugs the market turns out to have no item for. */
     private final UnknownItemReport unknownItems;
+    /** Only for how much drift each item is allowed before it is re-read. */
+    private final RankSensitivity rankSensitivity;
 
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
 
@@ -259,13 +284,15 @@ public class RelicMarketService {
 
     public RelicMarketService(DucatService ducatService, SetListingService setListingService,
                               PriceCacheStore store, MarketRateLimiter rateLimiter,
-                              ColdStartOrder coldStartOrder, UnknownItemReport unknownItems) {
+                              ColdStartOrder coldStartOrder, UnknownItemReport unknownItems,
+                              RankSensitivity rankSensitivity) {
         this.ducatService = ducatService;
         this.setListingService = setListingService;
         this.store = store;
         this.rateLimiter = rateLimiter;
         this.coldStartOrder = coldStartOrder;
         this.unknownItems = unknownItems;
+        this.rankSensitivity = rankSensitivity;
     }
 
     /**
@@ -408,6 +435,29 @@ public class RelicMarketService {
      * @param fresh    the reading replacing it
      */
     static Duration nextTtl(Cached previous, Cached fresh) {
+        return nextTtl(previous, fresh, TARGET_DRIFT);
+    }
+
+    /**
+     * The same rule, aimed at a drift this item in particular is allowed.
+     *
+     * <p>The two-argument form above is this one at {@link #TARGET_DRIFT}, and
+     * that is the shape of the extension: the law is unchanged and only what it
+     * is pointed at moves. {@link RankSensitivity} names a smaller target for
+     * the parts that can reorder the head of the Tier List, and a smaller
+     * target is a shorter interval by the square of the ratio — 1% against 5%
+     * is a twenty-fifth of the interval, which is what turns a day into an
+     * hour.
+     *
+     * <p>A named target below the default is also what unlocks
+     * {@link #SENSITIVE_MIN_TTL}. Those two belong together: a target that asks
+     * for forty minutes against a floor of three hours would be a rule with no
+     * effect, and a floor of one hour for the whole catalogue would be a
+     * fivefold increase in traffic bought for nothing.
+     *
+     * @param target the drift this item is allowed to accumulate between reads
+     */
+    static Duration nextTtl(Cached previous, Cached fresh, double target) {
         if (fresh == null || fresh.failed() || fresh.avg() == null) return null;
         if (previous == null || previous.avg() == null || previous.avg() <= 0) return null;
 
@@ -416,6 +466,7 @@ public class RelicMarketService {
 
         double drift = Math.abs(fresh.avg() - previous.avg()) / previous.avg();
         double current = previous.ttl().toSeconds();
+        Duration floor = target < TARGET_DRIFT ? SENSITIVE_MIN_TTL : MIN_TTL;
 
         // A price that did not move divides by zero on purpose. The infinity
         // that comes back is the honest answer — nothing happened, so no
@@ -423,10 +474,10 @@ public class RelicMarketService {
         // longest step allowed. A guard here would compute the same number by a
         // longer route, which is how it was written first and why the mutation
         // check could not tell the two apart.
-        double wanted = elapsed * Math.pow(TARGET_DRIFT / drift, 2);
+        double wanted = elapsed * Math.pow(target / drift, 2);
 
         double damped = Math.max(current * MAX_STEP_DOWN, Math.min(current * MAX_STEP_UP, wanted));
-        double bounded = Math.max(MIN_TTL.toSeconds(), Math.min(MAX_TTL.toSeconds(), damped));
+        double bounded = Math.max(floor.toSeconds(), Math.min(MAX_TTL.toSeconds(), damped));
 
         return Duration.ofSeconds(Math.round(bounded));
     }
@@ -841,7 +892,7 @@ public class RelicMarketService {
                 // The reading being replaced is the other half of the
                 // measurement, so the interval is worked out before it is gone.
                 Cached fresh = fetch(slug);
-                cache.put(slug, fresh.withTtl(nextTtl(existing, fresh)));
+                cache.put(slug, fresh.withTtl(nextTtl(existing, fresh, rankSensitivity.targetFor(slug))));
                 dirty.set(true);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

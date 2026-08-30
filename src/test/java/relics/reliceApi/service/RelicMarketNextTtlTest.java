@@ -113,6 +113,48 @@ class RelicMarketNextTtlTest {
     }
 
     @Test
+    void aimsAtTheDriftThisItemInParticularIsAllowed() {
+        // The extension, and the whole of it: the law does not change, only
+        // what it is pointed at. 5% in six hours is on target at the default,
+        // and five times too much for an item allowed 1% — so the interval
+        // wants a twenty-fifth of six hours, and the step floor holds it to
+        // half on this reading.
+        Cached previous = reading(100, Duration.ofHours(6), Duration.ofHours(6));
+
+        assertThat(RelicMarketService.nextTtl(previous, fresh(105)))
+                .isBetween(Duration.ofHours(6).minusMinutes(5), Duration.ofHours(6).plusMinutes(5));
+        assertThat(RelicMarketService.nextTtl(previous, fresh(105), 0.01))
+                .isEqualTo(Duration.ofHours(3));
+    }
+
+    @Test
+    void aNamedTargetIsWhatUnlocksTheShorterFloor() {
+        // Three hours is a statement about the sweep as a whole; an hour is
+        // what the handful of parts deciding the Tier List's head are worth.
+        // Same reading, same drift, and only the target differs — which is what
+        // makes this the pair that says the floor follows the target rather
+        // than the clock.
+        Cached previous = reading(100, Duration.ofHours(3), Duration.ofHours(3));
+
+        assertThat(RelicMarketService.nextTtl(previous, fresh(300))).isEqualTo(Duration.ofHours(3));
+        assertThat(RelicMarketService.nextTtl(previous, fresh(300), 0.01))
+                .isEqualTo(Duration.ofMinutes(90));
+    }
+
+    @Test
+    void anItemThatHoldsStillIsReadNoMoreOftenThanItIsToday() {
+        // The promise the reallocation must not break. A price that did not
+        // move earns the longest interval there is, and being named by the
+        // ranking does not shorten it: the target is a budget for movement, and
+        // an item with no movement spends none of it.
+        Cached previous = reading(100, Duration.ofHours(20), Duration.ofHours(20));
+
+        assertThat(RelicMarketService.nextTtl(previous, fresh(100), 0.01))
+                .isEqualTo(RelicMarketService.nextTtl(previous, fresh(100)))
+                .isEqualTo(Duration.ofHours(24));
+    }
+
+    @Test
     void neverGoesAboveADay() {
         Duration next = RelicMarketService.nextTtl(
                 reading(100, Duration.ofHours(20), Duration.ofHours(20)), fresh(100));
