@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import relics.reliceApi.model.ItemPrice;
 import relics.reliceApi.model.PricePoint;
 import relics.reliceApi.model.RelicPrice;
+import relics.reliceApi.model.TrendGap;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
@@ -124,6 +125,23 @@ public class RelicMarketService {
     private static final double MAX_STEP_DOWN = 0.5;
 
     private static final Duration TIMEOUT = Duration.ofSeconds(15);
+
+    /**
+     * How many of the last ninety days must have carried a completed trade
+     * before a trend is worth computing.
+     *
+     * <p>The market sends one entry per day that traded, so the size of the
+     * history IS the number of days that sold — a week of them, out of ninety.
+     * Under that the average being compared against is three or four sales
+     * spread over three months, and the percentage that comes out of it moves
+     * with which of them happened to land rather than with the price.
+     *
+     * <p>The consequence is not small and it is the reason this has a name:
+     * relics trade about an order of magnitude more thinly than parts, so this
+     * floor is what most relics on the Tier List fall under, and every screen
+     * showing a trend has to have an answer for the item it silences.
+     */
+    static final int MIN_TREND_DAYS = 7;
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(TIMEOUT)
@@ -427,6 +445,36 @@ public class RelicMarketService {
         return cached == null || cached.failed();
     }
 
+    /**
+     * Why this entry carries no trend, for the screen that has to say so.
+     *
+     * <p>Three of the causes are decided in here and only one of them is
+     * visible from outside: an item with a price and no trend is thin, which a
+     * caller could work out, while "no listings" and "the market did not
+     * answer" are the same absence once {@link Cached#failed} stays behind. So
+     * all three are named here rather than two, because a rule split across the
+     * wire is a rule nobody can read.
+     *
+     * <p>Null for a trend that exists, and null for an item the cache has not
+     * reached — see {@link TrendGap} for why those two are deliberately the
+     * same answer.
+     *
+     * <p>The order of the branches is the meaning. A failed call has no price
+     * and no history, exactly like an item nobody sells, so asking about the
+     * failure first is what stops a minute of bad network being reported as a
+     * market that does not exist.
+     */
+    static TrendGap trendGap(Cached cached) {
+        if (cached == null) return null;
+        if (cached.failed()) return TrendGap.NO_ANSWER;
+        // A null price means nothing sold in ninety days either: fetch() backfills
+        // the 48-hour window from the last day of history whenever there is one,
+        // so an empty price and a non-empty history cannot both be true.
+        if (cached.avg() == null) return TrendGap.NO_LISTINGS;
+        if (cached.trend() == null) return TrendGap.TOO_FEW_SALES;
+        return null;
+    }
+
     /* ------------------------------------------------------------------ */
     /* Reads — never block on the network                                  */
     /* ------------------------------------------------------------------ */
@@ -453,13 +501,14 @@ public class RelicMarketService {
         DucatService.ItemMeta meta = ducatService.lookup(itemName);
 
         // Field order matches ItemPrice: name, price, median, volume, trend,
-        // slug, ducats, set, category, copies per set.
+        // trend gap, slug, ducats, set, category, copies per set.
         return new ItemPrice(
                 itemName,
                 cached == null ? null : cached.avg(),
                 cached == null ? null : cached.median(),
                 cached == null ? null : cached.volume(),
                 cached == null ? null : cached.trend(),
+                trendGap(cached),
                 slug,
                 meta.ducats(),
                 meta.setName(),
@@ -531,6 +580,7 @@ public class RelicMarketService {
                 cached == null ? null : cached.median(),
                 cached == null ? null : cached.volume(),
                 cached == null ? null : cached.trend(),
+                trendGap(cached),
                 slug,
                 // A relic has no ducat value, no set, no kind of gear and no
                 // place in one: it is the container, not the contents.
@@ -959,9 +1009,21 @@ public class RelicMarketService {
         return out;
     }
 
-    /** Current price against the 90-day average, as a percentage. */
-    private Double trend(Double current, List<PricePoint> history) {
-        if (current == null || history.size() < 7) return null;
+    /**
+     * Current price against the 90-day average, as a percentage.
+     *
+     * <p>Static and package-private so the floor below can be read off a test
+     * rather than off this comment: {@link #MIN_TREND_DAYS} decides which half
+     * of the catalogue gets a number, and the only other way to reach it is
+     * through an HTTP call.
+     *
+     * <p>Null under the floor, and null again when the ninety days average to
+     * nothing — a division by zero, and a case {@link #trendGap} reports as a
+     * market too thin to measure, which is what a price of zero over ninety
+     * days is.
+     */
+    static Double trend(Double current, List<PricePoint> history) {
+        if (current == null || history.size() < MIN_TREND_DAYS) return null;
 
         double sum = 0;
         for (PricePoint point : history) sum += point.getAvgPrice();

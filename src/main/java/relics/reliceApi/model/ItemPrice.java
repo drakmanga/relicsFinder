@@ -41,6 +41,15 @@ public class ItemPrice {
     /** Percent change against the 90-day average. Null without enough history. */
     private Double trend;
 
+    /**
+     * Why {@code trend} is null, when something here knows.
+     *
+     * <p>Null both when the trend is present and when this item has not been
+     * fetched yet — see {@link TrendGap}, which carries why those two share an
+     * absence.
+     */
+    private TrendGap trendGap;
+
     /** The warframe.market slug the price was read from, for debugging. */
     private String slug;
 
