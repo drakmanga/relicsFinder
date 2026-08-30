@@ -427,56 +427,62 @@ body {
    Every other width is its header word measured at 1248: "Best drop" and
    "Ducats" are both wider than the numbers under them. */
 .rf-cols-items col:nth-child(1) {
-  width: 15%;
+  width: 14%;
 } /* Item */
 .rf-cols-items col:nth-child(2) {
-  width: 10%;
+  width: 9%;
 } /* Set */
 .rf-cols-items col:nth-child(3) {
-  width: 9%;
-} /* Rarity — the dot and "Uncommon", which needs 105px at 1280 */
+  width: 11%;
+} /* Status — the set's, repeated on every part of it */
 .rf-cols-items col:nth-child(4) {
-  width: 24%;
-} /* Relics — four tier chips */
+  width: 8%;
+} /* Rarity — the dot and "Uncommon", which needs 105px at 1280 */
 .rf-cols-items col:nth-child(5) {
-  width: 7%;
-} /* Best drop */
+  width: 20%;
+} /* Relics — four tier chips */
 .rf-cols-items col:nth-child(6) {
-  width: 7%;
-} /* Ducats */
+  width: 6%;
+} /* Best drop */
 .rf-cols-items col:nth-child(7) {
   width: 6%;
-} /* Price */
+} /* Ducats */
 .rf-cols-items col:nth-child(8) {
-  width: 12%;
-} /* Wishlist — the stepper is 102px wide and does not shrink */
+  width: 6%;
+} /* Price */
 .rf-cols-items col:nth-child(9) {
-  width: 4%;
-} /* Info */
+  width: 11%;
+} /* Wishlist — the stepper is 102px wide and does not shrink */
 .rf-cols-items col:nth-child(10) {
+  width: 3%;
+} /* Info */
+.rf-cols-items col:nth-child(11) {
   width: 6%;
 } /* Market */
 
 .rf-cols-sets col:nth-child(1) {
-  width: 8%;
+  width: 7%;
 } /* Owned — a tick under a six-letter heading */
 .rf-cols-sets col:nth-child(2) {
-  width: 23%;
+  width: 20%;
 } /* Set */
 .rf-cols-sets col:nth-child(3) {
-  width: 19%;
-} /* Progress */
+  width: 12%;
+} /* Status — "Long vaulted" is the longest word it holds */
 .rf-cols-sets col:nth-child(4) {
-  width: 11%;
-} /* Missing */
+  width: 15%;
+} /* Progress */
 .rf-cols-sets col:nth-child(5) {
-  width: 14%;
-} /* To finish */
+  width: 9%;
+} /* Missing */
 .rf-cols-sets col:nth-child(6) {
   width: 13%;
-} /* Whole set */
+} /* To finish */
 .rf-cols-sets col:nth-child(7) {
-  width: 12%;
+  width: 13%;
+} /* Whole set */
+.rf-cols-sets col:nth-child(8) {
+  width: 11%;
 } /* Wishlist — the stepper is 102px and does not shrink */
 
 .rf-cols-ducats col:nth-child(1) {
@@ -1500,6 +1506,35 @@ body {
   font-size: var(--rf-text-caption);
   color: var(--rf-fg-muted);
   white-space: nowrap;
+}
+
+/* Whether a Prime set still drops, as a word in a table cell.
+
+   The four colours are the relics table's Status column, not the price delta's:
+   there green means droppable, on a delta green means the price rose, and a set
+   that drops is the one whose price is falling. See SetPhase.tsx — the word is
+   the answer and the colour only makes the column scannable. */
+.rf-phase {
+  font-size: var(--rf-text-caption);
+  white-space: nowrap;
+}
+
+.rf-phase-dropping {
+  color: var(--rf-success);
+}
+
+/* Gold rather than a second green: this is the phase a reader acts on, and it
+   has to separate from "Dropping" at a glance rather than only on reading. */
+.rf-phase-recently-vaulted {
+  color: var(--rf-gold-200);
+}
+
+.rf-phase-long-vaulted {
+  color: var(--rf-fg-muted);
+}
+
+.rf-phase-unknown {
+  color: var(--rf-fg-disabled);
 }
 
 /* ----------------------------------------------------------- Detail panel -

@@ -63,6 +63,7 @@ export function App() {
   const {
     relics,
     unvaulted,
+    lifecycle,
     wishlist,
     ownedParts,
     endoOffers,
@@ -274,6 +275,7 @@ export function App() {
               relicPrices={relicPrices.data}
               relicPricesFilling={relicPriceProgress.filling}
               unvaulted={unvaulted.data}
+              lifecycle={lifecycle.data}
               term={filters.term}
               activeFilters={activeFilters}
               onClearFilters={() => setFilters({ ...emptyFilters(), term: filters.term })}

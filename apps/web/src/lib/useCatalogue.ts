@@ -7,6 +7,7 @@ import {
   useMarketStatus,
   useRelicPrices,
   useRelics,
+  useSetLifecycle,
   useUnvaultedNames,
 } from "../api/queries";
 import { usePriceRefresh } from "./priceRefresh";
@@ -74,6 +75,10 @@ export function useCatalogue({
 }: Input) {
   const relics = useRelics();
   const unvaulted = useUnvaultedNames();
+  /* Unconditional, like the catalogue: 160 rows read by four surfaces across
+     three views, and gating it per view would refetch nothing and complicate
+     every reader. */
+  const lifecycle = useSetLifecycle();
   const wishlist = useWishlist();
   const ownedParts = useOwned();
 
@@ -440,6 +445,7 @@ export function useCatalogue({
   return {
     relics,
     unvaulted,
+    lifecycle,
     wishlist,
     ownedParts,
     endoOffers,

@@ -9,13 +9,15 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Skeleton, Table, TableCell, TableCols, TableHeaderCell, TableRow } from "relic-finder-ui";
 
 import { OwnedBox } from "./OwnedBox";
+import { SetPhaseBadge } from "./SetPhase";
 import { QtyStepper } from "./QtyStepper";
 import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { bump, remove } from "../lib/wishlist";
+import { phaseCell } from "../lib/lifecycle";
 import type { PrimeSet } from "../lib/setCompletion";
-import type { WishlistKind } from "../api/types";
+import type { LifecycleMap, WishlistKind } from "../api/types";
 
 const ROW_HEIGHT = 40;
 const OVERSCAN = 12;
@@ -38,6 +40,14 @@ interface Props {
   pricesFilling: boolean;
   /** Whether the assembled-set prices are still landing. A batch of its own. */
   setPricesFilling: boolean;
+  /**
+   * Where each set sits in the price cycle. Undefined while it lands.
+   *
+   * Passed in rather than queried here for the reason every other price on this
+   * table is: a virtualised row renderer must not open a request of its own,
+   * and the same 160 rows answer the Prime Items table beside it.
+   */
+  lifecycle: LifecycleMap | undefined;
   selected: string | null;
   onSelect: (setName: string) => void;
 }
@@ -59,6 +69,7 @@ export function SetsTable({
   onSetOwnedAll,
   quantityOf,
   setPrices,
+  lifecycle,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -89,11 +100,16 @@ export function SetsTable({
         caption="Prime sets, with what each one still needs"
         className="rf-cols-sets"
       >
-        <TableCols count={7} />
+        <TableCols count={8} />
         <thead>
           <tr>
             <TableHeaderCell align="center">Owned</TableHeaderCell>
             <TableHeaderCell>Set</TableHeaderCell>
+            {/* "Status", the same word the relics table puts over the same
+                question. A set's answer is not a relic's, though: a relic is
+                droppable or not, and a set that stopped dropping has also
+                stopped for a length of time that changes what its price does. */}
+            <TableHeaderCell>Status</TableHeaderCell>
             <TableHeaderCell>Progress</TableHeaderCell>
             <TableHeaderCell align="right">Missing</TableHeaderCell>
             <TableHeaderCell align="right">
@@ -116,7 +132,7 @@ export function SetsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={7} className="rf-spacer" style={{ height: paddingTop }} />
+              <td colSpan={8} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -170,6 +186,10 @@ export function SetsTable({
                 </TableCell>
 
                 <TableCell>{set.setName}</TableCell>
+
+                <TableCell>
+                  <SetPhaseBadge cell={phaseCell(lifecycle, set.setName)} />
+                </TableCell>
 
                 <TableCell>
                   {/*
@@ -246,7 +266,7 @@ export function SetsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={7} className="rf-spacer" style={{ height: paddingBottom }} />
+              <td colSpan={8} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>

@@ -15,6 +15,7 @@ import { TierListTable } from "./TierListTable";
 import { WishlistTable } from "./WishlistTable";
 import type {
   EndoOffer,
+  LifecycleMap,
   PriceMap,
   Refinement,
   RelicPriceMap,
@@ -54,6 +55,8 @@ interface Props {
   /** The same, for the whole-relic batch, which fills at its own speed. */
   relicPricesFilling: boolean;
   unvaulted: Set<string> | undefined;
+  /** Where each Prime set sits in the price cycle. See lib/lifecycle. */
+  lifecycle: LifecycleMap | undefined;
   term: string;
   /** Every filter currently narrowing the list, in words, for the empty state. */
   activeFilters: string[];
@@ -127,6 +130,7 @@ export function ResultsPane({
   relicPrices,
   relicPricesFilling,
   unvaulted,
+  lifecycle,
   term,
   activeFilters,
   onClearFilters,
@@ -239,6 +243,7 @@ export function ResultsPane({
             quantityOf={quantityOf}
             setPrices={setPrices}
             setPricesFilling={setPricesFilling}
+            lifecycle={lifecycle}
           />
         </div>
       </div>
@@ -306,6 +311,7 @@ export function ResultsPane({
         prices={prices}
         pricesFilling={pricesFilling}
         quantityOf={quantityOf}
+        lifecycle={lifecycle}
         selected={selectedItem}
         onSelect={onSelectItem}
         onInfo={onInfo}

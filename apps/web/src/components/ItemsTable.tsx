@@ -21,6 +21,7 @@ import {
   TierChip,
 } from "relic-finder-ui";
 
+import { SetPhaseBadge } from "./SetPhase";
 import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
@@ -28,7 +29,8 @@ import { QtyStepper } from "./QtyStepper";
 import { bump, remove } from "../lib/wishlist";
 import { marketUrl, priceOf } from "../lib/format";
 import { usePricePriority } from "../lib/usePricePriority";
-import type { PriceMap, WishlistKind } from "../api/types";
+import { phaseCell } from "../lib/lifecycle";
+import type { LifecycleMap, PriceMap, WishlistKind } from "../api/types";
 import type { PrimeItemRow } from "../lib/items";
 
 const ROW_HEIGHT = 40;
@@ -40,6 +42,16 @@ interface Props {
   /** Whether more prices are still expected. See lib/priceProgress. */
   pricesFilling: boolean;
   quantityOf: (itemName: string) => number;
+  /**
+   * Where each part's SET sits in the price cycle. Undefined while it lands.
+   *
+   * A property of the set and therefore the same answer on all six rows of one
+   * — which is exactly why it is worth repeating here. This table is read one
+   * part at a time, and a reader looking at Volt Prime Neuroptics is owed the
+   * direction of its price without having to notice which set it belongs to and
+   * go and look the set up.
+   */
+  lifecycle: LifecycleMap | undefined;
   onSelect: (itemName: string) => void;
   selected: string | null;
   onInfo: (itemName: string, kind?: WishlistKind) => void;
@@ -51,6 +63,7 @@ export function ItemsTable({
   prices,
   pricesFilling,
   quantityOf,
+  lifecycle,
   onSelect,
   selected,
   onInfo,
@@ -90,12 +103,12 @@ export function ItemsTable({
         caption="Prime parts, with the relics that drop them, ducats and price"
         className="rf-cols-items"
       >
-        <TableCols count={10} />
+        <TableCols count={11} />
         <thead>
           <tr>
             {/*
               Widths are mandatory under the table's fixed layout — without
-              them the ten columns would each take a tenth, and a part name
+              them the eleven columns would each take an eleventh, and a part name
               needs several times what an icon button does. They are in
               app.css, measured rather than guessed: under fixed layout an
               undersized column silently eats its own content instead of
@@ -104,6 +117,9 @@ export function ItemsTable({
             */}
             <TableHeaderCell>Item</TableHeaderCell>
             <TableHeaderCell>Set</TableHeaderCell>
+            {/* The set's status, not the part's. Same word and same four
+                answers as the Sets table beside it — see SetPhase. */}
+            <TableHeaderCell>Status</TableHeaderCell>
             <TableHeaderCell>Rarity</TableHeaderCell>
             <TableHeaderCell>Relics</TableHeaderCell>
             <TableHeaderCell align="right">Best drop</TableHeaderCell>
@@ -127,7 +143,7 @@ export function ItemsTable({
         <tbody>
           {paddingTop > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} className="rf-spacer" style={{ height: paddingTop }} />
+              <td colSpan={11} className="rf-spacer" style={{ height: paddingTop }} />
             </tr>
           )}
 
@@ -161,6 +177,9 @@ export function ItemsTable({
                     has to stay reachable without opening the panel. */}
                 <TableCell title={row.itemName}>{row.itemName}</TableCell>
                 <TableCell title={row.setName ?? undefined}>{row.setName ?? "—"}</TableCell>
+                <TableCell>
+                  <SetPhaseBadge cell={phaseCell(lifecycle, row.setName)} />
+                </TableCell>
                 <TableCell>
                   <RarityTag rarity={row.rarity} />
                 </TableCell>
@@ -247,7 +266,7 @@ export function ItemsTable({
 
           {paddingBottom > 0 && (
             <tr aria-hidden="true">
-              <td colSpan={10} className="rf-spacer" style={{ height: paddingBottom }} />
+              <td colSpan={11} className="rf-spacer" style={{ height: paddingBottom }} />
             </tr>
           )}
         </tbody>
