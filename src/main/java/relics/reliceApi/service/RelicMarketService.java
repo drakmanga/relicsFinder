@@ -125,15 +125,25 @@ public class RelicMarketService {
      * as it needs to, so a name that expires hourly is reached within minutes
      * while the catalogue around it is quiet.
      *
-     * <p>What pays for it, measured on the live cache on 2026-08-30 rather than
-     * projected: the catalogue asks for 1.992 reads a day today, of which 1.079
-     * entries of 1.512 already sit at the 24h ceiling. The tail therefore
-     * cannot pay — there is nothing left to give up — and the increase comes
-     * out of the sweep's own idle capacity, which is 15.288 reads a day. With
-     * this floor and a head of fifty relics the catalogue asks for about 3.400
-     * a day: 1,7x today, 20% of what the sweep can serve, and 1,4% of the rate
-     * {@link MarketRateLimiter} allows. Neither the sweep interval nor the
-     * limiter moves.
+     * <p>What pays for it, measured on 2026-08-30 rather than guessed. The live
+     * cache is asking for 1.992 reads a day, with 1.079 of its 1.512 entries
+     * already at the 24h ceiling — so the tail cannot pay, because there is
+     * nothing left for it to give up. The increase comes out of the sweep's own
+     * idle capacity instead.
+     *
+     * <p>What the increase IS, computed for both rules the same way from the
+     * market's own ninety days of history — the interval whose drift would
+     * equal the target, given the median day-to-day move each item actually
+     * showed: 6.122 reads a day settled under the old rule, 7.567 under this
+     * one. That is +1.445 a day, 1,24x, about one more request a minute. It is
+     * 44% of what the sweep can serve and 3% of the rate {@link
+     * MarketRateLimiter} allows; neither of them moves.
+     *
+     * <p>An item that holds still is still read no more often than before: the
+     * target is a budget for movement, and the interval only shortens for an
+     * item whose price actually spends more than its budget. That is why the
+     * increase is a quarter rather than the fivefold one a floor applied to the
+     * whole catalogue would have bought.
      */
     private static final Duration SENSITIVE_MIN_TTL = Duration.ofHours(1);
 

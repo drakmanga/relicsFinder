@@ -184,16 +184,17 @@ otherwise.
 ## The gates
 
 Everything runs on every push through `.github/workflows/ci.yml`, in three jobs:
-types, lint, tests and the debt baselines; the backend; and axe over all six
-views against a real preview build. Locally:
+types, lint, tests and the debt baselines; the backend; and axe plus the reflow
+walk over all seven views against a real preview build. Locally:
 
 ```sh
 npm run verify:all     # typecheck, lint, debt baselines, unit tests, render checks
 npm run format:check   # prettier
 npm run test:mutants   # proves the frontend unit tests can fail
-./mvnw verify          # backend: 90 tests
+./mvnw verify          # the backend suite
 npm run test:mutants:java   # proves the backend tests can fail
 npm run axe            # accessibility, needs the two servers below
+npm run reflow         # 360px, 200% zoom and touch targets, same
 npm run lighthouse     # performance, same
 ```
 
