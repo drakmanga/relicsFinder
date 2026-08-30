@@ -1,5 +1,6 @@
 import { Button, Dialog, ExternalLinkIcon, Skeleton } from "relic-finder-ui";
 
+import { SetPhaseNote } from "./SetPhase";
 import { TrendValue } from "./TrendNote";
 import { Unlisted } from "./Unlisted";
 
@@ -8,12 +9,21 @@ import { PlatPrice } from "./Plat";
 import { PriceChart } from "./PriceChart";
 import { useItemHistory } from "../api/queries";
 import { marketUrl } from "../lib/format";
+import { phaseCell } from "../lib/lifecycle";
 import { trendCell } from "../lib/trend";
-import type { PriceMap, WishlistKind } from "../api/types";
+import type { LifecycleMap, PriceMap, WishlistKind } from "../api/types";
 
 interface Props {
   itemName: string | null;
   prices: PriceMap | undefined;
+  /**
+   * Where the part's SET sits in the price cycle. Undefined while it lands.
+   *
+   * Beside the trend rather than instead of it, and the pair is the whole
+   * point: the trend is what this part's price DID over ninety days, the phase
+   * is why, and either one alone leaves a reader guessing at the other.
+   */
+  lifecycle: LifecycleMap | undefined;
   /**
    * Which list the part would join.
    *
@@ -40,6 +50,7 @@ interface Props {
 export function ItemInfoDialog({
   itemName,
   prices,
+  lifecycle,
   kind = "part",
   quantityOf,
   onOpenWishlist,
@@ -97,6 +108,12 @@ export function ItemInfoDialog({
           <TrendValue cell={trendCell(meta)} size="stat" />
         </Stat>
       </div>
+
+      {/* Under the figures rather than among them: the four above are numbers
+          about this part, and this is a sentence about the set it belongs to.
+          A part with no set — Forma Blueprint — gets the "not dated" answer,
+          which is the true one. */}
+      <SetPhaseNote cell={phaseCell(lifecycle, meta?.setName ?? null)} />
 
       {/*
         The dialog is where someone lands after asking "is this worth having",

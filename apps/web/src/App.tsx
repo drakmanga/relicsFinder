@@ -318,6 +318,7 @@ export function App() {
             relics={relics.data ?? []}
             prices={prices.data}
             pricesFilling={priceProgress.filling}
+            lifecycle={lifecycle.data}
             relicRow={selectedRow}
             relicPrice={
               selectedRow
@@ -351,6 +352,7 @@ export function App() {
         itemName={infoItem}
         kind={infoKind}
         prices={prices.data}
+        lifecycle={lifecycle.data}
         quantityOf={wishlist.quantityOf}
         onOpenWishlist={showWishlist}
         onClose={() => showInfo(null)}

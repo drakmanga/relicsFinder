@@ -10,6 +10,7 @@ import { SetDetailPanel } from "./SetDetailPanel";
 import type { PaneView } from "./ResultsPane";
 import type {
   DropInfo,
+  LifecycleMap,
   PriceMap,
   Refinement,
   Relic,
@@ -26,6 +27,8 @@ interface Props {
   prices: PriceMap | undefined;
   /** Whether more prices are still expected. See lib/priceProgress. */
   pricesFilling: boolean;
+  /** Where each Prime set sits in the price cycle. See lib/lifecycle. */
+  lifecycle: LifecycleMap | undefined;
 
   relicRow: RelicRow | null;
   /** What the relic on show sells for, sealed. */
@@ -121,6 +124,7 @@ function Panel({
   relics,
   prices,
   pricesFilling,
+  lifecycle,
   relicRow,
   relicPrice,
   relicStates,
@@ -149,6 +153,7 @@ function Panel({
         set={set}
         highlightParts={highlightParts}
         pricesFilling={pricesFilling}
+        lifecycle={lifecycle}
         refinement={setRefinement}
         onRefinement={onSetRefinement}
         onSetOwned={onSetOwned}

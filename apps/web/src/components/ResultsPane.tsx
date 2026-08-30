@@ -10,6 +10,7 @@ import { EndoTable } from "./EndoTable";
 import { ItemsTable } from "./ItemsTable";
 import { ResultsTable } from "./ResultsTable";
 import { SetFilters } from "./SetFilters";
+import { SetPhaseLegend } from "./SetPhaseLegend";
 import { SetsTable } from "./SetsTable";
 import { TierListTable } from "./TierListTable";
 import { WishlistTable } from "./WishlistTable";
@@ -233,6 +234,8 @@ export function ResultsPane({
           shown={sets.length}
         />
 
+        <SetPhaseLegend />
+
         <div className="rf-sets-body">
           <SetsTable
             sets={sets}
@@ -306,16 +309,19 @@ export function ResultsPane({
 
   if (view === "items") {
     return (
-      <ItemsTable
-        rows={itemRows}
-        prices={prices}
-        pricesFilling={pricesFilling}
-        quantityOf={quantityOf}
-        lifecycle={lifecycle}
-        selected={selectedItem}
-        onSelect={onSelectItem}
-        onInfo={onInfo}
-      />
+      <>
+        <SetPhaseLegend />
+        <ItemsTable
+          rows={itemRows}
+          prices={prices}
+          pricesFilling={pricesFilling}
+          quantityOf={quantityOf}
+          lifecycle={lifecycle}
+          selected={selectedItem}
+          onSelect={onSelectItem}
+          onInfo={onInfo}
+        />
+      </>
     );
   }
 

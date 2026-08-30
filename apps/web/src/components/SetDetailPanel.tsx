@@ -7,10 +7,12 @@ import { useState } from "react";
 import { ArrowLeftIcon, Button, DetailPanel, Divider, InfoIcon, XIcon } from "relic-finder-ui";
 
 import { PlatPrice } from "./Plat";
+import { SetPhaseNote } from "./SetPhase";
 import type { PrimeSet } from "../lib/setCompletion";
 import { Piece } from "./SetPiece";
 import { ALL_REFINEMENTS, REFINEMENT_LABEL } from "../lib/rows";
-import type { Refinement } from "../api/types";
+import { phaseCell } from "../lib/lifecycle";
+import type { LifecycleMap, Refinement } from "../api/types";
 
 interface Props {
   set: PrimeSet | null;
@@ -24,6 +26,8 @@ interface Props {
   highlightParts: ReadonlyMap<string, string | null>;
   /** Whether more prices are still expected. See lib/priceProgress. */
   pricesFilling: boolean;
+  /** Where this set sits in the price cycle. See lib/lifecycle. */
+  lifecycle: LifecycleMap | undefined;
   refinement: Refinement;
   onRefinement: (next: Refinement) => void;
   /** Sets how many copies of one piece are in hand. */
@@ -50,6 +54,7 @@ export function SetDetailPanel({
   set,
   highlightParts,
   pricesFilling,
+  lifecycle,
   refinement,
   onRefinement,
   onSetOwned,
@@ -120,6 +125,12 @@ export function SetDetailPanel({
       }
     >
       <Divider />
+
+      {/* First thing under the heading, before the two routes to finishing the
+          set: whether the pieces are still dropping decides whether farming is
+          even on the table, and it is the one line here that is about the set
+          rather than about the reader's progress through it. */}
+      <SetPhaseNote cell={phaseCell(lifecycle, set.setName)} />
 
       {/* The controls on one side, the pieces on the other: the two are read
           together — tick a piece and the total beside it moves — and stacked,
