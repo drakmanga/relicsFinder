@@ -426,21 +426,39 @@ body {
    the chips and the item name takes what is left.
    Every other width is its header word measured at 1248: "Best drop" and
    "Ducats" are both wider than the numbers under them. */
+/* An eleventh column is 72px of table that has to come from somewhere, and
+   percentages of an unchanged 40rem take it from the ten already measured: at
+   360px the Relics cell lost 28px of its four tier chips and the Info button 8
+   of its own box, both of which reflow-check reports by name. So the floor
+   grows instead — 46rem against the 40rem `.rf-table` sets — and the
+   percentages below are the old absolute widths re-expressed against it.
+
+   The two figures that had to be recovered exactly are the ones made of px
+   rather than of text: Relics holds four tier chips and Info a button, and
+   neither shrinks to fit. Their points come from Item and Market, which hold
+   text and were already ellipsising by design. Every column is within a few
+   pixels of what it measured before Status existed, and the pane scrolls
+   sideways a little sooner — the strategy this table was already committed to.
+   All three numbers were measured with npm run reflow rather than derived. */
+.rf-cols-items {
+  min-width: 46rem;
+}
+
 .rf-cols-items col:nth-child(1) {
-  width: 14%;
-} /* Item */
+  width: 12%;
+} /* Item — ellipsises by design; the full name is on the cell's title */
 .rf-cols-items col:nth-child(2) {
   width: 9%;
 } /* Set */
 .rf-cols-items col:nth-child(3) {
-  width: 11%;
+  width: 10%;
 } /* Status — the set's, repeated on every part of it */
 .rf-cols-items col:nth-child(4) {
   width: 8%;
 } /* Rarity — the dot and "Uncommon", which needs 105px at 1280 */
 .rf-cols-items col:nth-child(5) {
-  width: 20%;
-} /* Relics — four tier chips */
+  width: 24%;
+} /* Relics — four tier chips, and they are px so this cannot be squeezed */
 .rf-cols-items col:nth-child(6) {
   width: 6%;
 } /* Best drop */
@@ -454,11 +472,18 @@ body {
   width: 11%;
 } /* Wishlist — the stepper is 102px wide and does not shrink */
 .rf-cols-items col:nth-child(10) {
-  width: 3%;
+  width: 4%;
 } /* Info */
 .rf-cols-items col:nth-child(11) {
-  width: 6%;
+  width: 4%;
 } /* Market */
+
+/* Same arithmetic as `.rf-cols-items` above, and for the same reason: an eighth
+   column is new width rather than width taken from the seven that were
+   measured. */
+.rf-cols-sets {
+  min-width: 45rem;
+}
 
 .rf-cols-sets col:nth-child(1) {
   width: 7%;
@@ -467,19 +492,19 @@ body {
   width: 20%;
 } /* Set */
 .rf-cols-sets col:nth-child(3) {
-  width: 12%;
-} /* Status — "Long vaulted" is the longest word it holds */
+  width: 10%;
+} /* Status — "Long vaulted" is the longest thing it holds */
 .rf-cols-sets col:nth-child(4) {
-  width: 15%;
+  width: 17%;
 } /* Progress */
 .rf-cols-sets col:nth-child(5) {
-  width: 9%;
+  width: 10%;
 } /* Missing */
 .rf-cols-sets col:nth-child(6) {
   width: 13%;
 } /* To finish */
 .rf-cols-sets col:nth-child(7) {
-  width: 13%;
+  width: 12%;
 } /* Whole set */
 .rf-cols-sets col:nth-child(8) {
   width: 11%;
