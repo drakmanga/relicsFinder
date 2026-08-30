@@ -1489,6 +1489,19 @@ body {
   color: var(--rf-fg-muted);
 }
 
+/* Why there is no trend, said in words — see components/TrendNote.tsx.
+
+   A size below the numbers it stands in for, because it is not one of them: a
+   column of percentages with a phrase in it should read as an aside rather than
+   as a competing figure. `nowrap` because the rows it sits in are a fixed 48px
+   and the longest phrase is eighteen characters, so wrapping would push a line
+   out of its own row rather than reflow it. */
+.rf-trend-note {
+  font-size: var(--rf-text-caption);
+  color: var(--rf-fg-muted);
+  white-space: nowrap;
+}
+
 /* ----------------------------------------------------------- Detail panel -
    Shapes the three panels share. Named for what the element is rather than for
    the declarations inside, so the next reader is not decoding a class name back

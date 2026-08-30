@@ -147,12 +147,31 @@ export type SetCategory =
   | "arch-melee"
   | "pet";
 
+/**
+ * Why a price carries no ninety-day trend, as the backend spells it.
+ *
+ * Mirrors `relics.reliceApi.model.TrendGap`. Three causes, and the two the
+ * browser could never work out for itself are the reason the field exists: an
+ * item nobody has ever listed and a request the market did not answer arrive
+ * here as the same empty price, and only the server saw which was which.
+ *
+ * Absent — on the wire and in the map — both when there IS a trend and when
+ * the price cache has not reached the item yet. Those two share an absence on
+ * purpose: a null trend beside a null gap means "not asked yet", which is the
+ * one state that resolves itself in seconds and the one state a label would be
+ * wrong about a moment later. A caller drawing that case draws the skeleton it
+ * draws for the price beside it.
+ */
+export type TrendGap = "no-answer" | "no-listings" | "too-few-sales";
+
 export interface WireItemPrice {
   itemName: string;
   averagePrice: number | null;
   median: number | null;
   volume: number | null;
   trend: number | null;
+  /** Why `trend` is null. Absent on a payload captured before the field. */
+  trendGap?: TrendGap | null;
   slug: string;
   ducats: number | null;
   setName: string | null;
@@ -180,6 +199,15 @@ export interface ItemPrice {
   volume: number | null;
   /** Percent against the 90-day average. */
   trend: number | null;
+  /**
+   * Why `trend` is null. See `TrendGap` — including why it is absent for a
+   * price the cache has not reached.
+   *
+   * Optional for the same reason `copiesPerSet` is: the captured payload in
+   * `lib/tierListPayload.ts` predates the field, and a payload with no key
+   * means the same thing there as a null does here.
+   */
+  trendGap?: TrendGap | null;
   slug: string;
   /** Static ducat value. Null for anything that is not a Prime part. */
   ducats: number | null;
