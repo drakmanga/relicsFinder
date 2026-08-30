@@ -1,4 +1,7 @@
+import { PriceDelta, Skeleton } from "relic-finder-ui";
+
 import type { TrendGap } from "../api/types";
+import type { TrendCell } from "../lib/trend";
 
 /**
  * What a trend column says when there is no percentage to put in it.
@@ -42,4 +45,32 @@ const LABEL: Record<TrendNoteReason, string> = {
 
 export function TrendNote({ reason }: { reason: TrendNoteReason }) {
   return <span className="rf-trend-note">{LABEL[reason]}</span>;
+}
+
+/**
+ * The two shapes a trend is read in, and the skeleton each of them waits as.
+ *
+ * A placeholder the size of the thing it replaces is the whole point of one:
+ * the table row must not change height as prices land under a reader's eyes,
+ * and the dialogs' stat grid must not reflow when the fourth figure arrives.
+ * Both numbers are the ones those surfaces already use for the price beside
+ * this cell.
+ */
+const SKELETON = {
+  cell: { width: 44, height: 14 },
+  stat: { width: 48, height: 20 },
+};
+
+/**
+ * A movement, the reason there is none, or the wait for either.
+ *
+ * One renderer for all four surfaces. They had four copies of
+ * `trend == null ? dash : arrow` between them, which is how the Tier List came
+ * to claim "Steady" about a number nobody had measured while the two dialogs
+ * said nothing at all about the same absence.
+ */
+export function TrendValue({ cell, size }: { cell: TrendCell; size: keyof typeof SKELETON }) {
+  if (cell.kind === "waiting") return <Skeleton {...SKELETON[size]} />;
+  if (cell.kind === "moved") return <PriceDelta value={Math.round(cell.percent)} />;
+  return <TrendNote reason={cell.reason} />;
 }

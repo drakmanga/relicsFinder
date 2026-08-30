@@ -1,11 +1,12 @@
-import { Button, Dialog, ExternalLinkIcon, PriceDelta, Skeleton } from "relic-finder-ui";
+import { Button, Dialog, ExternalLinkIcon, Skeleton } from "relic-finder-ui";
 
-import { Unlisted } from "./Unlisted";
+import { TrendValue } from "./TrendNote";
 
 import { PlatPrice } from "./Plat";
 import { PriceChart } from "./PriceChart";
 import { useRelicDetail, useRelicHistory } from "../api/queries";
 import { relicMarketUrl } from "../lib/format";
+import { trendCell } from "../lib/trend";
 
 interface Props {
   relicFullName: string | null;
@@ -65,11 +66,7 @@ export function RelicInfoDialog({ relicFullName, onClose }: Props) {
         </Stat>
 
         <Stat label="vs 90-day avg">
-          {detail.data?.trend == null ? (
-            <Unlisted />
-          ) : (
-            <PriceDelta value={Math.round(detail.data.trend)} />
-          )}
+          <TrendValue cell={trendCell(detail.data)} size="stat" />
         </Stat>
       </div>
 

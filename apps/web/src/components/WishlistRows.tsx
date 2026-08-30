@@ -18,7 +18,6 @@ import {
   DucatGlyph,
   ExternalLinkIcon,
   InfoIcon,
-  PriceDelta,
   Skeleton,
   Table,
   TableCell,
@@ -28,12 +27,14 @@ import {
   TierChip,
 } from "relic-finder-ui";
 
+import { TrendValue } from "./TrendNote";
 import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
 import { bump, remove, type WishlistEntry } from "../lib/wishlist";
 import { marketUrl } from "../lib/format";
+import { trendCell } from "../lib/trend";
 import type { EndoOffer, PriceMap, WishlistKind } from "../api/types";
 
 /** One list's worth of entries, already filtered to its kind by the parent. */
@@ -175,8 +176,10 @@ export function PartRows({ entries, prices, pricesFilling, onInfo, onPick }: Row
                   <PlatPrice value={unit} />
                 )}
               </TableCell>
+              {/* A trend and the reason there is no trend are two different
+                  answers, and a dash was neither. See lib/trend. */}
               <TableCell align="right" numeric>
-                {meta?.trend == null ? <Unlisted /> : <PriceDelta value={Math.round(meta.trend)} />}
+                <TrendValue cell={trendCell(meta)} size="cell" />
               </TableCell>
               <TableCell align="right" numeric>
                 {unit === null && pricesFilling ? (

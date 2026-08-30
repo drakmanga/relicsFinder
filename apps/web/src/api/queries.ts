@@ -181,6 +181,18 @@ export function useRelicDetail(relicName: string | null) {
     queryFn: ({ signal }) => api.relicDetail(relicName!, signal),
     enabled: !!relicName,
     ...PRICE_DATA,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      // A trend with no reason beside it is the server saying "not fetched
+      // yet": the endpoint waits four seconds for a first read and answers
+      // empty if the queue is longer than that. Nothing else would fill it in
+      // — there is no batch behind this query and a fifteen-minute staleTime
+      // in front of it — so the skeleton the trend cell draws would spin until
+      // the dialog was closed. Every other outcome, a price or one of the
+      // three reasons, stops the poll.
+      return data.trend === null && !data.trendGap ? 15_000 : false;
+    },
   });
 }
 

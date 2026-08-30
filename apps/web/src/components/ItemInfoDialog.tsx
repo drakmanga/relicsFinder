@@ -1,5 +1,6 @@
-import { Button, Dialog, ExternalLinkIcon, PriceDelta, Skeleton } from "relic-finder-ui";
+import { Button, Dialog, ExternalLinkIcon, Skeleton } from "relic-finder-ui";
 
+import { TrendValue } from "./TrendNote";
 import { Unlisted } from "./Unlisted";
 
 import { PanelWishlist } from "./PanelWishlist";
@@ -7,6 +8,7 @@ import { PlatPrice } from "./Plat";
 import { PriceChart } from "./PriceChart";
 import { useItemHistory } from "../api/queries";
 import { marketUrl } from "../lib/format";
+import { trendCell } from "../lib/trend";
 import type { PriceMap, WishlistKind } from "../api/types";
 
 interface Props {
@@ -92,7 +94,7 @@ export function ItemInfoDialog({
         </Stat>
 
         <Stat label="vs 90-day avg">
-          {meta?.trend == null ? <Unlisted /> : <PriceDelta value={Math.round(meta.trend)} />}
+          <TrendValue cell={trendCell(meta)} size="stat" />
         </Stat>
       </div>
 
