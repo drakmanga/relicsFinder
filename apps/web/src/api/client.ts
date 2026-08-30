@@ -4,8 +4,10 @@ import type {
   EndoOffer,
   EndoStatus,
   ItemPrice,
+  LifecycleMap,
   MarketStatus,
   PricePoint,
+  PrimeLifecycle,
   Relic,
   RelicPrice,
   WireDropInfo,
@@ -307,6 +309,19 @@ export const api = {
       for (const relic of relics) names.add(`${tier} ${relic.relicName}`);
     }
     return names;
+  },
+
+  /**
+   * Where every Prime set sits in the price cycle, keyed by set name.
+   *
+   * A map rather than the list the endpoint sends, because every reader of it
+   * arrives holding a set name and asking one question about it. Around 160
+   * rows, fetched once: the answer moves when a set is released or leaves the
+   * drop tables, not when a price does.
+   */
+  async setLifecycle(signal?: AbortSignal): Promise<LifecycleMap> {
+    const wire = await get<PrimeLifecycle[]>("/sets/lifecycle", signal);
+    return new Map(wire.map((row) => [row.setName, row]));
   },
 };
 

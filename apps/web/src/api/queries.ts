@@ -31,6 +31,7 @@ export const keys = {
   endo: ["endo", "offers"] as const,
   marketStatus: ["market", "status"] as const,
   endoStatus: ["endo", "status"] as const,
+  setLifecycle: ["sets", "lifecycle"] as const,
 };
 
 /**
@@ -291,6 +292,23 @@ export function useUnvaultedNames() {
   return useQuery({
     queryKey: ["relics", "unvaulted", "names"] as const,
     queryFn: ({ signal }) => api.unvaultedNames(signal),
+    ...STATIC_DATA,
+  });
+}
+
+/**
+ * Where every Prime set sits in the price cycle, in one request.
+ *
+ * As static as the relic catalogue and for the same reason: it moves when a set
+ * is released or rotates out of the drop tables, which is a few times a year,
+ * and never when a price moves. One query for all four surfaces that read it —
+ * the two tables and the two detail panels — so React Query serves them from a
+ * single cache entry.
+ */
+export function useSetLifecycle() {
+  return useQuery({
+    queryKey: keys.setLifecycle,
+    queryFn: ({ signal }) => api.setLifecycle(signal),
     ...STATIC_DATA,
   });
 }

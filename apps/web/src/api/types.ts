@@ -164,6 +164,43 @@ export type SetCategory =
  */
 export type TrendGap = "no-answer" | "no-listings" | "too-few-sales";
 
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Where a Prime set sits in the cycle its price follows.
+ *
+ * Mirrors `relics.reliceApi.model.PrimePhase`, which carries the measurement
+ * behind the three phases and the reason there are three rather than the six a
+ * clan guide draws. In short: on 2026-08-30 the sets in the drop tables had a
+ * median ninety-day trend of -11,5% and 83% of them fell, the ones vaulted
+ * within two years +9,4% with 85% rising, and the rest +0,7%.
+ *
+ * `"unknown"` is an answer, not a gap: the set is not dropping and no date says
+ * when it stopped. Kavasa Prime is the one in the catalogue, and it is also
+ * what a set absent from the lifecycle list altogether reads as — see
+ * `lib/lifecycle`.
+ */
+export type PrimePhase = "dropping" | "recently-vaulted" | "long-vaulted" | "unknown";
+
+/**
+ * One set's phase, with the dates it was read from.
+ *
+ * The dates ride along because the screen showing the phase shows them too:
+ * "vaulted since 2018" is what makes the badge a fact rather than an assertion.
+ * Both are null for a set the item database does not carry, and `vaultDate`
+ * alone is null for one that has never been vaulted — `phase` is what separates
+ * those two.
+ */
+export interface PrimeLifecycle {
+  setName: string;
+  phase: PrimePhase;
+  releaseDate: string | null;
+  vaultDate: string | null;
+}
+
+/** Every set's phase, keyed by set name. See `lib/lifecycle`. */
+export type LifecycleMap = Map<string, PrimeLifecycle>;
+
 export interface WireItemPrice {
   itemName: string;
   averagePrice: number | null;
