@@ -266,8 +266,32 @@ const MUTANTS = [
   {
     name: "the trend measures today against today",
     file: "apps/web/src/lib/tierList.ts",
-    from: "trend: trendBetween(soloValue, expectedValue(intact, baseline)),",
-    to: "trend: trendBetween(soloValue, expectedValue(intact, prices)),",
+    from: "        expectedValue(intact, baseline),",
+    to: "        expectedValue(intact, prices),",
+  },
+  {
+    // The third state of the same fault, and the one that survived the two
+    // above: with no drop carrying a trend the baseline is a copy of today, the
+    // movement computes to zero, and zero clears no threshold — so the column
+    // said Steady about a comparison nobody had made.
+    name: "a relic nobody measured is called steady again",
+    file: "apps/web/src/lib/tierList.ts",
+    from: 'if (!measured || ninetyDaysAgo <= 0) return "no-baseline";',
+    to: 'if (ninetyDaysAgo <= 0) return "no-baseline";',
+  },
+  {
+    name: "a cell still being fetched is labelled instead of waiting",
+    file: "apps/web/src/lib/trend.ts",
+    from: 'if (trend === "no-baseline" && filling) return WAITING;',
+    to: 'if (trend === "no-baseline") return WAITING;',
+  },
+  {
+    // A price standing exactly on its ninety-day average is the one movement
+    // that is both measured and falsy.
+    name: "a trend of zero is read as no trend at all",
+    file: "apps/web/src/lib/trend.ts",
+    from: 'if (price.trend !== null) return { kind: "moved", percent: price.trend };',
+    to: 'if (price.trend) return { kind: "moved", percent: price.trend };',
   },
   {
     // The bug this step closed: the fallback was its own literal, so moving the

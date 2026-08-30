@@ -19,7 +19,8 @@ const ONLY_SERVICE_TESTS =
   "-Dtest=RelicLoadServiceTest,RelicMarketServiceSlugTest,EndoServiceTest," +
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
-  "RelicMarketTradeCountTest,WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
+  "RelicMarketTradeCountTest,RelicMarketTrendGapTest," +
+  "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
   "DucatServiceIndexTest,OwnedServiceMigrationTest" +
   " -DfailIfNoTests=false";
 
@@ -159,6 +160,22 @@ const MUTANTS = [
     file: `${SERVICE}/RelicSearchItemService.java`,
     from: "if (relics == null || itemName == null || itemName.isEmpty()) {",
     to: "if (relics == null || itemName == null) {",
+  },
+  {
+    // The two below are the reason the frontend can say why a trend is missing
+    // at all. Both put the four causes back into one silence — the first by
+    // reporting a minute of bad network as a part nobody sells, the second by
+    // moving the floor that decides which half of the catalogue gets a number.
+    name: "a failed call is reported as a market with no listings",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "        if (cached.failed()) return TrendGap.NO_ANSWER;\n",
+    to: "",
+  },
+  {
+    name: "the trend floor drops by a day",
+    file: `${SERVICE}/RelicMarketService.java`,
+    from: "static final int MIN_TREND_DAYS = 7;",
+    to: "static final int MIN_TREND_DAYS = 6;",
   },
   {
     name: "a traded item is re-read as rarely as a dead one",
