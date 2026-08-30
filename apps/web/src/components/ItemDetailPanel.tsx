@@ -82,6 +82,10 @@ export function ItemDetailPanel({
               variant="ghost"
               size="sm"
               iconOnly
+              /* 32px square in rule 7's box, grown upwards into the panel's own
+                 inset and sideways into the 16px it now shares with its
+                 neighbour. Growing down instead would reach the heading. */
+              className="rf-hit-block-start rf-hit-inline"
               icon={<ArrowLeftIcon />}
               aria-label="Back to where this was opened from"
               title="Back"
@@ -92,6 +96,7 @@ export function ItemDetailPanel({
             variant="ghost"
             size="sm"
             iconOnly
+            className="rf-hit-block-start rf-hit-inline"
             icon={<XIcon />}
             aria-label="Close the panel"
             title="Close"
@@ -155,7 +160,9 @@ export function ItemDetailPanel({
                   <button
                     key={part}
                     type="button"
-                    className="rf-focus-ring"
+                    /* 30px rows 4px apart: growing one to 44 takes the two
+                       beside it. §5.4's third exception. */
+                    className="rf-focus-ring rf-droprow-sibling"
                     onClick={() => onPickItem(part)}
                     style={{
                       display: "flex",
@@ -196,7 +203,9 @@ export function ItemDetailPanel({
             <Button
               variant="primary"
               icon={<ExternalLinkIcon />}
-              className="rf-full"
+              /* 40px drawn, 44 to a pointer (rule 7): 4px a side, into the
+                 6 and 10 the rows either side of it leave. */
+              className="rf-full rf-hit-action"
               onClick={() =>
                 window.open(marketUrl(row.itemName, meta?.slug), "_blank", "noopener,noreferrer")
               }

@@ -257,8 +257,11 @@
    between them occupies — text, not a target — so the two boxes meet without
    overlapping, and the piece's own farming line is indented past both. */
 .rf-hit-inline.rf-hit-inline {
-  border-inline: var(--rf-hit-grow, var(--rf-space-2)) solid transparent;
-  margin-inline: calc(-1 * var(--rf-hit-grow, var(--rf-space-2)));
+  /* `--rf-hit-grow-inline` first, then the shared one: a control whose two axes
+     have different slack sets the axis it has to, and everything else keeps the
+     one value it always had. */
+  border-inline: var(--rf-hit-grow-inline, var(--rf-hit-grow, var(--rf-space-2))) solid transparent;
+  margin-inline: calc(-1 * var(--rf-hit-grow-inline, var(--rf-hit-grow, var(--rf-space-2))));
   background-clip: padding-box;
 }
 
@@ -272,9 +275,42 @@
 .rf-hit-inline-start.rf-hit-inline-start {
   /* No `box-sizing` of its own, deliberately: both controls it lands on are
      auto-width, so the border adds to the box either way — and setting one here
-     fought the block rule above, which needs the opposite value. */
-  border-inline-start: var(--rf-space-2) solid transparent;
-  margin-inline-start: calc(-1 * var(--rf-space-2));
+     fought the block rule above, which needs the opposite value.
+
+     `--rf-hit-grow-inline` and not `--rf-hit-grow`, because a control's two
+     axes rarely have the same slack: the vault switch in the filter drawer
+     needs 12px above and below to clear the rule and 20px in front of it, and
+     one variable for both would have it eating the row above to buy width. */
+  border-inline-start: var(--rf-hit-grow-inline, var(--rf-space-2)) solid transparent;
+  margin-inline-start: calc(-1 * var(--rf-hit-grow-inline, var(--rf-space-2)));
+  background-clip: padding-box;
+}
+
+/*
+  One block edge, for a control whose slack is all on one side of it.
+
+  The panel is a column of sections and everything in it has a neighbour four
+  to ten pixels away, so a control growing symmetrically takes the space of the
+  one above or below — which is the argument §5.4 makes against growing a
+  target inside a table, in a place where it does not have to be made. What
+  these two find instead is the direction with room: the close button at the top
+  of a panel has the panel's own inset above it and another button 5px below,
+  and the two grow away from each other rather than into each other.
+
+  `content-box` for the same reason `.rf-hit-block` sets it — the growth is
+  added to the drawn size rather than taken out of it, so the ink does not move.
+*/
+.rf-hit-block-start.rf-hit-block-start {
+  box-sizing: content-box;
+  border-block-start: var(--rf-hit-grow, var(--rf-space-2)) solid transparent;
+  margin-block-start: calc(-1 * var(--rf-hit-grow, var(--rf-space-2)));
+  background-clip: padding-box;
+}
+
+.rf-hit-block-end.rf-hit-block-end {
+  box-sizing: content-box;
+  border-block-end: var(--rf-hit-grow, var(--rf-space-2)) solid transparent;
+  margin-block-end: calc(-1 * var(--rf-hit-grow, var(--rf-space-2)));
   background-clip: padding-box;
 }
 

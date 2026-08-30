@@ -133,6 +133,10 @@ export function RelicDetailPanel({
               variant="ghost"
               size="sm"
               iconOnly
+              /* 32px square in rule 7's box, grown upwards into the panel's own
+                 inset and sideways into the 16px it now shares with its
+                 neighbour. Growing down instead would reach the heading. */
+              className="rf-hit-block-start rf-hit-inline"
               icon={<ArrowLeftIcon />}
               aria-label="Back to where this was opened from"
               title="Back"
@@ -143,6 +147,7 @@ export function RelicDetailPanel({
             variant="ghost"
             size="sm"
             iconOnly
+            className="rf-hit-block-start rf-hit-inline"
             icon={<XIcon />}
             aria-label="Close the panel"
             title="Close"
@@ -167,6 +172,10 @@ export function RelicDetailPanel({
                 variant="ghost"
                 size="sm"
                 iconOnly
+                /* Down and sideways: the close button sits 5px above this one
+                   and grows the other way, so the two meet without either
+                   taking the other's clicks. */
+                className="rf-hit-block-end rf-hit-inline rf-hit-panel-control"
                 icon={<InfoIcon />}
                 aria-label={`Price history for ${row.relicFullName}`}
                 title="Ninety days of completed trades"

@@ -408,11 +408,12 @@ Check every foreground/background pair that ships, in particular:
 Keep it that way: every new animation, transition over 200ms, and auto-playing effect must
 be disabled or reduced under that query.
 
-### 5.4 Touch targets — rule 7, and the two exceptions to it
+### 5.4 Touch targets — rule 7, and the three exceptions to it
 
-**Decided 2026-08-28.** Rule 7 asked for 44x44 with no exception, and the application had
-fifteen. This section is the rule change that closes that gap: what the minimum is, where it
-is lower, and why. `npm run reflow` measures all three, so none of it is on trust.
+**Decided 2026-08-28, extended 2026-08-30.** Rule 7 asked for 44x44 with no exception, and the
+application had fifteen. This section is the rule change that closes that gap: what the minimum
+is, where it is lower, and why. `npm run reflow` measures all four, in every state a reader can
+put a view in, so none of it is on trust.
 
 **The rule.** Every interactive element measures at least 44x44 CSS px in the box a pointer
 lands on. That is WCAG 2.5.5 (AAA), and it is the box rather than the ink: a control drawn
@@ -445,10 +446,32 @@ the full width of the table. The exemption is an allowlist in `scripts/reflow-ch
 (`EQUIVALENT`), never a shape, so nothing falls into it by accident. Adding to that list is a
 change to this section too.
 
-**What the gate does not measure.** The walk measures each view as it loads, plus the detail
-panel it opens. Controls behind a disclosure — the filter drawer, the panels' own steppers
-and toggles — are not measured, and several of them are known to be under the rule. That is
-a capture of its own, not a silent exception.
+**Exception 3 — a control in a panel's dense stack is held to 24x24.** Added when the walk
+first measured the states a reader opens and found 266 controls under the rule behind them. It
+is exception 1's argument outside a table: a detail panel is a column of rows four to ten pixels
+apart, so the space a target there would grow into belongs to the row above or below it, which
+is itself a target. The list is an allowlist in `scripts/reflow-check.mjs` (`DENSE`), never a
+shape, and adding to it is a change to this section too:
+
+| Selector              | What it is                          | Why it cannot grow                          |
+| --------------------- | ----------------------------------- | ------------------------------------------- |
+| `.rf-btn-xs`          | the quantity steppers, 24x24        | up to fourteen at once, 22px apart in a row |
+| `.rf-droprow-roomy`   | a relic's six drops, 30px rows      | 4px apart                                   |
+| `.rf-droprow-relic`   | the relics a part drops from, 24px  | 6px apart                                   |
+| `.rf-droprow-sibling` | the rest of a part's set, 30px rows | 4px apart                                   |
+| `.rf-hint-toggle`     | 13px of icon under a heading        | grown to 25x29; the next line is a control  |
+
+Everything else behind a disclosure was grown to 44 rather than excused, and several of them had
+to grow in one direction to do it — `.rf-hit-block-start` and `.rf-hit-block-end` exist for that,
+beside the `.rf-hit-inline-start` that was already there. The two sliders declare the band as
+their own height rather than borrowing a utility, because Firefox ignores a border on a range
+input drawn with the platform appearance and Chromium does not: measured, the same markup was
+48px tall in one engine and 20 in the other.
+
+**What green covers now.** The walk measures each view as it loads, the filter drawer behind
+`Filters`, and the detail panel each view opens, and it names the state beside the view. The
+paragraph that used to stand here — recording that everything behind a disclosure was unmeasured
+— is gone because that is no longer true.
 
 ---
 

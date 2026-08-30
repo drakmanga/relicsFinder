@@ -93,9 +93,10 @@ export function FilterBar({ id, filters, onChange, view }: Props) {
           set to an empty result is a trap.
         */}
         <div className="rf-filter-set">
-          {ALL_VAULT_FILTERS.map((vault) => (
+          {ALL_VAULT_FILTERS.map((vault, index) => (
             <Toggle
               key={vault}
+              opensTheGroup={index === 0}
               on={filters.vault === vault}
               label={`Show ${VAULT_LABEL[vault].toLowerCase()} relics`}
               onClick={() => onChange({ ...filters, vault })}
@@ -241,6 +242,7 @@ function Toggle({
   label,
   onClick,
   text = false,
+  opensTheGroup = false,
   children,
 }: {
   on: boolean;
@@ -248,6 +250,8 @@ function Toggle({
   onClick: () => void;
   /** Wraps a word rather than a coloured chip. */
   text?: boolean;
+  /** First of its row, so it may grow into the group's own inset. */
+  opensTheGroup?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -256,11 +260,18 @@ function Toggle({
       onClick={onClick}
       aria-pressed={on}
       aria-label={label}
-      className={
-        text
-          ? "rf-focus-ring rf-filter-toggle rf-filter-toggle-text"
-          : "rf-focus-ring rf-filter-toggle"
-      }
+      /* A chip is 28px drawn and a word 25, and rule 7 wants 44: the growth is
+         a transparent border, so nothing here moves. Sideways only for the one
+         that opens its row — "All" is 26px of text and cannot reach 44 from
+         both ends without taking the 4px that belongs to "Droppable" as much as
+         to it, while the inset in front of the group belongs to nobody. */
+      className={[
+        "rf-focus-ring rf-filter-toggle rf-hit-block",
+        text && "rf-filter-toggle-text",
+        text && opensTheGroup && "rf-hit-inline-start",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       {children}
     </button>

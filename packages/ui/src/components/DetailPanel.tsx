@@ -83,9 +83,7 @@ export function DetailPanel({
                   }}
                 >
                   {badges}
-                  {actions && (
-                    <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>{actions}</span>
-                  )}
+                  {actions && <span className="rf-detail-actions">{actions}</span>}
                 </div>
               )}
               <div className="rf-detail-head">

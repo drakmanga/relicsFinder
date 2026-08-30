@@ -65,6 +65,57 @@
   height: 24px;
 }
 
+/*
+  The panel's own actions, pushed to the end of the badge row.
+
+  The gap is 16px rather than the 4 it was drawn with, and that is rule 7 rather
+  than taste: two 32px icon buttons need 6px a side to reach 44, and 4px between
+  them is not enough for both — one of them would have been taking the other's
+  clicks. 16 is what the two growths need to meet exactly. The buttons carry
+  `.rf-hit-block-start` at their call sites, because what is above them is the
+  panel's own inset and what is below is the heading.
+*/
+.rf-detail-actions {
+  display: flex;
+  gap: var(--rf-space-4);
+  margin-inline-start: auto;
+}
+
+.rf-detail-actions .rf-btn-icon-sm {
+  --rf-hit-grow: var(--rf-space-3);
+  --rf-hit-grow-inline: var(--rf-space-2);
+}
+
+/* A 32px control inside the panel's body rather than its head — the price
+   history icon, the button that clears a set. 12px is what 32 needs to reach
+   44; which edge it grows from is the call site's, because what has room is
+   different in each place. */
+.rf-hit-panel-control {
+  --rf-hit-grow: var(--rf-space-3);
+  --rf-hit-grow-inline: var(--rf-space-2);
+}
+
+/*
+  The full-width action at the foot of a panel: 40px drawn, 48 to a pointer.
+
+  Its own mechanism rather than `.rf-hit-block`, and the reason is the width.
+  That utility works by making the control a content box, so the border it adds
+  lands outside the drawn height — but on a control that fills its container,
+  content-box means the button's own 16px of padding either side is added to a
+  width that was already the whole of the space, and the panel reported 15px of
+  its action drawn outside its gilded frame. Here the box stays a border box and
+  the height is declared with the growth included: `.rf-btn-md` draws 40px
+  (--rf-space-10), the border is 4 a side, and 40 + 8 is what the element
+  measures while its content box is the 40 it always was. The negative margin
+  hands the 8 back, so the panel's rhythm does not move either.
+*/
+.rf-hit-action {
+  block-size: calc(var(--rf-space-10) + 2 * var(--rf-space-1));
+  border-block: var(--rf-space-1) solid transparent;
+  margin-block: calc(-1 * var(--rf-space-1));
+  background-clip: padding-box;
+}
+
 /* Icon-only: square at the control height. */
 .rf-btn-icon-xs {
   width: 24px;

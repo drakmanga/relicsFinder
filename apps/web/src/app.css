@@ -238,8 +238,21 @@ body {
 
 /* ---- Filter bar band ---- */
 
+/* The band gives up height before the table does, and scrolls what it cannot
+   show.
+
+   `flex: none` let it take everything it asked for, and at 200% zoom it asks
+   for 275px of a 475px viewport: the results band was left with 26px, so a
+   reader who opened Filters watched the table they were filtering disappear.
+   That is the same fault as run 002's collapsed pane, in a state nothing
+   measured until now. Shrinking here rather than capping with a max-height
+   because the cap that helps at 475px does nothing at 950px, where the bar is
+   113px tall and there is nothing to solve — this way the band is untouched
+   whenever the window can afford it, which is every reference canvas. */
 .rf-filterband {
-  flex: none;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   background: var(--rf-surface-2);
   border-bottom: var(--rf-hairline) solid var(--rf-border-default);
 }
@@ -320,7 +333,13 @@ body {
    slab cut out of the layout. Continuing the page's own colour past the cap
    makes the gutters part of the page again. */
 .rf-resultsband {
-  flex: 1;
+  /* 8rem is the floor, and it is the other half of the filter band's shrink:
+     one of the two has to refuse, or the flex line has nothing to take the
+     height from. Enough for the table head and two rows — the table stays
+     legible as a table, and scrolls to the rest — against the 17rem the ranked
+     views floor their body at, which is a whole reading rather than a reminder
+     that the list is still there under an open drawer. */
+  flex: 1 0 8rem;
   min-height: 0;
   background: var(--rf-surface-2);
 }
@@ -643,10 +662,17 @@ body {
   margin-bottom: var(--rf-space-2);
 }
 
+/* The row gap is rule 7's, not the design's: a chip is 28px drawn and 44px to a
+   pointer, so two wrapped rows 4px apart had 16px of hit area to share between
+   them and each would have been taking clicks meant for the other. 20px is what
+   the two growths need — 8 from the chips above, 12 from the vault switches,
+   which are 3px shorter — and the columns keep the 4px they were drawn with,
+   because nothing grows sideways here. */
 .rf-filter-group-body {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--rf-space-1);
+  column-gap: var(--rf-space-1);
+  row-gap: var(--rf-space-5);
 }
 
 /* One set of controls inside a group that holds two of them. It wraps as a
@@ -655,7 +681,10 @@ body {
 .rf-filter-set {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--rf-space-1);
+  /* Same two gaps as the group body above, and for the same reason: rarity
+     wraps over vault inside this box. */
+  column-gap: var(--rf-space-1);
+  row-gap: var(--rf-space-5);
 }
 
 /* The chip is the control. The toggle used to draw a filled, bordered box
@@ -710,6 +739,9 @@ body {
   display: flex;
   align-items: center;
   gap: var(--rf-space-1);
+  /* 28px of chip in a 44px box (rule 7), which is the default growth exactly.
+     The row above and below is 20px away — see .rf-filter-group-body — so the
+     two meet and neither takes the other's clicks. */
   /* The bottom 5px is room for the rule, and it is on every toggle rather than
      only the pressed ones: padding that appeared with the state would shift the
      chip two pixels down the moment you clicked it, and a row of six would
@@ -757,6 +789,17 @@ body {
   filter: none;
 }
 
+/* A word is 25px where a chip is 28, so it needs 12 a side rather than 8 —
+   and 20 in front, for the one whose label is "All". 26px of text cannot be
+   grown to 44 sideways from both ends without meeting "Droppable" 4px away, so
+   the growth goes the one way there is room: into the group's own inset, which
+   belongs to nobody. Same argument, same utility, as the "All" on the Sets
+   view and the one on the Tier List. */
+.rf-filter-toggle-text {
+  --rf-hit-grow: var(--rf-space-3);
+  --rf-hit-grow-inline: var(--rf-space-5);
+}
+
 .rf-filter-vault {
   font-size: var(--rf-text-overline);
   letter-spacing: 0.06em;
@@ -788,9 +831,41 @@ body {
   max-width: 320px;
 }
 
+/*
+  The track is 16px tall and the thumb is the whole control, so rule 7 is 16px
+  of transparent band either side of it. In the filter drawer there is room for
+  that: what the band reaches is the group's label above and its scale below,
+  both of them text rather than targets.
+
+  Declared here rather than with `.rf-hit-block`, and the reason is Gecko.
+  Firefox ignores a border on a range input drawn with the platform appearance —
+  measured on this tree, the same markup is 48px tall in Chromium and 20 in
+  Firefox — and honours a declared border-box height. So the height is declared
+  WITH the band in it: 16 of track inside 16 either side, and the negative
+  margin hands the 32 back so nothing around it moves. The browser's own track
+  height is not a number to rely on either; it is 16px at the default font size
+  and 10px at 200% text zoom, which would have left the one reader who most
+  needs the band with six pixels less of it than everybody else (§4.3: a slider
+  is a target, not reading text).
+*/
 .rf-range {
   width: 100%;
+  box-sizing: border-box;
+  block-size: calc(16px + 2 * var(--rf-space-4));
+  border-block: var(--rf-space-4) solid transparent;
+  margin-block: calc(-1 * var(--rf-space-4));
+  background-clip: padding-box;
   accent-color: var(--rf-gold-500);
+}
+
+/* In a panel the same slider has an info toggle 10px above it, so the whole
+   band goes the one way there is room: down, into the 38px before the first
+   relic row. */
+.rf-modal .rf-range {
+  block-size: calc(16px + var(--rf-space-8));
+  border-block: 0;
+  border-block-end: var(--rf-space-8) solid transparent;
+  margin-block: 0 calc(-1 * var(--rf-space-8));
 }
 
 /* Wraps. At 200% text zoom the four refinement labels are wider than any track
@@ -1732,6 +1807,10 @@ body {
 .rf-set-piece-name {
   flex: 1;
   min-width: 0;
+  /* 20px of text in a 44px box (rule 7). The piece rows are 28px apart, so the
+     two growths meet with 4px to spare and no row takes the next one's clicks;
+     the name is the full width of the row already. */
+  --rf-hit-grow: var(--rf-space-3);
   text-align: left;
   background: none;
   border: 0;
@@ -1999,12 +2078,18 @@ body {
 /* ------------------------------------------------------------ Touch size --
    WCAG 2.5.8 asks for 44×44. On a mouse the pointer is a pixel and the dense
    layout is the point, so the minimum applies where it matters: below --rf-bp-lg
-   and on any coarse pointer, whatever the width. Growing a range input is free
-   — the extra height is transparent padding around the same track.
+   and on any coarse pointer, whatever the width.
+
+   The sliders used to be in here too, and are not any more. A hit area that
+   arrives at one width and leaves at another is two designs, and the wide one
+   was the one nothing measured: `npm run reflow` found both sliders at 16px on
+   a 1440px canvas with a fine pointer, which is the shape the rule was written
+   about. They carry `.rf-hit-block` now — the same 44px band at every width,
+   and the drawer 28px shorter on a phone than it was, because the band is a
+   transparent border rather than a taller box.
    ----------------------------------------------------------------------- */
 @media (max-width: 1023.98px), (pointer: coarse) {
-  .rf-checkbox-input,
-  .rf-range {
+  .rf-checkbox-input {
     min-height: var(--rf-touch-target);
   }
 
@@ -2160,6 +2245,10 @@ body {
    A heading that is a link, so it looks like the overline beside every other
    section until it is reached for. */
 .rf-panel-wishlist-link {
+  /* An overline is 13px tall, and this one is a control. 16 a side is rule 7's
+     box with a pixel over; the section above it is 18px away and what is under
+     it is the stepper's own row, 487px down. */
+  --rf-hit-grow: var(--rf-space-4);
   padding: 0;
   border: 0;
   background: none;
@@ -2174,6 +2263,26 @@ body {
 .rf-panel-wishlist-link:hover {
   color: var(--rf-gold-300);
   text-decoration-color: var(--rf-gold-500);
+}
+
+/* The working behind a section heading, one click away. Its box is rule 7's
+   third exception (AGENTS.md §5.4): 25x29 rather than 44x44, because the row
+   under it is 10px down and is itself a target on three of the panels.
+   `--rf-hit-grow` is the block half — 12px upwards, into the paragraph above,
+   which is text — and the inline half is the default 8 either side of it. */
+.rf-hint-toggle {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  --rf-hit-grow: var(--rf-space-3);
+  transition: color var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-hint-toggle[data-open] {
+  color: var(--rf-gold-500);
 }
 
 /* ---- Owned tick ----

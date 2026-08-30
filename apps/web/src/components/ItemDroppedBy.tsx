@@ -89,14 +89,10 @@ export function ItemDroppedBy({ sources, onPickRelic }: Props) {
           onClick={() => setHintOpen((was) => !was)}
           aria-expanded={hintOpen}
           aria-label={hintOpen ? "Hide the explanation" : "What refinement does to these odds"}
-          style={{
-            display: "inline-flex",
-            padding: 0,
-            border: 0,
-            background: "none",
-            cursor: "pointer",
-            color: hintOpen ? "var(--rf-gold-500)" : "inherit",
-          }}
+          /* The same box, and the same third exception, as every other
+             heading's toggle — see SectionLabel. */
+          className="rf-hint-toggle rf-hit-block-start rf-hit-inline"
+          data-open={hintOpen || undefined}
         >
           <InfoIcon width={13} height={13} />
         </button>
@@ -165,7 +161,9 @@ export function ItemDroppedBy({ sources, onPickRelic }: Props) {
             <button
               key={`${source.relicFullName}-${source.refinement}`}
               type="button"
-              className="rf-focus-ring"
+              /* 24x581, and held there: the rows are 6px apart, so growing one
+                 to 44 takes the two beside it. §5.4's third exception. */
+              className="rf-focus-ring rf-droprow-relic"
               onClick={() => onPickRelic(source.relicFullName)}
               title={`${source.relicFullName} — open it in Relics`}
               style={{

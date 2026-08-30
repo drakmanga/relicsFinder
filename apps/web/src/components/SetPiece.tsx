@@ -66,7 +66,12 @@ export function Piece({
       <div className="rf-row">
         <button
           type="button"
-          className={cx("rf-focus-ring rf-set-piece-name", part.complete && "rf-struck")}
+          /* 20px of text in rule 7's 44px box. The piece rows are 28px apart,
+             so the two growths meet with 4px to spare. */
+          className={cx(
+            "rf-focus-ring rf-set-piece-name rf-hit-block",
+            part.complete && "rf-struck",
+          )}
           onClick={() => onPickItem(part.itemName)}
           title={`${part.itemName} — open it in Prime Items`}
         >

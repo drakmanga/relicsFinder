@@ -96,6 +96,10 @@ export function SetDetailPanel({
               variant="ghost"
               size="sm"
               iconOnly
+              /* 32px square in rule 7's box, grown upwards into the panel's own
+                 inset and sideways into the 16px it now shares with its
+                 neighbour. Growing down instead would reach the heading. */
+              className="rf-hit-block-start rf-hit-inline"
               icon={<ArrowLeftIcon />}
               aria-label="Back to where this was opened from"
               title="Back"
@@ -106,6 +110,7 @@ export function SetDetailPanel({
             variant="ghost"
             size="sm"
             iconOnly
+            className="rf-hit-block-start rf-hit-inline"
             icon={<XIcon />}
             aria-label="Close the panel"
             title="Close"
@@ -128,14 +133,10 @@ export function SetDetailPanel({
               onClick={() => setHintOpen((was) => !was)}
               aria-expanded={hintOpen}
               aria-label={hintOpen ? "Hide the explanation" : "How the two routes compare"}
-              style={{
-                display: "inline-flex",
-                padding: 0,
-                border: 0,
-                background: "none",
-                cursor: "pointer",
-                color: hintOpen ? "var(--rf-gold-500)" : "inherit",
-              }}
+              /* The same box, and the same third exception, as every other
+                 heading's toggle — see SectionLabel. */
+              className="rf-hint-toggle rf-hit-block-start rf-hit-inline"
+              data-open={hintOpen || undefined}
             >
               <InfoIcon width={13} height={13} />
             </button>
@@ -175,7 +176,15 @@ export function SetDetailPanel({
           )}
 
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            <Button variant="outline" size="sm" onClick={() => onSetOwnedAll(pieces, !complete)}>
+            <Button
+              variant="outline"
+              size="sm"
+              /* 32px drawn, 44 to a pointer (rule 7), downwards only: the
+                 heading's info toggle is 9px above and this row's own margin
+                 is 14px below. */
+              className="rf-hit-block-end rf-hit-panel-control"
+              onClick={() => onSetOwnedAll(pieces, !complete)}
+            >
               {complete ? "Clear the set" : "I have all of these"}
             </Button>
           </div>

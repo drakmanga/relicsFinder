@@ -122,9 +122,9 @@ const TOLERANCE = 1;
 const CULPRITS = 5;
 
 /*
-  Rule 7's box, and the two written exceptions to it. All three are stated in
+  Rule 7's box, and the three written exceptions to it. All four are stated in
   AGENTS.md §1 and §5.4; what is here is the same rule in a form that fails a
-  build, and the two have to be changed together.
+  build, and the two files have to be changed together.
 
   44px is WCAG 2.5.5 (AAA), which is what rule 7 asks for. 24px is WCAG 2.5.8
   (AA), which is what a control inside a data cell is held to instead: the
@@ -142,6 +142,35 @@ const CULPRITS = 5;
 const TOUCH_MIN = 44;
 const DENSE_MIN = 24;
 const EQUIVALENT = ".rf-cell-open";
+
+/*
+  §5.4's third exception, added 2026-08-29 when the walk first measured the
+  states a reader opens: a control in a panel's dense stack is held to the same
+  24px as one in a data cell, and for the same reason.
+
+  A detail panel is a column of rows four to ten pixels apart, and the space a
+  target there would grow into belongs to the row above or below it, which is
+  itself a target. That is exception 1's argument outside a table, and the list
+  is deliberately four selectors rather than a shape — everything else in a
+  panel was grown to 44 instead, including the things that had to grow in one
+  direction to do it.
+
+  What is on it and why it cannot be grown:
+    .rf-btn-xs           the quantity steppers, 24x24 and 22px apart in a row
+    .rf-droprow-roomy    a relic's six drops, 30px rows 4px apart
+    .rf-droprow-relic    the relics a part drops from, 24px rows 6px apart
+    .rf-droprow-sibling  the rest of a part's set, 30px rows 4px apart
+    .rf-hint-toggle      13px of icon under a heading whose next line is a
+                         control; grown to 25x29, which is as far as it goes
+                         without taking that line
+*/
+const DENSE = [
+  ".rf-btn-xs",
+  ".rf-droprow-roomy",
+  ".rf-droprow-relic",
+  ".rf-droprow-sibling",
+  ".rf-hint-toggle",
+].join(", ");
 
 /*
   A scroll container shorter than the header row of the table it holds cannot
@@ -474,7 +503,7 @@ const SCROLLERS = () => {
  * the DOM, so a row is measured as the cells in it; whether that row is
  * operable at all is rule 5's question, not rule 7's.
  */
-const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent]) => {
+const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent, denseList]) => {
   const CONTROLS = [
     "button",
     "a[href]",
@@ -513,7 +542,9 @@ const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent]) => {
       if (covers && Math.min(rect.width, rect.height) > Math.min(hit.width, hit.height)) hit = rect;
     }
 
-    const dense = element.closest("td, th") !== null;
+    // A data cell, or a panel's dense stack: two places where the room a target
+    // would grow into is the next target's, and one floor for both.
+    const dense = element.closest("td, th") !== null || element.matches(denseList);
     const sameActionAsItsRow = element.matches(equivalent);
     if (dense || sameActionAsItsRow) exempt += 1;
     if (sameActionAsItsRow) continue;
@@ -695,7 +726,7 @@ const reportScrollers = (boxes, where) => {
 
 /** Rule 7 over whatever is on screen, under the name of the state it is in. */
 const measureTouch = async (page, where) => {
-  const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT]);
+  const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT, DENSE]);
 
   if (touch.under.length > 0) {
     console.log(`FAIL  ${where}: ${touch.under.length} control(s) under the rule 7 minimum`);
@@ -956,8 +987,8 @@ for (const engineName of ENGINES) {
 if (exempted > 0) {
   console.log(
     `\n${exempted} control measurement(s) were held to a written exception ` +
-      `(AGENTS.md §5.4): a data cell's ${DENSE_MIN}px floor, or a control whose own row ` +
-      `does the same thing.`,
+      `(AGENTS.md §5.4): the ${DENSE_MIN}px floor of a data cell or a panel's dense stack, ` +
+      `or a control whose own row does the same thing.`,
   );
 }
 

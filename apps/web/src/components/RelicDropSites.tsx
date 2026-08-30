@@ -94,7 +94,9 @@ export function RelicDropSites({ relicFullName, sites, sitesPending, best }: Pro
         <Button
           variant="primary"
           icon={<ExternalLinkIcon />}
-          className="rf-full"
+          /* 40px drawn, 44 to a pointer (rule 7): 4px a side, into the
+             6 and 10 the rows either side of it leave. */
+          className="rf-full rf-hit-action"
           onClick={() =>
             window.open(relicMarketUrl(relicFullName), "_blank", "noopener,noreferrer")
           }

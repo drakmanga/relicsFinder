@@ -23,15 +23,23 @@ export function SectionLabel({ children, hint }: { children: ReactNode; hint?: R
             onClick={() => setOpen((was) => !was)}
             aria-expanded={open}
             aria-label={open ? "Hide the explanation" : "How this is worked out"}
-            style={{
-              display: "inline-flex",
-              padding: 0,
-              border: 0,
-              background: "none",
-              cursor: "pointer",
-              color: open ? "var(--rf-gold-500)" : "inherit",
-              transition: "color var(--rf-dur-fast) var(--rf-ease-standard)",
-            }}
+            /*
+              13px of icon, and rule 7 wants 44. It grows upwards and sideways
+              because those are the directions with room: below it is the
+              section's own first line, 10px down, and that line is a control on
+              three of the panels. What it reaches instead is the heading beside
+              it and the paragraph above — text, neither of them a target.
+
+              It lands at 25x29 rather than 44, which is §5.4's third exception
+              and not an oversight: growing the other 20px would take the row
+              under it, and this control cannot be redrawn bigger without
+              redrawing every section heading in every panel.
+
+              The styling moved to a class because an inline `border: 0` would
+              have won against the hit area, which IS a border.
+            */
+            className="rf-hint-toggle rf-hit-block-start rf-hit-inline"
+            data-open={open || undefined}
           >
             <InfoIcon width={13} height={13} />
           </button>

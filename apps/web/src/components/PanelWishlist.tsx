@@ -33,7 +33,8 @@ export function PanelWishlist({ seed, qty, hint, onOpen }: Props) {
           <button
             type="button"
             onClick={onOpen}
-            className="rf-focus-ring rf-panel-wishlist-link rf-text-overline"
+            /* An overline that is a control: 13px drawn, 45 to a pointer. */
+            className="rf-focus-ring rf-panel-wishlist-link rf-text-overline rf-hit-block"
             title="Open the wishlist at this section"
           >
             Wishlist
