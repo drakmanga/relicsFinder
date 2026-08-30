@@ -14,11 +14,11 @@ import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Ducat value and set membership for Prime parts.
+ * Ducat value, set membership and release dates for Prime gear.
  *
- * <p>Both are static facts about an item — a Neuroptics is worth 65 ducats
- * whatever the market is doing — so they come from the item database rather
- * than warframe.market.
+ * <p>All of them are static facts about an item — a Neuroptics is worth 65
+ * ducats whatever the market is doing — so they come from the item database
+ * rather than warframe.market.
  *
  * <p>Deriving the set here rather than in the browser keeps one rule in one
  * place: the drop tables write "Volt Prime Neuroptics Blueprint" while the item
@@ -90,11 +90,30 @@ public class DucatService {
      */
     public record ItemMeta(Integer ducats, String setName, String category, Integer copiesPerSet) {}
 
-    private record Snapshot(Map<String, ItemMeta> byName, Instant fetchedAt) {
+    private record Snapshot(
+            Map<String, ItemMeta> byName,
+            Map<String, SetDates> datesBySet,
+            Instant fetchedAt) {
         boolean isFresh() {
             return Duration.between(fetchedAt, Instant.now()).compareTo(TTL) < 0;
         }
     }
+
+    /**
+     * When a Prime set entered the game and when it left the drop tables.
+     *
+     * <p>Dates as the database writes them, {@code yyyy-MM-dd}, and never parsed
+     * here: this is the file reader, and what a date MEANS is
+     * {@link PrimeLifecycleService}'s question rather than this one's.
+     *
+     * <p>{@code vaultDate} is null for a set that has never been vaulted, which
+     * is 29 of the 159 the relic catalogue holds. It is also the field that must
+     * not be read as "vaulted today": the database's own {@code vaulted} flag is
+     * true for exactly the sets that carry a date here, so it says the set has
+     * been vaulted at some point and nothing about whether it is obtainable now.
+     * Six sets are in the drop tables today with a vault date on them.
+     */
+    public record SetDates(String setName, String releaseDate, String vaultDate) {}
 
     /** Never null; a part the database does not know returns empty fields. */
     public ItemMeta lookup(String itemName) {
@@ -114,6 +133,17 @@ public class DucatService {
         }
 
         return new ItemMeta(null, null, null, null);
+    }
+
+    /**
+     * Release and vault dates for one set, by its display name.
+     *
+     * <p>Null for a set the database does not carry — Kavasa Prime is the one in
+     * the relic catalogue — rather than a record of nulls, so a caller cannot
+     * mistake "never vaulted" for "never heard of".
+     */
+    public SetDates datesFor(String setName) {
+        return current().datesBySet().get(normalize(setName));
     }
 
     private static String normalize(String value) {
@@ -136,7 +166,7 @@ public class DucatService {
             System.err.println("DucatService: refresh failed — " + e.getMessage());
             // Stale beats empty: without this every part would suddenly report
             // no ducats and no set.
-            return cached != null ? cached : new Snapshot(Map.of(), Instant.now());
+            return cached != null ? cached : new Snapshot(Map.of(), Map.of(), Instant.now());
         } finally {
             refreshLock.unlock();
         }
@@ -144,6 +174,7 @@ public class DucatService {
 
     private Snapshot fetch() throws Exception {
         Map<String, ItemMeta> byName = new HashMap<>();
+        Map<String, SetDates> datesBySet = new HashMap<>();
 
         for (Map.Entry<String, String> category : CATEGORIES.entrySet()) {
             HttpRequest request = HttpRequest.newBuilder()
@@ -164,10 +195,12 @@ public class DucatService {
                 continue;
             }
 
-            index(mapper.readTree(response.body()), category.getValue(), byName);
+            JsonNode items = mapper.readTree(response.body());
+            index(items, category.getValue(), byName);
+            indexDates(items, datesBySet);
         }
 
-        return new Snapshot(Map.copyOf(byName), Instant.now());
+        return new Snapshot(Map.copyOf(byName), Map.copyOf(datesBySet), Instant.now());
     }
 
     static void index(JsonNode items, String category, Map<String, ItemMeta> byName) {
@@ -200,6 +233,36 @@ public class DucatService {
                                 category,
                                 copies.isInt() ? copies.asInt() : null));
             }
+        }
+    }
+
+    /**
+     * The dates, read off the item rather than off its components.
+     *
+     * <p>Separate from {@link #index} because it answers about a different
+     * thing: that one walks the components and produces a row per part, this one
+     * produces a row per set. Walking both in one loop would put two keys, two
+     * maps and two guards in one body for no gain — the file is read once and
+     * both passes are over a node already in memory.
+     *
+     * <p>The gate is {@code releaseDate} rather than the database's
+     * {@code isPrime}: 801 of its 873 items carry a date and one Prime-named
+     * melee weapon carries no flag, so the flag would silently drop a set the
+     * relic catalogue does hold.
+     */
+    static void indexDates(JsonNode items, Map<String, SetDates> datesBySet) {
+        for (JsonNode item : items) {
+            String setName = item.path("name").asText("");
+            if (setName.isEmpty()) continue;
+
+            String releaseDate = item.path("releaseDate").asText("");
+            if (releaseDate.isEmpty()) continue;
+
+            String vaultDate = item.path("vaultDate").asText("");
+
+            datesBySet.put(
+                    normalize(setName),
+                    new SetDates(setName, releaseDate, vaultDate.isEmpty() ? null : vaultDate));
         }
     }
 }
