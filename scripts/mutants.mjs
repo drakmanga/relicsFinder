@@ -294,6 +294,21 @@ const MUTANTS = [
     to: 'if (price.trend) return { kind: "moved", percent: price.trend };',
   },
   {
+    // The two below are the last hop to an open tab. The first spends a second
+    // batch of six hundred prices the moment the app opens; the second spends
+    // one every time the warmer moves any of 1.500 numbers.
+    name: "the first marker a tab sees is treated as news",
+    file: "apps/web/src/lib/priceRefresh.ts",
+    from: "if (revision === undefined || seen === null) return false;",
+    to: "if (revision === undefined) return false;",
+  },
+  {
+    name: "an open tab re-reads the prices as fast as the marker moves",
+    file: "apps/web/src/lib/priceRefresh.ts",
+    from: "return now - lastRefreshedAt >= REFRESH_FLOOR_MS;",
+    to: "return true;",
+  },
+  {
     // The bug this step closed: the fallback was its own literal, so moving the
     // catalogue's default left the wishlist keying lines under a state nothing
     // showed any more. Its twin is on the Java side, one constant apart.

@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 
@@ -274,6 +275,25 @@ public class RelicMarketService {
     private final AtomicInteger sweepCursor = new AtomicInteger();
 
     private final AtomicBoolean dirty = new AtomicBoolean();
+
+    /**
+     * How many times a price in here has actually changed.
+     *
+     * <p>The number a browser watches. A tab left open never re-reads — the
+     * price queries stop polling once the batch is complete, and the client
+     * does not refetch on focus — so a backend that re-read three times in a
+     * day reached a tab open since morning zero times. This is what tells it
+     * there is something to come back for, and it rides on the status poll the
+     * freshness label already makes every minute, so learning that nothing has
+     * changed costs no request of its own.
+     *
+     * <p>Counted on the price rather than on the read. A re-read that comes
+     * back with the number it came back with last time has changed nothing any
+     * screen shows, and waking every open tab for it would spend a batch of six
+     * hundred prices to redraw the same table. A failed call is not a change
+     * either: it says nothing about the item.
+     */
+    private final AtomicLong revision = new AtomicLong();
 
     private final ScheduledExecutorService housekeeping =
             Executors.newSingleThreadScheduledExecutor(runnable -> {
@@ -758,6 +778,10 @@ public class RelicMarketService {
         status.put("fresh", fresh);
         status.put("queued", queue.size());
         status.put("asOf", newest == null ? null : newest.toString());
+        // Rides here rather than on an endpoint of its own: this is polled once
+        // a minute for the freshness label already, and a second poll for a
+        // second number would be the cost the marker exists to avoid.
+        status.put("revision", revision.get());
         return status;
     }
 
@@ -894,6 +918,7 @@ public class RelicMarketService {
                 Cached fresh = fetch(slug);
                 cache.put(slug, fresh.withTtl(nextTtl(existing, fresh, rankSensitivity.targetFor(slug))));
                 dirty.set(true);
+                if (changedPrice(existing, fresh)) revision.incrementAndGet();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
@@ -901,6 +926,19 @@ public class RelicMarketService {
                 System.err.println("market-warmer: " + e.getMessage());
             }
         }
+    }
+
+    /**
+     * Whether this read moved the number a screen would draw.
+     *
+     * <p>The first price for an item counts: the screen goes from a skeleton to
+     * a figure, which is the largest change there is. A failed call does not,
+     * and neither does a reading identical to the one it replaces.
+     */
+    static boolean changedPrice(Cached previous, Cached fresh) {
+        if (fresh == null || fresh.failed()) return false;
+        if (previous == null || previous.failed()) return fresh.avg() != null;
+        return !Objects.equals(previous.avg(), fresh.avg());
     }
 
     /** Gives the warmer a moment when a caller is genuinely waiting. */

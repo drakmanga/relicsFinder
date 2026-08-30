@@ -4,10 +4,12 @@ import {
   useDropInfo,
   useEndoOffers,
   useItemPrices,
+  useMarketStatus,
   useRelicPrices,
   useRelics,
   useUnvaultedNames,
 } from "../api/queries";
+import { usePriceRefresh } from "./priceRefresh";
 import { useWishlist } from "./wishlist";
 import { useOwned } from "./owned";
 import { itemPriceProgress, relicPriceProgress } from "./priceProgress";
@@ -106,6 +108,22 @@ export function useCatalogue({
     return [...names];
   }, [relics.data]);
   const prices = useItemPrices(pricedNames);
+
+  /*
+    A tab left open used to go stale in silence: both price queries stop polling
+    once their batch is complete and the client does not refetch on focus, so a
+    backend that re-read three times in a day reached a tab open since morning
+    zero times.
+
+    The status query is the one the freshness label already polls once a minute,
+    and asking for it here costs no request — React Query serves both readers
+    from the one cache entry, the same trick `useEndoStatus` uses. It is enabled
+    on the same condition the label uses, so the Endo tab, whose rows come from
+    live offers rather than from the price cache, does not poll for a marker
+    nothing on it reads.
+  */
+  const marketStatus = useMarketStatus(view !== "endo");
+  usePriceRefresh(marketStatus.data?.revision, marketStatus.dataUpdatedAt);
 
   const rows = useMemo(() => buildRelicRows(relics.data ?? [], filters), [relics.data, filters]);
 

@@ -20,6 +20,7 @@ const ONLY_SERVICE_TESTS =
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
   "RelicMarketTradeCountTest,RelicMarketTrendGapTest,RankSensitivityTest," +
+  "RelicMarketRevisionTest," +
   "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
   "DucatServiceIndexTest,OwnedServiceMigrationTest" +
   " -DfailIfNoTests=false";

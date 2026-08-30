@@ -295,6 +295,15 @@ export interface MarketStatus {
    * forever and would otherwise pin the label to that one stale reading.
    */
   asOf: string | null;
+  /**
+   * How many times a price has actually changed since the server started.
+   *
+   * The marker an open tab watches. Its value means nothing on its own — only
+   * that it moved — and it is counted on the price rather than on the read, so
+   * a sweep that re-reads a number and finds it unchanged does not ask six
+   * hundred prices to be fetched again. See `lib/priceRefresh`.
+   */
+  revision: number;
 }
 
 /** When the Ayatan offers were last read. Their own clock: they expire in five

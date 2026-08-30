@@ -12,8 +12,18 @@ export const keys = {
   relicStates: (name: string) => ["relics", "states", name] as const,
   dropInfo: (name: string) => ["relics", "drop-info", name] as const,
   search: (term: string) => ["search", term] as const,
-  itemPrices: (names: string[]) => ["market", "items", names] as const,
-  relicPrices: (names: string[]) => ["market", "relics", names] as const,
+  /**
+   * Every price batch, whatever set of names it was asked for.
+   *
+   * A prefix rather than a key: the two below carry the names they asked for,
+   * so adding a wishlist line makes a different query, and something wanting to
+   * refresh "the prices" has to reach all of them at once. The keys are built
+   * from these constants so the prefix cannot drift away from what it matches.
+   */
+  allItemPrices: ["market", "items"] as const,
+  allRelicPrices: ["market", "relics"] as const,
+  itemPrices: (names: string[]) => [...keys.allItemPrices, names] as const,
+  relicPrices: (names: string[]) => [...keys.allRelicPrices, names] as const,
   itemHistory: (name: string) => ["market", "history", name] as const,
   relicDetail: (name: string) => ["market", "relic", name] as const,
   relicHistory: (name: string) => ["market", "relic", "history", name] as const,
