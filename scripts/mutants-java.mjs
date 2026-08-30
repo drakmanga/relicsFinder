@@ -22,10 +22,45 @@ const ONLY_SERVICE_TESTS =
   "RelicMarketTradeCountTest,RelicMarketTrendGapTest,RankSensitivityTest," +
   "RelicMarketRevisionTest," +
   "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
-  "DucatServiceIndexTest,OwnedServiceMigrationTest" +
+  "DucatServiceIndexTest,DucatServiceDatesTest,PrimeLifecycleServiceTest," +
+  "OwnedServiceMigrationTest" +
   " -DfailIfNoTests=false";
 
 const MUTANTS = [
+  {
+    // The fault the whole phase rule exists not to have. Six sets were in the
+    // drop tables on 2026-08-30 carrying a vault date from years earlier, and
+    // reading the date first calls every one of them long vaulted — the exact
+    // opposite of what a reader would do about it.
+    name: "the vault date is read before the drop tables",
+    file: `${SERVICE}/PrimeLifecycleService.java`,
+    from: "        if (dropping) return PrimePhase.DROPPING;\n        if (vaultDate == null) return PrimePhase.UNKNOWN;",
+    to: "        if (vaultDate == null) return dropping ? PrimePhase.DROPPING : PrimePhase.UNKNOWN;",
+  },
+  {
+    // Defaulting puts the most confident of the three labels on the one set
+    // nothing here knows anything about.
+    name: "a set with no vault date falls through to long vaulted",
+    file: `${SERVICE}/PrimeLifecycleService.java`,
+    from: "        if (vaultDate == null) return PrimePhase.UNKNOWN;",
+    to: "        if (vaultDate == null) return PrimePhase.LONG_VAULTED;",
+  },
+  {
+    // Two years is measured, not round: at three the claim drops from 85% to
+    // 70% and the badge starts being wrong about sets that are not moving.
+    name: "the recently-vaulted window is widened to three years",
+    file: `${SERVICE}/PrimeLifecycleService.java`,
+    from: "    static final Period RECENTLY_VAULTED = Period.ofYears(2);",
+    to: "    static final Period RECENTLY_VAULTED = Period.ofYears(3);",
+  },
+  {
+    // An empty string sorts and compares as a date in the year zero, so every
+    // never-vaulted set would read as vaulted before the game existed.
+    name: "a set that has never been vaulted gets an empty date instead of none",
+    file: `${SERVICE}/DucatService.java`,
+    from: "new SetDates(setName, releaseDate, vaultDate.isEmpty() ? null : vaultDate));",
+    to: "new SetDates(setName, releaseDate, vaultDate));",
+  },
   {
     // The failure the owned migration must not have: the file in the wild is a
     // list of bare names, and a name has always meant one copy.

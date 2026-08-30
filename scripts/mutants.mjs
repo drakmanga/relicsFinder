@@ -12,6 +12,32 @@ const ROOT = new URL("..", import.meta.url).pathname;
 
 const MUTANTS = [
   {
+    // The two absences a phase cell has to tell apart. A landed answer that
+    // does not name the set is Kavasa Prime, and drawing a skeleton for it
+    // leaves a row waiting forever for a row that is never coming.
+    name: "a set the lifecycle answer never mentions waits instead of answering",
+    file: "apps/web/src/lib/lifecycle.ts",
+    from: '  if (!row) return { kind: "phase", phase: "unknown", releaseDate: null, vaultDate: null };',
+    to: "  if (!row) return WAITING;",
+  },
+  {
+    // Six sets are in the drop tables today carrying the date they were FIRST
+    // vaulted, years ago. Printing it under a badge reading "Dropping" puts a
+    // date on screen that contradicts the line above it.
+    name: "a dropping set prints the date it was first vaulted",
+    file: "apps/web/src/lib/lifecycle.ts",
+    from: '    return cell.releaseDate ? { label: "Released", date: cell.releaseDate } : null;',
+    to: '    return cell.vaultDate ? { label: "Released", date: cell.vaultDate } : null;',
+  },
+  {
+    // The explanation may not lean on the word it explains, or it explains
+    // nothing to the reader AGENTS.md is written about.
+    name: "the phase sentences go back to in-game vocabulary",
+    file: "apps/web/src/lib/lifecycle.ts",
+    from: '    "Stopped dropping from relics less than two years ago. What players already hold is the only supply, and prices usually climb.",',
+    to: '    "Vaulted less than two years ago, so prices usually climb.",',
+  },
+  {
     // The fault the whole step exists to close: 28 sets read as finished with a
     // piece still missing.
     name: "a piece is done as soon as one copy of it is in hand",
