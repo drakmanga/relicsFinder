@@ -445,26 +445,26 @@ body {
 }
 
 .rf-cols-items col:nth-child(1) {
-  width: 12%;
+  width: 11%;
 } /* Item — ellipsises by design; the full name is on the cell's title */
 .rf-cols-items col:nth-child(2) {
-  width: 9%;
-} /* Set */
+  width: 6%;
+} /* Set — the first words of the Item beside it, so it truncates cheapest */
 .rf-cols-items col:nth-child(3) {
-  width: 10%;
+  width: 8%;
 } /* Status — the set's, repeated on every part of it */
 .rf-cols-items col:nth-child(4) {
-  width: 8%;
+  width: 9%;
 } /* Rarity — the dot and "Uncommon", which needs 105px at 1280 */
 .rf-cols-items col:nth-child(5) {
-  width: 24%;
-} /* Relics — four tier chips, and they are px so this cannot be squeezed */
+  width: 25%;
+} /* Relics — four tier chips, in px, so this cannot be squeezed */
 .rf-cols-items col:nth-child(6) {
-  width: 6%;
-} /* Best drop */
+  width: 7%;
+} /* Best drop — the header word, wider than the number under it */
 .rf-cols-items col:nth-child(7) {
-  width: 6%;
-} /* Ducats */
+  width: 7%;
+} /* Ducats — the same */
 .rf-cols-items col:nth-child(8) {
   width: 6%;
 } /* Price */
@@ -475,8 +475,8 @@ body {
   width: 4%;
 } /* Info */
 .rf-cols-items col:nth-child(11) {
-  width: 4%;
-} /* Market */
+  width: 6%;
+} /* Market — the header word is wider than the icon under it */
 
 /* Same arithmetic as `.rf-cols-items` above, and for the same reason: an eighth
    column is new width rather than width taken from the seven that were

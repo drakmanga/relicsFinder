@@ -78,11 +78,23 @@ describe("phaseDate", () => {
     });
   });
 
-  it("shows a vaulted set when it stopped dropping", () => {
+  it("shows a vaulted set when it last dropped", () => {
     expect(phaseDate(phaseCell(map(WISP), "Wisp Prime"))).toEqual({
-      label: "Stopped dropping",
+      label: "Last dropped",
       date: "2025-05-21",
     });
+  });
+
+  /**
+   * The label may not repeat the sentence it is printed after.
+   *
+   * Both are on one line in the panel, and "Stopped dropping from relics less
+   * than two years ago. Stopped dropping 2025-12-10." is what the first version
+   * of this actually rendered.
+   */
+  it("does not open with the words the sentence beside it already used", () => {
+    const label = phaseDate(phaseCell(map(WISP), "Wisp Prime"))?.label ?? "";
+    expect(PHASE_MEANS["recently-vaulted"].startsWith(label)).toBe(false);
   });
 
   it("shows nothing for a set nothing is dated", () => {

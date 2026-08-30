@@ -93,11 +93,17 @@ export const PHASE_MEANS: Record<PrimePhase, string> = {
  * A release date is shown for those instead, which is a fact about the set that
  * nothing contradicts.
  */
+/* The date is printed as the item database writes it, yyyy-MM-dd, rather than
+   through a locale format. 10/12/2025 is two different days on two sides of an
+   ocean and this app is one page shared by link; the ISO form is the one shape
+   nobody has to guess at. */
 export function phaseDate(cell: PhaseCell): { label: string; date: string } | null {
   if (cell.kind !== "phase") return null;
 
   if (cell.phase === "recently-vaulted" || cell.phase === "long-vaulted") {
-    return cell.vaultDate ? { label: "Stopped dropping", date: cell.vaultDate } : null;
+    // Not "stopped dropping": the sentence beside it already opens with those
+    // words, and the pair read in sequence said them twice.
+    return cell.vaultDate ? { label: "Last dropped", date: cell.vaultDate } : null;
   }
 
   if (cell.phase === "dropping") {
