@@ -146,6 +146,23 @@ public class DucatService {
         return current().datesBySet().get(normalize(setName));
     }
 
+    /**
+     * Every Prime set the item database knows, by display name.
+     *
+     * <p>Read off the parts index rather than off the dates index, because the
+     * ducat value is what makes a set Prime: all 159 sets with a ducat-bearing
+     * component are Prime and none of the other 700-odd dated items is. Gating
+     * on the name would need the word rule that lives in the browser, and gating
+     * on the database's {@code isPrime} flag misses one.
+     */
+    public Set<String> primeSetNames() {
+        Set<String> names = new HashSet<>();
+        for (ItemMeta meta : current().byName().values()) {
+            if (meta.setName() != null) names.add(meta.setName());
+        }
+        return names;
+    }
+
     private static String normalize(String value) {
         return value == null ? "" : value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
