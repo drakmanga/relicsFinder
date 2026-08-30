@@ -9,7 +9,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Button,
   EmptyState,
-  PriceDelta,
   Skeleton,
   Table,
   TableCell,
@@ -22,7 +21,9 @@ import {
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { TierListPrimer } from "./TierListPrimer";
+import { TrendValue } from "./TrendNote";
 import { Unlisted } from "./Unlisted";
+import { tierTrendCell } from "../lib/trend";
 import { usePricePriority } from "../lib/usePricePriority";
 import {
   ALL_VAULT_FILTERS,
@@ -56,13 +57,17 @@ interface Props {
   /** Absent until the market answers: with no prices there is nothing to band. */
   prices: PriceMap | undefined;
   /**
-   * Whether the whole-relic batch is still landing. See lib/priceProgress.
+   * Whether the part batch is still landing. See lib/priceProgress.
    *
-   * The part batch is deliberately not a prop here, unlike everywhere else in
-   * the app: the letters survive a half-filled market — an unpriced drop counts
-   * as zero, which understates a relic rather than inventing a value for it —
-   * so nothing in this table waits on it.
+   * The letters do not wait on it and never did: an unpriced drop counts as
+   * zero, which understates a relic rather than inventing a value for it. The
+   * Trend column is the one thing here that has to know, because "no drop of
+   * this relic has a measured trend" and "no drop of this relic has a price
+   * yet" produce the same empty comparison, and only one of them is a fact
+   * about the market.
    */
+  pricesFilling: boolean;
+  /** Whether the whole-relic batch is still landing. Drives the price column. */
   relicPricesFilling: boolean;
   vault: VaultFilter;
   onVault: (next: VaultFilter) => void;
@@ -95,6 +100,7 @@ interface Props {
 export function TierListTable({
   tierList,
   prices,
+  pricesFilling,
   relicPricesFilling,
   vault,
   onVault,
@@ -351,7 +357,7 @@ export function TierListTable({
                       )}
                     </TableCell>
                     <TableCell align="right" numeric>
-                      <Trend percent={row.trend} />
+                      <TrendValue cell={tierTrendCell(row.trend, pricesFilling)} size="cell" />
                     </TableCell>
                   </TableRow>
                 );
@@ -390,21 +396,6 @@ function Grade({ letter }: { letter: TierLetter | null }) {
   return (
     <span className={`rf-grade rf-clip-octagon rf-grade-${letter.toLowerCase()}`}>{letter}</span>
   );
-}
-
-/**
- * Ninety-day movement of the solo expected value, or nothing.
- *
- * `PriceDelta` rather than an arrow of this view's own: the arrow, the sign
- * and the two tones are already the design system's answer to "this number
- * moved", and a second one beside it would be the same thing said differently.
- * Rounded to whole percent — the arrow only appears past ten, so the decimals
- * would be digits of noise under a number that means "it moved".
- */
-function Trend({ percent }: { percent: number | null }) {
-  if (percent === null) return <Unlisted what="Steady" />;
-
-  return <PriceDelta value={Math.round(percent)} />;
 }
 
 interface SortHeaderProps {

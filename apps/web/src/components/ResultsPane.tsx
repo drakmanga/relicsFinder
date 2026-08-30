@@ -202,6 +202,7 @@ export function ResultsPane({
       <TierListTable
         tierList={tierList}
         prices={prices}
+        pricesFilling={pricesFilling}
         relicPricesFilling={relicPricesFilling}
         vault={tierVault}
         onVault={onTierVault}

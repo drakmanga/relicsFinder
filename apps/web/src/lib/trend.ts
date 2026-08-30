@@ -1,5 +1,6 @@
 import type { ItemPrice } from "../api/types";
 import type { TrendNoteReason } from "../components/TrendNote";
+import type { TierTrend } from "./tierList";
 
 /**
  * What a trend cell has to draw, once.
@@ -35,4 +36,25 @@ export function trendCell(price: ItemPrice | undefined): TrendCell {
   if (price.trend !== null) return { kind: "moved", percent: price.trend };
   if (!price.trendGap) return WAITING;
   return { kind: "note", reason: price.trendGap };
+}
+
+/**
+ * The same cell, for the Tier List's own trend.
+ *
+ * A different number — the movement of an expected value, not of one listing —
+ * and therefore different causes: nothing here can be "never sold", and
+ * "steady" is an answer this column can actually give because it computes the
+ * comparison itself.
+ *
+ * `filling` is the only reason the batch's state is consulted at all. A relic
+ * whose drops have no prices yet is indistinguishable from one whose drops have
+ * no measured trend, and the honest answer while the cache fills is the same
+ * skeleton the price beside it draws: a cell reading "nothing to compare" that
+ * turns into a percentage a moment later is a worse answer than one that says
+ * nothing yet.
+ */
+export function tierTrendCell(trend: TierTrend, filling: boolean): TrendCell {
+  if (typeof trend === "number") return { kind: "moved", percent: trend };
+  if (trend === "no-baseline" && filling) return WAITING;
+  return { kind: "note", reason: trend };
 }

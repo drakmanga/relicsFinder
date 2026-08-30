@@ -42,12 +42,16 @@ describe("the ninety-day trend, over the payload the browser receives", () => {
     expect(trendOf("Neo A16")).toBeCloseTo(-34.97, 1);
   });
 
-  it("says nothing about the relics that barely moved", () => {
+  it("calls the relics that barely moved steady, and means it", () => {
     // Axi A1 moved 3.04% and Lith G1 3.40% on the day this was captured. The
     // gate is what keeps them quiet, so a fix that made the arrow appear by
     // lowering it would fail here rather than look like a success.
-    expect(trendOf("Axi A1")).toBeNull();
-    expect(trendOf("Lith G1")).toBeNull();
+    //
+    // These two are also the only place "steady" can be checked against real
+    // prices: it is the answer for a relic whose drops were measured and held
+    // still, and every part in this payload carries a trend.
+    expect(trendOf("Axi A1")).toBe("steady");
+    expect(trendOf("Lith G1")).toBe("steady");
     expect(TREND_ARROW_THRESHOLD).toBe(10);
   });
 
@@ -56,9 +60,21 @@ describe("the ninety-day trend, over the payload the browser receives", () => {
     // prices behind them carried a trend. Four of these six moved, so a path
     // that drops the trend anywhere between the wire and the row comes back
     // with nothing to say about any of them.
-    const moved = rowsFromPayload().filter((row) => row.trend !== null);
+    const moved = rowsFromPayload().filter((row) => typeof row.trend === "number");
 
     expect(moved).toHaveLength(4);
+  });
+
+  it("has a baseline for every relic in it", () => {
+    // "Nothing to compare" is the honest answer where no drop was measured, and
+    // it must not be the answer here: all thirty-one priced parts in the capture
+    // carry a trend, so a path that lost the trends would turn six real
+    // comparisons into six shrugs — the same defect as Steady, differently
+    // worded.
+    const rows = rowsFromPayload();
+
+    expect(rows.filter((row) => row.trend === "no-baseline")).toHaveLength(0);
+    expect(rows).toHaveLength(6);
   });
 
   it("was given prices that could have said something", () => {

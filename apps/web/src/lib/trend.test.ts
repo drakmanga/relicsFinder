@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { trendCell } from "./trend";
+import { tierTrendCell, trendCell } from "./trend";
 import type { ItemPrice, TrendGap } from "../api/types";
 
 function price(trend: number | null, trendGap?: TrendGap | null): ItemPrice {
@@ -51,5 +51,32 @@ describe("trendCell", () => {
       reason: "too-few-sales",
     });
     expect(trendCell(price(null, "no-answer"))).toEqual({ kind: "note", reason: "no-answer" });
+  });
+});
+
+describe("tierTrendCell", () => {
+  it("shows the movement whether or not the batch has settled", () => {
+    expect(tierTrendCell(14, true)).toEqual({ kind: "moved", percent: 14 });
+    expect(tierTrendCell(14, false)).toEqual({ kind: "moved", percent: 14 });
+  });
+
+  it("says steady while the cache is still filling", () => {
+    // Steady is computed from drops that were measured, so it does not become
+    // truer or falser as the rest of the batch lands. Only the absence waits.
+    expect(tierTrendCell("steady", true)).toEqual({ kind: "note", reason: "steady" });
+  });
+
+  it("waits rather than saying there is nothing to compare", () => {
+    // A relic whose drops have no prices YET looks exactly like a relic whose
+    // drops have no measured trend, and one of those is a fact about the market
+    // while the other is a fact about the clock.
+    expect(tierTrendCell("no-baseline", true)).toEqual({ kind: "waiting" });
+  });
+
+  it("says there is nothing to compare once the batch has settled", () => {
+    expect(tierTrendCell("no-baseline", false)).toEqual({
+      kind: "note",
+      reason: "no-baseline",
+    });
   });
 });

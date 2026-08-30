@@ -438,9 +438,9 @@ describe("the ninety-day trend", () => {
     expect(trendOf(one, withTrends(prices({ common: 10 }), { common: -25 }))).toBeCloseTo(-25, 8);
   });
 
-  it("says nothing about a move too small to act on", () => {
-    expect(trendOf(one, withTrends(prices({ common: 10 }), { common: 5 }))).toBeNull();
-    expect(trendOf(one, withTrends(prices({ common: 10 }), { common: -5 }))).toBeNull();
+  it("calls a move too small to act on steady, rather than an arrow", () => {
+    expect(trendOf(one, withTrends(prices({ common: 10 }), { common: 5 }))).toBe("steady");
+    expect(trendOf(one, withTrends(prices({ common: 10 }), { common: -5 }))).toBe("steady");
   });
 
   it("shows an arrow at exactly the threshold, in both directions", () => {
@@ -453,8 +453,25 @@ describe("the ninety-day trend", () => {
     expect(trendOf(one, withTrends(prices({ common: 9 }), { common: -10 }))).toBe(-10);
   });
 
-  it("says nothing when no drop has a trend", () => {
-    expect(trendOf(one, prices({ common: 10 }))).toBeNull();
+  it("does not call a relic nobody measured steady", () => {
+    // The defect the whole column had. With no trend on any drop the baseline
+    // is a copy of today's prices, so the movement computes to exactly zero and
+    // clears no threshold — which read as Steady, over six prices nothing had
+    // ever been compared against. "Steady" and "not measured" are not the same
+    // claim, and only one of them is true here.
+    expect(trendOf(one, prices({ common: 10 }))).toBe("no-baseline");
+  });
+
+  it("compares as soon as one drop was measured", () => {
+    // The pair that says the gate is on measurement rather than on movement:
+    // the same two drops, and only the trend on one of them differs. The
+    // untrended drop stays in the sum either way — see the case below.
+    const measured = withTrends(prices({ moved: 10, still: 10 }), { moved: 25 });
+
+    expect(trendOf([drop("moved", 50), drop("still", 50)], measured)).not.toBe("no-baseline");
+    expect(trendOf([drop("moved", 50), drop("still", 50)], prices({ moved: 10, still: 10 }))).toBe(
+      "no-baseline",
+    );
   });
 
   it("keeps a drop with no trend in the comparison instead of dropping it", () => {
@@ -479,10 +496,10 @@ describe("the ninety-day trend", () => {
     expect(trendOf([drop("gone", 50), drop("moved", 50)], market)).toBeCloseTo(11.111, 3);
   });
 
-  it("says nothing about a relic that was worth nothing ninety days ago", () => {
+  it("has nothing to compare a relic that was worth nothing ninety days ago", () => {
     const market = withTrends(prices({ common: null }), { common: 25 });
 
-    expect(trendOf(one, market)).toBeNull();
+    expect(trendOf(one, market)).toBe("no-baseline");
   });
 });
 

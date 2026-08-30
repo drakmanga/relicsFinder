@@ -580,8 +580,8 @@ body {
   width: 11%;
 } /* Era — fits the Vanguard chip */
 .rf-cols-tiers col:nth-child(3) {
-  width: 29%;
-} /* Relic */
+  width: 23%;
+} /* Relic — the longest name in the catalogue, "Requiem ETERNA", is 14 characters */
 .rf-cols-tiers col:nth-child(4) {
   width: 16%;
 } /* Solo, Intact — a band letter and a value */
@@ -592,8 +592,8 @@ body {
   width: 13%;
 } /* Relic price */
 .rf-cols-tiers col:nth-child(7) {
-  width: 9%;
-} /* Trend */
+  width: 15%;
+} /* Trend — holds "Nothing to compare", the longest thing this column says */
 
 /* Sets is four wide columns and no action column, so it needs no floor of its
    own beyond `.rf-table`'s. */

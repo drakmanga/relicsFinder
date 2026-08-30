@@ -76,6 +76,24 @@ export const RADSHARE_PLAYERS = 4;
 export const TREND_ARROW_THRESHOLD = 10;
 
 /**
+ * What ninety days did to one relic's solo value: a percentage, or why there
+ * is no percentage.
+ *
+ * These used to be one null, and the column read `Steady` over both. A relic
+ * whose drops carry no measured trend is not steady — it is the app comparing
+ * six prices against copies of themselves and reporting the zero it just
+ * manufactured — and that was most of the catalogue: parts trade thinly enough
+ * that a market with fewer than seven trading days in ninety, which earns no
+ * trend at all, is the common case rather than the exception.
+ */
+export type TierTrend =
+  | number
+  /** Measured, and under `TREND_ARROW_THRESHOLD`. Really is holding still. */
+  | "steady"
+  /** Nothing measured on the other side of the comparison. */
+  | "no-baseline";
+
+/**
  * One relic, ranked twice.
  *
  * `tier` is the relic's tier (Lith, Meso …); the band letters are `soloLetter`
@@ -99,9 +117,9 @@ export interface TierListRow {
   relicPrice: number | null;
   /**
    * Percent the solo expected value has moved against its ninety-day baseline,
-   * or null when it has not moved enough to be worth an arrow.
+   * or the reason there is no percentage. See `TierTrend`.
    */
-  trend: number | null;
+  trend: TierTrend;
 }
 
 /**
@@ -328,17 +346,25 @@ function ninetyDayBaseline(prices: PriceMap | undefined): PriceMap | undefined {
 
 /**
  * The movement between two expected values, reported only once it is worth an
- * arrow. Null when there is no baseline to move away from.
+ * arrow.
+ *
+ * `measured` is what separates a relic holding still from a relic nobody has
+ * measured, and it cannot be read off the two numbers: `ninetyDayBaseline`
+ * gives a part with no trend its own current price, deliberately — see there —
+ * so a relic whose six drops all lack one arrives here with today and ninety
+ * days ago identical, and computes a movement of exactly zero out of six
+ * prices nothing was ever compared against. That zero cleared no threshold and
+ * the column called it Steady on 772 relics out of 772.
  */
-function trendBetween(today: number, ninetyDaysAgo: number): number | null {
-  if (ninetyDaysAgo <= 0) return null;
+function trendBetween(today: number, ninetyDaysAgo: number, measured: boolean): TierTrend {
+  if (!measured || ninetyDaysAgo <= 0) return "no-baseline";
 
   // Multiplied before it is divided, which is not cosmetic: the other
   // association divides first and hands the gate a number a rounding step off
   // the threshold, so a relic sitting exactly on ten percent lands on
   // whichever side the last bit fell. This way it lands on ten.
   const percent = ((today - ninetyDaysAgo) * 100) / ninetyDaysAgo;
-  return Math.abs(percent) >= TREND_ARROW_THRESHOLD ? percent : null;
+  return Math.abs(percent) >= TREND_ARROW_THRESHOLD ? percent : "steady";
 }
 
 /**
@@ -442,7 +468,16 @@ export function buildTierList(
       // One arrow per row, on the solo expected value. Both columns move with
       // the same six prices, so a second arrow would say very nearly the same
       // thing in twice the width.
-      trend: trendBetween(soloValue, expectedValue(intact, baseline)),
+      trend: trendBetween(
+        soloValue,
+        expectedValue(intact, baseline),
+        // One drop with a trend is enough for the comparison to be about the
+        // market rather than about itself. The untrended drops stay in it at
+        // their current price on purpose — dropping them would compare a
+        // five-drop relic against a six-drop one — which is exactly why "some
+        // drop was measured" has to be asked separately from the two values.
+        intact.some((reward) => prices?.get(reward.itemName)?.trend != null),
+      ),
     };
   });
 
