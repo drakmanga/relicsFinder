@@ -99,6 +99,20 @@ public class RankSensitivity {
     }
 
     /**
+     * Every part being read faster, and the drift each is allowed.
+     *
+     * <p>Exists to be looked at. The allocation is the one thing in the read
+     * rule that cannot be worked out from a cache file — the interval an entry
+     * carries is the OUTCOME, and two items on six hours are indistinguishable
+     * whether one of them is being aimed at 1% or 5% — so "why is this read
+     * hourly" has no answer anywhere else, and neither does the aging probe's
+     * question of which entries to age.
+     */
+    public Map<String, Double> targets() {
+        return targets;
+    }
+
+    /**
      * Re-reads the ranking and works out what each part can do to it.
      *
      * <p>Called on the warm-up runner's own beat, ten minutes apart, because it

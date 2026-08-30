@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import relics.reliceApi.model.ItemPrice;
 import relics.reliceApi.model.PricePoint;
 import relics.reliceApi.model.RelicPrice;
+import relics.reliceApi.service.RankSensitivity;
 import relics.reliceApi.service.RelicMarketService;
 
 import java.util.List;
@@ -26,9 +27,13 @@ public class RelicMarketController {
     private static final int MAX_BATCH = 5000;
 
     private final RelicMarketService relicMarketService;
+    /** Only for the diagnostic below. */
+    private final RankSensitivity rankSensitivity;
 
-    public RelicMarketController(RelicMarketService relicMarketService) {
+    public RelicMarketController(RelicMarketService relicMarketService,
+                                 RankSensitivity rankSensitivity) {
         this.relicMarketService = relicMarketService;
+        this.rankSensitivity = rankSensitivity;
     }
 
     /** Average price of a single Prime part. */
@@ -85,6 +90,22 @@ public class RelicMarketController {
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> status() {
         return ResponseEntity.ok(relicMarketService.cacheStatus());
+    }
+
+    /**
+     * Which prices are read faster than the default rule reads them, and how
+     * much drift each of them is allowed.
+     *
+     * <p>A diagnostic rather than something a screen draws, and separate from
+     * {@code /status} for that reason: this is a hundred slugs and status is
+     * polled once a minute by every open tab. It answers "why is this item read
+     * hourly", which nothing else can — an interval is the outcome of the rule
+     * and does not carry the target it was aimed at — and it is what the aging
+     * probe reads to know which entries are worth aging.
+     */
+    @GetMapping("/sensitive")
+    public ResponseEntity<Map<String, Double>> sensitive() {
+        return ResponseEntity.ok(rankSensitivity.targets());
     }
 
     /**

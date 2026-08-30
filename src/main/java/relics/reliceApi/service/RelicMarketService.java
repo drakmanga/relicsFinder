@@ -782,6 +782,11 @@ public class RelicMarketService {
         // a minute for the freshness label already, and a second poll for a
         // second number would be the cost the marker exists to avoid.
         status.put("revision", revision.get());
+        // How many of the catalogue's prices are being read faster than the
+        // default rule would read them. Reported because it is the one number
+        // that says the reallocation is running at all: it is zero on a cold
+        // cache, by design — there is no ranking to be sensitive to yet.
+        status.put("sensitive", rankSensitivity.sensitiveCount());
         return status;
     }
 
@@ -916,7 +921,10 @@ public class RelicMarketService {
                 // The reading being replaced is the other half of the
                 // measurement, so the interval is worked out before it is gone.
                 Cached fresh = fetch(slug);
-                cache.put(slug, fresh.withTtl(nextTtl(existing, fresh, rankSensitivity.targetFor(slug))));
+                // The target is per item now, and the only thing about this
+                // read that is: what a move of THIS price does to the ranking.
+                Duration ttl = nextTtl(existing, fresh, rankSensitivity.targetFor(slug));
+                cache.put(slug, fresh.withTtl(ttl));
                 dirty.set(true);
                 if (changedPrice(existing, fresh)) revision.incrementAndGet();
             } catch (InterruptedException e) {
