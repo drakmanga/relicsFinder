@@ -98,7 +98,7 @@ public class RelicMarketService {
      * 2% of a 23p one. The traded items were being re-read four times a day for
      * the numbers that move least.
      */
-    private static final double TARGET_DRIFT = 0.05;
+    static final double TARGET_DRIFT = 0.05;
 
     /**
      * The shortest interval that can be honoured, and the longest allowed.
