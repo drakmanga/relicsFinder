@@ -160,7 +160,8 @@ const EQUIVALENT = ".rf-cell-open";
     .rf-qty-remove       the same stepper's remove X, 32x32, 3px from the + and
                          4px under the panel head's price-history button; in a
                          drop list it sits inside a 48px row whose neighbours
-                         are a pixel away
+                         are a pixel away. Added 2026-09-01, once the seed
+                         below made it visible to this walk at all
     .rf-droprow-roomy    a relic's six drops, 30px rows 4px apart
     .rf-droprow-relic    the relics a part drops from, 24px rows 6px apart
     .rf-droprow-sibling  the rest of a part's set, 30px rows 4px apart
@@ -623,6 +624,101 @@ const OPENS_A_MODAL = new Set(["relics", "prime items", "sets", "wishlist", "tie
 */
 const FILTER_TOGGLE = 'button[aria-controls="rf-filter-bar"]';
 
+/*
+  The walk owns the wishlist, because until now the operator did.
+
+  Some of the controls in a panel exist only when the wishlist holds a line —
+  the remove control on every quantity stepper is drawn `visibility: hidden` at
+  qty 0 and measures nothing — and what the wishlist held came from the running
+  backend's `data/wishlist.json`. So "0 failures" was a statement about one
+  machine's data rather than about the application: the operator's own list
+  holds set lines and no part line, and with four part lines added to a scratch
+  copy the same green run reported 18 touch-target failures. Seeded here, on a
+  tree that had not yet excused `.rf-qty-remove`, it reported 24. A gate whose
+  answer depends on a file nobody in CI has is not a gate.
+
+  Intercepted rather than seeded through the backend, and that is the whole
+  design. The stub answers every read with the seed and every write with the
+  body it was handed, so the walk is reproducible on a machine that has never
+  had a wishlist, it cannot be changed by the order the views are walked in,
+  and — the part that matters most — the operator's own file is never written:
+  the app saves the list 600ms after a click, and that request stops here.
+
+  Two lines, one of each kind that renders differently: a set line, which is
+  what the Wishlist view opens a panel for, and a part line, which is what puts
+  a stepper in the parts table under it. Both are real names from the
+  catalogue, so the rows they draw are the rows a reader would see.
+*/
+const WISHLIST_SEED = [
+  {
+    itemName: "Nikana Prime",
+    kind: "set",
+    tier: "lith",
+    relicFullName: "",
+    refinement: "intact",
+    quantity: 1,
+  },
+  {
+    itemName: "Nikana Prime Blueprint",
+    kind: "part",
+    tier: "axi",
+    relicFullName: "Axi A1",
+    refinement: "intact",
+    quantity: 1,
+  },
+];
+
+const ownTheWishlist = async (context) => {
+  let held = WISHLIST_SEED;
+
+  await context.route("**/api/wishlist", async (route) => {
+    const request = route.request();
+
+    if (request.method() !== "GET") {
+      try {
+        held = JSON.parse(request.postData() ?? "[]");
+      } catch {
+        // A write the walk cannot parse leaves the list it already had, which
+        // is a stranger state than failing — but failing here takes the whole
+        // run down for a request nothing in the walk depends on.
+      }
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(held),
+    });
+  });
+};
+
+/*
+  The gesture that makes a panel's remove control exist.
+
+  A seed cannot do this one. The stepper at the head of a panel is for the item
+  the panel is about, which is whatever row the walk clicked, so no fixture
+  written here can be sure of holding it — and the state a reader is actually
+  in when they meet that control is the one just after they added the thing
+  they were looking at. So the walk adds it, exactly as they would.
+*/
+const ADD_ONE = '.rf-panel-wishlist button[aria-label^="Add one"]';
+
+const addToTheWishlist = async (page) => {
+  const add = page.locator(ADD_ONE).first();
+  if ((await add.count()) === 0) return "no wishlist stepper in this panel";
+
+  await add.click();
+  try {
+    await page
+      .locator('.rf-panel-wishlist button[aria-label^="Remove "]')
+      .first()
+      .waitFor({ state: "visible", timeout: 3000 });
+  } catch {
+    return "added a line, no remove control appeared";
+  }
+  return null;
+};
+
 const openFilters = async (page) => {
   const toggle = page.locator(FILTER_TOGGLE);
   if ((await toggle.count()) === 0) return "no filter drawer on this view";
@@ -801,6 +897,7 @@ for (const engineName of ENGINES) {
     const context = await browser.newContext({
       viewport: { width: threshold.width, height: threshold.height },
     });
+    await ownTheWishlist(context);
     const page = await context.newPage();
 
     console.log(
@@ -943,6 +1040,17 @@ for (const engineName of ENGINES) {
         reach them — they are exactly the standalone shape it says is not
         excused, and until now nothing had ever measured one.
       */
+      /*
+        Measured with a line in the wishlist, because the panel's remove
+        control does not exist without one and rule 7 is not a rule about the
+        controls that happen to be on screen. The panel is measured in that
+        state rather than in both: the two differ by one control appearing in a
+        slot the layout already reserves for it, so the state with more in it is
+        the state that measures more.
+      */
+      const noLine = await addToTheWishlist(page);
+      if (noLine) console.log(`      wishlist: ${noLine}`);
+
       const panelTouch = await measureTouch(page, `${name} · panel open`);
       exempted += panelTouch.exempt;
       touchFailures += panelTouch.failures;
