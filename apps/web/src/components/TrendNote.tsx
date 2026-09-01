@@ -34,8 +34,15 @@ export type TrendNoteReason =
  * No "unlisted", no "no data", no "n/a": each says what happened, and the two
  * that matter most say it in the reader's terms — an item that has never sold
  * against one that sells too rarely to draw a line through.
+ *
+ * Exported because two of these words are also glossary entries. The tier
+ * list's Trend column answers in words as often as in numbers, and the primer
+ * defines what it prints — reading the word from here rather than repeating it,
+ * so a reworded label cannot leave a glossary defining a word the column no
+ * longer says. The same reason `VAULT_LABEL` is read rather than repeated a few
+ * lines above it there.
  */
-const LABEL: Record<TrendNoteReason, string> = {
+export const TREND_LABEL: Record<TrendNoteReason, string> = {
   steady: "Steady",
   "too-few-sales": "Too few sales",
   "no-listings": "Never sold",
@@ -44,7 +51,7 @@ const LABEL: Record<TrendNoteReason, string> = {
 };
 
 export function TrendNote({ reason }: { reason: TrendNoteReason }) {
-  return <span className="rf-trend-note">{LABEL[reason]}</span>;
+  return <span className="rf-trend-note">{TREND_LABEL[reason]}</span>;
 }
 
 /**

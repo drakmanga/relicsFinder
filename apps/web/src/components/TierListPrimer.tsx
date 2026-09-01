@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { Frame } from "relic-finder-ui";
 
+import { TREND_LABEL } from "./TrendNote";
 import { primerOpen, rememberPrimerOpen } from "../lib/primerMemory";
 import { VAULT_LABEL } from "../lib/rows";
 import { RADSHARE_PLAYERS } from "../lib/tierList";
@@ -67,6 +68,24 @@ const TERMS: readonly { readonly term: string; readonly means: string }[] = [
     means:
       "how the Solo column has moved against its average over the last 90 days. " +
       "An arrow appears past 10%.",
+  },
+  {
+    /* The two words that column prints, defined where the other seven are.
+       They were the only terms on this screen the glossary never explained,
+       which reads as though they were obvious — and they are not: "steady"
+       suggests a price the game fixes, and the difference between a price that
+       held still and one nobody measured is the whole of what `TrendCell` went
+       to the trouble of separating.
+
+       Both read their word from `TREND_LABEL` rather than repeating it, for
+       the same reason the two vault terms read `VAULT_LABEL`: a glossary that
+       defines a word the column no longer says is worse than no glossary. */
+    term: TREND_LABEL.steady,
+    means: "the price held still — within 10% of its own average.",
+  },
+  {
+    term: TREND_LABEL["no-baseline"],
+    means: "there is no 90-day average yet, so nothing is claimed.",
   },
 ];
 
