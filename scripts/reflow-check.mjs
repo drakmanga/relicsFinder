@@ -151,12 +151,16 @@ const EQUIVALENT = ".rf-cell-open";
   A detail panel is a column of rows four to ten pixels apart, and the space a
   target there would grow into belongs to the row above or below it, which is
   itself a target. That is exception 1's argument outside a table, and the list
-  is deliberately four selectors rather than a shape — everything else in a
-  panel was grown to 44 instead, including the things that had to grow in one
-  direction to do it.
+  is deliberately a handful of selectors rather than a shape — everything else
+  in a panel was grown to 44 instead, including the things that had to grow in
+  one direction to do it.
 
   What is on it and why it cannot be grown:
     .rf-btn-xs           the quantity steppers, 24x24 and 22px apart in a row
+    .rf-qty-remove       the same stepper's remove X, 32x32, 3px from the + and
+                         4px under the panel head's price-history button; in a
+                         drop list it sits inside a 48px row whose neighbours
+                         are a pixel away
     .rf-droprow-roomy    a relic's six drops, 30px rows 4px apart
     .rf-droprow-relic    the relics a part drops from, 24px rows 6px apart
     .rf-droprow-sibling  the rest of a part's set, 30px rows 4px apart
@@ -166,6 +170,7 @@ const EQUIVALENT = ".rf-cell-open";
 */
 const DENSE = [
   ".rf-btn-xs",
+  ".rf-qty-remove",
   ".rf-droprow-roomy",
   ".rf-droprow-relic",
   ".rf-droprow-sibling",

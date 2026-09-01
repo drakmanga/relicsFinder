@@ -70,6 +70,13 @@ export function QtyStepper({
           size="sm"
           iconOnly
           icon={<XIcon />}
+          /* A name for the gate, not a style: `.rf-qty-remove` has no rule
+             behind it and is what puts this control on AGENTS.md §5.4's third
+             exception. That list is an allowlist rather than a shape, so a
+             control cannot fall onto it by looking like this one — see
+             `DENSE` in scripts/reflow-check.mjs, and §5.4 for why 32x32 is
+             where this one stops. */
+          className="rf-qty-remove"
           aria-label={`Remove ${itemName} from the wishlist`}
           onClick={(event) => stop(event, onRemove)}
         />

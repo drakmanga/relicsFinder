@@ -19,18 +19,18 @@ Never claim a task is done on the basis of "the code looks right".
 
 ## 1. The ten non-negotiables
 
-| #   | Rule                                                                 | Fails when                                                                       |
-| --- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1   | No inline `style={{ ... }}` in JSX carrying visual values            | any `style={{}}` containing a colour, spacing, size, radius, duration or z-index |
-| 2   | No magic values                                                      | any raw hex, `px`, `ms` or unitless spacing number outside `tokens.css`          |
-| 3   | Every font-size is `rem`, never `px`                                 | `font-size: 15px` anywhere, including the root                                   |
-| 4   | Components stay under ~150 LOC                                       | a `.tsx` file over 150 lines without a written justification at the top          |
-| 5   | Every interactive element is reachable and operable by keyboard      | a click handler on a non-button, a missing `:focus-visible` style                |
-| 6   | Every layout survives 360px width and 200% text zoom                 | a scrollbar on the document in EITHER axis, clipped or overlapping text          |
-| 7   | Touch targets are at least 44x44 CSS px, §5.4's two exceptions apart | any button, icon button or row action below that box                             |
-| 8   | `tokens.json` is the only source of design values                    | a value edited in `tokens.css` without regenerating it                           |
-| 9   | Reusable UI lives in `packages/ui`, app UI in `apps/web`             | a generic component (button, badge, layout primitive) defined inside `apps/web`  |
-| 10  | Every non-obvious decision carries its reason in a comment           | a workaround, a magic constant or an override with no `why`                      |
+| #   | Rule                                                                   | Fails when                                                                       |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | No inline `style={{ ... }}` in JSX carrying visual values              | any `style={{}}` containing a colour, spacing, size, radius, duration or z-index |
+| 2   | No magic values                                                        | any raw hex, `px`, `ms` or unitless spacing number outside `tokens.css`          |
+| 3   | Every font-size is `rem`, never `px`                                   | `font-size: 15px` anywhere, including the root                                   |
+| 4   | Components stay under ~150 LOC                                         | a `.tsx` file over 150 lines without a written justification at the top          |
+| 5   | Every interactive element is reachable and operable by keyboard        | a click handler on a non-button, a missing `:focus-visible` style                |
+| 6   | Every layout survives 360px width and 200% text zoom                   | a scrollbar on the document in EITHER axis, clipped or overlapping text          |
+| 7   | Touch targets are at least 44x44 CSS px, §5.4's three exceptions apart | any button, icon button or row action below that box                             |
+| 8   | `tokens.json` is the only source of design values                      | a value edited in `tokens.css` without regenerating it                           |
+| 9   | Reusable UI lives in `packages/ui`, app UI in `apps/web`               | a generic component (button, badge, layout primitive) defined inside `apps/web`  |
+| 10  | Every non-obvious decision carries its reason in a comment             | a workaround, a magic constant or an override with no `why`                      |
 
 ---
 
@@ -456,10 +456,26 @@ shape, and adding to it is a change to this section too:
 | Selector              | What it is                          | Why it cannot grow                          |
 | --------------------- | ----------------------------------- | ------------------------------------------- |
 | `.rf-btn-xs`          | the quantity steppers, 24x24        | up to fourteen at once, 22px apart in a row |
+| `.rf-qty-remove`      | the same stepper's remove X, 32x32  | 3px from the `+`, 4px from the next control |
 | `.rf-droprow-roomy`   | a relic's six drops, 30px rows      | 4px apart                                   |
 | `.rf-droprow-relic`   | the relics a part drops from, 24px  | 6px apart                                   |
 | `.rf-droprow-sibling` | the rest of a part's set, 30px rows | 4px apart                                   |
 | `.rf-hint-toggle`     | 13px of icon under a heading        | grown to 25x29; the next line is a control  |
+
+**Decided 2026-09-01, on `.rf-qty-remove`.** It is the third control of the quantity stepper and
+it had been 32x32 for as long as it existed, on none of these lists, and the walk had never
+reported it — the control is drawn `visibility: hidden` until the line it clears exists, so what
+the gate saw depended on what the running backend's `data/wishlist.json` happened to hold. The
+walk seeds its own list now (`scripts/reflow-check.mjs`), which is what turned this from an
+argument into a measurement.
+
+Measured at 1440x950 with a line in the wishlist, in every place it renders: the `+` beside it is
+3px away, the panel head's price-history button is 4px below it, and in a relic's drop list it
+sits inside a 48px row whose neighbours are rows one pixel away. Every direction it could grow in
+is a neighbour's target, which is exceptions 1 and 3's own argument. It is excused at 32x32 —
+eight pixels above the floor the same lists grant the two controls beside it, and it stays there:
+this is a size to grow FROM if the stepper is ever redrawn with room, not a licence to shrink to 24. Growing the stepper's own 2px gaps to make room was weighed and dropped: those gaps are what
+the tables' column floors were measured against in run 012.
 
 Everything else behind a disclosure was grown to 44 rather than excused, and several of them had
 to grow in one direction to do it — `.rf-hit-block-start` and `.rf-hit-block-end` exist for that,
