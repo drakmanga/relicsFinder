@@ -1226,29 +1226,43 @@ body {
   margin: 0;
 }
 
-/* auto-fit and not two fixed columns: with the prose folded away the list has
-   the note's whole width to lay six terms across, with it open it has one
-   column of it, and at 360px a term and its definition need the whole line.
+/* Columns that balance by height, and not a grid that fills by row.
 
-   `min(18rem, 100%)` rather than the bare 18rem, for the reason spelled out at
-   `.rf-panel-cols` below: a track floor is still a floor once auto-fit is down
-   to one track. The inset from the viewport is fixed and readable off the
-   tokens — 16px of `.rf-shell` under --rf-bp-sm, 24px of `.rf-ranked-head`, the
-   1px Frame, 16px of `.rf-primer` — so at 360px this list's box is 246px and a
-   bare 18rem track would lay 42px of every definition past the pane. And
-   `.rf-results-main` clips rather than scrolls, so the reader would lose the
-   end of each line instead of seeing it wrap: `npm run reflow` measures a
-   document scrollbar and would have called this clean. */
+   A grid lays the terms row-major, which cost height twice. A row is as tall as
+   its tallest cell, so one two-line definition raised every cell beside it; and
+   the last row held whatever was left over — with the prose folded, seven terms
+   across three 360px tracks ended on one term and two empty cells, which is the
+   band of nothing the operator photographed. Multi-column pours the same list
+   down one column and then the next, balancing what it puts in each, so there
+   is no row to half-fill and no cell to raise. `break-inside: avoid` on the
+   term below is what keeps a definition with the word it defines.
+
+   And no count is baked in, which is the point: this list went from seven terms
+   to nine in the same change, and a `grid-auto-flow: column` with a row count
+   would have had to be re-derived for it.
+
+   The floor is a reading measure IN THIS LIST'S OWN TYPE. `--rf-measure` is
+   68ch and ch resolves against the element it is used on, so 68ch of caption is
+   about 420px where the same token beside the prose is 544 — the number that
+   decides this, and the reason it is not written as one. Measured at 1920x1080:
+   beside the open prose the list has 544px and stays one column, with the prose
+   folded it has 1112px and becomes two of 548, where every definition but
+   `Trend`'s fits on one line. Columns never overflow their container the way a
+   grid track floor does, so the `min(18rem, 100%)` this rule used to carry —
+   against a 246px box at 360px — has nothing left to guard.
+
+   No rule above the list and no gap between its rows, and both of those are
+   paid for. `--rf-fg-brand` on the term below is what separates one row from
+   the next now, and the height it buys back is what the two new terms are
+   spent on: measured at 1920x1080 with the prose open, this block is 224px
+   against the 227px it was with seven terms, a hairline, 12px of padding and
+   4px between every row. Folded it is 140px against 177. The gap of
+   `.rf-primer-cols` still separates this from the prose where the two stack. */
 .rf-primer-terms {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
-  gap: var(--rf-space-1) var(--rf-space-4);
-  /* The gap of `.rf-primer-cols` is what separates this from the prose when the
-     two are stacked; a margin of its own would be that distance twice. The rule
-     stays: beside the prose it reads as the glossary's own heading rule. */
+  display: block;
+  columns: var(--rf-measure);
+  column-gap: var(--rf-space-4);
   margin: 0;
-  padding-top: var(--rf-space-3);
-  border-top: var(--rf-hairline) solid var(--rf-border-subtle);
 }
 
 /* The term and what it means on one line where the line has room, wrapping to
@@ -1259,21 +1273,36 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: var(--rf-space-2);
+  /* A term in one column and its definition at the top of the next is the one
+     thing multi-column can do to a definition list that a grid could not. */
+  break-inside: avoid;
 }
 
-/* The term is the brightest and heaviest text on its line, and the tone is set
-   here rather than by a utility on the `dt` so that one rule owns the pair.
+/* The term is the only gold on its line, and the tone is set here rather than
+   by a utility on the `dt` so that one rule owns the pair.
 
-   It was secondary over semibold, one weight step and one tone step from its
-   own definition, at the smallest type size on the screen — which is not enough
-   separation to scan. A reader who came to find out what Vaulted means had to
-   read the list in order instead of spotting the word, which is the one thing a
-   glossary exists to prevent. It stays plain text: two of these five terms are
-   also the labels on the population buttons above, and a glossary entry that
-   started looking like a button would offer something it cannot do. */
+   Hue, because the other two levers are spent. It was secondary over semibold,
+   then primary over bold, which is as bright and as heavy as text on this
+   screen goes — and the same complaint came back against the same block: a
+   reader who came to find out what Vaulted means still had to read the list in
+   order instead of spotting the word, which is the one thing a glossary exists
+   to prevent. Gold carries the distinction now, and the weight goes back to
+   semibold because bold gold at caption size shouts a list nobody is meant to
+   read in order.
+
+   `--rf-fg-brand` and deliberately not `--rf-fg-accent`: accent resolves to
+   void 400, which is also `--rf-fg-link` and the colour of every anchor under
+   `.rf-root`. A term in that purple would offer a press it cannot honour, which
+   is the same trap the note below names about the population buttons. Contrast
+   does not decide it — against surface 2, gold 300 is 9.1:1 and void 400 is
+   5.77:1, and both clear AA at caption size.
+
+   It stays plain text for that same reason: two of these terms are the labels
+   on the population buttons above, and a glossary entry that started looking
+   like a button would offer something it cannot do. */
 .rf-primer-term dt {
-  color: var(--rf-fg-primary);
-  font-weight: var(--rf-weight-bold);
+  color: var(--rf-fg-brand);
+  font-weight: var(--rf-weight-semibold);
 }
 
 .rf-primer-term dd {
