@@ -889,14 +889,37 @@ body {
   accent-color: var(--rf-gold-500);
 }
 
-/* In a panel the same slider has an info toggle 10px above it, so the whole
-   band goes the one way there is room: down, into the 38px before the first
-   relic row. */
+/* In a panel the band stays split 16 either side, as it is above, and only the
+   room it needs above is bought here.
+
+   It used to send the whole 32px downwards — "the one way there is room: down,
+   into the 38px before the first relic row" — and that premise is wrong twice.
+   There is no gap before the relic rows: the element immediately after the
+   input is the row of state labels, and only after it the rows. And an
+   asymmetric band does not survive Gecko, which is the fault the operator
+   photographed. Firefox ignores the border on a range input drawn with the
+   platform appearance and paints the track down the middle of the declared
+   height, where Chromium paints it in the content box — so a band of 32 below
+   and 0 above put the painted track 24px lower in one engine than in the
+   other, straight across `INTACT EXCEPT. FLAWLESS+ RADIANT`, with the thumb on
+   the R of RADIANT. Measured on this tree at 1440x950: 26px of the label row
+   inside the input's box in Firefox, none of it in Chromium.
+
+   A band split evenly is the one shape the two engines agree on, because the
+   middle of the border box and the middle of the content box are the same
+   line. That is why the filter drawer's slider never had this and why the fix
+   is to stop overriding the split rather than to move it somewhere else.
+
+   What is bought here is the 8px the upper half needs. The base rule hands its
+   whole 16 back as negative margin, which would reach 8px past the label row's
+   own margin and cover the bottom of the info toggle in it — a target under a
+   target, which `npm run reflow` cannot see because it does not measure
+   occlusion. Handing back 8 instead of 16 lands the band's top exactly on that
+   margin: the toggle keeps its box, the painted track sits 16px under the
+   label instead of 8, and everything below the slider moves down 8px. Once,
+   and by an amount chosen here rather than as the side effect of a band. */
 .rf-modal .rf-range {
-  block-size: calc(16px + var(--rf-space-8));
-  border-block: 0;
-  border-block-end: var(--rf-space-8) solid transparent;
-  margin-block: 0 calc(-1 * var(--rf-space-8));
+  margin-block-start: calc(-1 * var(--rf-space-2));
 }
 
 /* Wraps. At 200% text zoom the four refinement labels are wider than any track
