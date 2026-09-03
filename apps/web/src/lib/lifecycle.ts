@@ -60,6 +60,31 @@ export const PHASE_LABEL: Record<PrimePhase, string> = {
 };
 
 /**
+ * The four phases in the order a reader meets them, for the controls over them.
+ *
+ * Chronological rather than alphabetical, and it is the order the badge column
+ * teaches: still dropping, stopped recently, stopped long ago, nothing recorded.
+ * A row of chips in any other order asks the reader to build that sequence
+ * themselves every time they look at it.
+ *
+ * All four, always, rather than only the phases the catalogue currently holds —
+ * which is what `availableCategories` does for the kind chips and would have
+ * been the obvious symmetry. The two are not the same case: the kinds are read
+ * off the sets, which arrive with the catalogue the whole pane already waits
+ * for, while a phase arrives from a second request that answers later. Deriving
+ * the chips would mean a filter row that is absent, then appears, after the
+ * table below it has already been drawn — the layout shift AGENTS.md §6
+ * forbids, bought in exchange for hiding one chip on the day the item database
+ * finally dates Kavasa Prime.
+ */
+export const ALL_PRIME_PHASES: PrimePhase[] = [
+  "dropping",
+  "recently-vaulted",
+  "long-vaulted",
+  "unknown",
+];
+
+/**
  * What the badge claims, and why, in the words of somebody who has never traded.
  *
  * Each one says the cause first and the consequence second, and the consequence

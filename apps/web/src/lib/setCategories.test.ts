@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { availableCategories, filterByStatus } from "./setCategories";
+import { availableCategories, filterByPhase, filterByStatus } from "./setCategories";
 import type { PrimeSet } from "./setCompletion";
+import type { LifecycleMap, PrimeLifecycle } from "../api/types";
 
 /**
  * Which sets the progress switch lets through.
@@ -50,5 +51,53 @@ describe("availableCategories", () => {
     expect(
       availableCategories([set({ category: "arch-gun" }), set({ category: "warframe" })]),
     ).toEqual(["warframe", "arch-gun"]);
+  });
+});
+
+/**
+ * Which sets the phase chips let through.
+ *
+ * The two cases that carry the design are the last two: a set the lifecycle
+ * answer never names has to filter as "Not dated", because that is what its own
+ * badge says, and a lifecycle that has not answered at all has to filter as
+ * nothing, because the table must not empty and refill while it lands.
+ */
+describe("filterByPhase", () => {
+  const volt = set({ setName: "Volt Prime", category: "warframe" });
+  const wisp = set({ setName: "Wisp Prime", category: "warframe" });
+  const kavasa = set({ setName: "Kavasa Prime", category: "pet" });
+
+  const lifecycle: LifecycleMap = new Map(
+    (
+      [
+        { setName: "Volt Prime", phase: "dropping", releaseDate: null, vaultDate: null },
+        { setName: "Wisp Prime", phase: "recently-vaulted", releaseDate: null, vaultDate: null },
+      ] satisfies PrimeLifecycle[]
+    ).map((row) => [row.setName, row]),
+  );
+
+  const all = [volt, wisp, kavasa];
+
+  it("lets everything through when no chip is on", () => {
+    expect(filterByPhase(all, new Set(), lifecycle)).toEqual(all);
+  });
+
+  it("keeps only the sets whose badge reads the chip that is on", () => {
+    expect(filterByPhase(all, new Set(["recently-vaulted"]), lifecycle)).toEqual([wisp]);
+  });
+
+  it("shows the union of two chips rather than their intersection", () => {
+    expect(filterByPhase(all, new Set(["dropping", "recently-vaulted"]), lifecycle)).toEqual([
+      volt,
+      wisp,
+    ]);
+  });
+
+  it("counts a set the lifecycle never names as the Not dated its badge says", () => {
+    expect(filterByPhase(all, new Set(["unknown"]), lifecycle)).toEqual([kavasa]);
+  });
+
+  it("filters nothing while the lifecycle request is still in flight", () => {
+    expect(filterByPhase(all, new Set(["dropping"]), undefined)).toEqual(all);
   });
 });

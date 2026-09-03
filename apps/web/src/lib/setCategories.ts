@@ -1,5 +1,6 @@
+import { phaseCell } from "./lifecycle";
 import type { PrimeSet } from "./setCompletion";
-import type { SetCategory } from "../api/types";
+import type { LifecycleMap, PrimePhase, SetCategory } from "../api/types";
 
 /**
  * What kind of gear a Prime set is.
@@ -102,4 +103,32 @@ export function filterByStatus(sets: PrimeSet[], status: SetStatus): PrimeSet[] 
 export function filterByCategory(sets: PrimeSet[], categories: Set<SetCategory>): PrimeSet[] {
   if (categories.size === 0) return sets;
   return sets.filter((set) => set.category !== null && categories.has(set.category));
+}
+
+/**
+ * The sets left after the phase chips.
+ *
+ * Same rule as the kinds above — nothing selected is no filter rather than
+ * nothing — and the phase is read through `phaseCell` rather than off the map,
+ * so a set the lifecycle answer never mentions is filtered as the "Not dated"
+ * the badge in its row already prints. Two readings of one absence is how a
+ * chip and the column beside it come to disagree.
+ *
+ * The undefined map is the case worth the guard. It means the lifecycle request
+ * has not answered yet, and every set on screen is drawing a skeleton where its
+ * badge goes: filtering then would empty the table and refill it a moment later,
+ * which reads as the chips having done something they did not. A set whose phase
+ * has not landed is a wait, not a set that failed to match.
+ */
+export function filterByPhase(
+  sets: PrimeSet[],
+  phases: Set<PrimePhase>,
+  lifecycle: LifecycleMap | undefined,
+): PrimeSet[] {
+  if (phases.size === 0 || !lifecycle) return sets;
+
+  return sets.filter((set) => {
+    const cell = phaseCell(lifecycle, set.setName);
+    return cell.kind === "phase" && phases.has(cell.phase);
+  });
 }
