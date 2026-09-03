@@ -16,13 +16,13 @@ import {
   TableHeaderCell,
   TableRow,
   TierChip,
+  Unlisted,
 } from "relic-finder-ui";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { Highlight, HighlightPlaceholder, RankedPage } from "./RankedPage";
 import { TierListPrimer } from "./TierListPrimer";
 import { TrendValue } from "./TrendNote";
-import { Unlisted } from "./Unlisted";
 import { tierTrendCell } from "../lib/trend";
 import { usePricePriority } from "../lib/usePricePriority";
 import {

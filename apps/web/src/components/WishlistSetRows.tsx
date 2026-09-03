@@ -7,11 +7,11 @@ import {
   TableCols,
   TableHeaderCell,
   TableRow,
+  Unlisted,
 } from "relic-finder-ui";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";
-import { Unlisted } from "./Unlisted";
 import { bump, remove, type WishlistEntry } from "../lib/wishlist";
 import { marketUrl } from "../lib/format";
 import type { PrimeSet } from "../lib/setCompletion";

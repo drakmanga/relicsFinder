@@ -40,6 +40,7 @@ import {
   Toast,
   ToastRegion,
   Tooltip,
+  Unlisted,
 } from "../src/index";
 
 interface Check {
@@ -170,9 +171,19 @@ const checks: Check[] = [
     expect: ["rf-price-platinum", "45", "rf-price-suffix"],
   },
   {
+    // The dash is still there and is now only half of what this asserts: the
+    // words beside it are what a screen reader gets, and the tone is muted
+    // rather than the disabled one it drew in until 2026-09-03.
     name: "Price/missing",
     element: <Price value={null} />,
-    expect: ["rf-price-empty", "—"],
+    expect: ["rf-unlisted", "—", "Not listed", "rf-sr-only"],
+  },
+  {
+    // The same placeholder on its own, with the word a caller gave it: the
+    // tier list asks for "Not ranked" and gets it in the same shape.
+    name: "Unlisted/named",
+    element: <Unlisted what="Not ranked" />,
+    expect: ["rf-unlisted", "Not ranked", 'aria-hidden="true"'],
   },
   {
     name: "Price/range",

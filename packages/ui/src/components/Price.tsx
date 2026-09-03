@@ -1,5 +1,6 @@
 import type { HTMLAttributes } from "react";
 import { cx } from "../lib/cx";
+import { Unlisted } from "./Unlisted";
 import type { Currency } from "../lib/types";
 
 export interface PriceProps extends HTMLAttributes<HTMLSpanElement> {
@@ -25,8 +26,14 @@ const formatter = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0 });
  * Price.
  *
  * Platinum prices are whole numbers — Warframe Market does not trade
- * fractions. An absent price is an em dash in the disabled tone: rendering `0`
- * would claim the item is free rather than unpriced.
+ * fractions. An absent price is a dash and never a `0`, which would claim the
+ * item is free rather than unpriced.
+ *
+ * That dash is `Unlisted` rather than the character. It used to be the
+ * character, in `.rf-price-empty`, which was the disabled tone at 2.57:1 on a
+ * fact about the market — and a glyph a screen reader announces as "dash" or as
+ * nothing. `Unlisted` was written in the app for exactly those two faults and
+ * could not be reached from here until it moved into this package.
  */
 export function Price({
   value,
@@ -44,13 +51,16 @@ export function Price({
       className={cx(
         "rf-price",
         `rf-price-${size}`,
-        missing ? "rf-price-empty" : `rf-price-${currency}`,
+        // No class for the missing case: what it looks like and what it says
+        // are `Unlisted`'s, in one place, and a second marker here would be a
+        // name with no rule behind it.
+        missing ? undefined : `rf-price-${currency}`,
         className,
       )}
       {...rest}
     >
       {missing ? (
-        "—"
+        <Unlisted />
       ) : (
         <>
           {formatter.format(value)}

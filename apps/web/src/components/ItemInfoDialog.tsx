@@ -1,8 +1,7 @@
-import { Button, Dialog, ExternalLinkIcon, Skeleton } from "relic-finder-ui";
+import { Button, Dialog, ExternalLinkIcon, Skeleton, Unlisted } from "relic-finder-ui";
 
 import { SetPhaseNote } from "./SetPhase";
 import { TrendValue } from "./TrendNote";
-import { Unlisted } from "./Unlisted";
 
 import { PanelWishlist } from "./PanelWishlist";
 import { PlatPrice } from "./Plat";

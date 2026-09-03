@@ -484,9 +484,9 @@
   margin-left: 2px;
 }
 
-/* An absent price is a dash, never a zero. */
-.rf-price-empty {
-  color: var(--rf-fg-disabled);
+/* A value nobody has. fg-muted, not fg-disabled: see components/Unlisted.tsx. */
+.rf-unlisted {
+  color: var(--rf-fg-muted);
 }
 
 .rf-delta {

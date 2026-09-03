@@ -19,10 +19,10 @@ import {
   TableHeaderCell,
   TableRow,
   TierChip,
+  Unlisted,
 } from "relic-finder-ui";
 
 import { SetPhaseBadge } from "./SetPhase";
-import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { QtyStepper } from "./QtyStepper";

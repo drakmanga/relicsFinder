@@ -6,12 +6,19 @@
  */
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Skeleton, Table, TableCell, TableCols, TableHeaderCell, TableRow } from "relic-finder-ui";
+import {
+  Skeleton,
+  Table,
+  TableCell,
+  TableCols,
+  TableHeaderCell,
+  TableRow,
+  Unlisted,
+} from "relic-finder-ui";
 
 import { OwnedBox } from "./OwnedBox";
 import { SetPhaseBadge } from "./SetPhase";
 import { QtyStepper } from "./QtyStepper";
-import { Unlisted } from "./Unlisted";
 
 import { PlatGlyph, PlatPrice } from "./Plat";
 import { bump, remove } from "../lib/wishlist";

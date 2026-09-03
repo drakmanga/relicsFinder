@@ -1596,11 +1596,6 @@ body {
   color: var(--rf-bone-400);
 }
 
-/* A number nobody has. fg-muted, not fg-disabled: see components/Unlisted.tsx. */
-.rf-unlisted {
-  color: var(--rf-fg-muted);
-}
-
 /* Why there is no trend, said in words — see components/TrendNote.tsx.
 
    A size below the numbers it stands in for, because it is not one of them: a
