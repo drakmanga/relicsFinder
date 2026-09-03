@@ -19,6 +19,30 @@ import type { Rarity, Refinement, Tier } from "../api/types";
  * Per view, because the two views are filtered differently — rarity means
  * nothing on a list of relics (see FilterBar), and a price ceiling that is
  * sensible for a part is not the same question on a relic.
+ *
+ * TWO VIEWS, AND NOT "THE TWO THAT HAPPEN TO HAVE BEEN WIRED UP". Decided
+ * 2026-09-03, when the Sets strip grew a third row of chips and this gap
+ * started reading as an oversight. It is not one: what makes a count worth
+ * keeping here is the first paragraph above, that the bar is SHUT. The Sets
+ * strip and the Tier List's population switch are never shut, and offering
+ * back a chip that is already on screen an inch away is not recall of anything.
+ *
+ * The two other things a count could buy on an always-open row were weighed
+ * and both cost more than they return. REORDERING it, most-used first, saves
+ * no click — every chip is already reachable — and buys a little eye travel by
+ * spending the position the reader had learned; `SET_CATEGORY_ORDER` is a
+ * decision about which kinds matter most, not an accident of the alphabet, and
+ * a row that rearranges itself between visits overwrites that with one
+ * browser's history. OPENING a view on what this browser usually asks for is
+ * not this mechanism at all: it is a default rather than a suggestion, and
+ * since those controls went into the address bar a link carrying no `kind`,
+ * `prog` or `phase` is saying the sender's view was unfiltered — a remembered
+ * default would contradict that silently, which is the one thing the URL work
+ * was for.
+ *
+ * So `CatalogueView` is the key on purpose. A third entry here is not a small
+ * extension of this idea, it is a different idea, and it needs its own reason
+ * rather than this one's.
  */
 const STORAGE_KEY = "relic-finder.filter-memory.v1";
 
