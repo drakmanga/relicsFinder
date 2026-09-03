@@ -234,9 +234,12 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
                       <span className="rf-fg-muted">{virtualRow.index + 1}</span>
                     </TableCell>
                     <TableCell>{row.itemName}</TableCell>
-                    <TableCell>
-                      <span className="rf-fg-secondary">{row.setName ?? "—"}</span>
-                    </TableCell>
+                    {/* The tone is on the cell, not on a span inside it: the
+                        `td` is what carries the table's `text-overflow`, so a
+                        span around a long set name is clipped to the eye and
+                        still 12px wider than its column to everything that
+                        measures boxes. */}
+                    <TableCell className="rf-fg-secondary">{row.setName ?? "—"}</TableCell>
                     <TableCell align="right" numeric>
                       <PlatPrice value={row.price} />
                     </TableCell>

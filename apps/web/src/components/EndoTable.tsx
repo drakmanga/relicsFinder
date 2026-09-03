@@ -220,9 +220,11 @@ export function EndoTable({ active, quantityOf }: Props) {
                     <TableCell align="right" numeric>
                       <strong className="rf-gold">{offer.ratio.toFixed(0)}</strong>
                     </TableCell>
-                    <TableCell>
-                      <span className="rf-text-caption rf-fg-muted">{offer.seller}</span>
-                    </TableCell>
+                    {/* On the cell for the reason the Ducanetor's set column
+                        gives: the `td` owns the ellipsis, so a span around a
+                        long seller name clips to the eye and still measures
+                        wider than its column. */}
+                    <TableCell className="rf-text-caption rf-fg-muted">{offer.seller}</TableCell>
                     <TableCell align="center">
                       <QtyStepper
                         itemName={offer.itemName}
