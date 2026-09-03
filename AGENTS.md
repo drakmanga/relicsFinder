@@ -398,6 +398,11 @@ Check every foreground/background pair that ships, in particular:
 - `--rf-fg-muted` (`#9a9280`) on `--rf-surface-1` (`#131210`) - verify it clears 4.5:1.
 - `--rf-fg-disabled` (`#5c5648`) on any surface - disabled text is exempt from WCAG,
   but if it carries information it is not really disabled.
+  **Mechanical since 2026-09-03**: `npm run lint:debt` fails on any use of that token in a
+  rule whose selector does not say `:disabled`, at a baseline of zero. It is a gate rather
+  than an audit because no browser will do it - with the markup forced onto the page, the
+  dash that prompted this rendered at 2.57:1 and axe-core reported no colour-contrast
+  violation for it at all. A green `npm run axe` is not evidence about this token.
 - `--rf-rarity-uncommon` (`#b8bfc7`) and `--rf-tier-*` chips - these are stated in the
   token file as "chip fills only, never text on dark". Enforce that comment: grep for any
   `color: var(--rf-tier-*)` and remove it.
