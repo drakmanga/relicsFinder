@@ -1989,12 +1989,57 @@ body {
 }
 
 /* Where a piece comes from, under its name and in the name's column. */
+/* The farming line under a piece: which relic, at what chance, for how many runs
+   and what that nets, with the verdict at the end.
+
+   It wraps. Without that, at 360px, the verdict — which sits at the far end on
+   an auto margin — was pushed four pixels past the panel's own frame, and
+   because the panel is a fixed overlay nothing scrolled to show it. The walk saw
+   it only once a piece was actually incomplete, which on a machine with a full
+   owned list is almost never. */
 .rf-set-piece-note {
   grid-column: 2;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--rf-space-2);
   margin-top: 3px;
+}
+
+/* A relic name inside that sentence, which is a link in everything but the
+   element it is made of. It stays a `button` because it opens a view rather
+   than navigating (rule 5.1), and it is drawn as the words around it because
+   that is what it is — one word in a line of running text, not a control with
+   a box of its own. Its hit area is that line's, which is §5.4's fourth
+   exception and WCAG 2.5.8's own "Inline". */
+.rf-inline-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--rf-fg-secondary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The verdict closes the line, pushed to its end so the eye can run down a
+   column of them. The colour is the answer rather than a status — green is
+   "buy it", gold is "farm it" — and the word carries it either way. */
+.rf-set-piece-verdict {
+  margin-inline-start: auto;
+}
+
+.rf-set-piece-verdict-buy {
+  color: var(--rf-success);
+}
+
+.rf-set-piece-verdict-farm {
+  color: var(--rf-gold-300);
+}
+
+.rf-set-piece-verdict-unknown {
+  color: var(--rf-fg-muted);
 }
 
 /* The stepper on a piece. Same shape as the wishlist's `.rf-qty` — a count

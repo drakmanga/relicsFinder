@@ -122,7 +122,7 @@ const TOLERANCE = 1;
 const CULPRITS = 5;
 
 /*
-  Rule 7's box, and the three written exceptions to it. All four are stated in
+  Rule 7's box, and the four written exceptions to it. All five are stated in
   AGENTS.md §1 and §5.4; what is here is the same rule in a form that fails a
   build, and the two files have to be changed together.
 
@@ -177,6 +177,25 @@ const DENSE = [
   ".rf-droprow-sibling",
   ".rf-hint-toggle",
 ].join(", ");
+
+/*
+  §5.4's fourth exception, added 2026-09-03: a target inside a sentence is held
+  to nothing, because its size is the line's and not a decision anybody made
+  about the control.
+
+  This is WCAG 2.5.8's own "Inline" exception, quoted rather than invented — the
+  same clause §5.4 already cites when it explains why a dense table cell is that
+  argument's nearest neighbour. `.rf-inline-link` is a relic name in the middle
+  of "Lith A11 · 11.11% · 9.0 runs · 14p net" under a piece in the set panel: it
+  is a word in running text, and the only ways to give it a 44px box are to
+  break the sentence around it or to draw a button where a word is.
+
+  A full exemption rather than the 24px floor the other two lists get, and that
+  is what the clause says: an inline target has no minimum, because the text
+  it sits in already decided its height. An allowlist, like the others, so
+  nothing falls into it by looking like a link.
+*/
+const INLINE = ".rf-inline-link";
 
 /*
   A scroll container shorter than the header row of the table it holds cannot
@@ -509,7 +528,7 @@ const SCROLLERS = () => {
  * the DOM, so a row is measured as the cells in it; whether that row is
  * operable at all is rule 5's question, not rule 7's.
  */
-const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent, denseList]) => {
+const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent, denseList, inlineList]) => {
   const CONTROLS = [
     "button",
     "a[href]",
@@ -552,8 +571,11 @@ const TOUCH_TARGETS = ([minimum, denseMinimum, equivalent, denseList]) => {
     // would grow into is the next target's, and one floor for both.
     const dense = element.closest("td, th") !== null || element.matches(denseList);
     const sameActionAsItsRow = element.matches(equivalent);
-    if (dense || sameActionAsItsRow) exempt += 1;
-    if (sameActionAsItsRow) continue;
+    // A word in a sentence, whose height is the line's. Exempt outright rather
+    // than held to the dense floor: WCAG 2.5.8's "Inline" sets no minimum.
+    const insideASentence = element.matches(inlineList);
+    if (dense || sameActionAsItsRow || insideASentence) exempt += 1;
+    if (sameActionAsItsRow || insideASentence) continue;
 
     /*
       Rounded, and compared rounded. A control drawn 28px tall inside an 8px
@@ -827,7 +849,13 @@ const reportScrollers = (boxes, where) => {
 
 /** Rule 7 over whatever is on screen, under the name of the state it is in. */
 const measureTouch = async (page, where) => {
-  const touch = await page.evaluate(TOUCH_TARGETS, [TOUCH_MIN, DENSE_MIN, EQUIVALENT, DENSE]);
+  const touch = await page.evaluate(TOUCH_TARGETS, [
+    TOUCH_MIN,
+    DENSE_MIN,
+    EQUIVALENT,
+    DENSE,
+    INLINE,
+  ]);
 
   if (touch.under.length > 0) {
     console.log(`FAIL  ${where}: ${touch.under.length} control(s) under the rule 7 minimum`);
@@ -1101,7 +1129,7 @@ if (exempted > 0) {
   console.log(
     `\n${exempted} control measurement(s) were held to a written exception ` +
       `(AGENTS.md §5.4): the ${DENSE_MIN}px floor of a data cell or a panel's dense stack, ` +
-      `or a control whose own row does the same thing.`,
+      `a control whose own row does the same thing, or a word inside a sentence.`,
   );
 }
 

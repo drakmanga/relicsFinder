@@ -99,19 +99,9 @@ export function Piece({
             <>
               <button
                 type="button"
-                className="rf-focus-ring"
+                className="rf-focus-ring rf-inline-link"
                 onClick={() => onPickRelic(part.bestRelic!)}
                 title={`${part.bestRelic} — open it in Relics`}
-                style={{
-                  background: "none",
-                  border: 0,
-                  padding: 0,
-                  cursor: "pointer",
-                  font: "inherit",
-                  color: "var(--rf-fg-secondary)",
-                  textDecoration: "underline",
-                  textUnderlineOffset: 3,
-                }}
               >
                 {part.bestRelic}
               </button>
@@ -131,17 +121,7 @@ export function Piece({
             <span>No relic drops it at this refinement</span>
           )}
 
-          <span
-            style={{
-              marginLeft: "auto",
-              color:
-                verdict === "buy"
-                  ? "var(--rf-success)"
-                  : verdict === "farm"
-                    ? "var(--rf-gold-300)"
-                    : "var(--rf-fg-muted)",
-            }}
-          >
+          <span className={`rf-set-piece-verdict rf-set-piece-verdict-${verdict}`}>
             {verdict === "unknown" ? "—" : verdict}
           </span>
         </div>

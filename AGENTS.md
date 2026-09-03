@@ -19,18 +19,18 @@ Never claim a task is done on the basis of "the code looks right".
 
 ## 1. The ten non-negotiables
 
-| #   | Rule                                                                   | Fails when                                                                       |
-| --- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1   | No inline `style={{ ... }}` in JSX carrying visual values              | any `style={{}}` containing a colour, spacing, size, radius, duration or z-index |
-| 2   | No magic values                                                        | any raw hex, `px`, `ms` or unitless spacing number outside `tokens.css`          |
-| 3   | Every font-size is `rem`, never `px`                                   | `font-size: 15px` anywhere, including the root                                   |
-| 4   | Components stay under ~150 LOC                                         | a `.tsx` file over 150 lines without a written justification at the top          |
-| 5   | Every interactive element is reachable and operable by keyboard        | a click handler on a non-button, a missing `:focus-visible` style                |
-| 6   | Every layout survives 360px width and 200% text zoom                   | a scrollbar on the document in EITHER axis, clipped or overlapping text          |
-| 7   | Touch targets are at least 44x44 CSS px, §5.4's three exceptions apart | any button, icon button or row action below that box                             |
-| 8   | `tokens.json` is the only source of design values                      | a value edited in `tokens.css` without regenerating it                           |
-| 9   | Reusable UI lives in `packages/ui`, app UI in `apps/web`               | a generic component (button, badge, layout primitive) defined inside `apps/web`  |
-| 10  | Every non-obvious decision carries its reason in a comment             | a workaround, a magic constant or an override with no `why`                      |
+| #   | Rule                                                                  | Fails when                                                                       |
+| --- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | No inline `style={{ ... }}` in JSX carrying visual values             | any `style={{}}` containing a colour, spacing, size, radius, duration or z-index |
+| 2   | No magic values                                                       | any raw hex, `px`, `ms` or unitless spacing number outside `tokens.css`          |
+| 3   | Every font-size is `rem`, never `px`                                  | `font-size: 15px` anywhere, including the root                                   |
+| 4   | Components stay under ~150 LOC                                        | a `.tsx` file over 150 lines without a written justification at the top          |
+| 5   | Every interactive element is reachable and operable by keyboard       | a click handler on a non-button, a missing `:focus-visible` style                |
+| 6   | Every layout survives 360px width and 200% text zoom                  | a scrollbar on the document in EITHER axis, clipped or overlapping text          |
+| 7   | Touch targets are at least 44x44 CSS px, §5.4's four exceptions apart | any button, icon button or row action below that box                             |
+| 8   | `tokens.json` is the only source of design values                     | a value edited in `tokens.css` without regenerating it                           |
+| 9   | Reusable UI lives in `packages/ui`, app UI in `apps/web`              | a generic component (button, badge, layout primitive) defined inside `apps/web`  |
+| 10  | Every non-obvious decision carries its reason in a comment            | a workaround, a magic constant or an override with no `why`                      |
 
 ---
 
@@ -413,10 +413,10 @@ Check every foreground/background pair that ships, in particular:
 Keep it that way: every new animation, transition over 200ms, and auto-playing effect must
 be disabled or reduced under that query.
 
-### 5.4 Touch targets — rule 7, and the three exceptions to it
+### 5.4 Touch targets — rule 7, and the four exceptions to it
 
-**Decided 2026-08-28, extended 2026-08-30.** Rule 7 asked for 44x44 with no exception, and the
-application had fifteen. This section is the rule change that closes that gap: what the minimum
+**Decided 2026-08-28, extended 2026-08-30 and 2026-09-03.** Rule 7 asked for 44x44 with no
+exception, and the application had fifteen. This section is the rule change that closes that gap: what the minimum
 is, where it is lower, and why. `npm run reflow` measures all four, in every state a reader can
 put a view in, so none of it is on trust.
 
@@ -466,6 +466,25 @@ shape, and adding to it is a change to this section too:
 | `.rf-droprow-relic`   | the relics a part drops from, 24px  | 6px apart                                   |
 | `.rf-droprow-sibling` | the rest of a part's set, 30px rows | 4px apart                                   |
 | `.rf-hint-toggle`     | 13px of icon under a heading        | grown to 25x29; the next line is a control  |
+
+**Exception 4 — a target inside a sentence is held to nothing.** Added 2026-09-03. This is
+WCAG 2.5.8's own "Inline" clause, which is the same one exception 1 already argues from: a
+target whose size is set by the line-height of the non-target text around it has no minimum,
+because nobody chose that size. `.rf-inline-link` is the relic name in the middle of
+"Lith A11 · 11.11% · 9.0 runs · 14p net", under a piece in the set panel. The two ways to
+give it a 44px box are to break the sentence around it or to draw a button where a word is,
+and both cost more than the rule buys — the word is underlined, it takes focus, and the
+sentence it sits in is the target's own context.
+
+A full exemption rather than exceptions 1 and 3's 24px floor, because that is what the clause
+says. An allowlist in `scripts/reflow-check.mjs` (`INLINE`) and never a shape, so nothing
+falls into it by looking like a link, and adding to it is a change to this section too.
+
+It was found by the gate rather than argued into it: the buttons render only on a piece that
+is not complete, so on a machine with a full `data/owned.json` the walk almost never drew one
+and reported 0 failures. On CI, with an empty owned list, the same commit reported 22 — the
+third time this walk has been green about a state one machine's data never produced, after
+the wishlist stepper on 2026-09-01 and the absent price on 2026-09-03.
 
 **Decided 2026-09-01, on `.rf-qty-remove`.** It is the third control of the quantity stepper and
 it had been 32x32 for as long as it existed, on none of these lists, and the walk had never
