@@ -1632,12 +1632,27 @@ body {
   color: var(--rf-gold-200);
 }
 
+/* The two settled phases, both moved up one step.
+
+   `unknown` was `fg-disabled` at 2.57:1, which is the call `Unlisted` and
+   `.rf-highlight-rank` have already made twice and this badge had missed: "Not
+   dated" is one of the four answers the column gives, so it is information
+   rather than a disabled control and WCAG's exemption does not reach it. It had
+   gone unreported because the only set it applies to is Kavasa Prime, one row
+   in two hundred that the virtualiser rarely had on screen when axe looked. The
+   key in the search band prints all four terms on every load, so the gate sees
+   it now — and reported it the first time it ran.
+
+   Muted for `unknown` at 6.06:1, and `long-vaulted` up to secondary at 8.80:1
+   so the two stay apart. What the four tones say is unchanged: green still
+   droppable, gold the one to act on, then the two greys of the settled end with
+   the dimmer of them still the one nothing is recorded about. */
 .rf-phase-long-vaulted {
-  color: var(--rf-fg-muted);
+  color: var(--rf-fg-secondary);
 }
 
 .rf-phase-unknown {
-  color: var(--rf-fg-disabled);
+  color: var(--rf-fg-muted);
 }
 
 /* ----------------------------------------------------------- Detail panel -
