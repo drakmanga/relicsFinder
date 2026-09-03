@@ -119,12 +119,38 @@ body {
 }
 
 /* Roomier above than below: the tabs are a different kind of control and sat
-   straight on the search box, so the two read as one crowded strip. */
+   straight on the search box, so the two read as one crowded strip.
+
+   Wrapping since the Status key joined the band. Without it the key and the
+   count squeeze the field instead of dropping below it, and at 360px the field
+   is the one thing in this row that has to stay usable. Nothing moves at the
+   widths where the row still fits on one line. */
 .rf-searchbar-inner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--rf-space-3);
   padding-block: var(--rf-space-5) var(--rf-space-3);
+}
+
+/* The key to the Status column, at the trailing end of the band.
+
+   `margin-inline-start: auto` rather than a column of its own: the field is
+   capped at 720px well before the shell is, so "after the count" and "at the
+   trailing end" are two different places on a wide screen, and this is the
+   second one. The margin folds away when the row wraps, which is what puts the
+   key at the start of its own line rather than pushed off the right edge.
+
+   The terms take their colour from `.rf-phase`, the same rule the badges in the
+   column use. That is the whole point of the bar: it is a key, so a term drawn
+   in a tone the column never uses would be a key to nothing. */
+.rf-status-terms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--rf-space-1) var(--rf-space-3);
+  min-width: 0;
+  margin-inline-start: auto;
 }
 
 /* Capped independently of the shell: a search field as wide as an eight-column

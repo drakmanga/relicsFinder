@@ -14,6 +14,7 @@ import { ItemInfoDialog } from "./components/ItemInfoDialog";
 import { LastUpdated } from "./components/LastUpdated";
 import { PriceStatus } from "./components/PriceStatus";
 import { RelicInfoDialog } from "./components/RelicInfoDialog";
+import { StatusTerms } from "./components/StatusTerms";
 import { emptyFilters } from "./lib/rows";
 import { useCatalogue } from "./lib/useCatalogue";
 import { isCatalogue, useViewState } from "./lib/useViewState";
@@ -189,6 +190,14 @@ export function App() {
                 results
               </Chip>
             )}
+            {/* Prime Items and not the Sets view beside it, though both draw
+                the Status column. Sets has four chips carrying these same four
+                words a few pixels below this band, and a term that filters to
+                itself is already the word on screen — a second, silent copy of
+                it would be the two glossaries for one idea this app keeps
+                refusing to grow. Prime Items has the column and no filter over
+                it, so the words have nowhere else to be. */}
+            {view === "items" && <StatusTerms />}
           </div>
         </div>
       )}
