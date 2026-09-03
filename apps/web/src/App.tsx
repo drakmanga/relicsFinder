@@ -48,6 +48,8 @@ export function App() {
     setSetCategories,
     setStatus,
     setSetStatus,
+    setPhases,
+    setSetPhases,
     tierVault,
     setTierVault,
     tierSort,
@@ -97,6 +99,7 @@ export function App() {
     setRefinement,
     setCategories,
     setStatus,
+    setPhases,
     tierVault,
     sort,
   });
@@ -300,6 +303,8 @@ export function App() {
               onSetCategories={setSetCategories}
               setStatus={setStatus}
               onSetStatus={setSetStatus}
+              setPhases={setPhases}
+              onSetPhases={setSetPhases}
               wishlistSection={wishlistSection}
               onWishlistSection={setWishlistSection}
               sort={sort}

@@ -18,6 +18,7 @@ import type {
   EndoOffer,
   LifecycleMap,
   PriceMap,
+  PrimePhase,
   Refinement,
   RelicPriceMap,
   RelicRow,
@@ -93,6 +94,9 @@ interface Props {
   /** All sets, the unfinished, or the done. */
   setStatus: SetStatus;
   onSetStatus: (next: SetStatus) => void;
+  /** Phases the Sets view is showing. Empty means all of them. */
+  setPhases: Set<PrimePhase>;
+  onSetPhases: (next: Set<PrimePhase>) => void;
   /** Ticks or unticks every piece of a set at once. */
   onSetOwnedAll: (pieces: { itemName: string; copies: number }[], owned: boolean) => void;
   /** Which wishlist section is open. Set by whatever sent the reader there. */
@@ -155,6 +159,8 @@ export function ResultsPane({
   onSetCategories,
   setStatus,
   onSetStatus,
+  setPhases,
+  onSetPhases,
   onSetOwnedAll,
   wishlistSection,
   onWishlistSection,
@@ -231,6 +237,8 @@ export function ResultsPane({
           onChange={onSetCategories}
           status={setStatus}
           onStatus={onSetStatus}
+          phases={setPhases}
+          onPhases={onSetPhases}
           shown={sets.length}
         />
 

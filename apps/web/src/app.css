@@ -2561,9 +2561,14 @@ body {
   color: var(--rf-gold-300);
 }
 
-/* The progress switch sits with the kinds but is a different question, so it is
-   set off by a rule rather than by a gap nobody would read as a division. */
-.rf-set-filters-status {
+/* Each row after the first sits with the kinds but is a different question, so
+   it is set off by a rule rather than by a gap nobody would read as a division.
+
+   Not `-status` any more, which was this class's name while the progress switch
+   was the only row it applied to: "Status" is now the overline over the phase
+   chips, and a class named for one row and used by another is a name that
+   misdirects the next reader. */
+.rf-set-filters-group {
   padding-left: var(--rf-space-3);
   border-left: var(--rf-hairline) solid var(--rf-border-subtle);
 }

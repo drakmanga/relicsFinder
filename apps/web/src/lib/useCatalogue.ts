@@ -16,7 +16,7 @@ import { useOwned } from "./owned";
 import { itemPriceProgress, relicPriceProgress } from "./priceProgress";
 import { buildSets, searchedPartsOf, setMatchesTerm } from "./setCompletion";
 import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./items";
-import { filterByCategory, filterByStatus, type SetStatus } from "./setCategories";
+import { filterByCategory, filterByPhase, filterByStatus, type SetStatus } from "./setCategories";
 import { buildTierList } from "./tierList";
 import {
   DEFAULT_REFINEMENT,
@@ -30,7 +30,7 @@ import {
   type VaultFilter,
 } from "./rows";
 import type { SortState } from "./sorting";
-import type { Refinement, Reward, SetCategory } from "../api/types";
+import type { PrimePhase, Refinement, Reward, SetCategory } from "../api/types";
 
 interface Input {
   view: string;
@@ -44,6 +44,8 @@ interface Input {
   setCategories: Set<SetCategory>;
   /** Whether the Sets view is showing all sets, the unfinished, or the done. */
   setStatus: SetStatus;
+  /** Phases the Sets view is showing. Empty means all of them. */
+  setPhases: Set<PrimePhase>;
   /** Which relics the tier list ranks — and therefore what its medians are of. */
   tierVault: VaultFilter;
   sort: SortState<RelicSortColumn>;
@@ -70,6 +72,7 @@ export function useCatalogue({
   setRefinement,
   setCategories,
   setStatus,
+  setPhases,
   tierVault,
   sort,
 }: Input) {
@@ -342,9 +345,13 @@ export function useCatalogue({
   );
 
   const visibleSets = useMemo(() => {
-    // The kind chips first: they cut two hundred rows to a handful, and the
+    // The three chip rows first: they cut two hundred rows to a handful, and the
     // term then searches what is left rather than the whole catalogue.
-    const byKind = filterByStatus(filterByCategory(sets, setCategories), setStatus);
+    const byKind = filterByPhase(
+      filterByStatus(filterByCategory(sets, setCategories), setStatus),
+      setPhases,
+      lifecycle.data,
+    );
 
     const term = filters.term.trim().toLowerCase();
     if (!term) return byKind;
@@ -356,7 +363,7 @@ export function useCatalogue({
     // the owned list; it arrives here inside `sets`, which is rebuilt whenever
     // a tick changes it, so the dependencies below already carry it.
     return byKind.filter((set) => setMatchesTerm(set, term));
-  }, [sets, setCategories, setStatus, filters.term]);
+  }, [sets, setCategories, setStatus, setPhases, lifecycle.data, filters.term]);
 
   const selectedSetRow = useMemo(
     () => sets.find((set) => set.setName === selectedSet) ?? null,

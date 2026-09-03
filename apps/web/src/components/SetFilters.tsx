@@ -1,3 +1,13 @@
+/**
+ * Over 150 lines (rule 4), and it is three rows of the same control answering
+ * three questions about one list. What a split would produce is a chip-row
+ * component taking a vocabulary, a label rule, a pressed rule, a handler, a
+ * leading-hit-area flag and a trailing slot — the three rows are not the same
+ * row — which is more surface than the markup it replaces and one strip
+ * described in two files. The length here is comments and JSX, not logic that
+ * could live elsewhere.
+ */
+import { ALL_PRIME_PHASES, PHASE_LABEL } from "../lib/lifecycle";
 import {
   ALL_SET_STATUSES,
   SET_CATEGORY_LABEL,
@@ -6,7 +16,7 @@ import {
   type SetStatus,
 } from "../lib/setCategories";
 import type { PrimeSet } from "../lib/setCompletion";
-import type { SetCategory } from "../api/types";
+import type { PrimePhase, SetCategory } from "../api/types";
 
 interface Props {
   /** Every set the catalogue holds, before the filter — the chips come from it. */
@@ -16,21 +26,32 @@ interface Props {
   /** All sets, the unfinished, or the done. */
   status: SetStatus;
   onStatus: (next: SetStatus) => void;
+  /** Phases on show. Empty is every phase, as with the kinds. */
+  phases: Set<PrimePhase>;
+  onPhases: (next: Set<PrimePhase>) => void;
   /** How many sets survive the current selection, for the count beside the chips. */
   shown: number;
 }
 
 /**
- * Which kinds of gear the Sets view is listing.
+ * Which sets the Sets view is listing: what kind of gear, how far along, and
+ * whether it still drops.
  *
- * Always open, unlike the filter bar on the catalogue views: this is one row of
- * words rather than four groups of controls, and a collapsed bar with one
- * question inside it costs more to open than it saves.
+ * Always open, unlike the filter bar on the catalogue views: this is three rows
+ * of words rather than four groups of controls, and a collapsed bar with three
+ * questions inside it costs more to open than it saves.
  *
- * The kinds are multi-select and nothing selected means everything: the reader
- * who wants frames and secondaries should not have to ask twice, and the view
- * has to open on the whole catalogue. Progress is exclusive beside them,
- * because a set cannot be both finished and not.
+ * The kinds and the phases are multi-select and nothing selected means
+ * everything: the reader who wants frames and secondaries should not have to
+ * ask twice, "just vaulted plus long vaulted" is the real question "everything
+ * I can no longer farm", and the view has to open on the whole catalogue.
+ * Progress is exclusive between them, because a set cannot be both finished and
+ * not.
+ *
+ * The phase words come from `PHASE_LABEL`, which the badge in every row, the
+ * detail panels and the search band all read too. A second list of words for
+ * the same four values would be two glossaries for one idea, and the one that
+ * was not edited would go on defining a word the column no longer says.
  */
 /* Rule 7: the chips are drawn 27.6px tall — a line box rather than a declared
    number — and `rf-hit-block` takes the box a pointer lands in to 43.6 without
@@ -39,16 +60,28 @@ interface Props {
    to, and stays inside the 8px row gap when the chips wrap. */
 const CHIP = "rf-focus-ring rf-set-filter rf-hit-block";
 
-export function SetFilters({ sets, selected, onChange, status, onStatus, shown }: Props) {
+const on = (pressed: boolean) => (pressed ? `${CHIP} rf-set-filter-on` : CHIP);
+
+/** Adds or removes one value, for the two rows that take more than one. */
+const toggled = <T,>(current: Set<T>, value: T): Set<T> => {
+  const next = new Set(current);
+  if (!next.delete(value)) next.add(value);
+  return next;
+};
+
+export function SetFilters({
+  sets,
+  selected,
+  onChange,
+  status,
+  onStatus,
+  phases,
+  onPhases,
+  shown,
+}: Props) {
   const categories = availableCategories(sets);
 
   if (categories.length === 0) return null;
-
-  const toggle = (category: SetCategory) => {
-    const next = new Set(selected);
-    if (!next.delete(category)) next.add(category);
-    onChange(next);
-  };
 
   return (
     <div className="rf-set-filters">
@@ -60,8 +93,8 @@ export function SetFilters({ sets, selected, onChange, status, onStatus, shown }
             key={category}
             type="button"
             aria-pressed={selected.has(category)}
-            className={selected.has(category) ? `${CHIP} rf-set-filter-on` : CHIP}
-            onClick={() => toggle(category)}
+            className={on(selected.has(category))}
+            onClick={() => onChange(toggled(selected, category))}
           >
             {SET_CATEGORY_LABEL[category]}
           </button>
@@ -84,7 +117,9 @@ export function SetFilters({ sets, selected, onChange, status, onStatus, shown }
         Exclusive, because a set is either finished or it is not — a pair of
         toggles could be set to neither, which is a filter that shows nothing.
       */}
-      <div className="rf-set-filters-row rf-set-filters-status">
+      <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Progress</p>
+
+      <div className="rf-set-filters-row rf-set-filters-group">
         {ALL_SET_STATUSES.map((option, index) => (
           <button
             key={option}
@@ -95,12 +130,30 @@ export function SetFilters({ sets, selected, onChange, status, onStatus, shown }
                chip's as much as this one's, while the inset that opens the
                group is nobody's. */
             className={
-              (index === 0 ? `${CHIP} rf-hit-inline-start` : CHIP) +
-              (status === option ? " rf-set-filter-on" : "")
+              index === 0 ? `${on(status === option)} rf-hit-inline-start` : on(status === option)
             }
             onClick={() => onStatus(option)}
           >
             {SET_STATUS_LABEL[option]}
+          </button>
+        ))}
+      </div>
+
+      {/* "Status", the word over the column these four chips filter, rather
+          than "Phase", which is the field's own name and is one a reader who
+          does not play cannot look up from here. */}
+      <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Status</p>
+
+      <div className="rf-set-filters-row rf-set-filters-group">
+        {ALL_PRIME_PHASES.map((phase) => (
+          <button
+            key={phase}
+            type="button"
+            aria-pressed={phases.has(phase)}
+            className={on(phases.has(phase))}
+            onClick={() => onPhases(toggled(phases, phase))}
+          >
+            {PHASE_LABEL[phase]}
           </button>
         ))}
       </div>
