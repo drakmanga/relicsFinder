@@ -150,7 +150,10 @@ body {
   align-items: baseline;
   gap: var(--rf-space-1) var(--rf-space-3);
   min-width: 0;
-  margin-inline-start: auto;
+  /* Not `.rf-flush` plus an auto margin: that utility is `margin: 0` and sits
+     later in this file, so it won the shorthand and quietly put the key back
+     beside the count. One rule owns the whole margin here. */
+  margin: 0 0 0 auto;
 }
 
 /* Capped independently of the shell: a search field as wide as an eight-column
@@ -2533,13 +2536,23 @@ body {
   border-bottom: var(--rf-hairline) solid var(--rf-border-default);
 }
 
+/* space-2 rather than the group's own 4px, so the total between a label and
+   its first chip stays the 12px it was when the label sat outside the row. */
 .rf-set-filters-label {
-  margin: 0;
+  margin: 0 var(--rf-space-2) 0 0;
   flex: none;
 }
 
-.rf-set-filters-row {
+/* One question and the chips that answer it, in one box.
+
+   The box is what makes the wrap read: with the labels loose in the strip, a
+   line could end on "Status" and the next begin with four chips, three words
+   away from a row of kinds — the reader had to work out which label owned
+   which chips. Wrapping inside a group is fine, because everything that wraps
+   there is still under its own label. */
+.rf-set-filters-group {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--rf-space-1);
   min-width: 0;
@@ -2602,14 +2615,9 @@ body {
   color: var(--rf-gold-300);
 }
 
-/* Each row after the first sits with the kinds but is a different question, so
-   it is set off by a rule rather than by a gap nobody would read as a division.
-
-   Not `-status` any more, which was this class's name while the progress switch
-   was the only row it applied to: "Status" is now the overline over the phase
-   chips, and a class named for one row and used by another is a name that
-   misdirects the next reader. */
-.rf-set-filters-group {
+/* Each group after the first is a different question about the same list, so it
+   is set off by a rule rather than by a gap nobody would read as a division. */
+.rf-set-filters-group + .rf-set-filters-group {
   padding-left: var(--rf-space-3);
   border-left: var(--rf-hairline) solid var(--rf-border-subtle);
 }

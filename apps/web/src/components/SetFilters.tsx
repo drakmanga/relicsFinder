@@ -85,9 +85,12 @@ export function SetFilters({
 
   return (
     <div className="rf-set-filters">
-      <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Kind</p>
-
-      <div className="rf-set-filters-row">
+      {/* Each question and the chips answering it are one box, so a wrap never
+          leaves a label at the end of one line with its own chips at the start
+          of the next — which is what "Status" did, three words away from four
+          words that could have been kinds. */}
+      <div className="rf-set-filters-group">
+        <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Kind</p>
         {categories.map((category) => (
           <button
             key={category}
@@ -117,9 +120,8 @@ export function SetFilters({
         Exclusive, because a set is either finished or it is not — a pair of
         toggles could be set to neither, which is a filter that shows nothing.
       */}
-      <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Progress</p>
-
-      <div className="rf-set-filters-row rf-set-filters-group">
+      <div className="rf-set-filters-group">
+        <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Progress</p>
         {ALL_SET_STATUSES.map((option, index) => (
           <button
             key={option}
@@ -142,9 +144,8 @@ export function SetFilters({
       {/* "Status", the word over the column these four chips filter, rather
           than "Phase", which is the field's own name and is one a reader who
           does not play cannot look up from here. */}
-      <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Status</p>
-
-      <div className="rf-set-filters-row rf-set-filters-group">
+      <div className="rf-set-filters-group">
+        <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Status</p>
         {ALL_PRIME_PHASES.map((phase) => (
           <button
             key={phase}

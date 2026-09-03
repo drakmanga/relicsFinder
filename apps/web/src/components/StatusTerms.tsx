@@ -33,7 +33,7 @@ import { ALL_PRIME_PHASES, PHASE_LABEL } from "../lib/lifecycle";
  */
 export function StatusTerms() {
   return (
-    <p className="rf-status-terms rf-text-caption rf-flush">
+    <p className="rf-status-terms rf-text-caption">
       <span className="rf-fg-muted">Status</span>
       {ALL_PRIME_PHASES.map((phase) => (
         <span key={phase} className={`rf-phase rf-phase-${phase}`}>
