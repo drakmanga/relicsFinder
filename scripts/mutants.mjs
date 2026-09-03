@@ -38,6 +38,25 @@ const MUTANTS = [
     to: '    "Vaulted less than two years ago, so prices usually climb.",',
   },
   {
+    // The table must not empty and refill while the lifecycle request lands. A
+    // set whose phase has not arrived is a wait, not a set that failed to
+    // match, and dropping the guard makes every row vanish for a second on a
+    // view somebody arrived at through a link with a phase chip in it.
+    name: "the phase chips filter a table whose phases have not arrived",
+    file: "apps/web/src/lib/setCategories.ts",
+    from: "  if (phases.size === 0 || !lifecycle) return sets;",
+    to: "  if (phases.size === 0) return sets;",
+  },
+  {
+    // Multi-select, and the union is the point: "just vaulted plus long
+    // vaulted" is "everything I can no longer farm", which is a real question
+    // and the reason this row is not exclusive like the one above it.
+    name: "a second phase chip empties the list instead of widening it",
+    file: "apps/web/src/lib/setCategories.ts",
+    from: '    return cell.kind === "phase" && phases.has(cell.phase);',
+    to: '    return cell.kind === "phase" && phases.size === 1 && phases.has(cell.phase);',
+  },
+  {
     // The fault the whole step exists to close: 28 sets read as finished with a
     // piece still missing.
     name: "a piece is done as soon as one copy of it is in hand",
