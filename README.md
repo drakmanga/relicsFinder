@@ -14,7 +14,7 @@ searches: everything you need in one place.
 
 ### 🎯 What it does today
 
-Six views, each answering one question:
+Seven views, each answering one question:
 
 - **Relics** — _which relic should I open?_ One row per relic, with **expected value**
   (every drop weighted by its chance), the best drop, what the relic itself sells for, and
@@ -30,11 +30,17 @@ Six views, each answering one question:
 - **Ducanetor** — _what do I buy for Baro?_ Parts ranked by **ducats per platinum** spent.
 - **Endo** — _which Ayatan should I buy?_ Offers ranked by **Endo per platinum**, computed
   from the stars actually socketed in that specific sculpture.
+- **Tier List** — _which relics are worth my time at all?_ Every relic banded **S to F**,
+  twice: once for opening it alone and once for a **radshare**. The two are separate
+  columns because they are separate answers — solo and squad-of-four share only 11 of their
+  top 20, and a relic can move 376 places between them.
 
-Plus: ninety-day price charts, drop chances and expected value for a **squad of 1 to 4**
-(radshare), refinement return measured in **platinum per void trace**, filters by tier /
-rarity / refinement / vault state / maximum price, and the whole view in the URL — a screen
-is shared with a link.
+Plus: ninety-day price charts and a **Trend** column that says which way a price is moving,
+a **Status** column saying whether a set still drops from relics and how long ago it
+stopped, drop chances and expected value for a **squad of 1 to 4** (radshare), refinement
+return measured in **platinum per void trace**, filters by tier / rarity / refinement /
+vault state / maximum price on the catalogue and by kind / progress / status on the sets,
+and the whole view in the URL — a screen is shared with a link.
 
 ### 🚀 Coming soon
 
@@ -200,6 +206,7 @@ GET  /api/relics                             every relic, four states each
 GET  /api/relics/relic/{Lith V9}             one relic (full name, tier included)
 GET  /api/relics/drop-info/{Lith V9}         missions that drop it
 GET  /api/relics/unvaulted                   what is in rotation right now
+GET  /api/sets/lifecycle                     where each Prime set sits in its price cycle
 POST /api/relics/update                      re-read the catalogue from the drop tables
 GET  /api/market/item/{Volt Prime Chassis}   price of one part
 POST /api/market/items                       prices in bulk (array of names in the body)
@@ -242,6 +249,16 @@ relicsFinder/
 2. Tick the pieces you already have
 3. The panel lists what is left, and for each piece whether to buy or farm it
 4. Follow a relic through to see where it drops
+
+### You do not know which relic to farm at all
+
+1. Open **Tier List**
+2. Read the **Solo** and **Radshare** letters side by side — they disagree more often than
+   not, and which one applies is a question about how you play rather than about the relic
+3. Narrow the population to what is still dropping, if you only care what you can farm
+   tonight: the ranking is re-banded against that population rather than filtered out of the
+   old one
+4. Click a row to open the relic and see what is actually inside it
 
 ### You have a Radiant Meso V5
 
@@ -311,6 +328,8 @@ Found a bug, or have an idea?
 - [x] Expected value, radshare and refinement return
 - [x] Ducats per platinum (Ducanetor) and Endo per platinum (Ayatan)
 - [x] Set completion: what a set is missing, and whether to buy or farm it
+- [x] Relic tier list: every relic banded S to F, solo and radshare
+- [x] Price direction: ninety-day trend, and where a Prime set sits in its price cycle
 - [ ] Personal inventory
 - [ ] Price alerts
 - [ ] Mobile companion app
