@@ -13,7 +13,7 @@ import {
   type VaultFilter,
 } from "./rows";
 import { fromSearch, toSearch } from "./urlState";
-import type { Refinement, SetCategory, WishlistKind } from "../api/types";
+import type { PrimePhase, Refinement, SetCategory, WishlistKind } from "../api/types";
 
 export type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers";
 
@@ -144,17 +144,26 @@ export function useViewState() {
    *
    * Its own state rather than part of `Filters`: the catalogue filters are per
    * view and describe relics and parts, and a tier or a refinement means
-   * nothing to a list of sets.
+   * nothing to a list of sets. Its own key in the address bar for the same
+   * reason — see `urlState`.
    */
-  const [setCategories, setSetCategories] = useState<Set<SetCategory>>(new Set());
+  const [setCategories, setSetCategories] = useState<Set<SetCategory>>(initial.setCategories);
   /**
    * How far along the sets on show are.
    *
-   * Opens on "all": the view is a catalogue before it is a to-do list, and
-   * someone arriving to look up what a set costs should not find it filtered to
-   * the ones they happen to be missing.
+   * Opens on "all" unless the link says otherwise: the view is a catalogue
+   * before it is a to-do list, and someone arriving to look up what a set costs
+   * should not find it filtered to the ones they happen to be missing.
    */
-  const [setStatus, setSetStatus] = useState<SetStatus>("all");
+  const [setStatus, setSetStatus] = useState<SetStatus>(initial.setStatus);
+  /**
+   * Which phases the Sets view is showing. Empty is every phase.
+   *
+   * Multi-select like the kinds rather than exclusive like the progress switch,
+   * and the reason is one question: "just vaulted plus long vaulted" is
+   * "everything I can no longer farm", which an exclusive row cannot ask.
+   */
+  const [setPhases, setSetPhases] = useState<Set<PrimePhase>>(initial.setPhases);
   /**
    * Which relics the tier list ranks, and what it ranks them by.
    *
@@ -229,11 +238,33 @@ export function useViewState() {
    * the browser does create.
    */
   useEffect(() => {
-    const search = toSearch({ view, filters, selected, pickedItem, tierVault, tierSort, sort });
+    const search = toSearch({
+      view,
+      filters,
+      selected,
+      pickedItem,
+      tierVault,
+      tierSort,
+      setCategories,
+      setStatus,
+      setPhases,
+      sort,
+    });
     if (search !== window.location.search) {
       window.history.replaceState(null, "", `${window.location.pathname}${search}`);
     }
-  }, [view, filters, selected, pickedItem, tierVault, tierSort, sort]);
+  }, [
+    view,
+    filters,
+    selected,
+    pickedItem,
+    tierVault,
+    tierSort,
+    setCategories,
+    setStatus,
+    setPhases,
+    sort,
+  ]);
 
   useEffect(() => {
     const onPop = () => {
@@ -255,6 +286,11 @@ export function useViewState() {
       // them at their defaults is saying they were at their defaults.
       setTierVault(next.tierVault);
       setTierSort(next.tierSort);
+      // The same holds for the Sets strip's three: they belong to one view, so
+      // an entry that carries none of them is saying that view was unfiltered.
+      setSetCategories(next.setCategories);
+      setSetStatus(next.setStatus);
+      setSetPhases(next.setPhases);
       setSort(next.sort);
     };
 
@@ -378,6 +414,8 @@ export function useViewState() {
     setSetCategories,
     setStatus,
     setSetStatus,
+    setPhases,
+    setSetPhases,
     tierVault,
     setTierVault,
     tierSort,

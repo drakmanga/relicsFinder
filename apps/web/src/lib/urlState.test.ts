@@ -11,6 +11,9 @@ const state = (overrides: Partial<UrlState> = {}): UrlState => ({
   pickedItem: null,
   tierVault: "all",
   tierSort: null,
+  setCategories: new Set(),
+  setStatus: "all",
+  setPhases: new Set(),
   sort: null,
   ...overrides,
 });
@@ -181,6 +184,60 @@ describe("fromSearch", () => {
   });
 });
 
+describe("the Sets view's own three keys", () => {
+  it("says nothing about the Sets view while its three controls are at rest", () => {
+    expect(toSearch(state({ view: "sets" }))).toBe("?view=sets");
+  });
+
+  it("names the kinds, the progress and the phases once they are not the default", () => {
+    const search = toSearch(
+      state({
+        view: "sets",
+        setCategories: new Set(["warframe", "melee"]),
+        setStatus: "missing",
+        setPhases: new Set(["recently-vaulted", "long-vaulted"]),
+      }),
+    );
+
+    expect(search).toContain("kind=warframe%2Cmelee");
+    expect(search).toContain("prog=missing");
+    expect(search).toContain("phase=recently-vaulted%2Clong-vaulted");
+  });
+
+  it("reads the three keys back", () => {
+    const read = fromSearch(
+      "?view=sets&kind=warframe&prog=complete&phase=dropping",
+      emptyFilters(),
+    );
+
+    expect([...read.setCategories]).toEqual(["warframe"]);
+    expect(read.setStatus).toBe("complete");
+    expect([...read.setPhases]).toEqual(["dropping"]);
+  });
+
+  it("drops a kind, a progress or a phase its own chips could never reach", () => {
+    const read = fromSearch(
+      "?view=sets&kind=warframe,zaw&prog=halfway&phase=dropping,vaulted",
+      emptyFilters(),
+    );
+
+    // The known half of each key survives: an outdated link narrowed to two
+    // kinds must not lose the kind that is still real along with the one the
+    // catalogue dropped.
+    expect([...read.setCategories]).toEqual(["warframe"]);
+    expect(read.setStatus).toBe("all");
+    expect([...read.setPhases]).toEqual(["dropping"]);
+  });
+
+  it("keeps a relics filter and a Sets filter at once, neither standing for the other", () => {
+    const read = fromSearch("?view=sets&vault=farmable&kind=melee&prog=missing", emptyFilters());
+
+    expect(read.filters.vault).toBe("farmable");
+    expect([...read.setCategories]).toEqual(["melee"]);
+    expect(read.setStatus).toBe("missing");
+  });
+});
+
 describe("a link survives the round trip", () => {
   const cases: UrlState[] = [
     state(),
@@ -199,6 +256,13 @@ describe("a link survives the round trip", () => {
       },
       selected: "Lith V9|radiant",
       pickedItem: "Volt Prime Blueprint",
+    }),
+    // The Sets view, with all three of its own controls off their defaults.
+    state({
+      view: "sets",
+      setCategories: new Set(["warframe", "pet"]),
+      setStatus: "missing",
+      setPhases: new Set(["dropping", "unknown"]),
     }),
     // The seventh view, with both of its own controls off their defaults and
     // the catalogue's vault filter left alone beside them.
@@ -228,6 +292,9 @@ describe("a link survives the round trip", () => {
       expect([...read.filters.rarities].sort()).toEqual([...original.filters.rarities].sort());
       expect(read.tierVault).toBe(original.tierVault);
       expect(read.tierSort).toEqual(original.tierSort);
+      expect([...read.setCategories].sort()).toEqual([...original.setCategories].sort());
+      expect(read.setStatus).toBe(original.setStatus);
+      expect([...read.setPhases].sort()).toEqual([...original.setPhases].sort());
       expect(read.sort).toEqual(original.sort);
     },
   );

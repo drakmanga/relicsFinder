@@ -1,4 +1,6 @@
-import type { Rarity, Refinement, Tier } from "../api/types";
+import type { PrimePhase, Rarity, Refinement, SetCategory, Tier } from "../api/types";
+import { ALL_PRIME_PHASES } from "./lifecycle";
+import { ALL_SET_STATUSES, SET_CATEGORY_ORDER, type SetStatus } from "./setCategories";
 import {
   ALL_RARITIES,
   ALL_REFINEMENTS,
@@ -55,6 +57,22 @@ export interface UrlState {
   tierVault: VaultFilter;
   tierSort: TierSortState;
   /**
+   * The Sets view's three controls, written as `kind`, `prog` and `phase`.
+   *
+   * Their own keys for the reason `tvault` and `tsort` have theirs: `Filters`
+   * is per-catalogue-view state, and the Sets view is not a catalogue view — a
+   * tier, a refinement or a price ceiling means nothing to a list of sets, so
+   * there is no filter set of its own to put a kind or a phase in.
+   *
+   * The three are named after the words on screen rather than after the fields
+   * behind them. `kind` is the overline above the first row; `phase` is what
+   * the Status column is, and `prog` is the progress switch beside them, short
+   * for the same reason every other key here is.
+   */
+  setCategories: Set<SetCategory>;
+  setStatus: SetStatus;
+  setPhases: Set<PrimePhase>;
+  /**
    * How the Relics table is ordered, written as `sort`.
    *
    * It was the one control on that view the address bar did not carry, which
@@ -80,6 +98,9 @@ export function toSearch(state: UrlState): string {
   if (filters.maxPrice !== null) params.set("max", String(filters.maxPrice));
   if (state.selected) params.set("relic", state.selected);
   if (state.pickedItem) params.set("item", state.pickedItem);
+  if (state.setCategories.size > 0) params.set("kind", [...state.setCategories].join(","));
+  if (state.setStatus !== "all") params.set("prog", state.setStatus);
+  if (state.setPhases.size > 0) params.set("phase", [...state.setPhases].join(","));
   if (state.tierVault !== "all") params.set("tvault", state.tierVault);
 
   // Both sorts write one key holding the column and the direction, and write
@@ -119,6 +140,12 @@ export function fromSearch(search: string, base: Filters): UrlState {
     // relics against a set of relics that is not on screen.
     tierVault: pickOne<VaultFilter>(params.get("tvault"), ALL_VAULT_FILTERS, "all"),
     tierSort: fromSortParam(params.get("tsort"), ALL_TIER_SORTS),
+    // Checked the same way, and against the same lists the chips are built
+    // from: a kind or a phase nobody validated would leave the Sets view
+    // filtered to a value no chip on it is pressed for.
+    setCategories: pickMany<SetCategory>(params.get("kind"), SET_CATEGORY_ORDER),
+    setStatus: pickOne<SetStatus>(params.get("prog"), ALL_SET_STATUSES, "all"),
+    setPhases: pickMany<PrimePhase>(params.get("phase"), ALL_PRIME_PHASES),
     sort: fromSortParam(params.get("sort"), ALL_RELIC_SORTS),
     filters: {
       ...base,
