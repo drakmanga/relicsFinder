@@ -88,6 +88,10 @@ public final class DockerSocket {
         return send("POST", path, body);
     }
 
+    public Response delete(String path) throws IOException {
+        return send("DELETE", path, null);
+    }
+
     private Response send(String method, String path, String body) throws IOException {
         UnixDomainSocketAddress address = UnixDomainSocketAddress.of(socketPath);
 

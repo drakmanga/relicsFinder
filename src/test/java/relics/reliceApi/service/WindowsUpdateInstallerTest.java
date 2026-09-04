@@ -252,7 +252,7 @@ class WindowsUpdateInstallerTest {
     private UpdateStatus status(String platform, boolean available, UpdateStatus.WindowsSetup windows) {
         return new UpdateStatus("9.9.8", "9.9.9", available, true,
                 "v9.9.9", "notes", RELEASE_URL, "2026-09-04T00:00:00Z",
-                platform, windows, null, Instant.now());
+                platform, windows, Instant.now());
     }
 
     private UpdateStatus.WindowsSetup setup(String digest) {

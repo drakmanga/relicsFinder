@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  * can double click.
  */
 @Service
-public class WindowsUpdateInstaller {
+public class WindowsUpdateInstaller implements UpdateInstaller {
 
     /** Under the application's own folder, beside its data, and never {@code {app}}. */
     static final String DOWNLOAD_DIRECTORY = "updates";
@@ -132,7 +132,13 @@ public class WindowsUpdateInstaller {
         this.downloadDirectory = downloadDirectory;
     }
 
+    @Override
+    public InstallPlatform platform() {
+        return InstallPlatform.WINDOWS;
+    }
+
     /** What the poll answers. Never throws and never blocks. */
+    @Override
     public UpdateInstall state() {
         return state.get();
     }
@@ -144,6 +150,7 @@ public class WindowsUpdateInstaller {
      * thread and the caller watches it through {@link #state()}. A start while
      * one is already running is the same install, not a second one.
      */
+    @Override
     public synchronized UpdateInstall start() {
         UpdateInstall current = state.get();
         if (current.stage().running()) return current;
