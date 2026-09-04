@@ -217,10 +217,20 @@ GET  /api/wishlist                           the stored wishlist
 PUT  /api/wishlist                           replaces it
 GET  /api/owned                              the parts you already have
 PUT  /api/owned                              replaces them
+GET  /api/app/update                         whether a newer release of the app exists
 ```
 
 Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
 200, `/api/relics/relic/V9` answers 404.
+
+`/api/app/update` is the one that talks to GitHub rather than to Warframe. It answers 200
+even with no network — `known: false` and nothing else filled — because a machine that is
+offline is an ordinary state and not a server error. The answer is cached for an hour, so
+two calls in a row are one request outward.
+
+`/api/relics/update` and `/api/app/update` are two different words. The first re-reads the
+relic catalogue into the build you are running; the second asks whether there is a newer
+build.
 
 ## 📁 Project layout
 
