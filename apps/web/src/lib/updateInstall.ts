@@ -13,6 +13,34 @@ import type { UpdateInstall } from "../api/types";
  * browser and a browser is not where a wrong sentence gets found.
  */
 
+/**
+ * The extra compose file that turns the container update button on.
+ *
+ * Named here rather than written into each sentence that mentions it, because
+ * two places say it: this module's prose and the command `DockerUpdateAction`
+ * shows beside it. A file renamed in one and not the other would leave the
+ * screen telling somebody to run a command that does not match the file it just
+ * told them to read.
+ */
+export const SELF_UPDATE_FILE = "docker-compose.self-update.yaml";
+
+/**
+ * The way out of `self-update-off`, which is the one ending that has one.
+ *
+ * Separate from `problemMessage` on purpose: that function says what stopped and
+ * why, and this says what the reader can do about it instead. Folding it in
+ * would put the offer and the price in a single paragraph, and the price is the
+ * half people skip.
+ *
+ * It is shown UNDER the problem sentence and never on its own. On its own it
+ * reads as an instruction to turn a feature on, when what it is is the second
+ * half of a choice whose first half is the control being handed over.
+ */
+export const SELF_UPDATE_OPT_IN =
+  `The button does exist, and turning it on is one extra file. Start Relic Finder with ` +
+  `${SELF_UPDATE_FILE} beside the usual one and the button appears here in place of these ` +
+  `commands. Read that file before you do: it says in full what you would be agreeing to.`;
+
 /** A megabyte, as a person means it — the number on the release page. */
 const BYTES_PER_MB = 1_000_000;
 

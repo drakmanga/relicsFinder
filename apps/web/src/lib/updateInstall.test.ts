@@ -7,6 +7,8 @@ import {
   installUnderWay,
   megabytes,
   problemMessage,
+  SELF_UPDATE_FILE,
+  SELF_UPDATE_OPT_IN,
 } from "./updateInstall";
 
 const install = (over: Partial<UpdateInstall> = {}): UpdateInstall => ({
@@ -149,6 +151,37 @@ describe("problemMessage", () => {
     ] as const) {
       expect(problemMessage(problem)).toMatch(/release|try again/i);
     }
+  });
+});
+
+describe("the way out of self-update-off", () => {
+  /*
+    The reason this exists. The problem sentence explains why the button is off
+    and stops; on its own that reads as "cannot be done", which is the
+    conclusion an operator reached on a real install. This is the half that
+    makes it a choice, so it has to say the button is real and name the file
+    that produces it.
+  */
+  it("says the button exists and names the file that turns it on", () => {
+    expect(SELF_UPDATE_OPT_IN).toContain("does exist");
+    expect(SELF_UPDATE_OPT_IN).toContain(SELF_UPDATE_FILE);
+  });
+
+  /*
+    The offer must not travel without the price. The problem sentence carries
+    what the socket costs, and this one is only ever shown under it — so what
+    is checked here is that it sends the reader to the file that explains the
+    trade rather than presenting the switch as free.
+  */
+  it("sends the reader to the file before they run it", () => {
+    expect(SELF_UPDATE_OPT_IN).toMatch(/read that file before you do/i);
+    expect(SELF_UPDATE_OPT_IN).toContain("agreeing to");
+  });
+
+  it("uses no word a Warframe player would have to look up", () => {
+    expect(SELF_UPDATE_OPT_IN).not.toMatch(
+      /checksum|digest|hash|sha-?256|CDN|payload|socket|daemon|mount/i,
+    );
   });
 });
 

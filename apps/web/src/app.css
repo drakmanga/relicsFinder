@@ -2721,4 +2721,14 @@ body {
   gap: var(--rf-space-3);
   text-align: start;
   color: var(--rf-fg-secondary);
+  /* Without this the block is as wide as the longest thing in it, and the
+     longest thing is a command that must not wrap. A flex item's automatic
+     minimum size is its min-content width, and `flex-shrink: 0` above means
+     the footer cannot pull it back: measured at 1440x950, the opt-in command
+     made this box 717px inside a 510px footer, and `justify-content: flex-end`
+     pushed the excess out through the dialog's LEFT edge — 206px of clipped
+     sentence, and invisible to every scrollWidth check because overflow to the
+     left is not scrollable. `min-width: 0` hands the scrolling back to
+     `.rf-commands-text`, which is where CommandBlock always meant it to be. */
+  min-width: 0;
 }
