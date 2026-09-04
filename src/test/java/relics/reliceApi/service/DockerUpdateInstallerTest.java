@@ -225,9 +225,13 @@ class DockerUpdateInstallerTest {
         assertTrue(create.contains("\"Image\":\"" + DockerUpdateInstaller.HELPER_IMAGE + "\""));
         assertTrue(create.contains("\"/var/run/docker.sock:/var/run/docker.sock\""),
                 "the helper was given no way to reach the daemon");
-        assertTrue(create.contains("\"/srv/relic finder:/project\""),
+        // The same path inside as outside, which is what makes `./data` in the
+        // compose file resolve to the directory that actually holds the
+        // wishlist: the daemon reads a bind source on the host, so a helper
+        // running from /project would ask it for /project/data there.
+        assertTrue(create.contains("\"/srv/relic finder:/srv/relic finder\""),
                 "the helper was given no compose files to work from");
-        assertTrue(create.contains("\"WorkingDir\":\"/project\""));
+        assertTrue(create.contains("\"WorkingDir\":\"/srv/relic finder\""));
         assertTrue(create.contains("docker compose -f docker-compose.yaml pull"));
 
         // Kept rather than auto-removed: the command it runs kills the process

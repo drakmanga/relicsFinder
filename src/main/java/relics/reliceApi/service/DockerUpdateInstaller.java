@@ -61,9 +61,6 @@ public class DockerUpdateInstaller implements UpdateInstaller {
      */
     static final String HELPER_CONTAINER = "relic-finder-updater";
 
-    /** Where the project directory is mounted inside the helper. */
-    private static final String PROJECT_MOUNT = "/project";
-
     /** How the compose files arrive in one environment variable. */
     private static final String FILE_SEPARATOR = ":";
 
@@ -282,7 +279,16 @@ public class DockerUpdateInstaller implements UpdateInstaller {
     private String helperDefinition() throws IOException {
         ObjectNode definition = mapper.createObjectNode();
         definition.put("Image", HELPER_IMAGE);
-        definition.put("WorkingDir", PROJECT_MOUNT);
+
+        // Mounted at the path it already has on the host, rather than somewhere
+        // tidy like /project, and this is the difference between an update and a
+        // lost wishlist. Compose resolves `./data` against the directory it is
+        // run from and hands the daemon the result as a bind source — and the
+        // daemon reads that path on the HOST. Run from /project, it would ask
+        // for /project/data there: a directory nobody has, created empty and
+        // root-owned on the first update, with the real one still sitting
+        // untouched and unread beside the compose file.
+        definition.put("WorkingDir", projectDirectory);
 
         ArrayNode command = definition.putArray("Cmd");
         command.add("sh");
@@ -292,7 +298,7 @@ public class DockerUpdateInstaller implements UpdateInstaller {
         ObjectNode hostConfig = definition.putObject("HostConfig");
         ArrayNode binds = hostConfig.putArray("Binds");
         binds.add(DockerSocket.DEFAULT_PATH + ":" + DockerSocket.DEFAULT_PATH);
-        binds.add(projectDirectory + ":" + PROJECT_MOUNT);
+        binds.add(projectDirectory + ":" + projectDirectory);
 
         // Kept after it exits so a failed run can be read. The next update
         // removes it, which is the only moment anything is left to do it.
