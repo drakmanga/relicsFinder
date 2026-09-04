@@ -381,7 +381,14 @@ const checks: Check[] = [
     ),
     // Both commands, and the newline between them: what is rendered is what
     // somebody copies, and a block that lost a line would still look right.
-    expect: ["rf-commands", "docker compose pull\ndocker compose up -d"],
+    expect: [
+      "rf-commands",
+      "docker compose pull\ndocker compose up -d",
+      // Focusable, because it scrolls: a keyboard cannot reach a command wider
+      // than the block otherwise, and only axe ever says so.
+      'tabindex="0"',
+      "rf-focus-ring",
+    ],
   },
   {
     name: "ProgressBar",
@@ -419,11 +426,16 @@ const checks: Check[] = [
       />
     ),
     // Both numbers spelled out, and the ending the dialog did not supply.
+    //
+    // The notes region carries its tabindex here because nothing else can catch
+    // it: it only scrolls on notes long enough to overflow, so axe sees the
+    // fault against a real release and never against a fixture.
     expect: [
       "rf-dialog-scrim",
       "Version 0.2.0 is out",
       "You have version 0.1.0.",
       "rf-update-notes",
+      'tabindex="0"',
       "Skip this version",
       "See the release",
     ],

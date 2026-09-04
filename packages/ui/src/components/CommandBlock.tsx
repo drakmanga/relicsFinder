@@ -50,7 +50,27 @@ export function CommandBlock({ commands, label, className }: CommandBlockProps) 
 
   return (
     <div className={cx("rf-commands", className)}>
-      <pre className="rf-commands-text rf-text-body-sm">{text}</pre>
+      {/*
+        Focusable because it scrolls sideways: a command longer than the block is
+        unreachable to a keyboard otherwise, which axe reports and a mouse never
+        notices. `role="group"` is what makes the label count — a bare <pre> maps
+        to generic, and an aria-label on a generic element is thrown away.
+
+        The lint rule below and axe's scrollable-region-focusable are in direct
+        conflict here, and axe is the one that is right: WCAG 2.1.1 wants
+        scrolling content operable by keyboard, and the rule is guarding against
+        tab stops on things that do nothing, which this is not.
+      */}
+      {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
+      <pre
+        className="rf-commands-text rf-focus-ring rf-text-body-sm"
+        tabIndex={0}
+        role="group"
+        aria-label={label}
+      >
+        {text}
+      </pre>
+      {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
 
       {canCopy && (
         <Button variant="ghost" onClick={copy} aria-label={`Copy ${label}`}>
