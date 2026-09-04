@@ -1013,11 +1013,46 @@
   margin-top: var(--rf-space-5);
 }
 
+/* Wraps, because a footer is not always three buttons. An ending that brings a
+   progress bar and a paragraph with it needs the dialog's width to read at,
+   and squeezed into what is left of a button row it gets a five-word column.
+   Nothing already here moves: buttons fit on one line and stay on it. */
 .rf-dialog-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--rf-space-3);
   margin-top: var(--rf-space-6);
+}
+
+/* ----------------------------------------------------------- ProgressBar - */
+/* A native <progress>, which every engine draws differently and none of them
+   the way this theme does, so the whole appearance is replaced. The three
+   pseudo-elements are the same bar three times over: `-webkit-progress-bar` and
+   `-moz-progress-bar` are not aliases and neither engine understands the
+   other's, so both are written out rather than grouped — a grouped selector
+   with one unknown pseudo-element is dropped whole by the parser, and the bar
+   would silently lose its fill in one browser. */
+.rf-progress {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: var(--rf-space-2);
+  border: 0;
+  background: var(--rf-surface-2);
+}
+
+.rf-progress::-webkit-progress-bar {
+  background: var(--rf-surface-2);
+}
+
+.rf-progress::-webkit-progress-value {
+  background: var(--rf-action-primary-bg);
+  transition: width var(--rf-dur-base) var(--rf-ease-standard);
+}
+
+.rf-progress::-moz-progress-bar {
+  background: var(--rf-action-primary-bg);
 }
 
 /* ---------------------------------------------------------- UpdateNotice - */

@@ -92,6 +92,12 @@
     animation: none !important;
   }
 
+  /* The bar still moves — it is the value, not decoration — it just stops
+     easing between the numbers it is given. */
+  .rf-progress::-webkit-progress-value {
+    transition: none;
+  }
+
   .rf-anim-sweep,
   .rf-stagger > * {
     opacity: 1;

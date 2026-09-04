@@ -26,6 +26,7 @@ import {
   Modal,
   OrokinProvider,
   Price,
+  ProgressBar,
   PriceDelta,
   RarityTag,
   Skeleton,
@@ -368,6 +369,13 @@ const checks: Check[] = [
       </Dialog>
     ),
     expect: [],
+  },
+  {
+    name: "ProgressBar",
+    element: <ProgressBar value={24} total={63} label="Downloading the update" />,
+    // The value and the whole have to reach the attributes: a bar that renders
+    // its class and no numbers looks right and measures nothing.
+    expect: ["rf-progress", 'value="24"', 'max="63"', 'aria-label="Downloading the update"'],
   },
   {
     name: "UpdateNotice",

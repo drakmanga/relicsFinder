@@ -372,6 +372,32 @@ export interface UpdateStatus {
   checkedAt: string;
 }
 
+/**
+ * How far the application has got updating itself.
+ *
+ * Windows only. Every other install answers `failed` with `not-windows`, which
+ * is why the button that starts this is never rendered anywhere else.
+ *
+ * `problem` is a code and not a sentence: the wording belongs on the screen
+ * that shows it, and `lib/updateInstall` is where it turns into English.
+ */
+export interface UpdateInstall {
+  stage: "idle" | "downloading" | "verifying" | "starting" | "failed";
+  problem:
+    | "not-windows"
+    | "no-update"
+    | "no-setup"
+    | "no-digest"
+    | "download-failed"
+    | "digest-mismatch"
+    | "launch-failed"
+    | null;
+  /** Bytes of the setup written so far. */
+  downloaded: number;
+  /** Bytes the release says the setup is. Zero when nothing is being fetched. */
+  total: number;
+}
+
 /** When the Ayatan offers were last read. Their own clock: they expire in five
  *  minutes, where a price may be hours old and still be the price. */
 export interface EndoStatus {

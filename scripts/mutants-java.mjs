@@ -23,7 +23,8 @@ const ONLY_SERVICE_TESTS =
   "RelicMarketRevisionTest," +
   "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
   "DucatServiceIndexTest,DucatServiceDatesTest,PrimeLifecycleServiceTest," +
-  "OwnedServiceMigrationTest,SemanticVersionTest,InstallPlatformTest" +
+  "OwnedServiceMigrationTest,SemanticVersionTest,InstallPlatformTest," +
+  "ReleaseDigestTest,WindowsUpdateInstallerTest" +
   " -DfailIfNoTests=false";
 
 const MUTANTS = [
@@ -390,6 +391,56 @@ const MUTANTS = [
     file: `${SERVICE}/InstallPlatform.java`,
     from: '        if (desktop && osName.toLowerCase(Locale.ROOT).startsWith("windows")) return WINDOWS;',
     to: "        if (desktop) return WINDOWS;",
+  },
+  {
+    // The whole check, turned off by the thing it checks. Every release cut
+    // before GitHub published digests carries none, and reading "no digest" as
+    // "nothing to compare, so it passes" runs an unverified executable.
+    name: "a release with no checksum is allowed through instead of refused",
+    file: `${SERVICE}/ReleaseDigest.java`,
+    from: "    public static boolean matches(String declaredHex, String actualHex) {\n        return declaredHex != null && declaredHex.equalsIgnoreCase(actualHex);",
+    to: "    public static boolean matches(String declaredHex, String actualHex) {\n        return declaredHex == null || declaredHex.equalsIgnoreCase(actualHex);",
+  },
+  {
+    // An attacker who can shape the API answer picks an algorithm they can
+    // collide. A parser that reads the hex out of any prefix hands it to them.
+    name: "the digest parser accepts any algorithm, not only sha256",
+    file: `${SERVICE}/ReleaseDigest.java`,
+    from: "        if (!trimmed.startsWith(PREFIX)) return null;\n\n        String hex = trimmed.substring(PREFIX.length());",
+    to: "        int colon = trimmed.indexOf(':');\n        if (colon < 0) return null;\n\n        String hex = trimmed.substring(colon + 1);",
+  },
+  {
+    // Hashing one buffer's worth is enough to match on anything shorter than
+    // one, and cheap on a sixty-megabyte file whose first 64 KB an attacker
+    // controls.
+    name: "the file is hashed from its first read rather than from all of it",
+    file: `${SERVICE}/ReleaseDigest.java`,
+    from: "            while ((read = in.read(buffer)) >= 0) {\n                digest.update(buffer, 0, read);\n            }",
+    to: "            read = in.read(buffer);\n            if (read > 0) digest.update(buffer, 0, read);",
+  },
+  {
+    // The ordering the brief turns on. Running first and checking afterwards is
+    // not a weaker check, it is no check: the code is already executing.
+    name: "the setup is run before its checksum is compared",
+    file: `${SERVICE}/WindowsUpdateInstaller.java`,
+    from: "        if (!ReleaseDigest.matches(declaredDigest, actual)) {",
+    to: "        if (false && !ReleaseDigest.matches(declaredDigest, actual)) {",
+  },
+  {
+    // A Docker install offered a Windows .exe, or a jar somebody started from
+    // a shell being told to replace itself.
+    name: "the platform is no longer checked before an update is offered",
+    file: `${SERVICE}/WindowsUpdateInstaller.java`,
+    from: "        if (!InstallPlatform.WINDOWS.wireName().equals(status.platform())) return Problem.NOT_WINDOWS;",
+    to: "        if (status.platform() == null) return Problem.NOT_WINDOWS;",
+  },
+  {
+    // Two clicks, two downloads, over each other's file. The second one wins a
+    // race with the first and what runs is whichever finished last.
+    name: "a second click starts a second download over the first",
+    file: `${SERVICE}/WindowsUpdateInstaller.java`,
+    from: "        if (current.stage().running()) return current;",
+    to: "        if (current.stage() == null) return current;",
   },
 ];
 

@@ -1,5 +1,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ApiError, api } from "./client";
+// The one piece of logic this layer needs and does not own: whether an install
+// is still running is a fact about the record, not about fetching it.
+import { installUnderWay } from "../lib/updateInstall";
 import type { RelicPriceMap } from "./types";
 
 /**
@@ -33,6 +36,7 @@ export const keys = {
   endoStatus: ["endo", "status"] as const,
   setLifecycle: ["sets", "lifecycle"] as const,
   appUpdate: ["app", "update"] as const,
+  updateInstall: ["app", "update", "install"] as const,
 };
 
 /**
@@ -281,6 +285,38 @@ export function useAppUpdate() {
     retry: false,
   });
 }
+
+/**
+ * How far the application has got updating itself, while it is doing it.
+ *
+ * Asked once whenever something mounts this, and then at
+ * {@link INSTALL_POLL_MS} for as long as the answer says an install is running.
+ * That is what makes a dialog closed halfway through a download and reopened
+ * pick the progress back up: the server is where the install lives, so the
+ * server is asked rather than a piece of component state that went away with
+ * the dialog.
+ *
+ * `staleTime: 0` because the whole point is that the answer changes: the
+ * default would serve the first response for the rest of the download.
+ */
+export function useUpdateInstall() {
+  return useQuery({
+    queryKey: keys.updateInstall,
+    queryFn: ({ signal }) => api.updateInstall(signal),
+    // Read off the answer rather than passed in, because the only thing that
+    // knows whether to keep asking is the last thing that was asked. A caller
+    // holding that as its own state loses it the moment the dialog closes.
+    refetchInterval: (query) => (installUnderWay(query.state.data) ? INSTALL_POLL_MS : false),
+    staleTime: 0,
+    // The last poll before the process ends is expected to fail — it is asking
+    // a server that is closing itself. A retry would turn that into an error
+    // the screen shows for the two seconds it has left.
+    retry: false,
+  });
+}
+
+/** Twice a second: fast enough that the bar moves, slow enough to be free. */
+const INSTALL_POLL_MS = 500;
 
 /**
  * When the Ayatan offers were read, for the same label on the Endo tab.

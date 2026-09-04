@@ -10,6 +10,7 @@ import type {
   PrimeLifecycle,
   Relic,
   RelicPrice,
+  UpdateInstall,
   UpdateStatus,
   WireDropInfo,
   WireItemPrice,
@@ -226,6 +227,42 @@ export const api = {
    */
   async appUpdate(signal?: AbortSignal): Promise<UpdateStatus> {
     return await get<UpdateStatus>("/app/update", signal);
+  },
+
+  /**
+   * Asks the application to update itself, and answers with the first stage.
+   *
+   * Returns long before the update is done — the download outlives the request
+   * by a minute — so what comes back is where it started, and `updateInstall`
+   * below is how the rest is watched. Safe to call twice: a second start joins
+   * the install already running.
+   */
+  async startUpdateInstall(): Promise<UpdateInstall> {
+    const url = `${BASE}/app/update/install`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+      });
+    } catch (cause) {
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
+    return (await res.json()) as UpdateInstall;
+  },
+
+  /**
+   * How far that update has got.
+   *
+   * 200 for a refusal too, carrying `stage: "failed"` and a problem code — the
+   * same shape as progress, because every refusal is a state the dialog
+   * already renders.
+   */
+  async updateInstall(signal?: AbortSignal): Promise<UpdateInstall> {
+    return await get<UpdateInstall>("/app/update/install", signal);
   },
 
   /** The wishlist, as stored on the server. */
