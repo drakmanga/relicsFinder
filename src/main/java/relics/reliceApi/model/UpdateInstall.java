@@ -34,7 +34,7 @@ public record UpdateInstall(
         long total) {
 
     /**
-     * The four things this can be doing, and the one thing it can have stopped
+     * The three things this can be doing, and the one thing it can have stopped
      * at.
      *
      * <p>Verifying is its own stage rather than a moment inside the download
@@ -50,25 +50,6 @@ public record UpdateInstall(
         /** The setup is coming down. {@code downloaded} and {@code total} move. */
         DOWNLOADING,
 
-        /**
-         * The new container images are being fetched.
-         *
-         * <p>Docker's counterpart to downloading, and a separate word because it
-         * carries no byte counts: the pull reports its progress layer by layer
-         * to a daemon, and none of that reaches here. A stage with nothing to
-         * measure is honest; a byte counter stuck at zero is not.
-         */
-        PULLING,
-
-        /**
-         * The containers are being replaced with ones built on the new images.
-         *
-         * <p>The last thing this application sees. The command doing it replaces
-         * the container this process is running in, so the answer that would
-         * report the next stage is never given by anybody.
-         */
-        RECREATING,
-
         /** The file is on disk and its checksum is being computed. */
         VERIFYING,
 
@@ -80,8 +61,7 @@ public record UpdateInstall(
 
         /** Whether an install is under way, and so whether a second start is a no-op. */
         public boolean running() {
-            return this == DOWNLOADING || this == VERIFYING || this == STARTING
-                    || this == PULLING || this == RECREATING;
+            return this == DOWNLOADING || this == VERIFYING || this == STARTING;
         }
 
         @JsonValue
@@ -93,7 +73,7 @@ public record UpdateInstall(
     /**
      * Everything that stops an update, as a closed vocabulary.
      *
-     * <p>The first four are refusals decided before anything is fetched: they
+     * <p>The first two are refusals decided before anything is fetched: they
      * are answers to "should this even be offered", and a client that shows the
      * button on a platform that cannot use it gets one of them rather than a
      * download.
@@ -103,25 +83,15 @@ public record UpdateInstall(
         /** This install updates some other way, or not at all. See InstallPlatform. */
         NOT_WINDOWS,
 
-        /** Asked of the container updater by something that is not in a container. */
-        NOT_DOCKER,
-
         /**
          * There is no updater for how this copy was installed.
          *
-         * <p>A jar somebody started from a shell, which is not something to
-         * replace behind their back — they chose where it lives and how it runs.
+         * <p>Two installs answer to this and both chose their own arrangement: a
+         * jar somebody started from a shell, and a container, which is replaced
+         * by whoever runs the daemon rather than by the thing inside it. Neither
+         * is something to swap out behind their back.
          */
         NOT_SUPPORTED,
-
-        /**
-         * A container install that was never given control of Docker.
-         *
-         * <p>The ordinary case rather than a fault, and the one refusal that has
-         * a real answer for the reader: two commands they run themselves. See
-         * docker-compose.self-update.yaml for what turning it on costs.
-         */
-        SELF_UPDATE_OFF,
 
         /** There is no newer release, or the check could not reach GitHub. */
         NO_UPDATE,
@@ -139,10 +109,7 @@ public record UpdateInstall(
         DIGEST_MISMATCH,
 
         /** The file verified, and Windows would not start it. */
-        LAUNCH_FAILED,
-
-        /** The pull, or the swap that follows it, did not finish. */
-        RECREATE_FAILED;
+        LAUNCH_FAILED;
 
         @JsonValue
         public String wireName() {
@@ -166,15 +133,6 @@ public record UpdateInstall(
 
     public static UpdateInstall starting(long total) {
         return new UpdateInstall(Stage.STARTING, null, total, total);
-    }
-
-    /** Nothing to count: see {@link Stage#PULLING}. */
-    public static UpdateInstall pulling() {
-        return new UpdateInstall(Stage.PULLING, null, 0, 0);
-    }
-
-    public static UpdateInstall recreating() {
-        return new UpdateInstall(Stage.RECREATING, null, 0, 0);
     }
 
     public static UpdateInstall failed(Problem problem) {

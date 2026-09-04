@@ -20,12 +20,10 @@
 # under its own name, and for the tests that run this file against a local
 # registry. Neither needs setting to use this.
 
-# Named rather than taken from the directory this file sits in. Two reasons and
-# the second is the one that matters: a project named after a folder is named
-# differently for everybody who cloned into a different folder, and the updater
-# runs compose from inside a container where the folder is mounted somewhere
-# else entirely — it would recreate nothing and create a second copy of
-# everything.
+# Named rather than taken from the directory this file sits in: a project named
+# after a folder is named differently for everybody who cloned into a different
+# folder, so the same install answers to two names depending on where it was put
+# and `docker compose down` in the wrong one finds nothing to stop.
 name: relic-finder
 
 services:

@@ -12,10 +12,9 @@
 # missing Dockerfile, for a user who never asked to compile anything.
 #
 # `image:` still comes from the base file, so a build here is tagged with the
-# same name a pull would have fetched. That is deliberate: it means the updater
-# and `docker compose pull` see the same reference, and a developer who later
-# stops passing this file gets the published image rather than a stale local one
-# under a different name.
+# same name a pull would have fetched. That is deliberate: `docker compose pull`
+# sees the same reference, and a developer who later stops passing this file
+# gets the published image rather than a stale local one under a different name.
 
 services:
   backend:

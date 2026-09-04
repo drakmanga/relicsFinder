@@ -476,45 +476,22 @@ const MUTANTS = [
     to: '      return "Installing.";',
   },
   {
-    // The ending every container install that ships actually reaches. Stating a
-    // fact about configuration answers a question nobody asked; the question a
-    // missing button raises is why it is missing.
-    name: "the declined ending stops explaining why there is no button",
+    // The ending every container install reaches, and the only thing on it. A
+    // reader who is told what to run and not why gets an instruction where the
+    // question they arrived with was whether this can be done at all.
+    name: "the container ending stops saying why there is no button",
     file: "apps/web/src/lib/updateInstall.ts",
-    from: '      return "There is no button here because replacing a container means giving Relic Finder control of Docker, and that is control of this whole machine rather than of Relic Finder alone. It is off until somebody turns it on. These two commands do the same job by hand:";',
-    to: '      return "Self-update is disabled.";',
+    from: '  "control of Docker, and that is control of this whole machine rather than of Relic " +',
+    to: '  "" +',
   },
   {
-    // A user whose update failed needs to know the old version is still serving
-    // them, or they go looking for a broken install that is not broken.
-    name: "a failed recreate stops saying that nothing was changed",
+    // The line exists for the reader who was handed a compose file and never
+    // cloned anything: without it the second command is an error in a dialog
+    // whose job is to remove doubt.
+    name: "the caveat stops covering the install that never cloned anything",
     file: "apps/web/src/lib/updateInstall.ts",
-    from: '      return "Fetching the new version, or swapping the containers onto it, did not finish. Nothing was changed and the old version is still running. Run `docker logs relic-finder-updater` to see what it said.";',
-    to: '      return "The recreate failed.";',
-  },
-  {
-    // The container swap takes the page down with it. Unwarned, that reads as
-    // the update having broken the thing it was updating.
-    name: "the recreate stage stops warning that the page will go quiet",
-    file: "apps/web/src/lib/updateInstall.ts",
-    from: '      return "Replacing the containers. This page will stop answering for a moment — reload it when it comes back.";',
-    to: '      return "Replacing the containers.";',
-  },
-  {
-    // A pull reports layer by layer to the daemon and none of it reaches here,
-    // so a byte counter on this stage is a number that cannot move.
-    name: "the pull stage claims a byte count it does not have",
-    file: "apps/web/src/lib/updateInstall.ts",
-    from: '      return "Fetching the new version";',
-    to: "      return `Fetching the new version — ${downloadedOf(install)}`;",
-  },
-  {
-    // The poll stops when the install stops, and both container stages are the
-    // install still running. Missing one leaves the dialog frozen on it.
-    name: "the container stages are not read as an install under way",
-    file: "apps/web/src/lib/updateInstall.ts",
-    from: '    install?.stage === "pulling" ||\n    install?.stage === "recreating"',
-    to: "    false",
+    from: '  "never cloned the repository.";',
+    to: '  "";',
   },
 ];
 

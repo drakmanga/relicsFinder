@@ -1,7 +1,7 @@
 import type { UpdateInstall } from "../api/types";
 
 /**
- * What an update in progress says on screen.
+ * What the update dialog says on screen.
  *
  * Every sentence here is written for somebody who has never thought about
  * checksums, installers or CDNs, because that is who is looking at it: the
@@ -14,32 +14,32 @@ import type { UpdateInstall } from "../api/types";
  */
 
 /**
- * The extra compose file that turns the container update button on.
+ * Why a container install has no button, and what it has instead.
  *
- * Named here rather than written into each sentence that mentions it, because
- * two places say it: this module's prose and the command `DockerUpdateAction`
- * shows beside it. A file renamed in one and not the other would leave the
- * screen telling somebody to run a command that does not match the file it just
- * told them to read.
+ * <p>Not a refusal and not a fault: a container is replaced from outside by
+ * whoever runs the daemon, and the code that once did it from the inside is
+ * gone. It needed the Docker control socket, which is the run of the whole
+ * machine rather than of Relic Finder alone, and no button is worth handing
+ * that over on every install that wanted one.
+ *
+ * Here rather than in the component so the test that forbids a word a Warframe
+ * player would have to look up reaches it.
  */
-export const SELF_UPDATE_FILE = "docker-compose.self-update.yaml";
+export const DOCKER_UPDATE =
+  "Relic Finder does not replace its own containers. Doing that would mean giving it " +
+  "control of Docker, and that is control of this whole machine rather than of Relic " +
+  "Finder alone. These four commands do it in a few seconds:";
 
 /**
- * The way out of `self-update-off`, which is the one ending that has one.
- *
- * Separate from `problemMessage` on purpose: that function says what stopped and
- * why, and this says what the reader can do about it instead. Folding it in
- * would put the offer and the price in a single paragraph, and the price is the
- * half people skip.
- *
- * It is shown UNDER the problem sentence and never on its own. On its own it
- * reads as an instruction to turn a feature on, when what it is is the second
- * half of a choice whose first half is the control being handed over.
+ * The one line under the commands, and it exists for the two ways they can fail
+ * somebody: a folder that is not theirs, and a `git pull` in a directory that
+ * was never a clone. Whoever was handed a compose file and nothing else gets an
+ * error from the second line otherwise, in the dialog that was supposed to
+ * remove their doubt.
  */
-export const SELF_UPDATE_OPT_IN =
-  `The button does exist, and turning it on is one extra file. Start Relic Finder with ` +
-  `${SELF_UPDATE_FILE} beside the usual one and the button appears here in place of these ` +
-  `commands. Read that file before you do: it says in full what you would be agreeing to.`;
+export const DOCKER_UPDATE_CAVEAT =
+  "Use the folder your own docker-compose.yaml is in, and skip the git pull if you " +
+  "never cloned the repository.";
 
 /** A megabyte, as a person means it — the number on the release page. */
 const BYTES_PER_MB = 1_000_000;
@@ -74,12 +74,6 @@ export function installMessage(install: UpdateInstall): string | null {
       return null;
     case "downloading":
       return `Downloading — ${downloadedOf(install)}`;
-    case "pulling":
-      // No counter, because there is none to have: the pull is reported layer
-      // by layer to the Docker daemon and none of that reaches the browser.
-      return "Fetching the new version";
-    case "recreating":
-      return "Replacing the containers. This page will stop answering for a moment — reload it when it comes back.";
     case "verifying":
       return "Checking that the download is the real one";
     case "starting":
@@ -98,14 +92,8 @@ export function installMessage(install: UpdateInstall): string | null {
  */
 export function problemMessage(problem: UpdateInstall["problem"]): string {
   switch (problem) {
-    case "self-update-off":
-      return "There is no button here because replacing a container means giving Relic Finder control of Docker, and that is control of this whole machine rather than of Relic Finder alone. It is off until somebody turns it on. These two commands do the same job by hand:";
-    case "recreate-failed":
-      return "Fetching the new version, or swapping the containers onto it, did not finish. Nothing was changed and the old version is still running. Run `docker logs relic-finder-updater` to see what it said.";
-    case "not-docker":
-      return "This copy is not running in a container, so it cannot be updated that way.";
     case "not-supported":
-      return "This copy was started by hand rather than installed, so it cannot replace itself. Update it the way you started it.";
+      return "This copy cannot replace itself. Update it the way you started it.";
     case "digest-mismatch":
       return "What downloaded is not the file the release published, so nothing was installed. Nothing was run and the download has been deleted. Try again, and if it happens twice, download the release yourself instead.";
     case "download-failed":
@@ -132,8 +120,6 @@ export function installUnderWay(install: UpdateInstall | undefined): boolean {
   return (
     install?.stage === "downloading" ||
     install?.stage === "verifying" ||
-    install?.stage === "starting" ||
-    install?.stage === "pulling" ||
-    install?.stage === "recreating"
+    install?.stage === "starting"
   );
 }

@@ -376,35 +376,27 @@ export interface UpdateStatus {
 /**
  * How far the application has got updating itself.
  *
- * Two platforms answer here and the stages say which is working: a Windows
- * install downloads a setup, checks it and runs it; a container install pulls
- * images and is rebuilt on them. Anything else answers `failed` with
- * `not-supported`.
+ * One platform answers here: a Windows install downloads a setup, checks it and
+ * runs it. Everything else answers `failed` with `not-supported`, container
+ * installs included — a container is recreated from outside, so the screen for
+ * one shows the commands that do it and never asks this endpoint at all.
  *
  * `problem` is a code and not a sentence: the wording belongs on the screen that
  * shows it, and `lib/updateInstall` is where it turns into English.
- *
- * `self-update-off` is the one refusal that is not a fault. A container install
- * gets it before anybody clicks, because replacing a container needs control of
- * Docker and the shipped compose file does not hand it over — so the screen
- * shows the two commands instead of a button.
  */
 export interface UpdateInstall {
-  stage: "idle" | "downloading" | "verifying" | "starting" | "pulling" | "recreating" | "failed";
+  stage: "idle" | "downloading" | "verifying" | "starting" | "failed";
   problem:
     | "not-windows"
-    | "not-docker"
     | "not-supported"
-    | "self-update-off"
     | "no-update"
     | "no-setup"
     | "no-digest"
     | "download-failed"
     | "digest-mismatch"
     | "launch-failed"
-    | "recreate-failed"
     | null;
-  /** Bytes of the setup written so far. Always zero on a container install. */
+  /** Bytes of the setup written so far. */
   downloaded: number;
   /** Bytes the release says the setup is. Zero when nothing is being fetched. */
   total: number;

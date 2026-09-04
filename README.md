@@ -132,16 +132,28 @@ The images come from GitHub's registry, built and smoke tested by every release.
 no Node, no compiler, no clone. Only `./data` is shared with the host, and it is where the
 wishlist and the catalogue live.
 
-**Updating** is two commands, and the dialog inside the application shows you both:
+**Updating** is four commands, and the dialog inside the application shows you all four:
 
 ```bash
+cd ~/relicsFinder
+git pull
 docker compose pull
 docker compose up -d
 ```
 
-`pull` fetches the new images and `up -d` is what actually swaps the running containers
-onto them — either one alone looks like it worked and leaves the old version running. Your
-`./data` is untouched by both.
+`cd` because compose reads the files in the directory it runs from, and `git pull` because
+those files change between releases — skip that one if you were handed a compose file and
+never cloned anything. Then `pull` fetches the new images and `up -d` swaps the running
+containers onto them: either one alone looks like it worked and leaves the old version
+running. Your `./data` is untouched by all four.
+
+Relic Finder does not do this for itself, and there is no button that will. Replacing a
+container means controlling the Docker daemon, which is the run of the whole machine rather
+than of Relic Finder alone — a container that can update itself is a container that can
+read every file on the host. There was an opt-in for it up to 0.4.2 and it has been
+removed: one click twice a year is not worth the thing it was traded for, and a capability
+that dangerous is safer as code that does not exist than as code nobody is expected to
+switch on.
 
 **Pinning a version.** Unset, this follows `latest`, which each release moves. To stay on
 one:
@@ -149,20 +161,6 @@ one:
 ```bash
 RELICS_VERSION=0.3.0 docker compose up -d
 ```
-
-**The one-click update, and what it costs.** The application can run those two commands for
-itself, and doing so needs the Docker control socket — which is control of the whole
-machine, not of Relic Finder alone. It is off unless you turn it on, and turning it on is
-one extra file:
-
-```bash
-docker compose -f docker-compose.yaml -f docker-compose.self-update.yaml up -d
-```
-
-Read [`docker-compose.self-update.yaml`](docker-compose.self-update.yaml) before you do —
-it is four lines of configuration and a page explaining the trade. On a machine that only
-ever runs Relic Finder it is a reasonable yes; on the laptop you also bank on it is a
-reasonable no, and saying no costs the two commands above twice a year.
 
 Two things worth knowing:
 
@@ -283,11 +281,11 @@ two calls in a row are one request outward.
 `/api/app/update/install` is the one that changes the machine, and what it does depends on
 how this copy was installed. A Windows install downloads the release's setup, verifies it
 against the sha256 GitHub publishes and only then runs it — never the other way round, so a
-release that cannot be verified is one it will not download at all. A container install
-pulls the new images and has compose rebuild the containers on them, and answers
-`self-update-off` until somebody mounts the Docker socket. Anything else is refused. Polled
-with GET while it works; the GET also answers before anybody starts, which is how the
-dialog knows whether to draw a button or the two commands.
+release that cannot be verified is one it will not download at all. Everything else is
+refused with `not-supported`, a container install included: a container is recreated from
+outside by whoever runs the daemon, so the dialog for one shows the four commands and never
+calls this endpoint at all. Polled with GET while it works; the GET also answers before
+anybody starts, which is how the dialog knows whether an install is already running.
 
 `/api/relics/update` and `/api/app/update` are two different words. The first re-reads the
 relic catalogue into the build you are running; the second asks whether there is a newer

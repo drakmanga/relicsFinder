@@ -5,12 +5,17 @@ import relics.reliceApi.model.UpdateInstall;
 /**
  * One way of replacing this copy of Relic Finder with a newer one.
  *
- * <p>There is one of these per {@link InstallPlatform} that can do it, and they
- * have nothing in common underneath: Windows downloads a setup, proves it and
- * runs it; Docker asks the daemon to fetch two images and rebuild the
- * containers. What they share is the shape of the answer and the endpoint that
- * gives it, which is the whole reason for the interface — a screen showing an
- * update in progress should not have to know which of them is doing the work.
+ * <p>There is one of these per {@link InstallPlatform} that can do it, which
+ * today is Windows alone: it downloads a setup, proves it and runs it. A
+ * container is not one of them and deliberately has none — replacing a
+ * container is done by whoever runs the daemon, and the code that once did it
+ * from the inside needed the Docker socket to work, which is the run of the
+ * whole machine.
+ *
+ * <p>The interface survives one implementation because what it fixes is the
+ * shape of the answer and the endpoint that gives it: a screen showing an
+ * update in progress does not have to know what is doing the work, and a second
+ * platform is a class rather than an edit to the controller.
  *
  * <p>The controller picks by platform, so nothing here ever runs on an install
  * it does not belong to. Each implementation still checks the platform itself,

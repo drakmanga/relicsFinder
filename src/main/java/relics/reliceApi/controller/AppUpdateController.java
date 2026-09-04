@@ -31,9 +31,10 @@ public class AppUpdateController {
     /**
      * One per platform that can replace itself, and the detected platform picks.
      *
-     * <p>Injected as a list rather than one by one so that adding a third — a
+     * <p>Injected as a list rather than one by one so that adding a second — a
      * package manager, a Flatpak — is a class and not an edit here. Nothing in
-     * this file knows what any of them do.
+     * this file knows what any of them do, and a platform with no installer in
+     * the list is refused rather than special-cased.
      */
     private final List<UpdateInstaller> installers;
 
@@ -99,8 +100,10 @@ public class AppUpdateController {
     }
 
     /**
-     * A jar somebody started from a shell, which is the one install this cannot
-     * replace and must not try to: they chose where it lives and how it runs.
+     * Every install this cannot replace and must not try to: a jar somebody
+     * started from a shell, and a container, which is recreated from outside by
+     * whoever runs the daemon. Both chose how they run, and neither is a thing
+     * to swap out from under them.
      */
     private static UpdateInstall unsupported() {
         return UpdateInstall.failed(UpdateInstall.Problem.NOT_SUPPORTED);
