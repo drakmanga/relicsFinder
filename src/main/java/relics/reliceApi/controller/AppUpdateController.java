@@ -7,8 +7,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import relics.reliceApi.model.UpdateInstall;
 import relics.reliceApi.model.UpdateStatus;
+import relics.reliceApi.service.InstallPlatform;
 import relics.reliceApi.service.UpdateCheckService;
-import relics.reliceApi.service.WindowsUpdateInstaller;
+import relics.reliceApi.service.UpdateInstaller;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Whether the application itself is out of date.
@@ -23,13 +27,35 @@ import relics.reliceApi.service.WindowsUpdateInstaller;
 public class AppUpdateController {
 
     private final UpdateCheckService updateCheckService;
-    private final WindowsUpdateInstaller windowsUpdateInstaller;
+
+    /**
+     * One per platform that can replace itself, and the detected platform picks.
+     *
+     * <p>Injected as a list rather than one by one so that adding a third — a
+     * package manager, a Flatpak — is a class and not an edit here. Nothing in
+     * this file knows what any of them do.
+     */
+    private final List<UpdateInstaller> installers;
 
     public AppUpdateController(
             UpdateCheckService updateCheckService,
-            WindowsUpdateInstaller windowsUpdateInstaller) {
+            List<UpdateInstaller> installers) {
         this.updateCheckService = updateCheckService;
-        this.windowsUpdateInstaller = windowsUpdateInstaller;
+        this.installers = installers;
+    }
+
+    /**
+     * The updater for how this copy was installed, if there is one.
+     *
+     * <p>Asked per request rather than resolved once: the answer is two property
+     * reads and a file check, and resolving it at startup would mean a container
+     * that gained its socket on a restart went on reporting that it had none.
+     */
+    private Optional<UpdateInstaller> installer() {
+        InstallPlatform platform = InstallPlatform.detect();
+        return installers.stream()
+                .filter(installer -> installer.platform() == platform)
+                .findFirst();
     }
 
     /**
@@ -52,7 +78,9 @@ public class AppUpdateController {
      */
     @PostMapping("/update/install")
     public ResponseEntity<UpdateInstall> install() {
-        return ResponseEntity.ok(windowsUpdateInstaller.start());
+        return ResponseEntity.ok(installer()
+                .map(UpdateInstaller::start)
+                .orElseGet(AppUpdateController::unsupported));
     }
 
     /**
@@ -65,6 +93,16 @@ public class AppUpdateController {
      */
     @GetMapping("/update/install")
     public ResponseEntity<UpdateInstall> installProgress() {
-        return ResponseEntity.ok(windowsUpdateInstaller.state());
+        return ResponseEntity.ok(installer()
+                .map(UpdateInstaller::state)
+                .orElseGet(AppUpdateController::unsupported));
+    }
+
+    /**
+     * A jar somebody started from a shell, which is the one install this cannot
+     * replace and must not try to: they chose where it lives and how it runs.
+     */
+    private static UpdateInstall unsupported() {
+        return UpdateInstall.failed(UpdateInstall.Problem.NOT_SUPPORTED);
     }
 }

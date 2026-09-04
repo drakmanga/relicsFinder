@@ -57,6 +57,20 @@ describe("installMessage", () => {
     expect(message).toContain("open again");
   });
 
+  it("says what is being fetched, without a counter it does not have", () => {
+    const message = installMessage(install({ stage: "pulling" }));
+    expect(message).toBe("Fetching the new version");
+    expect(message).not.toMatch(/MB/);
+  });
+
+  /* The container swap takes the page down with it, and a reader who was not
+     warned reads that as the update having broken something. */
+  it("warns that the page itself is about to go away", () => {
+    const message = installMessage(install({ stage: "recreating" }));
+    expect(message).toContain("stop answering");
+    expect(message).toContain("reload");
+  });
+
   it("hands a failure straight to its explanation", () => {
     expect(installMessage(install({ stage: "failed", problem: "download-failed" }))).toBe(
       problemMessage("download-failed"),
@@ -76,6 +90,25 @@ describe("problemMessage", () => {
     expect(message).toContain("release");
   });
 
+  /*
+    The ending for every container install that ships, so it is the sentence
+    most people will read. It has to answer the question the missing button
+    raises rather than state a fact about configuration.
+  */
+  it("says why there is no button, and that the commands do the same job", () => {
+    const message = problemMessage("self-update-off");
+    expect(message).toContain("no button");
+    expect(message).toContain("whole machine");
+    expect(message).toContain("same job");
+  });
+
+  it("says nothing was changed when the swap did not finish", () => {
+    const message = problemMessage("recreate-failed");
+    expect(message).toContain("Nothing was changed");
+    expect(message).toContain("old version is still running");
+    expect(message).toContain("docker logs relic-finder-updater");
+  });
+
   it("uses no word a Warframe player would have to look up", () => {
     const jargon = /checksum|digest|hash|sha-?256|CDN|payload/i;
     const problems: UpdateInstall["problem"][] = [
@@ -84,6 +117,10 @@ describe("problemMessage", () => {
       "no-setup",
       "no-update",
       "not-windows",
+      "not-docker",
+      "not-supported",
+      "self-update-off",
+      "recreate-failed",
       "launch-failed",
       null,
     ];
@@ -121,8 +158,14 @@ describe("installUnderWay", () => {
     expect(installUnderWay(install())).toBe(false);
   });
 
-  it("is true through all three working stages", () => {
-    for (const stage of ["downloading", "verifying", "starting"] as const) {
+  it("is true through every working stage, on either platform", () => {
+    for (const stage of [
+      "downloading",
+      "verifying",
+      "starting",
+      "pulling",
+      "recreating",
+    ] as const) {
       expect(installUnderWay(install({ stage }))).toBe(true);
     }
   });

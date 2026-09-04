@@ -8,12 +8,17 @@ import java.time.Instant;
  * Whether a newer Relic Finder has been released, and everything the thing that
  * asked would need next.
  *
- * <p>Both platform payloads travel on every answer, filled or not, rather than
- * each platform fetching its own half later. Two of them hang an update off
- * this one call — Windows downloads and runs a setup, Docker pulls an image —
- * and a second round trip to GitHub for the other half would spend one of the
- * sixty requests an hour a shared address gets, to learn something this answer
+ * <p>The Windows payload travels on every answer, filled or not, rather than
+ * being fetched later: a Windows install downloads and runs the setup named
+ * here, and a second round trip to GitHub for it would spend one of the sixty
+ * requests an hour a shared address gets, to learn something this answer
  * already had in hand.
+ *
+ * <p>There is no Docker payload, and there was one until this shape was tried
+ * against a real container update. A container is replaced by compose, which
+ * resolves image names out of the files the operator started with — so an image
+ * reference composed here would be a second, quieter answer to a question
+ * something else already answers, and the first one to go stale.
  *
  * <p>{@code known} is the field to read first. False means the check could not
  * reach GitHub, which offline is the ordinary case rather than a fault: the
@@ -60,9 +65,6 @@ public record UpdateStatus(
         /** The setup to download, or null when the release carries no .exe. */
         WindowsSetup windows,
 
-        /** The image to pull. Null only when there is no release to pull. */
-        DockerImage docker,
-
         /** When this answer was read from GitHub, so a caller can see it is cached. */
         Instant checkedAt) {
 
@@ -75,13 +77,4 @@ public record UpdateStatus(
      * it is null for a release cut before that rather than absent.
      */
     public record WindowsSetup(String url, String name, long size, String digest) {}
-
-    /**
-     * The image and tag a container install would pull.
-     *
-     * <p>Composed from configuration and the release tag rather than read from
-     * GitHub: a release does not carry its own image name, and the deployment
-     * that runs the image is the thing that knows where it lives.
-     */
-    public record DockerImage(String reference, String tag) {}
 }

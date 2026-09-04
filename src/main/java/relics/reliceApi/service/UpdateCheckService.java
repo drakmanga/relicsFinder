@@ -67,17 +67,14 @@ public class UpdateCheckService {
     private final ReentrantLock refreshLock = new ReentrantLock();
 
     private final String repository;
-    private final String image;
     private final Duration ttl;
 
     private volatile UpdateStatus cached;
 
     public UpdateCheckService(
             @Value("${relics.update.repository:drakmanga/relicsFinder}") String repository,
-            @Value("${relics.update.image:ghcr.io/drakmanga/relicsfinder}") String image,
             @Value("${relics.update.ttl:PT1H}") Duration ttl) {
         this.repository = repository;
-        this.image = image;
         this.ttl = ttl;
     }
 
@@ -152,7 +149,6 @@ public class UpdateCheckService {
                 text(release, "published_at"),
                 InstallPlatform.detect().wireName(),
                 windowsSetup(release),
-                latest.isEmpty() ? null : new UpdateStatus.DockerImage(image + ":" + latest, latest),
                 Instant.now());
     }
 
@@ -189,6 +185,6 @@ public class UpdateCheckService {
                 AppVersion.RUNNING, null, false, false,
                 null, null, null, null,
                 InstallPlatform.detect().wireName(),
-                null, null, Instant.now());
+                null, Instant.now());
     }
 }

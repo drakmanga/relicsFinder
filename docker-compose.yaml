@@ -1,8 +1,36 @@
+# What a stranger runs. `docker compose up -d` and nothing else: the images come
+# from the registry a release pushes them to, so this works on a machine that has
+# never seen the sources and has no Java, no Node and no clone.
+#
+# It used to say `build:` here, which meant updating was `git pull` and a
+# recompile — minutes of work, available only to somebody who had the repository
+# in the first place, and no route at all for anyone who was handed a compose
+# file. Building is still how this is developed; it moved to
+# docker-compose.build.yaml, which is an addition rather than a replacement:
+#
+#   docker compose -f docker-compose.yaml -f docker-compose.build.yaml up -d --build
+#
+# RELICS_VERSION pins a release. Unset, it follows `latest`, which the newest
+# release moves — which is what makes `docker compose pull && docker compose up -d`
+# an update.
+#
+#   RELICS_VERSION=0.4.0 docker compose up -d
+#
+# RELICS_IMAGE_BACKEND and RELICS_IMAGE_FRONTEND exist for a fork publishing
+# under its own name, and for the tests that run this file against a local
+# registry. Neither needs setting to use this.
+
+# Named rather than taken from the directory this file sits in. Two reasons and
+# the second is the one that matters: a project named after a folder is named
+# differently for everybody who cloned into a different folder, and the updater
+# runs compose from inside a container where the folder is mounted somewhere
+# else entirely — it would recreate nothing and create a second copy of
+# everything.
+name: relic-finder
+
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: ${RELICS_IMAGE_BACKEND:-ghcr.io/drakmanga/relicsfinder-backend}:${RELICS_VERSION:-latest}
     container_name: relics-finder-backend
     volumes:
       - ./data:/app/data
@@ -15,9 +43,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
+    image: ${RELICS_IMAGE_FRONTEND:-ghcr.io/drakmanga/relicsfinder-frontend}:${RELICS_VERSION:-latest}
     container_name: relics-finder-frontend
     ports:
       - "80:80"

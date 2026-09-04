@@ -87,7 +87,27 @@ export function UpdateDialog({
       {notes && (
         <>
           <p className="rf-text-overline rf-fg-muted">What changed</p>
-          <div className="rf-update-notes rf-text-body-sm">{notes}</div>
+          {/*
+            Focusable, because release notes are as long as the release was and
+            this scrolls. A scrolling region no keyboard can reach is release
+            notes a keyboard user can only read the first screen of — and only
+            axe ever says so, against a set of notes long enough to overflow,
+            which a stubbed fixture never is.
+
+            The disable is deliberate and the same one CommandBlock carries: the
+            rule guards against tab stops on things that do nothing, and a region
+            that scrolls is not one of those.
+          */}
+          {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
+          <div
+            className="rf-update-notes rf-focus-ring rf-text-body-sm"
+            tabIndex={0}
+            role="group"
+            aria-label="What changed in this version"
+          >
+            {notes}
+          </div>
+          {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
         </>
       )}
     </Dialog>

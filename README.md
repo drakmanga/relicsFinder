@@ -112,7 +112,8 @@ Two things Windows will do that are not faults:
 
 ### Anywhere else: Docker
 
-Two containers, nothing else needed:
+Two containers, nothing else needed — not even this repository. Save
+[`docker-compose.yaml`](docker-compose.yaml) somewhere and run:
 
 ```bash
 docker compose up -d
@@ -127,9 +128,46 @@ docker compose logs -f    # follow both services
 docker compose down       # stop them
 ```
 
-The first build is the slow one: the images compile the frontend and the jar from the
-sources in this repository. Afterwards only `./data` is shared with the host, and it is
-where the wishlist and the catalogue live.
+The images come from GitHub's registry, built and smoke tested by every release. No Java,
+no Node, no compiler, no clone. Only `./data` is shared with the host, and it is where the
+wishlist and the catalogue live.
+
+> **Until the first release after this was written, there is nothing there to pull.** The
+> workflow that publishes the images runs on a tag, so the registry has them from the next
+> release onwards. Before then, build them yourself with the override under
+> [From the sources](#from-the-sources).
+
+**Updating** is two commands, and the dialog inside the application shows you both:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+`pull` fetches the new images and `up -d` is what actually swaps the running containers
+onto them — either one alone looks like it worked and leaves the old version running. Your
+`./data` is untouched by both.
+
+**Pinning a version.** Unset, this follows `latest`, which each release moves. To stay on
+one:
+
+```bash
+RELICS_VERSION=0.3.0 docker compose up -d
+```
+
+**The one-click update, and what it costs.** The application can run those two commands for
+itself, and doing so needs the Docker control socket — which is control of the whole
+machine, not of Relic Finder alone. It is off unless you turn it on, and turning it on is
+one extra file:
+
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.self-update.yaml up -d
+```
+
+Read [`docker-compose.self-update.yaml`](docker-compose.self-update.yaml) before you do —
+it is four lines of configuration and a page explaining the trade. On a machine that only
+ever runs Relic Finder it is a reasonable yes; on the laptop you also bank on it is a
+reasonable no, and saying no costs the two commands above twice a year.
 
 Two things worth knowing:
 
@@ -143,8 +181,19 @@ Two things worth knowing:
 
 ### From the sources
 
-For working on it. Needs **Java 25+**, **Node 20+** and Maven — the bundled `./mvnw` counts
-— and an internet connection for the Warframe Market API.
+For working on it — and for an architecture no release publishes images for, since they are
+amd64 only:
+
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.build.yaml up -d --build
+```
+
+That builds both images here instead of pulling them, under the same names, so dropping the
+flag later gets you the published image rather than a stale local one.
+
+Without Docker at all, which is how it is actually developed. Needs **Java 25+**,
+**Node 20+** and Maven — the bundled `./mvnw` counts — and an internet connection for the
+Warframe Market API.
 
 ```bash
 git clone https://github.com/drakmanga/relicsFinder.git
@@ -224,8 +273,8 @@ PUT  /api/wishlist                           replaces it
 GET  /api/owned                              the parts you already have
 PUT  /api/owned                              replaces them
 GET  /api/app/update                         whether a newer release of the app exists
-POST /api/app/update/install                 download it, check it, run it (Windows only)
-GET  /api/app/update/install                 how far that has got
+POST /api/app/update/install                 replace this copy with the newer one
+GET  /api/app/update/install                 how far that has got, or why it will not
 ```
 
 Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
@@ -236,11 +285,14 @@ even with no network — `known: false` and nothing else filled — because a ma
 offline is an ordinary state and not a server error. The answer is cached for an hour, so
 two calls in a row are one request outward.
 
-`/api/app/update/install` is the one that changes the machine. It is refused on anything
-but a Windows install, and refused on a release that publishes no sha256 for its setup —
-the file is verified against that checksum before it is run, never after, so a release
-that cannot be verified is one this will not download at all. Polled with GET while it
-works; the answer says which of downloading, checking and installing it is on.
+`/api/app/update/install` is the one that changes the machine, and what it does depends on
+how this copy was installed. A Windows install downloads the release's setup, verifies it
+against the sha256 GitHub publishes and only then runs it — never the other way round, so a
+release that cannot be verified is one it will not download at all. A container install
+pulls the new images and has compose rebuild the containers on them, and answers
+`self-update-off` until somebody mounts the Docker socket. Anything else is refused. Polled
+with GET while it works; the GET also answers before anybody starts, which is how the
+dialog knows whether to draw a button or the two commands.
 
 `/api/relics/update` and `/api/app/update` are two different words. The first re-reads the
 relic catalogue into the build you are running; the second asks whether there is a newer

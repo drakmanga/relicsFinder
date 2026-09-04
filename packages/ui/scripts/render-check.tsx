@@ -14,6 +14,7 @@ import {
   Button,
   Card,
   Chip,
+  CommandBlock,
   DetailPanel,
   Dialog,
   Divider,
@@ -371,6 +372,25 @@ const checks: Check[] = [
     expect: [],
   },
   {
+    name: "CommandBlock",
+    element: (
+      <CommandBlock
+        commands={["docker compose pull", "docker compose up -d"]}
+        label="two commands"
+      />
+    ),
+    // Both commands, and the newline between them: what is rendered is what
+    // somebody copies, and a block that lost a line would still look right.
+    expect: [
+      "rf-commands",
+      "docker compose pull\ndocker compose up -d",
+      // Focusable, because it scrolls: a keyboard cannot reach a command wider
+      // than the block otherwise, and only axe ever says so.
+      'tabindex="0"',
+      "rf-focus-ring",
+    ],
+  },
+  {
     name: "ProgressBar",
     element: <ProgressBar value={24} total={63} label="Downloading the update" />,
     // The value and the whole have to reach the attributes: a bar that renders
@@ -406,11 +426,16 @@ const checks: Check[] = [
       />
     ),
     // Both numbers spelled out, and the ending the dialog did not supply.
+    //
+    // The notes region carries its tabindex here because nothing else can catch
+    // it: it only scrolls on notes long enough to overflow, so axe sees the
+    // fault against a real release and never against a fixture.
     expect: [
       "rf-dialog-scrim",
       "Version 0.2.0 is out",
       "You have version 0.1.0.",
       "rf-update-notes",
+      'tabindex="0"',
       "Skip this version",
       "See the release",
     ],

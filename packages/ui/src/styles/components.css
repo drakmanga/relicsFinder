@@ -1025,6 +1025,34 @@
   margin-top: var(--rf-space-6);
 }
 
+/* ---------------------------------------------------------- CommandBlock - */
+/* A terminal-shaped block: darker than the surface it sits on, monospaced, and
+   able to scroll sideways on its own rather than widening the dialog. A command
+   is one line and must not be wrapped — a wrapped command copied by eye is a
+   command that does not run — so it overflows and scrolls instead. */
+.rf-commands {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rf-space-3);
+  width: 100%;
+}
+
+.rf-commands-text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: var(--rf-space-3);
+  overflow-x: auto;
+  background: var(--rf-surface-1);
+  border: var(--rf-hairline) solid var(--rf-border-subtle);
+  color: var(--rf-fg-primary);
+  font-family: var(--rf-font-mono);
+  white-space: pre;
+  /* Selecting the block is the fallback when there is no clipboard, so the
+     text has to behave like text even inside a dialog. */
+  user-select: text;
+}
+
 /* ----------------------------------------------------------- ProgressBar - */
 /* A native <progress>, which every engine draws differently and none of them
    the way this theme does, so the whole appearance is replaced. The three
