@@ -261,9 +261,23 @@ jobs:
           # /FORCECLOSEAPPLICATIONS, without which a silent setup closes nothing
           # and meets a jar this test is still holding open.
           $setup = Get-ChildItem .\build\windows\installer -Filter '*.exe' | Select-Object -First 1
-          Start-Process -Wait -FilePath $setup.FullName `
+          $run = Start-Process -PassThru -FilePath $setup.FullName `
             -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', `
                           '/FORCECLOSEAPPLICATIONS', '/RELAUNCH=yes', '/LOG=update-setup.log'
+
+          # -PassThru and WaitForExit rather than -Wait, and the difference is
+          # the whole reason this step once hung for twenty minutes in silence.
+          # -Wait waits for the process AND ITS DESCENDANTS, and the last thing
+          # this setup does is start the application and leave it running — so
+          # -Wait blocks forever on exactly the process the test is here to see
+          # come back. It only ever returned while the relaunch was broken.
+          if (-not $run.WaitForExit(300000)) {
+            $run.Kill()
+            Write-Host '--- setup log ---'
+            Get-Content 'update-setup.log' -ErrorAction SilentlyContinue | Select-Object -Last 60
+            throw 'The setup did not finish within five minutes'
+          }
+          Write-Host "The setup exited $($run.ExitCode)"
 
           # No /DIR was passed, so anything under $target is the previous
           # location being remembered rather than the default being used.
