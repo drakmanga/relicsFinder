@@ -4,6 +4,7 @@ import { Button, ExternalLinkIcon, UpdateNotice } from "relic-finder-ui";
 import { useAppUpdate } from "../api/queries";
 import { plainReleaseNotes } from "../lib/releaseNotes";
 import { rememberSkippedVersion, shouldAnnounce, skippedVersion } from "../lib/updateMemory";
+import { WindowsUpdateAction } from "./WindowsUpdateAction";
 
 /**
  * The topbar's update notice, wired to the endpoint that answers for it.
@@ -19,9 +20,17 @@ import { rememberSkippedVersion, shouldAnnounce, skippedVersion } from "../lib/u
  * A reader who is current sees no notice at all — not a green tick, which would
  * put a claim in the bar for the one state that needs no words.
  *
- * The ending is the release page. That is the whole ending this brief has: a
- * Windows install and a container install each replace it with a real button of
- * their own, and the slot is where those go.
+ * The ending depends on what this install can actually do. A Windows install
+ * updates itself in one click and gets the button that does it; everything else
+ * gets the release page, which is the honest ending when the application cannot
+ * finish the job itself.
+ *
+ * The Windows button is offered on the platform rather than on the presence of
+ * a setup, and the two come apart: a release whose installer build failed has
+ * a `windows` of null, and the button then refuses out loud with a sentence and
+ * a link. That is better than quietly showing the same link as every other
+ * platform, which tells a Windows user nothing about why their one click went
+ * missing.
  */
 export function AppUpdateNotice() {
   const update = useAppUpdate();
@@ -47,16 +56,20 @@ export function AppUpdateNotice() {
         setSkipped(latest);
       }}
       action={
-        status.releaseUrl && (
-          <Button
-            variant="primary"
-            icon={<ExternalLinkIcon />}
-            onClick={() =>
-              window.open(status.releaseUrl as string, "_blank", "noopener,noreferrer")
-            }
-          >
-            See the release
-          </Button>
+        status.platform === "windows" ? (
+          <WindowsUpdateAction releaseUrl={status.releaseUrl} />
+        ) : (
+          status.releaseUrl && (
+            <Button
+              variant="primary"
+              icon={<ExternalLinkIcon />}
+              onClick={() =>
+                window.open(status.releaseUrl as string, "_blank", "noopener,noreferrer")
+              }
+            >
+              See the release
+            </Button>
+          )
         )
       }
     />
