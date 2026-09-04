@@ -343,6 +343,35 @@ export interface MarketStatus {
   revision: number;
 }
 
+/**
+ * Whether a newer Relic Finder has been released.
+ *
+ * `known` is the field to read first. False means the backend could not reach
+ * GitHub, which offline is ordinary rather than a fault: everything below it is
+ * then null, and the right thing to render is nothing at all — not "you are up
+ * to date", which would be a claim nobody checked.
+ *
+ * `windows` and `docker` arrive on every answer whatever this install is,
+ * because they are what the two platform updates will hang off and a second
+ * call to fetch the other half would spend one of GitHub's sixty requests an
+ * hour on something this answer already had.
+ */
+export interface UpdateStatus {
+  current: string;
+  latest: string | null;
+  updateAvailable: boolean;
+  known: boolean;
+  releaseName: string | null;
+  /** Markdown, as GitHub holds it. `lib/releaseNotes` is what makes it readable. */
+  releaseNotes: string | null;
+  releaseUrl: string | null;
+  publishedAt: string | null;
+  platform: "windows" | "docker" | "unknown";
+  windows: { url: string; name: string; size: number; digest: string | null } | null;
+  docker: { reference: string; tag: string } | null;
+  checkedAt: string;
+}
+
 /** When the Ayatan offers were last read. Their own clock: they expire in five
  *  minutes, where a price may be hours old and still be the price. */
 export interface EndoStatus {

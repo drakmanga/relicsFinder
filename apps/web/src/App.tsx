@@ -11,6 +11,7 @@ import { FilterBar } from "./components/FilterBar";
 import { FilterSummary } from "./components/FilterSummary";
 import { ResultsPane } from "./components/ResultsPane";
 import { ItemInfoDialog } from "./components/ItemInfoDialog";
+import { AppUpdateNotice } from "./components/AppUpdateNotice";
 import { LastUpdated } from "./components/LastUpdated";
 import { PriceStatus } from "./components/PriceStatus";
 import { RelicInfoDialog } from "./components/RelicInfoDialog";
@@ -152,8 +153,19 @@ export function App() {
           {/* In the masthead rather than above the table, because it answers
               for every view including the three with no search band — and a
               reader looking for how old a number is looks up, once, in the
-              same place each time. */}
-          <LastUpdated endo={view === "endo"} />
+              same place each time.
+
+              The update notice joins it here for the same reason and not by
+              convenience: this end of the bar is where the eye goes for "how
+              current is what I am looking at", and the application being out
+              of date belongs beside the data being out of date. The pair is
+              wrapped because both used to be pushed right by a margin of their
+              own, and two of those is a gap between them rather than beside
+              them. */}
+          <div className="rf-topbar-end">
+            <AppUpdateNotice />
+            <LastUpdated endo={view === "endo"} />
+          </div>
         </div>
       </header>
 

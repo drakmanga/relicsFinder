@@ -10,6 +10,7 @@ import type {
   PrimeLifecycle,
   Relic,
   RelicPrice,
+  UpdateStatus,
   WireDropInfo,
   WireItemPrice,
   WireOwnedEntry,
@@ -215,6 +216,16 @@ export const api = {
   /** How much of the price cache is filled — the UI says so while it warms. */
   async marketStatus(signal?: AbortSignal): Promise<MarketStatus> {
     return await get<MarketStatus>("/market/status", signal);
+  },
+
+  /**
+   * Whether a newer release of the application exists.
+   *
+   * Answers 200 with `known: false` when the server could not reach GitHub, so
+   * an offline machine is not an error state here — see `UpdateStatus`.
+   */
+  async appUpdate(signal?: AbortSignal): Promise<UpdateStatus> {
+    return await get<UpdateStatus>("/app/update", signal);
   },
 
   /** The wishlist, as stored on the server. */

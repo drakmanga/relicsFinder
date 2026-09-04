@@ -32,6 +32,7 @@ export const keys = {
   marketStatus: ["market", "status"] as const,
   endoStatus: ["endo", "status"] as const,
   setLifecycle: ["sets", "lifecycle"] as const,
+  appUpdate: ["app", "update"] as const,
 };
 
 /**
@@ -256,6 +257,28 @@ export function useMarketStatus(enabled: boolean) {
     enabled,
     staleTime: 30_000,
     refetchInterval: enabled ? 60_000 : false,
+  });
+}
+
+/**
+ * Whether the application itself is out of date.
+ *
+ * Asked once a session and never polled. The server holds its own answer for an
+ * hour — GitHub's rate limit is per address and a Docker host behind NAT shares
+ * one with everybody — so a poll here would be a round trip to be told the same
+ * thing, and a release published while a tab is open is news that keeps until
+ * the next load.
+ *
+ * `retry: false` because the one failure worth expecting is no network, and
+ * three more attempts at it is three more waits before the page settles. The
+ * server already answers 200 with `known: false` rather than an error.
+ */
+export function useAppUpdate() {
+  return useQuery({
+    queryKey: keys.appUpdate,
+    queryFn: ({ signal }) => api.appUpdate(signal),
+    staleTime: Infinity,
+    retry: false,
   });
 }
 

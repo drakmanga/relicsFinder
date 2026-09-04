@@ -97,8 +97,18 @@ body {
 .rf-lastupdated {
   flex: none;
   margin-block: 0;
-  margin-inline-start: auto;
   white-space: nowrap;
+}
+
+/* The pair at the far end: the update notice and the freshness label. The
+   margin that pushes them there is on the group rather than on either one, so
+   the two sit together instead of being pushed apart by a margin each. */
+.rf-topbar-end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--rf-space-4);
+  margin-inline-start: auto;
 }
 
 /* Below --rf-bp-md (768px) the brand and the six tabs stop fitting on one
