@@ -37,11 +37,24 @@ class SemanticVersionTest {
         assertThat(SemanticVersion.parse("1.2.3.4")).isNull();
     }
 
-    /** The one comparison a string comparison gets backwards. */
+    /**
+     * The one comparison a string comparison gets backwards, on each of the
+     * three numbers.
+     *
+     * <p>All three, because a suite that only ever asks about single digits is
+     * green against an implementation that compares text — measured: the mutant
+     * that orders the major number as text survived on 2.0.0 against 1.99.99.
+     */
     @Test
     void ordersByNumberRatherThanByText() {
+        assertThat(SemanticVersion.isNewer("10.0.0", "9.9.9")).isTrue();
+        assertThat(SemanticVersion.isNewer("9.9.9", "10.0.0")).isFalse();
+
         assertThat(SemanticVersion.isNewer("0.10.0", "0.9.0")).isTrue();
         assertThat(SemanticVersion.isNewer("0.9.0", "0.10.0")).isFalse();
+
+        assertThat(SemanticVersion.isNewer("0.1.10", "0.1.9")).isTrue();
+        assertThat(SemanticVersion.isNewer("0.1.9", "0.1.10")).isFalse();
     }
 
     @Test

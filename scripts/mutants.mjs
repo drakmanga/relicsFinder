@@ -399,6 +399,38 @@ const MUTANTS = [
     from: '        line.kind === "relic" && line.itemName === itemName && line.refinement !== refinement,',
     to: '        line.kind === "relic" && line.itemName === itemName,',
   },
+  {
+    // A skip that silences every future release turns "not this one" into
+    // "never again", and the release that mattered goes with it.
+    name: "skipping one version silences every version after it",
+    file: "apps/web/src/lib/updateMemory.ts",
+    from: "  return latest !== skipped;",
+    to: "  return skipped === null;",
+  },
+  {
+    // The offline answer carries a null latest. Announcing it puts a notice on
+    // screen about a version nothing could read.
+    name: "the notice is announced when there is no release to announce",
+    file: "apps/web/src/lib/updateMemory.ts",
+    from: "  if (!latest) return false;",
+    to: "  if (latest === undefined) return false;",
+  },
+  {
+    // Storage that cannot be read must mean nothing was skipped. Reading it as
+    // a skip of the empty string silences whatever the notice was about.
+    name: "an empty stored version counts as a version that was skipped",
+    file: "apps/web/src/lib/updateMemory.ts",
+    from: '    return typeof version === "string" && version.length > 0 ? version : null;',
+    to: '    return typeof version === "string" ? version : null;',
+  },
+  {
+    // The one thing the tidy must never do: swallow a line because its shape
+    // was not one of the five it recognises.
+    name: "a list marker takes the line with it instead of becoming a bullet",
+    file: "apps/web/src/lib/releaseNotes.ts",
+    from: '    .replace(BULLET, "• ")',
+    to: '    .replace(BULLET, "")',
+  },
 ];
 
 let killed = 0;

@@ -23,7 +23,7 @@ const ONLY_SERVICE_TESTS =
   "RelicMarketRevisionTest," +
   "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
   "DucatServiceIndexTest,DucatServiceDatesTest,PrimeLifecycleServiceTest," +
-  "OwnedServiceMigrationTest" +
+  "OwnedServiceMigrationTest,SemanticVersionTest,InstallPlatformTest" +
   " -DfailIfNoTests=false";
 
 const MUTANTS = [
@@ -357,6 +357,39 @@ const MUTANTS = [
     file: `${SERVICE}/RelicMarketService.java`,
     from: "        if (cached == null || cached.history().isEmpty()) return null;",
     to: "        if (cached == null || cached.history().isEmpty()) return 0;",
+  },
+  {
+    // The one comparison a string comparison gets backwards, and the release
+    // nobody would then be told about.
+    name: "versions are ordered as text, so 0.10.0 comes before 0.9.0",
+    file: `${SERVICE}/SemanticVersion.java`,
+    from: "        int byNumbers = Integer.compare(major, other.major);",
+    to: "        int byNumbers = String.valueOf(major).compareTo(String.valueOf(other.major));",
+  },
+  {
+    // A release and its own pre-release are not the same version. Treating
+    // them as equal leaves a working copy never told about the release it is
+    // working towards.
+    name: "a release ranks equal to its own pre-release",
+    file: `${SERVICE}/SemanticVersion.java`,
+    from: "        if (preRelease == null && other.preRelease == null) return 0;\n        if (preRelease == null) return 1;",
+    to: "        if (preRelease == null) return 0;",
+  },
+  {
+    // Same version, no update. Off by one here is a notice that never goes
+    // away, on every install, for as long as it takes somebody to notice.
+    name: "the version already running counts as an update",
+    from: "        return newer.compareTo(running) > 0;",
+    to: "        return newer.compareTo(running) >= 0;",
+    file: `${SERVICE}/SemanticVersion.java`,
+  },
+  {
+    // There is no desktop installer for anything but Windows, so a desktop
+    // launch elsewhere must not be offered a Windows setup.
+    name: "the desktop flag is trusted without asking which operating system",
+    file: `${SERVICE}/InstallPlatform.java`,
+    from: '        if (desktop && osName.toLowerCase(Locale.ROOT).startsWith("windows")) return WINDOWS;',
+    to: "        if (desktop) return WINDOWS;",
   },
 ];
 
