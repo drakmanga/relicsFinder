@@ -1185,27 +1185,28 @@ body {
   flex: 1 1 var(--rf-measure);
 }
 
-/* The standing note, between the lead and the cards. Held to the reading
-   measure rather than to the pane: it is running prose, and the pane is as wide
-   as the dense table under it. Two measures and the gutter between them, so the
-   block can hold two columns of text and never a third — see
-   `.rf-primer-cols`.
+/* The standing note, between the lead and the cards, and as wide as the pane
+   like everything else in this view. It used to be capped at two reading
+   measures plus the primer's own inset, which made it the one element with a
+   short right edge — at 1530px of pane, 230px of dead strip under the controls,
+   which reads as a block that failed to render rather than as one that chose to
+   be narrow.
 
-   The font size is set here rather than left to inherit because `--rf-measure`
-   is 68ch: a cap written in ch means the width of the text it caps only if the
-   two are the same size, and the note is small print at every callsite.
+   The cap is gone and the measure it protected is not, because the measure is
+   not this box's to keep: `.rf-primer-body` caps the paragraphs in their own
+   type, so the prose stops at one measure however wide its track gets. What the
+   extra width reaches instead is `.rf-primer-cols`, which spends it on the two
+   tracks, and the glossary in the second one, which is a definition list and
+   loses nothing by filling the line. auto-fit collapses the tracks it has no
+   items for, so a pane wide enough for three never lays the prose across a
+   third of it — the 135-character line that cap was written against came from
+   the grid being 34px short of a second track, not from the box being wide.
 
-   The inset is part of the sum because the cap applies to the border box and
-   the columns are laid out inside it: `.rf-primer` spends --rf-space-4 either
-   side plus its frame's hairline, and capping the note at two bare measures
-   left the grid 34px short of a second track — auto-fit answered by laying the
-   prose across the whole 1078px, which is 135 characters to a line. */
+   The font size stays: it is the size of any ink the content does not set for
+   itself, which on the primer is the `h3` the UA sizes in em off this. */
 .rf-ranked-note {
   margin-top: var(--rf-space-4);
   font-size: var(--rf-text-body-sm);
-  max-width: calc(
-    var(--rf-measure) * 2 + var(--rf-space-6) + 2 * (var(--rf-space-4) + var(--rf-hairline))
-  );
 }
 
 .rf-primer {
@@ -1250,8 +1251,8 @@ body {
    the words the list defines, so they are read in parallel rather than one
    after the other.
 
-   Measured on the tier list at 1920x1080, with the prose open: 200px of head
-   side by side against 387px stacked. The old note here said "every phone,
+   Measured on the tier list at 1920x1080, with the prose open: 209px of note
+   side by side against 298px stacked. The old note here said "every phone,
    every open detail panel and every 200% text zoom", and the middle case has
    been gone since the panel became a modal over the table — see `.rf-results`.
    What is left is the phone and the reader who raised their font size, which is
@@ -1275,8 +1276,12 @@ body {
    The measure is capped here and not on the track, because the track is what
    the glossary beside it also stands in and a definition list is not running
    prose: it loses nothing by filling the line. Where only one column fits — a
-   phone, or 200% text zoom on a desktop, where the block is 1310px and one
-   measure is 1088 — an uncapped paragraph ran to 82 characters. */
+   phone, or 200% text zoom on a desktop, where the block is 1344px and one
+   measure is 1088 — an uncapped paragraph ran to 82 characters.
+
+   And this is the only cap left: `.rf-ranked-note` no longer holds the box to
+   two measures, so what stops a paragraph at one is this line and nothing
+   above it, however wide the track around it gets. */
 .rf-primer-body {
   display: flex;
   flex-direction: column;
@@ -1306,20 +1311,24 @@ body {
    The floor is a reading measure IN THIS LIST'S OWN TYPE. `--rf-measure` is
    68ch and ch resolves against the element it is used on, so 68ch of caption is
    about 420px where the same token beside the prose is 544 — the number that
-   decides this, and the reason it is not written as one. Measured at 1920x1080:
-   beside the open prose the list has 544px and stays one column, with the prose
-   folded it has 1112px and becomes two of 548, where every definition but
-   `Trend`'s fits on one line. Columns never overflow their container the way a
-   grid track floor does, so the `min(18rem, 100%)` this rule used to carry —
-   against a 246px box at 360px — has nothing left to guard.
+   decides this, and the reason it is not written as one. Measured at 1920x1080,
+   since `.rf-ranked-note` stopped capping the box: beside the open prose the
+   list has 667px and stays one column, and every definition now fits on a line
+   of its own — `Trend`'s is the longest at 579px. With the prose folded it has
+   1358px and becomes two columns of 671. Columns never overflow their container
+   the way a grid track floor does, so the `min(18rem, 100%)` this rule used to
+   carry — against a 246px box at 360px — has nothing left to guard.
 
    No rule above the list and no gap between its rows, and both of those are
    paid for. `--rf-fg-brand` on the term below is what separates one row from
    the next now, and the height it buys back is what the two new terms are
-   spent on: measured at 1920x1080 with the prose open, this block is 224px
+   spent on: measured at 1920x1080 with the prose open, this block was 224px
    against the 227px it was with seven terms, a hairline, 12px of padding and
-   4px between every row. Folded it is 140px against 177. The gap of
-   `.rf-primer-cols` still separates this from the prose where the two stack. */
+   4px between every row. Folded, 140px against 177. Both pairs were taken while
+   the note was capped at two measures; at the width the block has now the same
+   list is 151px open and 84px folded, which is the same trade made in a wider
+   column rather than a different trade. The gap of `.rf-primer-cols` still
+   separates this from the prose where the two stack. */
 .rf-primer-terms {
   display: block;
   columns: var(--rf-measure);
