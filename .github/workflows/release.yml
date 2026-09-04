@@ -15,6 +15,24 @@
 #   * the installer is run silently and the copy it installed is started, which
 #     on this runner finds the JDK setup-java put there and so exercises the
 #     configuration file rewriting instead.
+#
+# CUTTING A RELEASE, and there is one manual step and it is not the one there
+# used to be:
+#
+#   1. bump <revision> in pom.xml and commit it — that line is where the version
+#      of Relic Finder is declared, and everything else reads it;
+#   2. tag the commit v<the same three numbers> and push the tag.
+#
+# That is all. This workflow PUBLISHES the release rather than drafting it, and
+# nobody has to remember to promote anything afterwards. It used to draft, which
+# looked like the careful choice and was not: /releases/latest does not return a
+# draft, so the update check inside every installed copy went on reporting the
+# release before it, silently, for as long as the draft sat there. A release
+# nobody is told about is not a release.
+#
+# Publishing straight out is safe here because the release is only created on a
+# tag and only after both smoke tests above have passed — a build that cannot
+# start never reaches the step that publishes it.
 
 name: Windows installer
 
@@ -67,6 +85,9 @@ jobs:
         id: version
         shell: pwsh
         run: |
+          $pom = [xml] (Get-Content pom.xml -Raw)
+          $declared = $pom.project.properties.revision -replace '-SNAPSHOT$', ''
+
           $ref = "${{ github.ref }}"
           if ($ref -like "refs/tags/v*") {
             $version = $ref -replace "^refs/tags/v", ""
@@ -78,8 +99,18 @@ jobs:
           if ($version -notmatch '^\d+\.\d+\.\d+$') {
             throw "Version '$version' is not three numbers, which is all jpackage accepts."
           }
+
+          # The tag does not get to say something the repository does not. A tag
+          # and a pom that disagree produce an installer stamped with one number
+          # and a jar reporting another, which is the exact fault the single
+          # <revision> exists to remove — and it would only surface months later,
+          # as an update notice that never goes away.
+          if ($ref -like "refs/tags/v*" -and $version -ne $declared) {
+            throw "Tag v$version does not match <revision> $declared in pom.xml. Bump the pom, commit, then tag."
+          }
+
           "version=$version" >> $env:GITHUB_OUTPUT
-          Write-Host "Building $version"
+          Write-Host "Building $version (pom declares $declared)"
 
       # Pinned rather than taken from the runner image: the version that image
       # happens to carry has changed under us before, and the script needs 6.3
@@ -219,10 +250,13 @@ jobs:
           path: build\windows\installer\*.exe
           if-no-files-found: error
 
-      - name: Attach it to the release
+      # Published, not drafted. /releases/latest skips a draft, so a drafted
+      # release is invisible to the update check in every installed copy — see
+      # the note at the top of this file.
+      - name: Publish the release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
           files: build\windows\installer\*.exe
-          draft: true
+          draft: false
           generate_release_notes: true

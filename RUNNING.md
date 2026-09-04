@@ -107,17 +107,36 @@ page in the default browser.
 
 ### Cutting a release
 
-Tag it. `.github/workflows/release.yml` runs on `windows-latest`, builds the
-installer, smoke tests it twice and attaches it to a **draft** release, which is
-yours to review and publish.
+Two steps, and the first one is the one people forget.
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+# 1. Bump the version where it is declared, and commit it.
+#    <revision> in pom.xml is the only place Relic Finder says which version it
+#    is: the jar takes it from there, installer\windows\build.ps1 reads it from
+#    there, and the running application reports it through /api/app/update.
+$EDITOR pom.xml          # <revision>0.2.0-SNAPSHOT</revision>
+git commit -am "Release 0.2.0"
+
+# 2. Tag the same three numbers and push the tag.
+git tag v0.2.0
+git push origin main v0.2.0
 ```
 
+`.github/workflows/release.yml` runs on `windows-latest`, refuses a tag whose
+three numbers are not the three in the pom, builds the installer, smoke tests it
+twice and **publishes** the release.
+
+Published rather than drafted, and that is deliberate: `/releases/latest` does
+not return a draft, so every installed copy's update check would go on reporting
+the release before it for as long as the draft sat there. Publishing straight out
+is safe because the release is only created on a tag and only after both smoke
+tests have passed — a build that cannot start never reaches the step that
+publishes it. If you want to look before anybody else does, tag from a branch and
+do not push it to `main`.
+
 The version has to be three numbers — that is all Windows records, and jpackage
-refuses anything else. To get an installer without cutting a release, run the
+refuses anything else; the `-SNAPSHOT` suffix in the pom is dropped by everything
+that needs the bare three. To get an installer without cutting a release, run the
 workflow by hand from the Actions tab; it uploads the same file as an artifact.
 
 ### Building one by hand
@@ -127,8 +146,12 @@ and **Inno Setup 6.3 or later**. It cannot be built from Linux: jpackage bundles
 a runtime for the machine it runs on, and Inno Setup is a Windows program.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File installer\windows\build.ps1 -Version 0.1.0
+powershell -ExecutionPolicy Bypass -File installer\windows\build.ps1
 ```
+
+`-Version` is optional and defaults to the `<revision>` in `pom.xml` with the
+`-SNAPSHOT` dropped. Pass it only to build an installer stamped with something
+the repository does not declare.
 
 Everything lands in `build\windows\`; the installer itself in
 `build\windows\installer\`. `-SkipBuild` reuses the frontend and the jar already
