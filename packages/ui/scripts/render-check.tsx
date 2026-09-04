@@ -382,7 +382,7 @@ const checks: Check[] = [
     // Closed: the notice is a button in the topbar until somebody opens it, so
     // what must render here is the button and the whole version sentence — the
     // one thing a reader who has never thought about versions needs.
-    expect: ["rf-update-notice", "Version 0.2.0 is out", "rf-hit-block"],
+    expect: ["rf-update-notice", "Version 0.2.0 is out", "rf-focus-ring"],
   },
   {
     name: "UpdateDialog",

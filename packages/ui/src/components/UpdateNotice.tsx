@@ -113,7 +113,7 @@ export function UpdateNotice({ className, ...versions }: UpdateNoticeProps) {
     <>
       <button
         type="button"
-        className={cx("rf-update-notice", "rf-focus-ring", "rf-hit-block", className)}
+        className={cx("rf-update-notice", "rf-focus-ring", className)}
         onClick={() => setOpen(true)}
       >
         Version {versions.latestVersion} is out

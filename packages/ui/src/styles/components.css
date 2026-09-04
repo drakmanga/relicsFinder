@@ -970,6 +970,13 @@
 }
 
 /* ---------------------------------------------------------------- Dialog - */
+/* `safe center` rather than `center`, with the scrim scrolling. Plain centring
+   is what a dialog taller than the window overflows off BOTH ends of: the top
+   half goes above the viewport and no amount of scrolling reaches it, so the
+   panel's own title becomes unreachable. `safe` is the keyword for exactly
+   this — centred while it fits, aligned to the start once it does not — and the
+   scroll is what makes the rest of it reachable. Found at 200% zoom, where the
+   update dialog is 952px tall in a 900px window. */
 .rf-dialog-scrim {
   position: fixed;
   inset: 0;
@@ -977,8 +984,9 @@
   background: var(--rf-scrim);
   backdrop-filter: blur(2px);
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
+  overflow-y: auto;
   padding: var(--rf-space-6);
   animation: rf-rise var(--rf-dur-base) var(--rf-ease-enter) both;
 }
@@ -1017,12 +1025,19 @@
    instead of it: both answer "how current is this", one about the numbers and
    one about the application, and neither is the thing you came to read.
 
-   The 44px of rule 7 comes from `rf-hit-block` the way the masthead gets it —
-   12px of transparent border in a 56px bar, handed back as margin so nothing
-   in the row moves. `border: 0` here is what that class is doubled to beat. */
+   Rule 7's 44px comes from the box rather than from `rf-hit-block`, unlike the
+   masthead beside it. That class grows a control by a fixed transparent border,
+   which lands where the ink happens to land: caption text in a 12px border
+   measured 43, half a pixel short of the rule with no token able to close the
+   gap. The bar is 56px and centres what it holds, so asking for the minimum
+   outright moves nothing and says what it means. */
 .rf-update-notice {
   flex: none;
-  --rf-hit-grow: var(--rf-space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--rf-touch-target);
+  min-width: var(--rf-touch-target);
   padding: 0;
   border: 0;
   background: none;
