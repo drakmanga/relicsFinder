@@ -38,6 +38,8 @@ import {
   Tabs,
   TierChip,
   Toast,
+  UpdateDialog,
+  UpdateNotice,
   ToastRegion,
   Tooltip,
   Unlisted,
@@ -366,6 +368,44 @@ const checks: Check[] = [
       </Dialog>
     ),
     expect: [],
+  },
+  {
+    name: "UpdateNotice",
+    element: (
+      <UpdateNotice
+        latestVersion="0.2.0"
+        currentVersion="0.1.0"
+        notes={"What changed\n- a thing"}
+        onSkip={() => {}}
+      />
+    ),
+    // Closed: the notice is a button in the topbar until somebody opens it, so
+    // what must render here is the button and the whole version sentence — the
+    // one thing a reader who has never thought about versions needs.
+    expect: ["rf-update-notice", "Version 0.2.0 is out", "rf-hit-block"],
+  },
+  {
+    name: "UpdateDialog",
+    element: (
+      <UpdateDialog
+        open
+        onClose={() => {}}
+        latestVersion="0.2.0"
+        currentVersion="0.1.0"
+        notes={"What changed\n- a thing"}
+        action={<Button variant="primary">See the release</Button>}
+        onSkip={() => {}}
+      />
+    ),
+    // Both numbers spelled out, and the ending the dialog did not supply.
+    expect: [
+      "rf-dialog-scrim",
+      "Version 0.2.0 is out",
+      "You have version 0.1.0.",
+      "rf-update-notes",
+      "Skip this version",
+      "See the release",
+    ],
   },
   {
     name: "Modal",

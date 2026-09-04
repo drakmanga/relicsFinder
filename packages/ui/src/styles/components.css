@@ -1012,6 +1012,43 @@
   margin-top: var(--rf-space-6);
 }
 
+/* ---------------------------------------------------------- UpdateNotice - */
+/* Gold and small, because it sits beside the freshness label rather than
+   instead of it: both answer "how current is this", one about the numbers and
+   one about the application, and neither is the thing you came to read.
+
+   The 44px of rule 7 comes from `rf-hit-block` the way the masthead gets it —
+   12px of transparent border in a 56px bar, handed back as margin so nothing
+   in the row moves. `border: 0` here is what that class is doubled to beat. */
+.rf-update-notice {
+  flex: none;
+  --rf-hit-grow: var(--rf-space-3);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--rf-text-caption);
+  color: var(--rf-fg-brand);
+  white-space: nowrap;
+}
+
+.rf-update-notice:hover {
+  color: var(--rf-gold-200);
+}
+
+/* Release notes are as long as the release was, so they scroll inside the
+   dialog rather than growing it past the bottom of the screen. `pre-wrap`
+   because the text arrives with the line breaks somebody wrote it with, and
+   collapsing them turns a list of changes into a paragraph. */
+.rf-update-notes {
+  margin-top: var(--rf-space-2);
+  max-height: 14rem;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: var(--rf-fg-secondary);
+}
+
 /* ----------------------------------------------------------------- Modal - */
 /* The scrim of a Dialog with none of its chrome: what sits on top brings its
    own frame. Same z-order and same entrance, so the two read as one surface

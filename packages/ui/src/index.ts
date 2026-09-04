@@ -66,6 +66,9 @@ export type { DialogProps } from "./components/Dialog";
 export { Modal } from "./components/Modal";
 export type { ModalProps } from "./components/Modal";
 
+export { UpdateNotice, UpdateDialog } from "./components/UpdateNotice";
+export type { UpdateNoticeProps, UpdateDialogProps } from "./components/UpdateNotice";
+
 export { Toast, ToastRegion } from "./components/Toast";
 export type { ToastProps, ToastRegionProps, ToastTone } from "./components/Toast";
 
