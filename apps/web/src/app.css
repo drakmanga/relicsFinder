@@ -1308,16 +1308,41 @@ body {
    to nine in the same change, and a `grid-auto-flow: column` with a row count
    would have had to be re-derived for it.
 
-   The floor is a reading measure IN THIS LIST'S OWN TYPE. `--rf-measure` is
-   68ch and ch resolves against the element it is used on, so 68ch of caption is
-   about 420px where the same token beside the prose is 544 — the number that
-   decides this, and the reason it is not written as one. Measured at 1920x1080,
-   since `.rf-ranked-note` stopped capping the box: beside the open prose the
-   list has 667px and stays one column, and every definition now fits on a line
-   of its own — `Trend`'s is the longest at 579px. With the prose folded it has
-   1358px and becomes two columns of 671. Columns never overflow their container
-   the way a grid track floor does, so the `min(18rem, 100%)` this rule used to
-   carry — against a 246px box at 360px — has nothing left to guard.
+   The floor is a whole reading measure because a row of this list is a term
+   and its definition on ONE line, and the widest of them, `Trend`, is 620px in
+   chromium and 624 in firefox. A floor is a minimum rather than a promise —
+   68ch down here is 544 in chromium and 514.5 in firefox, under both of those —
+   but it is what decides how many columns a width is cut into, and the widths
+   it produces here are the ones that hold a row. Measured at 1920x1080 and the
+   two engines agree: beside the open prose the list has 667px and stays one
+   column; with the prose folded it has 1358 and becomes two columns of 671.
+   Every definition is on a line of its own in both.
+
+   A token rather than the 544 it currently computes to, and that is the part a
+   literal would lose: with the prose folded at 200% text the block is 1310px,
+   where `var(--rf-measure)` — 1020 in chromium, 1029 in firefox, at 24px type —
+   keeps it one column and a 544px literal cuts it into two columns of 647 with
+   24px type, in both engines. The floor has to grow with the reader's font size
+   for the same reason the block it is in does.
+
+   NOT because the token means something different in caption type, which is
+   what this comment used to say — "about 420px" of caption against 544 beside
+   the prose. `ch` does resolve against this element; the two sizes just do not
+   differ the way that argued. Inter's digit advance is 0.625em and chromium
+   quantises it to a whole pixel, so 12px and 13px both land on 8px per `ch` and
+   68ch is 544 at each. Firefox does not round — 514.5 against 557.6 — so the
+   distinction buys nothing in one of the two engines the reflow gate runs, and
+   43px in the other.
+
+   `--rf-measure-caption` is the token that name suggests and it was measured
+   here rather than assumed: 40ch of caption gives two columns of 326 beside the
+   open prose and four of 328 folded, and six of the nine definitions wrap,
+   `Trend`'s onto three lines. A glossary read by spotting a word is not helped
+   by more columns of less line.
+
+   Columns never overflow their container the way a grid track floor does, so
+   the `min(18rem, 100%)` this rule used to carry — against a 246px box at 360px
+   — has nothing left to guard.
 
    No rule above the list and no gap between its rows, and both of those are
    paid for. `--rf-fg-brand` on the term below is what separates one row from
