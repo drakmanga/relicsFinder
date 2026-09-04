@@ -24,7 +24,8 @@ const ONLY_SERVICE_TESTS =
   "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
   "DucatServiceIndexTest,DucatServiceDatesTest,PrimeLifecycleServiceTest," +
   "OwnedServiceMigrationTest,SemanticVersionTest,InstallPlatformTest," +
-  "ReleaseDigestTest,WindowsUpdateInstallerTest" +
+  "ReleaseDigestTest,WindowsUpdateInstallerTest," +
+  "DockerSocketTest,DockerUpdateInstallerTest" +
   " -DfailIfNoTests=false";
 
 const MUTANTS = [
@@ -441,6 +442,81 @@ const MUTANTS = [
     file: `${SERVICE}/WindowsUpdateInstaller.java`,
     from: "        if (current.stage().running()) return current;",
     to: "        if (current.stage() == null) return current;",
+  },
+  {
+    // The one that costs somebody their data. Compose resolves ./data against
+    // the directory it runs from and the daemon reads that path on the host, so
+    // a helper running anywhere but the project's own path asks for a directory
+    // nobody has — and the containers come back healthy and empty.
+    name: "the project is mounted somewhere tidy instead of where it lives",
+    file: `${SERVICE}/DockerUpdateInstaller.java`,
+    from: '        binds.add(projectDirectory + ":" + projectDirectory);',
+    to: '        binds.add(projectDirectory + ":/project");',
+  },
+  {
+    // Same fault from the other side: the mount is right and the command is run
+    // from the wrong place.
+    name: "compose is run from somewhere other than the project directory",
+    file: `${SERVICE}/DockerUpdateInstaller.java`,
+    from: '        definition.put("WorkingDir", projectDirectory);',
+    to: '        definition.put("WorkingDir", "/");',
+  },
+  {
+    // The switch is the whole opt-in. Reading it as on by default hands the
+    // Docker socket to every install that never asked for it.
+    name: "the update button is on unless something turns it off",
+    file: `${SERVICE}/DockerUpdateInstaller.java`,
+    from: '            @Value("${relics.docker.update:false}") boolean switchedOn,',
+    to: '            @Value("${relics.docker.update:true}") boolean switchedOn,',
+  },
+  {
+    // The override that mounts the socket has to be in the list compose is
+    // re-run with, or the first update recreates the backend without it and
+    // switches the button off as a side effect of being used.
+    name: "only the first compose file survives into the recreate",
+    file: `${SERVICE}/DockerUpdateInstaller.java`,
+    from: '        for (String file : composeFiles) {\n            files.append(" -f ").append(file);\n        }',
+    to: '        files.append(" -f ").append(composeFiles.get(0));',
+  },
+  {
+    // Recreating on the images already here is not an update, and it exits zero
+    // while looking exactly like one that worked.
+    name: "the containers are recreated without pulling first",
+    file: `${SERVICE}/DockerUpdateInstaller.java`,
+    from: '        return compose + " pull && " + compose + " up -d";',
+    to: '        return compose + " up -d";',
+  },
+  {
+    // A file name from the environment is pasted into a shell command. The
+    // pattern is the only thing between that and a second command.
+    name: "a compose file name is taken as given",
+    file: `${SERVICE}/DockerUpdateInstaller.java`,
+    from: "            if (COMPOSE_FILE.matcher(file).matches()) {",
+    to: "            if (true) {",
+  },
+  {
+    // The declined ending has to be knowable before anybody clicks: a screen
+    // that only learns it on the POST shows a button that fails when pressed.
+    name: "an install that declined the socket looks idle until it is asked",
+    file: `${SERVICE}/DockerUpdateInstaller.java`,
+    from: "        return switchedOn() ? current : UpdateInstall.failed(Problem.SELF_UPDATE_OFF);",
+    to: "        return current;",
+  },
+  {
+    // Connection: close is what frames the response, since the daemon has no
+    // other way of saying the body ended.
+    name: "the request stops asking the daemon to close the connection",
+    file: `${SERVICE}/DockerSocket.java`,
+    from: '                .append("Connection: close\\r\\n");',
+    to: '                .append("Connection: keep-alive\\r\\n");',
+  },
+  {
+    // Without de-chunking, the hex lengths sit interleaved through the JSON of
+    // a pull and it stops parsing.
+    name: "a chunked body is handed back with its framing still in it",
+    file: `${SERVICE}/DockerSocket.java`,
+    from: "        return new Response(status, isChunked(lines) ? dechunk(body) : text(body));",
+    to: "        return new Response(status, text(body));",
   },
 ];
 

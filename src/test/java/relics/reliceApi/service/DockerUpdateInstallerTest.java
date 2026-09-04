@@ -3,6 +3,8 @@ package relics.reliceApi.service;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import relics.reliceApi.model.UpdateInstall;
 import relics.reliceApi.model.UpdateInstall.Problem;
 import relics.reliceApi.model.UpdateInstall.Stage;
@@ -10,6 +12,8 @@ import relics.reliceApi.model.UpdateStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Parameter;
 import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
 import java.nio.ByteBuffer;
@@ -26,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -126,6 +131,35 @@ class DockerUpdateInstallerTest {
 
         assertEquals(Problem.NO_UPDATE, installer.start().problem());
         assertTrue(requests.isEmpty());
+    }
+
+    /**
+     * The opt-in itself, which nothing else here can check.
+     *
+     * <p>Every other test hands the flag in through the constructor Spring does
+     * not use, so all of them pass whichever way the default points. What is
+     * being protected is the default — the whole security design of the
+     * container update is that the socket is never mounted and never wanted
+     * unless somebody said so — and the only place it is written down is the
+     * annotation. So the annotation is what is read.
+     */
+    @Test
+    void theUpdateButtonIsOffUnlessSomebodyTurnsItOn() throws Exception {
+        Constructor<?> springs = null;
+        for (Constructor<?> candidate : DockerUpdateInstaller.class.getDeclaredConstructors()) {
+            if (candidate.isAnnotationPresent(Autowired.class)) springs = candidate;
+        }
+        assertNotNull(springs, "no constructor is the one Spring uses");
+
+        Value flag = null;
+        for (Parameter parameter : springs.getParameters()) {
+            Value value = parameter.getAnnotation(Value.class);
+            if (value != null && value.value().contains("relics.docker.update")) flag = value;
+        }
+        assertNotNull(flag, "nothing reads relics.docker.update");
+
+        assertEquals("${relics.docker.update:false}", flag.value(),
+                "an install that never asked for the Docker socket must not get the button");
     }
 
     @Test
