@@ -1013,8 +1013,13 @@
   margin-top: var(--rf-space-5);
 }
 
+/* Wraps, because a footer is not always three buttons. An ending that brings a
+   progress bar and a paragraph with it needs the dialog's width to read at,
+   and squeezed into what is left of a button row it gets a five-word column.
+   Nothing already here moves: buttons fit on one line and stay on it. */
 .rf-dialog-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--rf-space-3);
   margin-top: var(--rf-space-6);

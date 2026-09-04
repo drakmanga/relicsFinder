@@ -2675,11 +2675,12 @@ body {
 /* ------------------------------------------------- the Windows update flow - */
 /* The dialog footer is a right-aligned row of buttons, which is right for a
    button and wrong for what replaces it: a bar, a sentence and sometimes a way
-   out. `flex: 1` gives that block the whole row so the sentence wraps at the
-   dialog's width instead of at a button's, and `text-align: start` undoes the
-   row's pull to the right for text that is read rather than clicked. */
+   out. `flex-basis: 100%` takes a row of its own — the footer wraps for exactly
+   this — so the sentence breaks at the dialog's width instead of at a button's,
+   and `text-align: start` undoes the row's pull to the right for text that is
+   read rather than clicked. */
 .rf-update-install {
-  flex: 1;
+  flex: 1 0 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
