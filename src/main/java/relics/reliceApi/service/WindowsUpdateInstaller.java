@@ -67,9 +67,18 @@ public class WindowsUpdateInstaller implements UpdateInstaller {
      *
      * <p>/RELAUNCH=yes is read by the .iss and by nothing else. It is what
      * starts the newer copy once the files are in place.
+     *
+     * <p>/FORCECLOSEAPPLICATIONS is what makes the ordering below stop being a
+     * race. {@code CloseApplications=yes} in the .iss only takes effect on its
+     * own when a wizard is on screen to ask; a silent run closes nothing unless
+     * this says so, and then the setup meets a jar the JVM still has open.
+     * This process does close itself a moment after starting the setup, so most
+     * of the time it would be gone in any case — but "most of the time" is the
+     * whole problem, and the failure is a half-written install.
      */
-    private static final String[] SETUP_ARGUMENTS =
-            {"/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RELAUNCH=yes"};
+    private static final String[] SETUP_ARGUMENTS = {
+        "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/FORCECLOSEAPPLICATIONS", "/RELAUNCH=yes"
+    };
 
     /**
      * How long the setup is given to get going before this process ends.

@@ -256,9 +256,14 @@ jobs:
           if (-not (Test-Path "$home_\port")) { throw 'The installed copy did not start before the update' }
           Remove-Item "$home_\port" -Force
 
+          # The same switches WindowsUpdateInstaller passes, because the point
+          # is to exercise what the application actually runs — including
+          # /FORCECLOSEAPPLICATIONS, without which a silent setup closes nothing
+          # and meets a jar this test is still holding open.
           $setup = Get-ChildItem .\build\windows\installer -Filter '*.exe' | Select-Object -First 1
           Start-Process -Wait -FilePath $setup.FullName `
-            -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/RELAUNCH=yes'
+            -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', `
+                          '/FORCECLOSEAPPLICATIONS', '/RELAUNCH=yes', '/LOG=update-setup.log'
 
           # No /DIR was passed, so anything under $target is the previous
           # location being remembered rather than the default being used.
@@ -275,8 +280,16 @@ jobs:
             Start-Sleep -Seconds 2
           }
           if (-not $port) {
-            Write-Host '--- log ---'
+            # Both logs, because the two failures look identical from here and
+            # are fixed in different files: the setup's says whether it closed
+            # the running copy and reached the Run entry at all, and the
+            # application's says whether the copy it started then died.
+            Write-Host '--- setup log ---'
+            Get-Content 'update-setup.log' -ErrorAction SilentlyContinue | Select-Object -Last 60
+            Write-Host '--- application log ---'
             Get-Content "$home_\logs\relic-finder.log" -ErrorAction SilentlyContinue
+            Write-Host '--- previous application log ---'
+            Get-Content "$home_\logs\relic-finder.log.1" -ErrorAction SilentlyContinue
             throw 'The setup did not bring the application back with /RELAUNCH=yes'
           }
 
