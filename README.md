@@ -132,6 +132,11 @@ The images come from GitHub's registry, built and smoke tested by every release.
 no Node, no compiler, no clone. Only `./data` is shared with the host, and it is where the
 wishlist and the catalogue live.
 
+> **Until the first release after this was written, there is nothing there to pull.** The
+> workflow that publishes the images runs on a tag, so the registry has them from the next
+> release onwards. Before then, build them yourself with the override under
+> [From the sources](#from-the-sources).
+
 **Updating** is two commands, and the dialog inside the application shows you both:
 
 ```bash
