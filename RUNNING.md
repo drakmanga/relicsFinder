@@ -126,6 +126,13 @@ git push origin main v0.4.0
 three numbers are not the three in the pom, builds the installer, smoke tests it
 twice and **publishes** the release.
 
+Everyone on Windows gets that release without being asked to do anything: their
+copy sees it, downloads the setup, checks it against the sha256 GitHub publishes
+beside the asset, and runs it. Which means a release is now something people
+actually end up on, and a broken one reaches them just as reliably — the smoke
+tests are the gate that stops it, and they are the reason the workflow may
+publish without a human looking.
+
 Published rather than drafted, and that is deliberate: `/releases/latest` does
 not return a draft, so every installed copy's update check would go on reporting
 the release before it for as long as the draft sat there. Publishing straight out

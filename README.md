@@ -84,6 +84,12 @@ its own Java 25, and if the machine already has one it offers to use that instea
 the copy. It installs into your own user folder, so Windows does not even ask for
 administrator rights.
 
+**It updates itself.** When a newer version is out, the topbar says so; opening that says
+what changed and offers one button. The button downloads the new installer, checks it
+against the checksum the release publishes, and only then runs it — the application closes
+and opens again a version newer, with your wishlist untouched. Windows asks for nothing,
+because the install is in your own folder rather than in Program Files.
+
 Then **Relic Finder** is in the Start menu, like any other program:
 
 | What you do           | What happens                                                            |
@@ -218,6 +224,8 @@ PUT  /api/wishlist                           replaces it
 GET  /api/owned                              the parts you already have
 PUT  /api/owned                              replaces them
 GET  /api/app/update                         whether a newer release of the app exists
+POST /api/app/update/install                 download it, check it, run it (Windows only)
+GET  /api/app/update/install                 how far that has got
 ```
 
 Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
@@ -227,6 +235,12 @@ Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9
 even with no network — `known: false` and nothing else filled — because a machine that is
 offline is an ordinary state and not a server error. The answer is cached for an hour, so
 two calls in a row are one request outward.
+
+`/api/app/update/install` is the one that changes the machine. It is refused on anything
+but a Windows install, and refused on a release that publishes no sha256 for its setup —
+the file is verified against that checksum before it is run, never after, so a release
+that cannot be verified is one this will not download at all. Polled with GET while it
+works; the answer says which of downloading, checking and installing it is on.
 
 `/api/relics/update` and `/api/app/update` are two different words. The first re-reads the
 relic catalogue into the build you are running; the second asks whether there is a newer
