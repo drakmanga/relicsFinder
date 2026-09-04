@@ -126,9 +126,19 @@ git push origin main v0.4.0
 three numbers are not the three in the pom, builds the installer, smoke tests it
 twice and **publishes** the release.
 
+`.github/workflows/images.yml` runs on the same tag, on Linux, and publishes the
+two container images: `relicsfinder-backend` and `relicsfinder-frontend` under
+`ghcr.io/<owner>`, tagged with the three numbers and with `latest`. It builds
+them, runs them together through the shipped compose file, asks for the API and
+the page, and pushes only then — a tag that cannot start is a tag that would
+break every Docker install that reaches it. Its own workflow, because a jpackage
+failure on a Windows runner has nothing to say about a Linux image and should
+not take it down.
+
 Everyone on Windows gets that release without being asked to do anything: their
 copy sees it, downloads the setup, checks it against the sha256 GitHub publishes
-beside the asset, and runs it. Which means a release is now something people
+beside the asset, and runs it. Every Docker install is two commands away from it,
+or one click if it was given the socket. Which means a release is now something people
 actually end up on, and a broken one reaches them just as reliably — the smoke
 tests are the gate that stops it, and they are the reason the workflow may
 publish without a human looking.
