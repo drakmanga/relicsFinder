@@ -268,6 +268,22 @@ public class WindowsUpdateInstaller {
      *
      * <p>The setup outlives its parent: it is a detached process, and nothing
      * here waits for it.
+     *
+     * <p><b>SmartScreen, and what is and is not known about it.</b> The setup
+     * is unsigned, and "Windows protected your PC" is what an unsigned setup
+     * gets when a person double clicks it in Explorer. That warning is driven
+     * by the Mark of the Web — the {@code Zone.Identifier} stream a browser
+     * attaches to a file it downloaded — and a file this process writes with an
+     * ordinary stream carries no such stream, so the reasoning says the warning
+     * does not fire here.
+     *
+     * <p>Reasoning is not a measurement, and this one has not been taken: it
+     * needs a real Windows machine, which nothing in this repository's toolchain
+     * is. Until it has, the claim above is a hypothesis and the task
+     * {@code smartscreen-on-a-launched-setup} is what closes it. If the warning
+     * does fire, an updater whose first screen is an unexplained warning is not
+     * the feature this was meant to be, and signing — 200-400 EUR a year — is
+     * the conversation that follows.
      */
     private static void runSetupAndStandAside(Path setup) throws IOException {
         new ProcessBuilder(concat(setup.toString(), SETUP_ARGUMENTS))

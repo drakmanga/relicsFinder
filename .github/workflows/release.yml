@@ -7,14 +7,20 @@
 # is exercised by nothing else, and a mistake in it is otherwise found by a user
 # rather than by CI.
 #
-# Two smoke tests, because there are two ways the installed application finds a
-# Java and they fail differently:
+# Three smoke tests. The first two are the two ways the installed application
+# finds a Java, which fail differently; the third is the update path, which is
+# how every user reaches a release now that the application installs one itself.
 #
 #   * the application image is started as it is, which uses the runtime jpackage
 #     bundled — the path a machine with no Java takes;
 #   * the installer is run silently and the copy it installed is started, which
 #     on this runner finds the JDK setup-java put there and so exercises the
-#     configuration file rewriting instead.
+#     configuration file rewriting instead;
+#   * the same setup is run again over that copy while it is running, with no
+#     /DIR and with /RELAUNCH=yes — the way the application runs it when the
+#     user clicks Update. A setup that stopped finding the previous install, or
+#     stopped bringing the application back, would otherwise be found by a user
+#     whose application vanished mid-update.
 #
 # CUTTING A RELEASE, and there is one manual step and it is not the one there
 # used to be:
@@ -31,8 +37,10 @@
 # nobody is told about is not a release.
 #
 # Publishing straight out is safe here because the release is only created on a
-# tag and only after both smoke tests above have passed — a build that cannot
-# start never reaches the step that publishes it.
+# tag and only after all three smoke tests above have passed — a build that
+# cannot start, or cannot be updated to, never reaches the step that publishes
+# it. That gate matters more than it used to: every Windows install now takes a
+# published release on its own, so nobody is left to notice a bad one first.
 
 name: Windows installer
 
@@ -221,6 +229,61 @@ jobs:
           if ($api.StatusCode -ne 200) { throw "The API answered $($api.StatusCode)" }
 
           Write-Host 'Installed copy: runs on the Java already on the machine.'
+          Stop-Process -Name RelicFinder -Force -ErrorAction SilentlyContinue
+
+      # The update path, which is the one a user takes from now on: the same
+      # setup run over the copy already installed, with no /DIR and with the
+      # switch the application passes. It proves three things nothing else
+      # does — that a setup finds the previous install by itself, that it
+      # replaces files the running application is holding open, and that
+      # /RELAUNCH=yes brings the application back.
+      - name: Smoke test — updating in place over a running copy
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $home_ = "$env:LOCALAPPDATA\RelicFinder"
+          $target = "$env:RUNNER_TEMP\RelicFinderInstalled"
+
+          Remove-Item "$home_\port" -Force -ErrorAction SilentlyContinue
+          Start-Process -FilePath "$target\RelicFinder.exe" -ArgumentList '--relics.desktop.browser=false'
+
+          # The setup has to find a copy holding its own jar open, which is the
+          # state every real update runs against.
+          foreach ($attempt in 1..90) {
+            if (Test-Path "$home_\port") { break }
+            Start-Sleep -Seconds 2
+          }
+          if (-not (Test-Path "$home_\port")) { throw 'The installed copy did not start before the update' }
+          Remove-Item "$home_\port" -Force
+
+          $setup = Get-ChildItem .\build\windows\installer -Filter '*.exe' | Select-Object -First 1
+          Start-Process -Wait -FilePath $setup.FullName `
+            -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/RELAUNCH=yes'
+
+          # No /DIR was passed, so anything under $target is the previous
+          # location being remembered rather than the default being used.
+          if (-not (Test-Path "$target\app\RelicFinder.cfg")) {
+            throw 'The update did not install over the previous location'
+          }
+
+          $port = $null
+          foreach ($attempt in 1..90) {
+            if (Test-Path "$home_\port") {
+              $port = (Get-Content "$home_\port" -Raw).Trim()
+              if ($port) { break }
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $port) {
+            Write-Host '--- log ---'
+            Get-Content "$home_\logs\relic-finder.log" -ErrorAction SilentlyContinue
+            throw 'The setup did not bring the application back with /RELAUNCH=yes'
+          }
+
+          $api = Invoke-WebRequest "http://127.0.0.1:$port/api/relics" -UseBasicParsing
+          if ($api.StatusCode -ne 200) { throw "The relaunched copy answered $($api.StatusCode)" }
+
+          Write-Host 'Update in place: replaced a running copy and brought it back.'
           Stop-Process -Name RelicFinder -Force -ErrorAction SilentlyContinue
 
       # The application writes its log into the user's AppData, which is outside

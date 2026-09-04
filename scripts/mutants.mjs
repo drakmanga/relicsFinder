@@ -431,6 +431,50 @@ const MUTANTS = [
     from: '    .replace(BULLET, "• ")',
     to: '    .replace(BULLET, "")',
   },
+  {
+    // The unit switches partway through a download, so a bar reading 900 KB
+    // jumps to 1 MB and back. Nobody would call it a bug; everybody would
+    // notice it.
+    name: "megabytes grows a scale and switches units mid-download",
+    file: "apps/web/src/lib/updateInstall.ts",
+    from: "  return `${Math.round(Math.max(bytes, 0) / BYTES_PER_MB)} MB`;",
+    to: "  return bytes < BYTES_PER_MB ? `${Math.round(bytes / 1000)} KB` : `${Math.round(bytes / BYTES_PER_MB)} MB`;",
+  },
+  {
+    // The sentence a user reads when the download did not verify. Dropping
+    // "nothing was run" leaves them believing something was installed, which is
+    // the one thing they must not conclude.
+    name: "the mismatch sentence stops saying that nothing was run",
+    file: "apps/web/src/lib/updateInstall.ts",
+    from: '      return "What downloaded is not the file the release published, so nothing was installed. Nothing was run and the download has been deleted. Try again, and if it happens twice, download the release yourself instead.";',
+    to: '      return "The update failed a checksum verification.";',
+  },
+  {
+    // The dialog is inside a Warframe companion. A reader who has never heard
+    // the word cannot act on a sentence built out of it.
+    name: "the failures go back to the vocabulary of a package manager",
+    file: "apps/web/src/lib/updateInstall.ts",
+    from: '      return "The download did not finish. That is usually the connection. Try again, or open the release page and download it yourself.";',
+    to: '      return "The payload transfer aborted before the digest could be computed.";',
+  },
+  {
+    // The poll stops the moment an install stops running. Reading the failed
+    // stage as still running leaves it asking a finished install how it is
+    // doing, twice a second, for as long as the page is open.
+    name: "a failed install is read as one still under way",
+    file: "apps/web/src/lib/updateInstall.ts",
+    from: '    install?.stage === "starting"',
+    to: '    install?.stage === "starting" ||\n    install?.stage === "failed"',
+  },
+  {
+    // The whole of what "starting" tells a user: the window is about to
+    // vanish and come back on its own. Without it, an application that closes
+    // itself reads as a crash.
+    name: "the last stage stops warning that the application will close",
+    file: "apps/web/src/lib/updateInstall.ts",
+    from: '      return "Installing. Relic Finder will close and open again on its own.";',
+    to: '      return "Installing.";',
+  },
 ];
 
 let killed = 0;
