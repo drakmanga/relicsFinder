@@ -158,6 +158,17 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 ; instead of the player's — is silent and permanent.
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchApp,{#AppName}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
+; The same launch, for the silent run the application starts on itself when the
+; user clicks Update. The entry above cannot serve both: postinstall makes it a
+; tick box on a page a silent run never shows, and skipifsilent then removes it
+; altogether — which is right for every other silent install and wrong for this
+; one, where the application closed itself a moment ago and has to come back.
+;
+; Guarded by a switch rather than by "silent", because a silent install started
+; by hand or by a deployment tool has no business starting a program on
+; somebody's desktop. Only the updater passes it.
+Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: RelaunchRequested
+
 [UninstallDelete]
 ; The launcher's configuration file is edited after installation, and the
 ; folder holds nothing else worth keeping. The user's lists are not here — they
@@ -529,6 +540,16 @@ end;
 function UseBundledRuntime: Boolean;
 begin
   Result := (SystemJavaHome = '') or (JavaPage.SelectedValueIndex = 1);
+end;
+
+{ Whether this run was started by the application updating itself.
+
+  /RELAUNCH=yes is passed by nothing else. The value is compared rather than
+  the switch merely being present, because Inno reads a missing /X as the empty
+  string and an empty string is not a request. }
+function RelaunchRequested: Boolean;
+begin
+  Result := CompareText(ExpandConstant('{param:RELAUNCH|no}'), 'yes') = 0;
 end;
 
 procedure InitializeWizard;
