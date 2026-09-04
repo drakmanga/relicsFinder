@@ -6,6 +6,8 @@
 ; What it does beyond copying files:
 ;
 ;   * refuses to install on anything older than Windows 10;
+;   * installs into the user's own folder and never asks for administrator
+;     rights, which is what lets the application update itself in one click;
 ;   * looks for a Java 25 already on the machine — in the registry, on PATH
 ;     and in the folders vendors install into — and, if it finds one, offers
 ;     to use it and leave the bundled runtime out of the installation;
@@ -43,13 +45,26 @@ AppPublisherURL={#AppUrl}
 AppSupportURL={#AppUrl}/issues
 AppUpdatesURL={#AppUrl}/releases
 
-; Installs for the current user by default, into their own AppData, which needs
-; no administrator rights and raises no prompt from Windows. The dialog still
-; offers the machine-wide install to anyone who wants it.
+; Installs for the current user, into their own AppData, and there is no second
+; option. Never elevates, and so never raises the blue prompt from Windows.
+;
+; The machine-wide install used to be offered here, and taking it away is what
+; makes an update one click: the application updates itself by running a newer
+; setup, and a setup that needs administrator rights turns that click into a
+; consent prompt on every single version, for a program one person runs on
+; their own desktop. An install nobody but its owner uses does not earn one.
+;
+; This costs nothing today and would cost a migration later: the only installs
+; that exist are the author's and one friend's, both replaceable in a minute.
+; Changing it back once there are strangers running it means leaving their copy
+; stranded in Program Files, where the updater cannot reach it.
+;
+; {localappdata}\Programs rather than {autopf}: the two resolve to the same
+; folder while PrivilegesRequired is lowest, and spelling it out means a later
+; change to that line cannot silently move every install into Program Files.
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
 
-DefaultDirName={autopf}\{#AppName}
+DefaultDirName={localappdata}\Programs\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\{#AppExe}
@@ -104,7 +119,7 @@ en.JavaUseSystem=Use the Java already installed (saves about %1 MB)
 en.JavaUseBundled=Install the included Java runtime (safest choice)
 en.CreateDesktopIcon=Create a &desktop icon
 en.LaunchApp=Open %1 now
-en.RemoveDataText=Your wishlist, the parts marked as owned and the cached prices are kept in:%n%n%1%n%nDelete them?%n%nChoose No to keep them for a later reinstallation. If %2 was installed for every user, only your own copy is affected.
+en.RemoveDataText=Your wishlist, the parts marked as owned and the cached prices are kept in:%n%n%1%n%nDelete them?%n%nChoose No to keep them for a later reinstallation. %2 is installed for you alone, so nobody else on this computer is affected either way.
 it.JavaCaptionFound=Java è già presente su questo computer
 it.JavaCaptionMissing=Java non è stato trovato, quindi verrà installato
 it.JavaHeader=%1 funziona con Java 25
@@ -114,7 +129,7 @@ it.JavaUseSystem=Usa il Java già installato (risparmia circa %1 MB)
 it.JavaUseBundled=Installa il runtime Java incluso (scelta più sicura)
 it.CreateDesktopIcon=Crea un'icona sul &desktop
 it.LaunchApp=Apri %1 adesso
-it.RemoveDataText=La wishlist, i pezzi segnati come posseduti e i prezzi in cache sono in:%n%n%1%n%nVuoi cancellarli?%n%nScegli No per conservarli in vista di una reinstallazione. Se %2 era installato per tutti gli utenti, viene toccata solo la tua copia.
+it.RemoveDataText=La wishlist, i pezzi segnati come posseduti e i prezzi in cache sono in:%n%n%1%n%nVuoi cancellarli?%n%nScegli No per conservarli in vista di una reinstallazione. %2 è installato solo per te, quindi in ogni caso non tocca nessun altro utente del computer.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -136,9 +151,11 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 [Run]
 ; nowait, because the launcher does not return: it is the application.
 ; postinstall leaves it as a tick box on the last page rather than something
-; that happens whether or not it was wanted. runasoriginaluser matters for the
-; machine-wide install: started elevated, the application would write its
-; wishlist into the administrator's AppData instead of the player's.
+; that happens whether or not it was wanted. runasoriginaluser is kept even
+; though this setup never elevates: it costs nothing and it is the line that
+; would otherwise have to be remembered if elevation ever came back, and the
+; failure it prevents — a wishlist written into the administrator's AppData
+; instead of the player's — is silent and permanent.
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchApp,{#AppName}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallDelete]
