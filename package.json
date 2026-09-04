@@ -1,6 +1,6 @@
 {
   "name": "relic-finder",
-  "version": "0.1.0",
+  "//": "No version field, here or in the two workspaces. The one version of Relic Finder is <revision> in pom.xml: the jar takes it from there, installer/windows/build.ps1 reads it from there, and the page asks the running backend for it through /api/app/update. These three files each used to declare 0.1.0 of their own, which agreed with the pom by luck and stopped agreeing the first time anyone bumped one. npm needs no version for a package nothing publishes.",
   "private": true,
   "description": "Relic Finder — Orokin design system, component library and web frontend",
   "license": "MIT",

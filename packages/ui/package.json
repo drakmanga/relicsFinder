@@ -1,6 +1,6 @@
 {
   "name": "relic-finder-ui",
-  "version": "0.1.0",
+  "//": "No version field on purpose. See the note in the root package.json: pom.xml is where the version is declared. This package is consumed through the workspace link and published nowhere.",
   "description": "Orokin design system components for Relic Finder — React implementation of design-system/DESIGN_SYSTEM.md",
   "license": "MIT",
   "type": "module",

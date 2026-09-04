@@ -33,16 +33,27 @@
 		<java.version>25</java.version>
 
 		<!--
-			The version, so a release build can set it from the tag rather than
-			from here. It reaches the jar manifest, and from there the
-			User-Agent the application introduces itself to warframe.market
-			with — which used to say 0.0.1-SNAPSHOT whatever the installer had
-			just stamped 0.1.3 on the front of.
+			THE version of Relic Finder. Declared here and nowhere else.
+
+			It reaches the jar manifest, and from there both the User-Agent the
+			application introduces itself to warframe.market with and the
+			"you have" figure the update check reports. The Windows installer
+			reads it (installer\windows\build.ps1), the Docker image takes
+			whatever jar the build produced, and the frontend no longer carries
+			a version of its own at all — the three package.json files used to,
+			and agreeing with this line was left to luck.
+
+			-Drevision on the command line overrides it, which is how a release
+			build stamps the tag; release.yml refuses a tag whose three numbers
+			are not the three below, so the override can only ever say what
+			this line already says.
 
 			Maven's own mechanism for this, so nothing rewrites the file during
-			a build. The default is what a working copy is: not a release.
+			a build. The -SNAPSHOT suffix is what a working copy is: not a
+			release, and correctly ordered BEFORE 0.1.0 by the comparison the
+			update check does — so a working copy is told the release is newer.
 		-->
-		<revision>0.0.1-SNAPSHOT</revision>
+		<revision>0.1.0-SNAPSHOT</revision>
 	</properties>
 	<dependencies>
 		<dependency>

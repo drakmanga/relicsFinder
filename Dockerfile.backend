@@ -9,11 +9,17 @@ RUN ./mvnw -B dependency:go-offline
 COPY src src
 RUN ./mvnw -B -DskipTests package
 
+# Renamed here rather than named again below. The jar carries the version from
+# pom.xml in its filename, so the COPY that used to spell relicsApi-0.0.1-SNAPSHOT.jar
+# was a fourth place declaring which version this is — and the one that breaks
+# the image build rather than merely lying, the first time the version moves.
+RUN mv target/relicsApi-*.jar /app.jar
+
 # ---- runtime stage: solo JRE + jar, niente Maven ----
 FROM eclipse-temurin:25-jre AS runtime
 WORKDIR /app
 
-COPY --from=build /app/target/relicsApi-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app.jar app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,6 +1,6 @@
 {
   "name": "@relic-finder/web",
-  "version": "0.1.0",
+  "//": "No version field on purpose. See the note in the root package.json: pom.xml is where the version is declared.",
   "private": true,
   "type": "module",
   "scripts": {

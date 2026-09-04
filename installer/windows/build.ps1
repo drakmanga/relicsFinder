@@ -23,6 +23,12 @@
     Three numbers, which is all Windows records in the installed programs list.
     Anything else — a SNAPSHOT suffix, a fourth part — is refused by jpackage.
 
+    Defaults to the <revision> in pom.xml with any -SNAPSHOT dropped, because
+    that line is where the version of Relic Finder is declared and this script
+    stamping a second one of its own is how the installer and the jar came to
+    disagree in the first place. A release build passes the tag explicitly;
+    release.yml checks the tag against the same line.
+
 .PARAMETER SkipBuild
     Reuses the frontend and the jar already in target\. For iterating on the
     installer itself, where rebuilding the application every time is four
@@ -34,7 +40,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string] $Version = '0.1.0',
+    [string] $Version,
 
     [switch] $SkipBuild
 )
@@ -45,6 +51,20 @@ $ProgressPreference = 'SilentlyContinue'
 # The repository root, whatever directory this was called from.
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Push-Location $root
+
+# Read rather than declared. [xml] rather than a regex because the property is
+# one element in a file full of them and the element is what we mean.
+function Get-DeclaredVersion {
+    param([string] $Root)
+
+    $pom = [xml] (Get-Content (Join-Path $Root 'pom.xml') -Raw)
+    $revision = $pom.project.properties.revision
+    if (-not $revision) { throw 'No <revision> in pom.xml, which is where the version is declared.' }
+
+    # -SNAPSHOT is honest in a working copy and refused by jpackage, so the
+    # installer stamps the three numbers under it.
+    return ($revision -replace '-SNAPSHOT$', '')
+}
 
 # PowerShell does not fail a script when a native command fails; it carries on
 # with a broken artefact and reports success at the end. Every external call
@@ -73,6 +93,14 @@ function Resolve-Tool {
 }
 
 try {
+    if (-not $Version) {
+        $Version = Get-DeclaredVersion -Root $root
+        if ($Version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "pom.xml declares '$Version', which is not the three numbers jpackage accepts."
+        }
+        Write-Host "Version from pom.xml: $Version" -ForegroundColor DarkGray
+    }
+
     $build = Join-Path $root 'build\windows'
     $staging = Join-Path $build 'staging'
     $appImage = Join-Path $build 'app-image'
