@@ -66,6 +66,8 @@ export type { DialogProps } from "./components/Dialog";
 export { Modal } from "./components/Modal";
 export type { ModalProps } from "./components/Modal";
 
+export { CommandBlock } from "./components/CommandBlock";
+export type { CommandBlockProps } from "./components/CommandBlock";
 export { ProgressBar } from "./components/ProgressBar";
 export type { ProgressBarProps } from "./components/ProgressBar";
 export { UpdateNotice, UpdateDialog } from "./components/UpdateNotice";

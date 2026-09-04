@@ -14,6 +14,7 @@ import {
   Button,
   Card,
   Chip,
+  CommandBlock,
   DetailPanel,
   Dialog,
   Divider,
@@ -369,6 +370,18 @@ const checks: Check[] = [
       </Dialog>
     ),
     expect: [],
+  },
+  {
+    name: "CommandBlock",
+    element: (
+      <CommandBlock
+        commands={["docker compose pull", "docker compose up -d"]}
+        label="two commands"
+      />
+    ),
+    // Both commands, and the newline between them: what is rendered is what
+    // somebody copies, and a block that lost a line would still look right.
+    expect: ["rf-commands", "docker compose pull\ndocker compose up -d"],
   },
   {
     name: "ProgressBar",

@@ -46,6 +46,12 @@ export function installMessage(install: UpdateInstall): string | null {
       return null;
     case "downloading":
       return `Downloading — ${downloadedOf(install)}`;
+    case "pulling":
+      // No counter, because there is none to have: the pull is reported layer
+      // by layer to the Docker daemon and none of that reaches the browser.
+      return "Fetching the new version";
+    case "recreating":
+      return "Replacing the containers. This page will stop answering for a moment — reload it when it comes back.";
     case "verifying":
       return "Checking that the download is the real one";
     case "starting":
@@ -64,6 +70,14 @@ export function installMessage(install: UpdateInstall): string | null {
  */
 export function problemMessage(problem: UpdateInstall["problem"]): string {
   switch (problem) {
+    case "self-update-off":
+      return "There is no button here because replacing a container means giving Relic Finder control of Docker, and that is control of this whole machine rather than of Relic Finder alone. It is off until somebody turns it on. These two commands do the same job by hand:";
+    case "recreate-failed":
+      return "Fetching the new version, or swapping the containers onto it, did not finish. Nothing was changed and the old version is still running. Run `docker logs relic-finder-updater` to see what it said.";
+    case "not-docker":
+      return "This copy is not running in a container, so it cannot be updated that way.";
+    case "not-supported":
+      return "This copy was started by hand rather than installed, so it cannot replace itself. Update it the way you started it.";
     case "digest-mismatch":
       return "What downloaded is not the file the release published, so nothing was installed. Nothing was run and the download has been deleted. Try again, and if it happens twice, download the release yourself instead.";
     case "download-failed":
@@ -90,6 +104,8 @@ export function installUnderWay(install: UpdateInstall | undefined): boolean {
   return (
     install?.stage === "downloading" ||
     install?.stage === "verifying" ||
-    install?.stage === "starting"
+    install?.stage === "starting" ||
+    install?.stage === "pulling" ||
+    install?.stage === "recreating"
   );
 }

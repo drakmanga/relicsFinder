@@ -351,10 +351,12 @@ export interface MarketStatus {
  * then null, and the right thing to render is nothing at all — not "you are up
  * to date", which would be a claim nobody checked.
  *
- * `windows` and `docker` arrive on every answer whatever this install is,
- * because they are what the two platform updates will hang off and a second
- * call to fetch the other half would spend one of GitHub's sixty requests an
- * hour on something this answer already had.
+ * `windows` arrives on every answer whatever this install is, because a Windows
+ * update hangs off it and a second call to fetch it would spend one of GitHub's
+ * sixty requests an hour on something this answer already had. There is no
+ * Docker counterpart: compose resolves image names out of the operator's own
+ * files, so a reference from here would be a second answer to a question
+ * something else already answers.
  */
 export interface UpdateStatus {
   current: string;
@@ -368,31 +370,41 @@ export interface UpdateStatus {
   publishedAt: string | null;
   platform: "windows" | "docker" | "unknown";
   windows: { url: string; name: string; size: number; digest: string | null } | null;
-  docker: { reference: string; tag: string } | null;
   checkedAt: string;
 }
 
 /**
  * How far the application has got updating itself.
  *
- * Windows only. Every other install answers `failed` with `not-windows`, which
- * is why the button that starts this is never rendered anywhere else.
+ * Two platforms answer here and the stages say which is working: a Windows
+ * install downloads a setup, checks it and runs it; a container install pulls
+ * images and is rebuilt on them. Anything else answers `failed` with
+ * `not-supported`.
  *
- * `problem` is a code and not a sentence: the wording belongs on the screen
- * that shows it, and `lib/updateInstall` is where it turns into English.
+ * `problem` is a code and not a sentence: the wording belongs on the screen that
+ * shows it, and `lib/updateInstall` is where it turns into English.
+ *
+ * `self-update-off` is the one refusal that is not a fault. A container install
+ * gets it before anybody clicks, because replacing a container needs control of
+ * Docker and the shipped compose file does not hand it over — so the screen
+ * shows the two commands instead of a button.
  */
 export interface UpdateInstall {
-  stage: "idle" | "downloading" | "verifying" | "starting" | "failed";
+  stage: "idle" | "downloading" | "verifying" | "starting" | "pulling" | "recreating" | "failed";
   problem:
     | "not-windows"
+    | "not-docker"
+    | "not-supported"
+    | "self-update-off"
     | "no-update"
     | "no-setup"
     | "no-digest"
     | "download-failed"
     | "digest-mismatch"
     | "launch-failed"
+    | "recreate-failed"
     | null;
-  /** Bytes of the setup written so far. */
+  /** Bytes of the setup written so far. Always zero on a container install. */
   downloaded: number;
   /** Bytes the release says the setup is. Zero when nothing is being fetched. */
   total: number;

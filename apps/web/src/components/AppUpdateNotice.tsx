@@ -4,6 +4,7 @@ import { Button, ExternalLinkIcon, UpdateNotice } from "relic-finder-ui";
 import { useAppUpdate } from "../api/queries";
 import { plainReleaseNotes } from "../lib/releaseNotes";
 import { rememberSkippedVersion, shouldAnnounce, skippedVersion } from "../lib/updateMemory";
+import { DockerUpdateAction } from "./DockerUpdateAction";
 import { WindowsUpdateAction } from "./WindowsUpdateAction";
 
 /**
@@ -21,9 +22,11 @@ import { WindowsUpdateAction } from "./WindowsUpdateAction";
  * put a claim in the bar for the one state that needs no words.
  *
  * The ending depends on what this install can actually do. A Windows install
- * updates itself in one click and gets the button that does it; everything else
- * gets the release page, which is the honest ending when the application cannot
- * finish the job itself.
+ * updates itself in one click and gets the button that does it. A container
+ * install gets a button too when it was given control of Docker, and the two
+ * commands to run by hand when it was not — which is the shipped default, and
+ * an answer rather than an absence. Anything else gets the release page, which
+ * is the honest ending when the application cannot finish the job itself.
  *
  * The Windows button is offered on the platform rather than on the presence of
  * a setup, and the two come apart: a release whose installer build failed has
@@ -58,6 +61,8 @@ export function AppUpdateNotice() {
       action={
         status.platform === "windows" ? (
           <WindowsUpdateAction releaseUrl={status.releaseUrl} />
+        ) : status.platform === "docker" ? (
+          <DockerUpdateAction />
         ) : (
           status.releaseUrl && (
             <Button
