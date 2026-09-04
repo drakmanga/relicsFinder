@@ -1,0 +1,193 @@
+# Publishes the two container images a release is made of, so that updating a
+# Docker install is a pull rather than a clone.
+#
+# Its own workflow rather than a job inside release.yml, and the reason is the
+# failure mode rather than tidiness: that workflow builds a Windows installer on
+# a Windows runner, these build Linux images on a Linux one, and neither has
+# anything to tell the other. Folded together, a jpackage failure would take the
+# images down with it and a stranger's `docker compose pull` would find a tag
+# that was never pushed.
+#
+# WHAT GETS PUSHED, and it is two names rather than one:
+#
+#   ghcr.io/<owner>/relicsfinder-backend
+#   ghcr.io/<owner>/relicsfinder-frontend
+#
+# each tagged with the three numbers of the release and with `latest`. The
+# compose file that ships reads the first through RELICS_VERSION and defaults to
+# the second, which is what lets somebody who has never seen this repository run
+# one command and get the newest release.
+#
+# THE SMOKE TEST IS BEFORE THE PUSH, not after, and that ordering is the whole
+# point of the job. An installed copy now takes a published release on its own —
+# nobody goes looking for it and nobody reads the release notes first — so a tag
+# that cannot start is a tag that breaks every Docker install that reaches it.
+# The images are built, run together through the shipped compose file, asked for
+# the API and the page, and only then pushed.
+#
+# amd64 only. Cross-building arm64 here means QEMU emulating a Maven build and
+# an npm build, which turns a four-minute job into most of an hour; the two
+# people running this are on amd64, and an arm64 user builds from source with
+# docker-compose.build.yaml until somebody asks for the tag.
+
+name: Container images
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    paths:
+      - "Dockerfile.backend"
+      - "Dockerfile.frontend"
+      - "docker-compose*.yaml"
+      - "nginx.conf"
+      - ".github/workflows/images.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: images-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  images:
+    name: Build, smoke test, push
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # The same rule release.yml enforces, for the same reason: <revision> in
+      # pom.xml is where this repository says which version it is, and a tag
+      # that disagrees produces images stamped with one number and a jar
+      # reporting another — which surfaces months later as an update notice that
+      # never goes away.
+      - name: Work out the version
+        id: version
+        run: |
+          declared=$(sed -n 's:.*<revision>\(.*\)</revision>.*:\1:p' pom.xml | sed 's/-SNAPSHOT$//')
+
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+            if [[ "$version" != "$declared" ]]; then
+              echo "Tag v$version does not match <revision> $declared in pom.xml." >&2
+              exit 1
+            fi
+          else
+            version="0.0.0"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Building $version (pom declares $declared)"
+
+      # Lowercased, because a repository owner may have capitals in their name
+      # and a registry reference may not. drakmanga has none; the next fork will.
+      - name: Work out the image names
+        id: images
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "backend=ghcr.io/$owner/relicsfinder-backend" >> "$GITHUB_OUTPUT"
+          echo "frontend=ghcr.io/$owner/relicsfinder-frontend" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Built and loaded into the local daemon rather than pushed, so the smoke
+      # test below runs the exact images that would be published. A push here
+      # and a test afterwards would be a test of something already public.
+      - name: Build the backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.backend
+          load: true
+          tags: ${{ steps.images.outputs.backend }}:${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build the frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.frontend
+          load: true
+          tags: ${{ steps.images.outputs.frontend }}:${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Through the shipped compose file, not through `docker run`: the thing
+      # being tested is what a stranger gets, and that includes nginx finding the
+      # backend by its service name and the bind mount being writable.
+      - name: Smoke test — the two of them, together
+        env:
+          RELICS_VERSION: ${{ steps.version.outputs.version }}
+          RELICS_IMAGE_BACKEND: ${{ steps.images.outputs.backend }}
+          RELICS_IMAGE_FRONTEND: ${{ steps.images.outputs.frontend }}
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          docker compose up -d
+
+          # The backend downloads the catalogue on startup, so first answers can
+          # be slow on a cold runner. Ninety seconds of two-second attempts.
+          for attempt in $(seq 1 45); do
+            if curl -fsS http://localhost/api/relics -o /dev/null; then break; fi
+            sleep 2
+          done
+
+          curl -fsS http://localhost/api/relics -o /dev/null \
+            || { docker compose logs; echo 'The API never answered through nginx' >&2; exit 1; }
+
+          # Proves the frontend image carries a built bundle rather than an empty
+          # html directory, which is the failure a healthy container hides.
+          curl -fsS http://localhost/ | grep -q '<div id="root"' \
+            || { docker compose logs; echo 'The page served is not the application' >&2; exit 1; }
+
+          # The version the running jar reports has to be the version being
+          # published, or the update check inside every install compares the
+          # wrong two numbers.
+          reported=$(curl -fsS http://localhost/api/app/update | sed -n 's/.*"current":"\([^"]*\)".*/\1/p')
+          if [[ "$reported" != "${{ steps.version.outputs.version }}" && "${{ steps.version.outputs.version }}" != "0.0.0" ]]; then
+            echo "The image reports version '$reported', not ${{ steps.version.outputs.version }}" >&2
+            exit 1
+          fi
+
+          echo "Both images start, serve the page and the API, and report $reported."
+          docker compose down
+
+      - name: Sign in to the registry
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Only now, and only on a tag. `latest` moves with the newest release
+      # because that is what an unconfigured compose file pulls.
+      - name: Push the backend
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.backend
+          push: true
+          tags: |
+            ${{ steps.images.outputs.backend }}:${{ steps.version.outputs.version }}
+            ${{ steps.images.outputs.backend }}:latest
+          cache-from: type=gha
+
+      - name: Push the frontend
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.frontend
+          push: true
+          tags: |
+            ${{ steps.images.outputs.frontend }}:${{ steps.version.outputs.version }}
+            ${{ steps.images.outputs.frontend }}:latest
+          cache-from: type=gha

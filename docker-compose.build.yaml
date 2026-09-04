@@ -1,0 +1,29 @@
+# Builds the two images from these sources instead of pulling them.
+#
+# For developing on Relic Finder, and for an architecture no release publishes a
+# tag for — the images are amd64, and an arm64 machine builds its own:
+#
+#   docker compose -f docker-compose.yaml -f docker-compose.build.yaml up -d --build
+#
+# An override rather than a `build:` alongside `image:` in the file that ships,
+# and the difference is not cosmetic: with both keys present, `docker compose up`
+# on a machine with no local image BUILDS rather than pulls — which on a machine
+# that was handed a compose file and nothing else fails with an error about a
+# missing Dockerfile, for a user who never asked to compile anything.
+#
+# `image:` still comes from the base file, so a build here is tagged with the
+# same name a pull would have fetched. That is deliberate: it means the updater
+# and `docker compose pull` see the same reference, and a developer who later
+# stops passing this file gets the published image rather than a stale local one
+# under a different name.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
