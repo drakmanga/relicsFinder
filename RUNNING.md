@@ -114,12 +114,12 @@ Two steps, and the first one is the one people forget.
 #    <revision> in pom.xml is the only place Relic Finder says which version it
 #    is: the jar takes it from there, installer\windows\build.ps1 reads it from
 #    there, and the running application reports it through /api/app/update.
-$EDITOR pom.xml          # <revision>0.2.0-SNAPSHOT</revision>
-git commit -am "Release 0.2.0"
+$EDITOR pom.xml          # <revision>0.4.0-SNAPSHOT</revision>
+git commit -am "Release 0.4.0"
 
 # 2. Tag the same three numbers and push the tag.
-git tag v0.2.0
-git push origin main v0.2.0
+git tag v0.4.0
+git push origin main v0.4.0
 ```
 
 `.github/workflows/release.yml` runs on `windows-latest`, refuses a tag whose
