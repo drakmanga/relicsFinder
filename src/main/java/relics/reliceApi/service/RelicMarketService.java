@@ -755,6 +755,74 @@ public class RelicMarketService {
     }
 
     /**
+     * How old an answer built on these prices is, and when it can differ.
+     *
+     * <p>Asked by a caller that has just built something out of many prices and
+     * has to say, in its own response, whether it is worth asking again yet —
+     * the Tier List endpoint is the one that does. {@link #cacheStatus} cannot
+     * answer it: that one is about the whole cache, and a ranking is about the
+     * six hundred parts and the seven hundred relics it was computed from.
+     *
+     * <p>Failed entries are left out of every field, for the reason
+     * {@code cacheStatus} leaves them out of its counts: a call that did not
+     * come back says nothing about the item, and counting it would let a market
+     * that answered nothing report a ranking fully priced.
+     *
+     * @param itemNames  Prime parts, as the ranking asked for them
+     * @param relicNames whole relics, whose own listings are a different slug
+     */
+    public Freshness freshnessOf(Collection<String> itemNames, Collection<String> relicNames) {
+        List<Cached> entries = new ArrayList<>(itemNames.size() + relicNames.size());
+        int itemsPriced = countPriced(itemNames, this::slugFor, entries);
+        int relicsPriced = countPriced(relicNames, RelicMarketService::relicSlug, entries);
+
+        Instant newest = entries.stream().map(Cached::at).max(Instant::compareTo).orElse(null);
+        Instant earliestDue = entries.stream()
+                .map(cached -> cached.at().plus(cached.ttl()))
+                .min(Instant::compareTo)
+                .orElse(null);
+
+        return new Freshness(newest, earliestDue, itemsPriced, relicsPriced);
+    }
+
+    /** Collects the entries that answered, and counts the ones that answered with a price. */
+    private int countPriced(Collection<String> names, Function<String, String> derive,
+                            List<Cached> entries) {
+        int priced = 0;
+        for (String name : names) {
+            if (name == null || name.isBlank()) continue;
+
+            // Not slugOf: nothing is being fetched here, so writing the name
+            // down against the slug would be a side effect of a read.
+            Cached cached = cache.get(derive.apply(name.trim()));
+            if (isMissing(cached)) continue;
+
+            entries.add(cached);
+            if (cached.avg() != null) priced++;
+        }
+        return priced;
+    }
+
+    /**
+     * What a caller can say about the prices behind an answer it has built.
+     *
+     * @param newest      the most recent of those readings, or null when none of
+     *                    them has ever been read
+     * @param earliestDue the first moment any of them becomes eligible to be
+     *                    read again, or null for the same reason. Before it,
+     *                    none of these prices can move — nothing re-reads an
+     *                    entry that is still fresh — so an answer built on them
+     *                    cannot either. It is in the past when the sweep is
+     *                    behind, which is the honest way to say "at any moment
+     *                    now", and it says nothing about the names that have no
+     *                    price yet: those are what the two counts are for.
+     * @param itemsPriced how many of the parts asked about carry a price
+     * @param relicsPriced the same, for the relics' own listings
+     */
+    public record Freshness(Instant newest, Instant earliestDue,
+                            int itemsPriced, int relicsPriced) {}
+
+    /**
      * How much of the catalogue is priced. Drives the "warming" hint in the UI.
      *
      * <p>Failed calls are left out of both counts. They sit in the map like any
