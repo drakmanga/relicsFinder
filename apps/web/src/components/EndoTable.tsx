@@ -83,6 +83,7 @@ export function EndoTable({ active, quantityOf }: Props) {
   if (offers.isPending) {
     return (
       <RankedPage
+        view="endo"
         title="Endo"
         lead="Reading the open orders."
         controls={controls}
@@ -99,7 +100,7 @@ export function EndoTable({ active, quantityOf }: Props) {
 
   if (offers.isError) {
     return (
-      <RankedPage title="Endo" lead="Ayatan sculptures ranked by Endo per platinum.">
+      <RankedPage view="endo" title="Endo" lead="Ayatan sculptures ranked by Endo per platinum.">
         <EmptyState
           tone="error"
           title="Could not read the Ayatan market"
@@ -116,6 +117,7 @@ export function EndoTable({ active, quantityOf }: Props) {
 
   return (
     <RankedPage
+      view="endo"
       title="Endo"
       lead="Ayatan sculptures ranked by Endo per platinum, from sellers who are in the game right now. Dissolve them at Maroo's on Mars."
       controls={controls}

@@ -1209,6 +1209,43 @@ body {
   font-size: var(--rf-text-body-sm);
 }
 
+/* The refresh control and the sentence that reports on it, at the end of the
+   ranked head's flex row.
+
+   A column rather than a row: the sentence runs to about eighty characters —
+   "This is already the newest data. You can check again in 12 minutes." — and
+   beside a button it would either push the ranked heading below its own
+   breakpoint or wrap into a second line of the head anyway. Under the button it
+   is the head growing downwards, which is the one direction with room.
+
+   `align-items: flex-end` on the row aligns this with the baseline of the
+   controls beside it; the column keeps its own contents to the start, so the
+   button sits over the left edge of its sentence rather than centred on a box
+   whose width the sentence decides. The measure caps it at the width that fits
+   the longest of the four messages on one or two lines, whatever the pane does
+   above. */
+.rf-refresh {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: var(--rf-measure);
+}
+
+/* The space between the button and the sentence belongs to the sentence rather
+   than to a gap on the column, because the live region above it is here on
+   every render and is empty most of the time — a gap would hold a 16px band of
+   nothing open under the button whenever there was nothing to say.
+
+   16 and not 8: `.rf-hit-block` on the button hands 8 back as negative margin,
+   growing the 32px control to the 48 rule 7 asks for, and what it grows into is
+   this space. What is left is the 8 the sentence needs to sit clear of the ink,
+   and it is space between a target and a line of text rather than between two
+   targets. */
+.rf-refresh-note {
+  margin: var(--rf-space-4) 0 0;
+}
+
 .rf-primer {
   padding: var(--rf-space-3) var(--rf-space-4);
 }

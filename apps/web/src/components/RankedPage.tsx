@@ -1,5 +1,15 @@
+/**
+ * Over 150 lines (rule 4). The shell and the three cards at the top of it are
+ * one decision about what a ranking page looks like: the cards exist only
+ * inside this header, the header reserves their exact height so the table below
+ * does not jump, and splitting them would put the two halves of that one
+ * measurement in two files.
+ */
 import type { ReactNode } from "react";
 import { Frame, Skeleton } from "relic-finder-ui";
+
+import { RefreshControl } from "./RefreshControl";
+import type { RefreshView } from "../api/types";
 
 /** Measured from a rendered card: three of them are one 99px row. */
 const HIGHLIGHT_HEIGHT = 99;
@@ -87,6 +97,15 @@ export function HighlightPlaceholder() {
 }
 
 interface PageProps {
+  /**
+   * Which of the three this is, for the refresh control below.
+   *
+   * Required rather than optional: every view that uses this shell is one whose
+   * whole subject is a figure that can go stale, so a page here without a way
+   * to ask for a newer one would be the exact gap this shell was given the
+   * control to close.
+   */
+  view: RefreshView;
   title: string;
   lead: string;
   /** Filters or toggles, right-aligned in the header. */
@@ -107,13 +126,14 @@ interface PageProps {
 }
 
 /**
- * Shell for the two ranking views.
+ * Shell for the three ranking views.
  *
- * Shared so Ducanetor and Endo cannot drift apart: they answer the same shape
- * of question — what is the best value right now — and should look like they
- * belong to the same tool.
+ * Shared so Ducanetor, Endo and the Tier List cannot drift apart: they answer
+ * the same shape of question — what is the best value right now — and should
+ * look like they belong to the same tool.
  */
 export function RankedPage({
+  view,
   title,
   lead,
   controls,
@@ -131,6 +151,14 @@ export function RankedPage({
             <p className="rf-text-body-sm rf-fg-muted rf-prose rf-ranked-lead">{lead}</p>
           </div>
           {controls}
+
+          {/* Rendered here rather than passed in through `controls`, because
+              every one of the three views has waiting and error states of its
+              own that reach this shell down a different branch — and those are
+              precisely the states where somebody most wants to ask again. A
+              slot would have had to be filled at seven call sites and would
+              have been empty at some of them. */}
+          <RefreshControl view={view} />
         </div>
 
         {note && <div className="rf-ranked-note">{note}</div>}

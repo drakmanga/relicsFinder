@@ -116,6 +116,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
   if (!prices) {
     return (
       <RankedPage
+        view="ducats"
         title="Ducanetor"
         lead="Waiting for the market to be read."
         controls={controls}
@@ -132,6 +133,7 @@ export function DucanetorTable({ prices, onInfo, quantityOf }: Props) {
 
   return (
     <RankedPage
+      view="ducats"
       title="Ducanetor"
       lead="Prime parts ranked by ducats per platinum spent. Buy near the top, dissolve at Baro Ki'Teer."
       controls={controls}

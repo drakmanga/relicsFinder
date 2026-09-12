@@ -196,6 +196,7 @@ export function TierListTable({
   if (!tierList) {
     return (
       <RankedPage
+        view="tiers"
         title="Tier List"
         lead="Waiting for the market to be read."
         controls={controls}
@@ -213,6 +214,7 @@ export function TierListTable({
 
   return (
     <RankedPage
+      view="tiers"
       title="Tier List"
       lead={`Every relic ranked twice: opened alone Intact, and opened Radiant in a squad of ${RADSHARE_PLAYERS}. The two disagree more often than not.`}
       controls={controls}
