@@ -179,6 +179,30 @@ public class EndoService {
     }
 
     /**
+     * Reads the orders now, whatever the five-minute hold says.
+     *
+     * <p>What a reload and the refresh control ask for on the Endo tab. The
+     * rolling pass keeps the list inside its TTL on its own beat, which is the
+     * right answer for a screen nobody is looking at and the wrong one for
+     * somebody who has just come back to it wanting to know whether that seller
+     * is still online.
+     *
+     * <p>Eleven requests, about four seconds of the shared market budget — see
+     * {@link MarketRateLimiter} — which is why the caller is expected to have
+     * booked a slot with {@code RefreshCooldown} before arriving here.
+     *
+     * @return whether the read came back. False leaves the previous list in
+     *         place, which is what {@link #refresh} does with a market that did
+     *         not answer; the caller says so on screen rather than showing a
+     *         refresh that changed nothing and explained nothing.
+     */
+    public boolean refreshNow() {
+        Instant before = fetchedAt;
+        refresh(Duration.ZERO);
+        return fetchedAt.isAfter(before);
+    }
+
+    /**
      * @param maxAge how old the list may be and still count as an answer.
      *               {@link Duration#ZERO} forces the work, which is what a
      *               warming pass wants: reusing {@link #TTL} here made every

@@ -167,6 +167,35 @@ public class DucatService {
         return value == null ? "" : value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * Re-reads the item database now, whatever the TTL says.
+     *
+     * <p>The door a reload and the refresh control both come through: the
+     * 24-hour hold is right for a file that only moves when Digital Extremes
+     * ships a build, and wrong for the morning after they have, which is the
+     * one morning somebody goes looking for a part that is not there.
+     *
+     * <p>Synchronous rather than an invalidation, and that is the reason it is
+     * a method rather than a null assignment: dropping the snapshot would hand
+     * the ten fetches to whichever request happened to arrive next, and the
+     * screen that asked for the refresh would be told it was finished before
+     * anything had been read.
+     *
+     * <p>The lock is the one {@link #current()} takes, so a refresh and an
+     * expiring TTL cannot fetch over each other. A failed fetch leaves the
+     * previous snapshot in place and throws, because the caller is a user
+     * waiting for an answer rather than a background pass: stale beats empty
+     * either way, but only one of the two is owed the news.
+     */
+    public void refreshNow() throws Exception {
+        refreshLock.lock();
+        try {
+            snapshot = fetch();
+        } finally {
+            refreshLock.unlock();
+        }
+    }
+
     private Snapshot current() {
         Snapshot cached = snapshot;
         if (cached != null && cached.isFresh()) return cached;
