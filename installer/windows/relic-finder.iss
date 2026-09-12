@@ -30,6 +30,9 @@
 
 #define AppName "Relic Finder"
 #define AppExe "RelicFinder.exe"
+; Installed on its own, last, because a procedure has to run the moment it
+; lands — see the [Files] section.
+#define AppCfg "RelicFinder.cfg"
 #define AppPublisher "drakmanga"
 #define AppUrl "https://github.com/drakmanga/relicsFinder"
 
@@ -136,12 +139,25 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "{#AppImage}\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#AppImage}\app\*"; DestDir: "{app}\app"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#AppImage}\app\*"; DestDir: "{app}\app"; Excludes: "{#AppCfg}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Skipped entirely when the user chose the Java already on the machine. The
 ; files are inside this installer either way — the choice is about what ends up
 ; on their disk, not about what they download.
 Source: "{#AppImage}\runtime\*"; DestDir: "{app}\runtime"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: UseBundledRuntime
+
+; The launcher's configuration, alone and last, so that everything it can point
+; at is already on disk and AfterInstall can point it at the right one.
+;
+; The hook is here rather than in CurStepChanged(ssPostInstall), where it used
+; to be, because ssPostInstall runs AFTER [Run] — and the relaunch entry in
+; [Run] starts the launcher against this very file. An update on an install
+; that uses the machine's Java got a fresh configuration with no app.runtime
+; line, was relaunched against it, and died on "Failed to find JVM" in a
+; runtime folder that install deliberately never had. The write has to happen
+; before anything is started against it, and this is the last moment that is
+; still true.
+Source: "{#AppImage}\app\{#AppCfg}"; DestDir: "{app}\app"; Flags: ignoreversion; AfterInstall: ApplyJavaChoice
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
@@ -193,11 +209,33 @@ const
     files were compiled for. }
   RequiredJava = 25;
 
+  { Where the answer to the Java page is kept between one install and the next.
+
+    It has to be kept somewhere: a silent run shows no page, so without a record
+    it re-derives the choice from a fresh sweep every time, and an update then
+    takes the bundled runtime away from whoever chose it on purpose and points
+    their launcher at a Java they never agreed to depend on.
+
+    HKCU rather than the file it configures, because the file is overwritten
+    by [Files] before anything gets to read it. Under the publisher's own key
+    rather than Inno's, which belongs to Inno. }
+  ChoiceKey = 'Software\{#AppPublisher}\{#AppName}';
+  ChoiceValue = 'JavaRuntime';
+
+  { What that value holds when the bundled runtime was chosen. Anything else in
+    it is the path of the Java that was chosen instead, and no Java home is
+    spelled like this. }
+  BundledMarker = 'bundled';
+
 var
   JavaPage: TInputOptionWizardPage;
   SystemJavaHome: String;
   SystemJavaVersion: Integer;
   Candidates: TArrayOfString;
+
+  { What the previous install recorded, or empty when there is no previous
+    install. Read once, in InitializeWizard. }
+  RecordedRuntime: String;
 
 { ---------------------------------------------------------------------------
   Finding a Java that is already here.
@@ -508,6 +546,55 @@ begin
   Result := Version >= RequiredJava;
 end;
 
+{ ---------------------------------------------------------------------------
+  What the last install was told, so this one does not have to guess.
+  --------------------------------------------------------------------------- }
+
+{ Whether the recorded answer was the bundled runtime. False when nothing was
+  recorded, which is a first install rather than a choice. }
+function RecordedBundled: Boolean;
+begin
+  Result := CompareText(RecordedRuntime, BundledMarker) = 0;
+end;
+
+{ The Java the recorded answer names, or empty when it named none. }
+function RecordedJavaHome: String;
+begin
+  if (RecordedRuntime = '') or RecordedBundled then
+    Result := ''
+  else
+    Result := RecordedRuntime;
+end;
+
+procedure ReadRecordedChoice;
+begin
+  RecordedRuntime := '';
+
+  if not RegQueryStringValue(HKCU64, ChoiceKey, ChoiceValue, RecordedRuntime) then
+  begin
+    RecordedRuntime := '';
+    Log('Java: no previous choice recorded, this is a first install');
+    exit;
+  end;
+
+  RecordedRuntime := Trim(RecordedRuntime);
+  Log('Java: the previous install recorded ' + RecordedRuntime);
+end;
+
+{ Writes the answer down for the next silent run to obey.
+
+  Never fatal. The install it belongs to is correct either way, and the only
+  thing a failure costs is that the next update has to derive the choice again
+  — which is the behaviour that existed before this was recorded at all. Logged
+  so that derivation has an explanation when it goes somewhere unexpected. }
+procedure RecordJavaChoice(Value: String);
+begin
+  if RegWriteStringValue(HKCU64, ChoiceKey, ChoiceValue, Value) then
+    Log('Java: recorded ' + Value + ' under HKCU\' + ChoiceKey)
+  else
+    Log('Java: could not record ' + Value + ' under HKCU\' + ChoiceKey);
+end;
+
 { Fills SystemJavaHome and SystemJavaVersion, or leaves them empty. Any Java 25
   will do, so the first usable candidate wins and the order does not matter. }
 procedure FindSystemJava;
@@ -516,6 +603,20 @@ var
 begin
   SystemJavaHome := '';
   SystemJavaVersion := 0;
+
+  { The Java a previous install recorded comes before the sweep, because it is
+    the one its owner agreed to depend on. Without this an update would move
+    the installation onto whichever Java the sweep reached first, which on a
+    machine with three of them is a coin toss the user never asked to throw.
+    The sweep below still answers for a first install, and for a recorded Java
+    that has since been uninstalled. }
+  if (RecordedJavaHome <> '') and IsUsableJava(RecordedJavaHome, Version) then
+  begin
+    SystemJavaHome := RemoveBackslashUnlessRoot(RecordedJavaHome);
+    SystemJavaVersion := Version;
+    Log('Java: using the one the previous install recorded, ' + SystemJavaHome);
+    exit;
+  end;
 
   CollectCandidates;
   Log('Java: ' + IntToStr(GetArrayLength(Candidates)) + ' candidate folder(s)');
@@ -536,10 +637,32 @@ end;
   The choice, and what it changes.
   --------------------------------------------------------------------------- }
 
-{ Called once for every file in the runtime, so it does no work of its own. }
+{ Called once for every file in the runtime, so it does no work of its own:
+  everything it reads was decided in InitializeWizard. }
 function UseBundledRuntime: Boolean;
 begin
-  Result := (SystemJavaHome = '') or (JavaPage.SelectedValueIndex = 1);
+  { No Java to use, so there is nothing to choose between. }
+  if SystemJavaHome = '' then
+  begin
+    Result := True;
+    exit;
+  end;
+
+  { A silent run has no page to ask with, so it obeys the last answer somebody
+    was actually asked for. An update is always silent, and this is what keeps
+    the choice made at install time in force across every version after it.
+
+    Nothing recorded falls through to the page's own default, which is the
+    behaviour a silent install had before this existed: the machine's Java when
+    there is one. A silent FIRST install is a deployment tool or a smoke test,
+    neither of which has an opinion to preserve. }
+  if WizardSilent and (RecordedRuntime <> '') then
+  begin
+    Result := RecordedBundled;
+    exit;
+  end;
+
+  Result := JavaPage.SelectedValueIndex = 1;
 end;
 
 { Whether this run was started by the application updating itself.
@@ -556,6 +679,8 @@ procedure InitializeWizard;
 var
   Caption, Body: String;
 begin
+  { Before the search, which prefers what it finds here. }
+  ReadRecordedChoice;
   FindSystemJava;
 
   if SystemJavaHome <> '' then
@@ -592,7 +717,12 @@ begin
     JavaPage.CheckListBox.Enabled := False;
   end;
 
+  { The recorded answer is the default, so a reinstall clicked through without
+    reading does not quietly move somebody onto a different runtime. Guarded on
+    a Java being there, because without one the page has a single item. }
   JavaPage.SelectedValueIndex := 0;
+  if (SystemJavaHome <> '') and RecordedBundled then
+    JavaPage.SelectedValueIndex := 1;
 end;
 
 { Points the launcher at the Java the user chose.
@@ -606,11 +736,19 @@ var
   Path: String;
   Lines, Rewritten: TArrayOfString;
   I, Count: Integer;
+  Written: Boolean;
 begin
-  Path := ExpandConstant('{app}\app\RelicFinder.cfg');
+  Path := ExpandConstant('{app}\app\{#AppCfg}');
   if not LoadStringsFromFile(Path, Lines) then
+  begin
+    { Logged before it is raised, because a silent run is started with
+      /SUPPRESSMSGBOXES and the exception is the whole of what the user sees:
+      nothing. The log is then the only account of what happened. }
+    Log('Java: cannot read ' + Path);
     RaiseException('Cannot read ' + Path);
+  end;
 
+  Written := False;
   Count := 0;
   SetArrayLength(Rewritten, GetArrayLength(Lines) + 1);
 
@@ -626,19 +764,53 @@ begin
       begin
         Rewritten[Count] := 'app.runtime=' + SystemJavaHome;
         Count := Count + 1;
+        Written := True;
       end;
     end;
   end;
 
+  { The key is inserted under a section header that jpackage has always
+    written, and a file without one would be saved back unchanged — an install
+    that reports success and a launcher that cannot start, which is the exact
+    pair this whole hook exists to stop happening again. }
+  if not Written then
+  begin
+    Log('Java: no [Application] section in ' + Path + ', nowhere to put app.runtime');
+    RaiseException('No [Application] section in ' + Path);
+  end;
+
   SetArrayLength(Rewritten, Count);
   if not SaveStringsToFile(Path, Rewritten, False) then
+  begin
+    Log('Java: cannot write ' + Path);
     RaiseException('Cannot write ' + Path);
+  end;
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
+{ Applies the choice to the copy on disk, and writes it down for the next one.
+
+  Called from [Files], the moment the launcher's configuration lands and
+  before [Run] starts anything against it. The branch it took is logged either
+  way: the one question a user reporting a launcher that will not start can
+  answer from their setup log is which of these two happened. }
+procedure ApplyJavaChoice;
 begin
-  if (CurStep = ssPostInstall) and not UseBundledRuntime then
-    PointLauncherAtSystemJava;
+  if UseBundledRuntime then
+  begin
+    { The configuration out of the application image carries no app.runtime, so
+      the launcher falls back to the runtime folder beside itself, which is the
+      one this branch installed. }
+    Log('Java: branch=bundled, the runtime beside the launcher is the runtime');
+    RecordJavaChoice(BundledMarker);
+    exit;
+  end;
+
+  Log('Java: branch=system, pointing the launcher at ' + SystemJavaHome);
+
+  { Recorded only once it has been applied, so a failed write never leaves a
+    record of a choice this install is not actually running. }
+  PointLauncherAtSystemJava;
+  RecordJavaChoice(SystemJavaHome);
 end;
 
 { ---------------------------------------------------------------------------
@@ -681,6 +853,14 @@ begin
 
   if CurUninstallStep <> usPostUninstall then
     exit;
+
+  { The recorded Java choice goes with the installation that made it. Left
+    behind, it would answer on behalf of an install the user has not made yet,
+    naming a Java they may have removed in the meantime. The publisher key
+    above it only goes if it is now empty — nothing else of this project's
+    writes there today, but a key is not ours to delete on that basis. }
+  RegDeleteKeyIncludingSubkeys(HKCU64, ChoiceKey);
+  RegDeleteKeyIfEmpty(HKCU64, 'Software\{#AppPublisher}');
 
   Data := ExpandConstant('{localappdata}\RelicFinder');
   if not DirExists(Data) then
