@@ -8,6 +8,8 @@ import type {
   MarketStatus,
   PricePoint,
   PrimeLifecycle,
+  RefreshOutcome,
+  RefreshView,
   Relic,
   RelicPrice,
   TierList,
@@ -331,6 +333,32 @@ export const api = {
   /** When those offers were read. Cheap: the server holds them for five minutes. */
   async endoStatus(signal?: AbortSignal): Promise<EndoStatus> {
     return await get<EndoStatus>("/endo/status", signal);
+  },
+
+  /**
+   * Asks the server to re-read what this view shows.
+   *
+   * The one call in here with an effect on the other end, which is why it is a
+   * POST: it must never be answered from a cache between here and the browser.
+   *
+   * Never rejects on a refusal. "Inside the cooldown" and "the source did not
+   * answer" both come back 200 carrying a `status`, because both are answers
+   * about the snapshot rather than failures of the request — the screen renders
+   * one sentence from one shape. A network error still throws, as everywhere
+   * else.
+   */
+  async refresh(view: RefreshView, signal?: AbortSignal): Promise<RefreshOutcome> {
+    const url = `${BASE}/refresh/${view}`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, { method: "POST", signal, headers: { Accept: "application/json" } });
+    } catch (cause) {
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
+    return (await res.json()) as RefreshOutcome;
   },
 
   async isVaulted(relicName: string, signal?: AbortSignal): Promise<boolean> {

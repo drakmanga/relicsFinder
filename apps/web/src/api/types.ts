@@ -408,6 +408,33 @@ export interface EndoStatus {
   asOf: string | null;
 }
 
+/**
+ * A view whose numbers can be asked for again.
+ *
+ * Three of them, and only three: these are the tabs that exist to answer one
+ * question with a figure, where the figure not moving is the whole failure.
+ */
+export type RefreshView = "ducats" | "endo" | "tiers";
+
+/**
+ * What came of asking for newer numbers.
+ *
+ * `already-current` is not an error: the server holds one cooldown for every
+ * client, because warframe.market counts requests per address and a Docker host
+ * behind NAT shares one with everybody behind it. Inside that window nothing is
+ * fetched from anybody, and the snapshot on screen is what a re-read would have
+ * produced anyway.
+ *
+ * `source-unavailable` is the host this proxies not answering. The previous
+ * snapshot still stands, so the screen is not wrong — only not newer.
+ */
+export interface RefreshOutcome {
+  view: RefreshView;
+  status: "refreshed" | "already-current" | "source-unavailable";
+  /** ISO instant this view may be asked again. Present on all three outcomes. */
+  nextRefreshAt: string;
+}
+
 /** One wishlist line as the server stores it. */
 /**
  * What a wishlist line is for. Part of its identity, not a label.

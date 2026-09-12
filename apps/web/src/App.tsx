@@ -17,10 +17,17 @@ import { PriceStatus } from "./components/PriceStatus";
 import { RelicInfoDialog } from "./components/RelicInfoDialog";
 import { StatusTerms } from "./components/StatusTerms";
 import { emptyFilters } from "./lib/rows";
+import { useReloadSpentAfterFirstRender } from "./lib/snapshotRefresh";
 import { useCatalogue } from "./lib/useCatalogue";
 import { isCatalogue, useViewState } from "./lib/useViewState";
 
 export function App() {
+  /* A reload is answered by the view that was in front when the page loaded,
+     and by nothing after it. This is what ends that window: React runs this
+     effect after the children's, so the ranked view showing at load has already
+     asked by the time it does. See lib/snapshotRefresh. */
+  useReloadSpentAfterFirstRender();
+
   const {
     view,
     setView,
