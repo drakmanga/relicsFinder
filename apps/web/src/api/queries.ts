@@ -35,6 +35,16 @@ export const keys = {
   marketStatus: ["market", "status"] as const,
   endoStatus: ["endo", "status"] as const,
   setLifecycle: ["sets", "lifecycle"] as const,
+  /**
+   * The ranking, per population.
+   *
+   * `allTierLists` is the prefix: the vault filter is part of the key, so the
+   * three populations are three cache entries, and something wanting to refresh
+   * "the ranking" has to reach all of them at once — the same shape the two
+   * price batches use, and for the same reason.
+   */
+  allTierLists: ["tiers"] as const,
+  tierList: (vault: string) => [...keys.allTierLists, vault] as const,
   appUpdate: ["app", "update"] as const,
   updateInstall: ["app", "update", "install"] as const,
 };
@@ -68,9 +78,22 @@ export const PRICE_RESIDUE = 0.05;
  * which is exactly why the residue exists.
  */
 export function stillFilling(values: (number | null | undefined)[]): boolean {
-  if (values.length === 0) return false;
-  const missing = values.filter((value) => value === null || value === undefined).length;
-  return missing > values.length * PRICE_RESIDUE;
+  const priced = values.filter((value) => value !== null && value !== undefined).length;
+  return stillFillingCount(priced, values.length);
+}
+
+/**
+ * The same question asked of two counts rather than of the prices themselves.
+ *
+ * The Tier List asks it this way: the ranking is computed on the server, so the
+ * tab never holds the prices behind it and the response reports how many of
+ * them there were. One rule for both shapes, because a row still shimmering
+ * after the polling that fills it gave up is the failure either of them would
+ * produce alone.
+ */
+export function stillFillingCount(priced: number, total: number): boolean {
+  if (total === 0) return false;
+  return total - priced > total * PRICE_RESIDUE;
 }
 
 export function useRelics() {
@@ -369,6 +392,41 @@ export function useSetLifecycle() {
     queryKey: keys.setLifecycle,
     queryFn: ({ signal }) => api.setLifecycle(signal),
     ...STATIC_DATA,
+  });
+}
+
+/**
+ * Every relic ranked twice, from the server that computes it.
+ *
+ * Polled while the prices behind it are still arriving, exactly as the two
+ * price batches poll: the ranking of a cold instance is built on the prices
+ * that have landed, and it is worth asking again until they have. Once the
+ * response says the catalogue is priced the polling stops, and the marker on
+ * `/api/market/status` is what wakes it afterwards — see `usePriceRefresh`.
+ *
+ * Fetched only for the view that shows it. The other six have no use for a
+ * ranking, and a request for 772 rows behind another tab is a response nobody
+ * reads.
+ */
+export function useTierList(vault: string, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.tierList(vault),
+    queryFn: ({ signal }) => api.tierList(vault, signal),
+    enabled,
+    ...PRICE_DATA,
+    // The population is part of the key, so switching the filter is a different
+    // query. Without this the table would blank to its empty state for the
+    // length of one round trip on every click of a control that only re-bands
+    // the rows it is already showing.
+    placeholderData: keepPreviousData,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      return stillFillingCount(data.prices.partsPriced, data.prices.parts) ||
+        stillFillingCount(data.prices.relicsPriced, data.prices.relics)
+        ? 15_000
+        : false;
+    },
   });
 }
 

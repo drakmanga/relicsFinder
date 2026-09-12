@@ -6,9 +6,14 @@ import type {
   RelicGroup,
   Reward,
   Tier,
+  TierList,
+  TierListRow,
+  TierTrend,
   WireDropInfo,
   WireRelic,
   WireRewards,
+  WireTierList,
+  WireTierListRow,
 } from "./types";
 
 const TIERS: Tier[] = ["lith", "meso", "neo", "axi", "requiem", "vanguard"];
@@ -108,5 +113,50 @@ export function normalizeDropInfo(wire: WireDropInfo): DropInfo {
     location: wire.location,
     rotation: wire.rotation,
     chance: parseChance(wire.chance),
+  };
+}
+
+/**
+ * The trend as the column draws it: a number, or the reason there is not one.
+ *
+ * The wire keeps the two apart — a state beside a nullable percentage — because
+ * a percentage of null would be indistinguishable from a market nobody
+ * measured. They are folded back into one value here because that is the shape
+ * every reader of it wants: `typeof trend === "number"` is the question the
+ * cell asks.
+ */
+function normalizeTierTrend(wire: WireTierListRow): TierTrend {
+  if (wire.trend === "moved" && wire.trendPercent !== null) return wire.trendPercent;
+  return wire.trend === "steady" ? "steady" : "no-baseline";
+}
+
+export function normalizeTierListRow(wire: WireTierListRow): TierListRow {
+  return {
+    relicFullName: wire.relic,
+    // The backend spells the era the way the catalogue does, "Lith"; the design
+    // system's unions are lowercase, exactly as `normalizeRelic` handles it.
+    tier: pick(wire.era, TIERS, "lith"),
+    soloValue: wire.soloValue,
+    radshareValue: wire.radshareValue,
+    soloLetter: wire.soloBand,
+    radshareLetter: wire.radshareBand,
+    relicPrice: wire.relicPrice,
+    trend: normalizeTierTrend(wire),
+  };
+}
+
+/**
+ * The ranking, as the views read it.
+ *
+ * Nothing is decided here beyond the two shapes above: the coverage counts are
+ * carried through as they arrived, because whether a batch that size counts as
+ * still filling is a rule the app already owns once, in lib/priceProgress.
+ */
+export function normalizeTierList(wire: WireTierList): TierList {
+  return {
+    rows: wire.rows.map(normalizeTierListRow),
+    soloMedian: wire.soloMedian,
+    radshareMedian: wire.radshareMedian,
+    prices: wire.prices,
   };
 }

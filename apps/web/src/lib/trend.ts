@@ -1,6 +1,5 @@
-import type { ItemPrice } from "../api/types";
+import type { ItemPrice, TierTrend } from "../api/types";
 import type { TrendNoteReason } from "../components/TrendNote";
-import type { TierTrend } from "./tierList";
 
 /**
  * What a trend cell has to draw, once.

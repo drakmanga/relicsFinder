@@ -87,6 +87,8 @@ export function App() {
     visible,
     visibleSets,
     tierList,
+    tierListQuery,
+    tierProgress,
     allSets,
     setPriceBySet,
     selectedSetRow,
@@ -331,6 +333,9 @@ export function App() {
               sort={sort}
               onSort={cycleSort}
               tierList={tierList}
+              ranking={tierListQuery}
+              tierPricesFilling={tierProgress.pricesFilling}
+              tierRelicPricesFilling={tierProgress.relicPricesFilling}
               tierVault={tierVault}
               onTierVault={setTierVault}
               tierSort={tierSort}

@@ -20,7 +20,8 @@ const ONLY_SERVICE_TESTS =
   "RelicVaultedServiceTest,RelicSearchItemServiceTest,RelicMarketCachedTtlTest," +
   "RelicMarketSweepTest,PriceCacheStoreTest,RelicMarketNextTtlTest," +
   "RelicMarketTradeCountTest,RelicMarketTrendGapTest,RankSensitivityTest," +
-  "RelicMarketRevisionTest," +
+  "RelicMarketRevisionTest,TierListServiceTest,TierListBandsTest," +
+  "TierListTrendTest,TierListPayloadTest,RelicValueTest," +
   "WishlistServiceIdentityTest,WishlistServiceCoalesceTest," +
   "DucatServiceIndexTest,DucatServiceDatesTest,PrimeLifecycleServiceTest," +
   "OwnedServiceMigrationTest,SemanticVersionTest,InstallPlatformTest," +
@@ -28,6 +29,75 @@ const ONLY_SERVICE_TESTS =
   " -DfailIfNoTests=false";
 
 const MUTANTS = [
+  {
+    // The six below came from scripts/mutants.mjs with the arithmetic they
+    // break: the relic ranking was computed in the browser until brief-020, and
+    // the tests that caught them there are now TierListServiceTest,
+    // TierListBandsTest and TierListTrendTest.
+    name: "the median sorts the way strings sort",
+    file: `${SERVICE}/TierListService.java`,
+    from: "        List<Double> sorted = values.stream().sorted().toList();",
+    to: "        List<Double> sorted = values.stream().toList();",
+  },
+  {
+    name: "a band stops owning its own lower edge",
+    file: `${SERVICE}/TierListService.java`,
+    from: "            if (value >= band.minMultiple() * median) return band.letter();",
+    to: "            if (value > band.minMultiple() * median) return band.letter();",
+  },
+  {
+    // Best-of-four pays about three times what one roll does, so one median for
+    // both columns puts the whole radshare column in S and the whole solo
+    // column in F.
+    name: "both columns are ranked against the solo median",
+    file: `${SERVICE}/TierListService.java`,
+    from: "        Double radshareMedian = medianOf(unranked.stream().map(Unranked::radshareValue).toList());",
+    to: "        Double radshareMedian = soloMedian;",
+  },
+  {
+    // The two below are the fault the tier list was reported with: Trend read
+    // Steady on all 772 relics while the prices behind them carried a movement.
+    // Each one breaks a different half of the path — the map that is supposed
+    // to be re-priced, and the call that is supposed to read it.
+    name: "the ninety-day baseline re-prices nothing",
+    file: `${SERVICE}/TierListService.java`,
+    from: "            double factor = 1 + (listing.getTrend() == null ? 0 : listing.getTrend()) / 100;",
+    to: "            double factor = 1;",
+  },
+  {
+    name: "the trend measures today against today",
+    file: `${SERVICE}/TierListService.java`,
+    from: "        double ninetyDaysAgo = RelicValue.expected(states.intact(), baseline);",
+    to: "        double ninetyDaysAgo = RelicValue.expected(states.intact(), prices);",
+  },
+  {
+    // The third state of the same fault, and the one that survived the two
+    // above: with no drop carrying a trend the baseline is a copy of today, the
+    // movement computes to zero, and zero clears no threshold — so the column
+    // said Steady about a comparison nobody had made.
+    name: "a relic nobody measured is called steady again",
+    file: `${SERVICE}/TierListService.java`,
+    from: "        if (!measured || ninetyDaysAgo <= 0) return new Trend(TierTrend.NO_BASELINE, null);",
+    to: "        if (ninetyDaysAgo <= 0) return new Trend(TierTrend.NO_BASELINE, null);",
+  },
+  {
+    // A relic nobody has listed is unknown, not worthless, so it sorts last
+    // whichever way the price column points. Read as a zero it would sort like
+    // the cheapest relic in the game, which is a claim about a number nobody
+    // has.
+    name: "an unlisted relic sorts as though it were free",
+    file: `${SERVICE}/TierListService.java`,
+    from: "                Comparator.comparing(valueOf(sort), Comparator.nullsLast(byNumber));",
+    to: "                Comparator.comparing(valueOf(sort), Comparator.nullsFirst(byNumber));",
+  },
+  {
+    // A squad of four is the best of four rolls and not four times one, which
+    // is the single biggest lever on what a relic is worth.
+    name: "a radshare pays the average of the squad instead of its best roll",
+    file: `${SERVICE}/RelicValue.java`,
+    from: "            total += pair[0] * (Math.pow(tailAbove, players) - Math.pow(tailBelow, players));",
+    to: "            total += pair[0] * (tailAbove - tailBelow);",
+  },
   {
     // The fault the whole phase rule exists not to have. Six sets were in the
     // drop tables on 2026-08-30 carrying a vault date from years earlier, and

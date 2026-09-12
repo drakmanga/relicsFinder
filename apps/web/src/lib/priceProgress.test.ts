@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { itemPriceProgress, relicPriceProgress } from "./priceProgress";
+import { itemPriceProgress, tierPriceProgress, relicPriceProgress } from "./priceProgress";
 import type { ItemPrice, PriceMap, RelicPriceMap } from "../api/types";
 
 /** Only the field this module reads; the rest of ItemPrice is beside the point. */
@@ -87,5 +87,43 @@ describe("relicPriceProgress", () => {
 
   it("is filling while its own first request is out", () => {
     expect(relicPriceProgress(undefined, true).filling).toBe(true);
+  });
+});
+
+describe("the prices behind the ranking", () => {
+  const coverage = (partsPriced: number, relicsPriced: number) => ({
+    parts: 100,
+    partsPriced,
+    relics: 100,
+    relicsPriced,
+  });
+
+  it("waits on both columns while the ranking itself is in flight", () => {
+    // Nothing has been asked yet, so neither column can say "not listed".
+    expect(tierPriceProgress(undefined)).toEqual({
+      pricesFilling: true,
+      relicPricesFilling: true,
+    });
+  });
+
+  it("reports the two batches apart, because they fill at different speeds", () => {
+    expect(tierPriceProgress(coverage(100, 20))).toEqual({
+      pricesFilling: false,
+      relicPricesFilling: true,
+    });
+  });
+
+  it("settles once the residue is all that is left", () => {
+    // The parts nobody has ever listed are not late, and a row showing one has
+    // to say so rather than shimmer forever. Same share as the batches the
+    // other views fetch — see PRICE_RESIDUE.
+    expect(tierPriceProgress(coverage(96, 96))).toEqual({
+      pricesFilling: false,
+      relicPricesFilling: false,
+    });
+    expect(tierPriceProgress(coverage(94, 94))).toEqual({
+      pricesFilling: true,
+      relicPricesFilling: true,
+    });
   });
 });

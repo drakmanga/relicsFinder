@@ -280,6 +280,58 @@ a jar, pass a real path — `--relics.catalogue.path=data/relics.json`.
 Prices and drop tables have caches of their own — thirty minutes and six hours —
 and need nothing from you.
 
+## The relic ranking, as data
+
+The Tier List tab is also an endpoint, so a spreadsheet, a Discord bot or a
+script that checks the top twenty before a farming session can read the ranking
+without opening the page:
+
+```sh
+curl "http://localhost:8080/api/tiers?vault=farmable&limit=20"
+```
+
+It answers one row per relic — the relic, its era, what it pays opened alone
+Intact and opened Radiant in a squad of four, a band letter for each of those
+two columns, what the relic itself sells for, and what ninety days did to it —
+plus the two medians the letters are bands around. The screen and this endpoint
+are the same answer: the ranking is computed once, on the server, and the tab
+reads it from here.
+
+| Parameter | Values | What it does |
+| --- | --- | --- |
+| `vault` | `all` (default), `farmable`, `vaulted` | Which relics are ranked. It moves both medians with it, so a letter means "against these relics" — `farmable` ranks the ~34 relics currently dropping against each other, where against the whole catalogue nearly all of them are D or F |
+| `sort` | `solo` (default), `radshare`, `price`, `relic` | The column the rows come back in |
+| `order` | `asc`, `desc` | Defaults to best-first on the three value columns and A-to-Z on `relic` |
+| `limit` | any number from 1 | How many rows to return. It cuts the response and never the population: the top twenty are still ranked against every relic `vault` left |
+
+A wrong spelling is answered with a 400 saying which parameter it was and what
+it accepts, rather than with the default ranking.
+
+**How often it is worth asking.** Once an hour. Under that you will be handed
+the same numbers you already have, because no price behind the ranking is
+re-read more often than that — the ones at the top of the table hourly, the rest
+of the catalogue every three hours, and the relic list itself once a day. The
+response says so itself rather than making you count: `asOf` is when the newest
+price behind it was read, and `nextUpdateAt` is the first moment any of them is
+allowed to be read again. Ask before that and nothing can have changed.
+
+Asking anyway is cheap and nothing stops you. Every response carries an `ETag`,
+so a script that sends it back — `curl -H "If-None-Match: <etag>"` — is answered
+with an empty 304 for as long as the ranking is byte for byte the one it already
+has.
+
+**How much of it is real yet.** A freshly started instance has read only part of
+the market, and a relic whose drops have no price yet counts as worth nothing,
+which looks exactly like a relic nobody wants. `prices` in the response says how
+many of the parts and relics behind the ranking actually carry a price, so a
+script can wait rather than act on a ranking of gaps.
+
+**The response is a contract.** `version` is `1`. Fields will be added without it
+moving; a field that is removed, renamed or made to mean something else is what
+moves it. It is also the only endpoint here that answers a request from another
+origin, because the caller is a script on the same machine rather than a page
+this application served.
+
 ## Where the state lives
 
 The wishlist and the list of parts you own are JSON files under `data/`, written
@@ -294,9 +346,10 @@ data/owned.json       parts already in your inventory, ticked in the Sets view
 
 ## Where the project is
 
-Six views: **Relics** (one row per relic, with vault state, expected value and
+Seven views: **Relics** (one row per relic, with vault state, expected value and
 best drop), **Prime Items**, **Sets** (what a set is missing and whether to buy
-or farm it), **Wishlist** (split by kind: parts, relics, ducats, Ayatan), **Ducanetor**
+or farm it), **Tier List** (every relic ranked twice, solo and in a radshare),
+**Wishlist** (split by kind: parts, relics, ducats, Ayatan), **Ducanetor**
 (ducats per platinum) and **Endo** (Ayatan by Endo per platinum). Search,
 filters, the wishlist and the owned list are all in place. For what is left, see
 the roadmap in the README and the open issues.

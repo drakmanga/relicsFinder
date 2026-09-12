@@ -451,3 +451,141 @@ export interface EndoOffer {
   seller: string;
   quantity: number;
 }
+
+/**
+ * The ranking as `GET /api/tiers` sends it.
+ *
+ * One row per relic, banded against the population the request asked for. The
+ * arithmetic behind every number here lives in `TierListService` on the backend
+ * and nowhere else: this view used to compute it in the browser, and the two
+ * copies would have drifted the first time a band moved.
+ */
+export interface WireTierListRow {
+  /** `"Lith V9"`, tier included. */
+  relic: string;
+  /** `"Lith"` — the catalogue's own spelling, narrowed to `Tier` on the way in. */
+  era: string;
+  soloValue: number;
+  radshareValue: number;
+  /** `"S"` … `"F"`, or null when the population has no median to band against. */
+  soloBand: TierLetter | null;
+  radshareBand: TierLetter | null;
+  relicPrice: number | null;
+  trend: "moved" | "steady" | "no-baseline";
+  /** The movement, and null unless `trend` is `moved`. */
+  trendPercent: number | null;
+}
+
+export interface WireTierList {
+  /** The response contract. See `TierListResponse.VERSION` on the backend. */
+  version: number;
+  vault: string;
+  sort: string;
+  direction: string;
+  /** The squad size the radshare column means. Fixed at four, said out loud. */
+  players: number;
+  /** Relics in the ranked population, which is what both medians are of. */
+  population: number;
+  soloMedian: number | null;
+  radshareMedian: number | null;
+  /** ISO instant of the newest price behind the ranking, or null before the first. */
+  asOf: string | null;
+  nextUpdateAt: string | null;
+  /** How much of what the ranking rests on actually has a price. */
+  prices: {
+    parts: number;
+    partsPriced: number;
+    relics: number;
+    relicsPriced: number;
+  };
+  rows: WireTierListRow[];
+}
+
+/**
+ * A band letter. Six of them, and E is skipped.
+ *
+ * E is missing because nobody reads it as a rank: the tier-list convention the
+ * letters borrow from runs S A B C D F, and a reader who meets an E spends the
+ * moment working out whether it sits above or below D.
+ *
+ * The letters are handed out by the backend, which is also where the multiples
+ * they stand for are written down and argued for — see `TierListService.BANDS`.
+ */
+export type TierLetter = "S" | "A" | "B" | "C" | "D" | "F";
+
+/**
+ * What ninety days did to one relic's solo value: a percentage, or why there is
+ * no percentage.
+ *
+ * A relic whose drops carry no measured trend is not steady — it is a
+ * comparison of six prices against copies of themselves — and that is most of
+ * the catalogue. The two are told apart here so the column can say so.
+ */
+export type TierTrend =
+  | number
+  /** Measured, and under the threshold. Really is holding still. */
+  | "steady"
+  /** Nothing measured on the other side of the comparison. */
+  | "no-baseline";
+
+/**
+ * One relic, ranked twice, as the views read it.
+ *
+ * `tier` is the relic's era (Lith, Meso …); the band letters are `soloLetter`
+ * and `radshareLetter`. The two words collide on this screen and the fields are
+ * named so a reader never has to work out which one is meant — which is also
+ * why the wire calls the era `era`.
+ */
+export interface TierListRow {
+  /** `"Lith V9"` — one row per relic, not per relic-and-refinement. */
+  relicFullName: string;
+  tier: Tier;
+  /** Expected platinum from one solo run of the Intact relic. */
+  soloValue: number;
+  /** Expected platinum from one run of the Radiant relic in a radshare squad. */
+  radshareValue: number;
+  /** Null when there is no median to rank against. */
+  soloLetter: TierLetter | null;
+  radshareLetter: TierLetter | null;
+  /** What the relic itself sells for. Beside the letters, never inside them. */
+  relicPrice: number | null;
+  trend: TierTrend;
+}
+
+/**
+ * The rows, the two medians they were banded against, and how much of the
+ * market the whole thing rests on.
+ *
+ * Two medians rather than one, because the columns are two different scales:
+ * best-of-four pays about three times what one roll does, so ranking both
+ * against a single median would put the entire radshare column in S and the
+ * entire solo column in F.
+ *
+ * The medians are carried rather than hidden because the view states them —
+ * "S is 2x the median, and the median is 5.1p" is what stops the letters
+ * reading as a verdict handed down from somewhere.
+ */
+export interface TierList {
+  rows: TierListRow[];
+  /** Null when there is nothing to take a median of. */
+  soloMedian: number | null;
+  radshareMedian: number | null;
+  /**
+   * How much of what the ranking rests on actually has a price.
+   *
+   * Carried because this tab fetches no prices of its own since the ranking
+   * moved to the server, and two of its columns still have to know whether more
+   * are coming: "no drop of this relic has a measured trend" and "no drop of
+   * this relic has a price yet" produce the same empty comparison, and only one
+   * of them is a fact about the market. See `tierPriceProgress`.
+   */
+  prices: TierPriceCoverage;
+}
+
+/** The four counts `GET /api/tiers` reports about its own inputs. */
+export interface TierPriceCoverage {
+  parts: number;
+  partsPriced: number;
+  relics: number;
+  relicsPriced: number;
+}

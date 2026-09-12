@@ -38,12 +38,10 @@ import {
   TIER_SORT_LABEL,
   sortTierRows,
   topOfRanking,
-  type TierLetter,
-  type TierList,
   type TierSortColumn,
   type TierSortState,
 } from "../lib/tierList";
-import type { PriceMap, Refinement } from "../api/types";
+import type { Refinement, TierLetter, TierList } from "../api/types";
 
 const ROW_HEIGHT = 48;
 const OVERSCAN = 10;
@@ -53,11 +51,10 @@ const HIGHLIGHT_COUNT = 3;
 const VAULT_LABEL_ID = "rf-tier-vault-label";
 
 interface Props {
-  tierList: TierList;
-  /** Absent until the market answers: with no prices there is nothing to band. */
-  prices: PriceMap | undefined;
+  /** Absent until the ranking arrives: it is computed server-side. */
+  tierList: TierList | undefined;
   /**
-   * Whether the part batch is still landing. See lib/priceProgress.
+   * Whether the parts behind the ranking are still being priced.
    *
    * The letters do not wait on it and never did: an unpriced drop counts as
    * zero, which understates a relic rather than inventing a value for it. The
@@ -67,7 +64,7 @@ interface Props {
    * about the market.
    */
   pricesFilling: boolean;
-  /** Whether the whole-relic batch is still landing. Drives the price column. */
+  /** The same for the relics' own listings. Drives the price column. */
   relicPricesFilling: boolean;
   vault: VaultFilter;
   onVault: (next: VaultFilter) => void;
@@ -99,7 +96,6 @@ interface Props {
  */
 export function TierListTable({
   tierList,
-  prices,
   pricesFilling,
   relicPricesFilling,
   vault,
@@ -111,12 +107,12 @@ export function TierListTable({
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const rows = useMemo(() => sortTierRows(tierList.rows, sort), [tierList.rows, sort]);
+  const rows = useMemo(() => sortTierRows(tierList?.rows ?? [], sort), [tierList?.rows, sort]);
 
   /* The cards are a standing answer to "which relics are worth opening" and the
      sort arrows do not touch them — see `topOfRanking`, which carries why that
      was reversed. The population does, and it is the only thing that does. */
-  const top = useMemo(() => topOfRanking(tierList.rows, HIGHLIGHT_COUNT), [tierList.rows]);
+  const top = useMemo(() => topOfRanking(tierList?.rows ?? [], HIGHLIGHT_COUNT), [tierList?.rows]);
 
   /*
     The state the panel opens on is the one every relic panel opens on, whatever
@@ -142,9 +138,10 @@ export function TierListTable({
 
   const items = virtualizer.getVirtualItems();
 
-  // The rows on screen, told to the server so it prices those first. Same batch
-  // and same reason as the Relics table: this view asks for all 772 relic
-  // prices, and without the hint the ones being looked at fill in last.
+  // The rows on screen, told to the server so it prices those first. This view
+  // asks for no prices at all any more — the ranking arrives with the relic's
+  // own price in it — but the hint is what decides which of 772 relic listings
+  // the warmer reads next, and without it the ones being looked at fill in last.
   usePricePriority({
     relics: items
       .map((item) => rows[item.index]?.relicFullName)
@@ -196,7 +193,7 @@ export function TierListTable({
     </div>
   );
 
-  if (!prices) {
+  if (!tierList) {
     return (
       <RankedPage
         title="Tier List"
@@ -207,8 +204,8 @@ export function TierListTable({
       >
         <EmptyState
           tone="initial"
-          title="No prices yet"
-          description="A letter is a relic against the median relic, and there is no median until the cache fills."
+          title="No ranking yet"
+          description="A letter is a relic against the median relic, and the median is being worked out."
         />
       </RankedPage>
     );

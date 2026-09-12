@@ -8,16 +8,16 @@ import {
   useRelicPrices,
   useRelics,
   useSetLifecycle,
+  useTierList,
   useUnvaultedNames,
 } from "../api/queries";
 import { usePriceRefresh } from "./priceRefresh";
 import { useWishlist } from "./wishlist";
 import { useOwned } from "./owned";
-import { itemPriceProgress, relicPriceProgress } from "./priceProgress";
+import { itemPriceProgress, relicPriceProgress, tierPriceProgress } from "./priceProgress";
 import { buildSets, searchedPartsOf, setMatchesTerm } from "./setCompletion";
 import { applyItemPriceCeiling, buildItemRows, synthesiseItemRow } from "./items";
 import { filterByCategory, filterByPhase, filterByStatus, type SetStatus } from "./setCategories";
-import { buildTierList } from "./tierList";
 import {
   DEFAULT_REFINEMENT,
   applyRelicPriceCeiling,
@@ -270,10 +270,12 @@ export function useCatalogue({
     // cost of the relics it takes — and there the whole catalogue is in play.
     // The wishlist asks for the handful it has lines for and nothing else: a
     // list of four relics must not queue six hundred behind it.
-    // The tier list prices every relic too: it says what the relic itself
-    // sells for beside the letters, and the "worth selling" badge is that
-    // price against what opening it returns.
-    view === "relics" || view === "sets" || view === "tiers"
+    // The tier list is deliberately not in this list any more. It says what
+    // each relic sells for beside the letters, but the server puts that number
+    // in the ranking it now computes, so fetching seven hundred relic prices
+    // into the browser to draw a column that arrives with the rows would be a
+    // second copy of the same request.
+    view === "relics" || view === "sets"
       ? (relics.data ?? [])
           .filter((relic) => relic.refinement === "intact")
           .map((relic) => relic.fullName)
@@ -379,18 +381,21 @@ export function useCatalogue({
   /**
    * Every relic ranked twice, solo and radshare.
    *
-   * Built only for the view that shows it, the way `itemRows` and the sets are:
-   * the pass walks 772 relics twice over and re-medians them, and paying for
-   * that behind another tab would be a re-render nobody sees. The arithmetic
-   * and every decision inside it live in lib/tierList — this is only where the
-   * catalogue, the two price maps and the population choice meet.
+   * Read from `/api/tiers` rather than computed here. The arithmetic and every
+   * decision inside it live in `TierListService` on the backend, which is what
+   * makes the screen and the endpoint the same answer — they used to be two
+   * implementations of it, and the one in the browser is the one that went.
+   *
+   * Fetched only for the view that shows it, as the sets are: the other six
+   * views have no use for a ranking, and 772 rows behind another tab is a
+   * response nobody reads.
    */
-  const tierList = useMemo(
-    () =>
-      view === "tiers"
-        ? buildTierList(relics.data ?? [], prices.data, relicPrices.data, unvaulted.data, tierVault)
-        : { rows: [], soloMedian: null, radshareMedian: null },
-    [view, relics.data, prices.data, relicPrices.data, unvaulted.data, tierVault],
+  const tierListQuery = useTierList(tierVault, view === "tiers");
+
+  /** Whether the prices the ranking rests on are still arriving. See lib/priceProgress. */
+  const tierProgress = useMemo(
+    () => tierPriceProgress(tierListQuery.data?.prices),
+    [tierListQuery.data?.prices],
   );
 
   /**
@@ -476,7 +481,11 @@ export function useCatalogue({
     visible,
     visibleSets,
     /** The seventh view's rows and the two medians they were banded against. */
-    tierList,
+    tierList: tierListQuery.data,
+    /** The ranking's own request, for the waiting and error states. */
+    tierListQuery,
+    /** Whether the parts and the relics behind the ranking are still being priced. */
+    tierProgress,
     /** Every set, before the kind chips: the chips themselves are built from it. */
     allSets: sets,
     /** What each set sells for assembled, by set name. Null while it lands. */

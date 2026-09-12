@@ -22,6 +22,7 @@ import type {
   RelicPriceMap,
   RelicRow,
   SetCategory,
+  TierList,
   WishlistKind,
 } from "../api/types";
 import type { PrimeItemRow } from "../lib/items";
@@ -29,7 +30,7 @@ import type { PrimeSet } from "../lib/setCompletion";
 import type { SetStatus } from "../lib/setCategories";
 import type { RelicSortColumn, VaultFilter } from "../lib/rows";
 import type { SortState } from "../lib/sorting";
-import type { TierList, TierSortColumn, TierSortState } from "../lib/tierList";
+import type { TierSortColumn, TierSortState } from "../lib/tierList";
 import type { WishlistEntry } from "../lib/wishlist";
 
 export type PaneView = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers";
@@ -104,7 +105,18 @@ interface Props {
   sort: SortState<RelicSortColumn>;
   onSort: (column: RelicSortColumn) => void;
   /** Every relic ranked twice, plus the two medians it was banded against. */
-  tierList: TierList;
+  tierList: TierList | undefined;
+  /** The ranking's own request: it is a round trip of its own now. */
+  ranking: { isError: boolean; error: unknown; refetch: () => void };
+  /**
+   * Whether the prices the ranking rests on are still arriving.
+   *
+   * Its own pair rather than the two above: this view fetches no prices, so the
+   * batches that fill the other tables say nothing about it. The counts come
+   * back with the ranking. See lib/priceProgress.
+   */
+  tierPricesFilling: boolean;
+  tierRelicPricesFilling: boolean;
   /** Which relics the tier list ranks. Its own control, not the filter bar's. */
   tierVault: VaultFilter;
   onTierVault: (next: VaultFilter) => void;
@@ -166,6 +178,9 @@ export function ResultsPane({
   sort,
   onSort,
   tierList,
+  ranking,
+  tierPricesFilling,
+  tierRelicPricesFilling,
   tierVault,
   onTierVault,
   tierSort,
@@ -205,15 +220,32 @@ export function ResultsPane({
     return <DucanetorTable prices={prices} onInfo={onInfo} quantityOf={quantityOf} />;
   }
 
-  // Below the two guards above, unlike Endo: this one reads the relic
-  // catalogue, so it has to wait for it the way the four catalogue views do.
+  // Below the two guards above, unlike Endo: the panel a row opens reads the
+  // relic catalogue, so this view waits for it the way the four catalogue views
+  // do. The rows themselves no longer come from it — they are one request of
+  // their own, which is why the failure of that request is answered here rather
+  // than left to the table to draw as an eternal "waiting".
   if (view === "tiers") {
+    if (ranking.isError) {
+      return (
+        <EmptyState
+          tone="error"
+          title="Could not load the ranking"
+          description={String(ranking.error)}
+          actions={
+            <Button variant="outline" size="sm" onClick={ranking.refetch}>
+              Retry
+            </Button>
+          }
+        />
+      );
+    }
+
     return (
       <TierListTable
         tierList={tierList}
-        prices={prices}
-        pricesFilling={pricesFilling}
-        relicPricesFilling={relicPricesFilling}
+        pricesFilling={tierPricesFilling}
+        relicPricesFilling={tierRelicPricesFilling}
         vault={tierVault}
         onVault={onTierVault}
         sort={tierSort}

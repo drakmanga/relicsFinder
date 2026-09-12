@@ -1,4 +1,4 @@
-import { normalizeDropInfo, normalizeRelic } from "./normalize";
+import { normalizeDropInfo, normalizeRelic, normalizeTierList } from "./normalize";
 import type {
   DropInfo,
   EndoOffer,
@@ -10,6 +10,7 @@ import type {
   PrimeLifecycle,
   Relic,
   RelicPrice,
+  TierList,
   UpdateInstall,
   UpdateStatus,
   WireDropInfo,
@@ -17,6 +18,7 @@ import type {
   WireOwnedEntry,
   WireRelic,
   WireRelicPrice,
+  WireTierList,
   WireWishlistEntry,
 } from "./types";
 
@@ -370,6 +372,27 @@ export const api = {
   async setLifecycle(signal?: AbortSignal): Promise<LifecycleMap> {
     const wire = await get<PrimeLifecycle[]>("/sets/lifecycle", signal);
     return new Map(wire.map((row) => [row.setName, row]));
+  },
+
+  /**
+   * Every relic ranked twice, and the two medians it was banded against.
+   *
+   * The whole ranking in one request, and no prices: the arithmetic runs on the
+   * server, so this tab no longer fetches the six hundred part prices and seven
+   * hundred relic prices it used to compute the letters from.
+   *
+   * The population is the one parameter that changes the answer rather than the
+   * order of it — it moves both medians, and therefore every letter — so it is
+   * the one the tab sets. The rows are asked for by name because that is the
+   * order this view treats as "unsorted": the table reorders itself as the
+   * reader clicks, which is instant and part of the shared link, and asking the
+   * server for it would put a round trip under every header click. `limit` is
+   * for the callers this endpoint exists for; a table showing 772 rows has
+   * nothing to cut.
+   */
+  async tierList(vault: string, signal?: AbortSignal): Promise<TierList> {
+    const query = `vault=${seg(vault)}&sort=relic&order=asc`;
+    return normalizeTierList(await get<WireTierList>(`/tiers?${query}`, signal));
   },
 };
 

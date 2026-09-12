@@ -3,9 +3,10 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
 /**
- * The Spring Boot backend has no CORS configuration, so in development Vite
- * proxies /api to it rather than the browser calling it cross-origin. That
- * keeps the backend untouched and makes dev and prod use the same relative
+ * The Spring Boot backend answers cross-origin on one endpoint only — the relic
+ * ranking, whose caller is a script rather than a page — so in development Vite
+ * proxies /api to it rather than the browser calling it cross-origin. That keeps
+ * the backend's surface as it is and makes dev and prod use the same relative
  * URLs.
  *
  * In production the build output is what Spring Boot serves from

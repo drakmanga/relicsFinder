@@ -72,6 +72,10 @@ export function usePriceRefresh(revision: number | undefined, polledAt: number) 
       // names it was asked for — see `keys`.
       void queryClient.invalidateQueries({ queryKey: keys.allItemPrices });
       void queryClient.invalidateQueries({ queryKey: keys.allRelicPrices });
+      // And the ranking, which is computed from those same prices on the server
+      // and would otherwise be the one screen left showing the morning's order —
+      // the very thing this exists to stop.
+      void queryClient.invalidateQueries({ queryKey: keys.allTierLists });
       return;
     }
 

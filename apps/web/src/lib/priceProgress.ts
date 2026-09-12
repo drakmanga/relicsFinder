@@ -1,5 +1,5 @@
-import { stillFilling } from "../api/queries";
-import type { PriceMap, RelicPriceMap } from "../api/types";
+import { stillFilling, stillFillingCount } from "../api/queries";
+import type { PriceMap, RelicPriceMap, TierPriceCoverage } from "../api/types";
 
 /**
  * How far a price batch has got.
@@ -45,6 +45,29 @@ export function relicPriceProgress(
 ): PriceProgress {
   if (!prices) return { ...NOTHING, filling: pending };
   return measure([...prices.values()].map((price) => price.averagePrice));
+}
+
+/**
+ * Progress over the prices behind the ranking, which this tab never holds.
+ *
+ * Two batches in one answer, because the Tier List draws both: the parts decide
+ * whether the Trend column is waiting or has nothing to compare, and the
+ * relics' own listings decide whether the price column shows a skeleton or "not
+ * listed". They fill at different speeds, so they are reported apart.
+ *
+ * Undefined while the ranking itself is in flight: nothing has been asked yet,
+ * and both columns are waiting rather than settled.
+ */
+export function tierPriceProgress(coverage: TierPriceCoverage | undefined): {
+  pricesFilling: boolean;
+  relicPricesFilling: boolean;
+} {
+  if (!coverage) return { pricesFilling: true, relicPricesFilling: true };
+
+  return {
+    pricesFilling: stillFillingCount(coverage.partsPriced, coverage.parts),
+    relicPricesFilling: stillFillingCount(coverage.relicsPriced, coverage.relics),
+  };
 }
 
 // The request's own pending state is not consulted here, and cannot be: a batch

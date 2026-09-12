@@ -240,14 +240,14 @@ const MUTANTS = [
   {
     name: "stillFilling waits for the untraded parts too",
     file: "apps/web/src/api/queries.ts",
-    from: "return missing > values.length * PRICE_RESIDUE;",
-    to: "return missing > 0;",
+    from: "  return total - priced > total * PRICE_RESIDUE;",
+    to: "  return total - priced > 0;",
   },
   {
     name: "the residue boundary lets one price too many count as a wait",
     file: "apps/web/src/api/queries.ts",
-    from: "return missing > values.length * PRICE_RESIDUE;",
-    to: "return missing >= values.length * PRICE_RESIDUE;",
+    from: "  return total - priced > total * PRICE_RESIDUE;",
+    to: "  return total - priced >= total * PRICE_RESIDUE;",
   },
   {
     name: "progress forgets a first request is a wait of its own",
@@ -278,51 +278,6 @@ const MUTANTS = [
     file: "apps/web/src/lib/priceEta.ts",
     from: "const burst = last && next.at - last.at < COALESCE_MS && next.total === last.total;",
     to: "const burst = last && next.at - last.at < COALESCE_MS;",
-  },
-  {
-    name: "medianOf sorts the way strings sort",
-    file: "apps/web/src/lib/tierList.ts",
-    from: "const sorted = [...values].sort((a, b) => a - b);",
-    to: "const sorted = [...values].sort();",
-  },
-  {
-    name: "a band stops owning its own lower edge",
-    file: "apps/web/src/lib/tierList.ts",
-    from: "return TIER_BANDS.find((band) => value >= band.minMultiple * median)?.letter ?? LOWEST_BAND;",
-    to: "return TIER_BANDS.find((band) => value > band.minMultiple * median)?.letter ?? LOWEST_BAND;",
-  },
-  {
-    name: "both columns are ranked against the solo median",
-    file: "apps/web/src/lib/tierList.ts",
-    from: "const radshareMedian = medianOf(unranked.map((row) => row.radshareValue));",
-    to: "const radshareMedian = soloMedian;",
-  },
-  {
-    // The two below are the fault the tier list was reported with: Trend read
-    // Steady on all 772 relics while the prices behind them carried a movement.
-    // Either mutation puts it back, and each one breaks a different half of the
-    // path — the map that is supposed to be re-priced, and the call that is
-    // supposed to read it.
-    name: "the ninety-day baseline re-prices nothing",
-    file: "apps/web/src/lib/tierList.ts",
-    from: "const factor = 1 + (item.trend ?? 0) / 100;",
-    to: "const factor = 1;",
-  },
-  {
-    name: "the trend measures today against today",
-    file: "apps/web/src/lib/tierList.ts",
-    from: "        expectedValue(intact, baseline),",
-    to: "        expectedValue(intact, prices),",
-  },
-  {
-    // The third state of the same fault, and the one that survived the two
-    // above: with no drop carrying a trend the baseline is a copy of today, the
-    // movement computes to zero, and zero clears no threshold — so the column
-    // said Steady about a comparison nobody had made.
-    name: "a relic nobody measured is called steady again",
-    file: "apps/web/src/lib/tierList.ts",
-    from: 'if (!measured || ninetyDaysAgo <= 0) return "no-baseline";',
-    to: 'if (ninetyDaysAgo <= 0) return "no-baseline";',
   },
   {
     name: "a cell still being fetched is labelled instead of waiting",
@@ -386,8 +341,27 @@ const MUTANTS = [
     to: "  return open === true;",
   },
   {
-    // The reversal this run made: the podium was the head of whatever the table
-    // was sorted by, so an ascending column put the three worst relics on it.
+    // The ranking itself moved to the backend with brief-020 and its mutants
+    // went with it — see scripts/mutants-java.mjs, which carries the six that
+    // used to be here. What is left on this side is the translation and the
+    // order, and these are its two halves.
+    name: "a movement with no number behind it becomes a movement of zero",
+    file: "apps/web/src/api/normalize.ts",
+    from: 'if (wire.trend === "moved" && wire.trendPercent !== null) return wire.trendPercent;',
+    to: 'if (wire.trend === "moved") return wire.trendPercent as number;',
+  },
+  {
+    // The two batches behind the ranking fill at different speeds, and reading
+    // one of them for both puts the price column's skeleton under the trend
+    // column's answer.
+    name: "the ranking reports one coverage for both of its batches",
+    file: "apps/web/src/lib/priceProgress.ts",
+    from: "    relicPricesFilling: stillFillingCount(coverage.relicsPriced, coverage.relics),",
+    to: "    relicPricesFilling: stillFillingCount(coverage.partsPriced, coverage.parts),",
+  },
+  {
+    // The podium follows the population, which is a request, and not the sort,
+    // which is a click. The reversal run 006 made.
     name: "the podium follows the table's own sort again",
     file: "apps/web/src/lib/tierList.ts",
     from: '  return sortTierRows(rows, { column: DEFAULT_TIER_SORT, direction: "desc" }).slice(0, count);',
