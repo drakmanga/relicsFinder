@@ -53,7 +53,7 @@
 			release, and correctly ordered BEFORE 0.1.0 by the comparison the
 			update check does — so a working copy is told the release is newer.
 		-->
-		<revision>0.4.4</revision>
+		<revision>0.4.5</revision>
 	</properties>
 	<dependencies>
 		<dependency>
