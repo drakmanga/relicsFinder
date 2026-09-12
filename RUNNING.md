@@ -297,28 +297,41 @@ plus the two medians the letters are bands around. The screen and this endpoint
 are the same answer: the ranking is computed once, on the server, and the tab
 reads it from here.
 
-| Parameter | Values | What it does |
-| --- | --- | --- |
-| `vault` | `all` (default), `farmable`, `vaulted` | Which relics are ranked. It moves both medians with it, so a letter means "against these relics" — `farmable` ranks the ~34 relics currently dropping against each other, where against the whole catalogue nearly all of them are D or F |
-| `sort` | `solo` (default), `radshare`, `price`, `relic` | The column the rows come back in |
-| `order` | `asc`, `desc` | Defaults to best-first on the three value columns and A-to-Z on `relic` |
-| `limit` | any number from 1 | How many rows to return. It cuts the response and never the population: the top twenty are still ranked against every relic `vault` left |
+| Parameter | Values                                         | What it does                                                                                                                                                                                                                              |
+| --------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vault`   | `all` (default), `farmable`, `vaulted`         | Which relics are ranked. It moves both medians with it, so a letter means "against these relics" — `farmable` ranks the ~34 relics currently dropping against each other, where against the whole catalogue nearly all of them are D or F |
+| `sort`    | `solo` (default), `radshare`, `price`, `relic` | The column the rows come back in                                                                                                                                                                                                          |
+| `order`   | `asc`, `desc`                                  | Defaults to best-first on the three value columns and A-to-Z on `relic`                                                                                                                                                                   |
+| `limit`   | any number from 1                              | How many rows to return. It cuts the response and never the population: the top twenty are still ranked against every relic `vault` left                                                                                                  |
 
 A wrong spelling is answered with a 400 saying which parameter it was and what
 it accepts, rather than with the default ranking.
 
-**How often it is worth asking.** Once an hour. Under that you will be handed
-the same numbers you already have, because no price behind the ranking is
-re-read more often than that — the ones at the top of the table hourly, the rest
-of the catalogue every three hours, and the relic list itself once a day. The
-response says so itself rather than making you count: `asOf` is when the newest
-price behind it was read, and `nextUpdateAt` is the first moment any of them is
-allowed to be read again. Ask before that and nothing can have changed.
+**How often it is worth asking.** For any one relic, once an hour. Nothing here
+asks the market about the same thing faster than that: the prices that decide
+the top of the ranking are re-read at most once an hour, everything else in the
+catalogue at most once every three hours, and the list of relics itself once a
+day at 04:20. So a script watching one relic, or the top twenty, has nothing to
+gain from asking more often.
+
+The whole table is a different question, and the honest answer is that it moves
+sooner: it rests on about six hundred part prices, and while each of them is
+read at most hourly, at any given minute some of them are being read. A script
+that pulls all 772 rows every minute will see changes — small ones, in the
+middle of the table, on relics nothing was waiting for.
+
+The response says which case you are in rather than making you guess. `asOf` is
+when the newest price behind the ranking was read, and `nextUpdateAt` is the
+first moment ANY of them is allowed to be read again — before it, nothing in the
+ranking can have moved, and `Cache-Control` carries exactly that wait. It sits in
+the past on an instance whose background reading has fallen behind, which is the
+plain way of saying "at any moment now".
 
 Asking anyway is cheap and nothing stops you. Every response carries an `ETag`,
 so a script that sends it back — `curl -H "If-None-Match: <etag>"` — is answered
-with an empty 304 for as long as the ranking is byte for byte the one it already
-has.
+with an empty 304 and no body for as long as the ranking is byte for byte the
+one it already has. That, rather than a schedule, is what makes a tight polling
+loop cost the instance almost nothing.
 
 **How much of it is real yet.** A freshly started instance has read only part of
 the market, and a relic whose drops have no price yet counts as worth nothing,

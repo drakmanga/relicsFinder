@@ -8,13 +8,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.WebRequest;
 import relics.reliceApi.service.TierListService;
 import relics.reliceApi.model.TierListQuery;
 import relics.reliceApi.model.TierListResponse;
+import relics.reliceApi.model.TierListRow;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.Map;
 
 /**
@@ -78,7 +84,8 @@ public class TierListController {
             @RequestParam(required = false) String vault,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order,
-            @RequestParam(required = false) Integer limit) throws IOException {
+            @RequestParam(required = false) Integer limit,
+            WebRequest request) throws IOException {
 
         TierListQuery query;
         try {
@@ -92,10 +99,81 @@ public class TierListController {
         }
 
         TierListResponse ranking = tierListService.rank(query);
+        String tag = rankingTag(ranking);
+
+        // 304 and no body when the caller already has this ranking. Answered
+        // here rather than by a filter over the rendered bytes, because two of
+        // those bytes move on a beat of their own — see rankingTag.
+        if (request.checkNotModified(tag)) return null;
 
         return ResponseEntity.ok()
+                .eTag(tag)
                 .cacheControl(CacheControl.maxAge(holdFor(ranking.nextUpdateAt())))
                 .body(ranking);
+    }
+
+    /**
+     * What identifies this ranking — deliberately not when it was read.
+     *
+     * <p>{@code asOf} and {@code nextUpdateAt} are excluded, and that exclusion
+     * is the whole reason this exists rather than a filter hashing the response
+     * body. The rolling refresh re-reads one price every five seconds, and most
+     * re-reads come back with the number they came back with last time; {@code
+     * asOf} follows every one of them regardless. Hashing it would hand a
+     * different tag to a poller each minute for a ranking whose rows had not
+     * moved — measured on a live instance, which is where this was found — and
+     * the 304 that makes a tight polling loop free would never be reachable.
+     *
+     * <p>Everything a caller reads as the answer is in here: the parameters it
+     * was ranked under, both medians, every row, and the coverage counts that
+     * say how much of the market it rests on.
+     */
+    static String rankingTag(TierListResponse ranking) {
+        StringBuilder canonical = new StringBuilder()
+                .append(ranking.version()).append('|')
+                .append(ranking.vault()).append('|')
+                .append(ranking.sort()).append('|')
+                .append(ranking.direction()).append('|')
+                .append(ranking.players()).append('|')
+                .append(ranking.population()).append('|')
+                .append(ranking.soloMedian()).append('|')
+                .append(ranking.radshareMedian()).append('|')
+                .append(ranking.prices().parts()).append('|')
+                .append(ranking.prices().partsPriced()).append('|')
+                .append(ranking.prices().relics()).append('|')
+                .append(ranking.prices().relicsPriced());
+
+        for (TierListRow row : ranking.rows()) {
+            canonical.append('\n')
+                    .append(row.relic()).append(';')
+                    .append(row.era()).append(';')
+                    .append(row.soloValue()).append(';')
+                    .append(row.radshareValue()).append(';')
+                    .append(row.soloBand()).append(';')
+                    .append(row.radshareBand()).append(';')
+                    .append(row.relicPrice()).append(';')
+                    .append(row.trend()).append(';')
+                    .append(row.trendPercent());
+        }
+
+        return '"' + digestOf(canonical.toString()) + '"';
+    }
+
+    /**
+     * A short digest of that text. SHA-256 because it is the one every JDK has;
+     * nothing here is a security claim, only a name for a version of the rows.
+     */
+    private static String digestOf(String canonical) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256")
+                    .digest(canonical.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash, 0, 16);
+        } catch (NoSuchAlgorithmException e) {
+            // Unreachable: every JDK carries SHA-256. Rethrown rather than
+            // swallowed, because an ETag computed from something else would be
+            // a cache key that lies.
+            throw new IllegalStateException("SHA-256 is missing from this JVM", e);
+        }
     }
 
     private static TierListQuery parse(String vault, String sort, String order, Integer limit) {

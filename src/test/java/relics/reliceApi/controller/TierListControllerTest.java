@@ -2,8 +2,14 @@ package relics.reliceApi.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.ServletWebRequest;
+import relics.reliceApi.model.TierBand;
 import relics.reliceApi.model.TierListQuery;
 import relics.reliceApi.model.TierListResponse;
+import relics.reliceApi.model.TierListRow;
+import relics.reliceApi.model.TierTrend;
 import relics.reliceApi.service.TierListService;
 
 import java.io.IOException;
@@ -30,15 +36,46 @@ class TierListControllerTest {
     private final TierListController controller = new TierListController(service);
 
     private TierListResponse ranking(String nextUpdateAt) {
-        return new TierListResponse(TierListResponse.VERSION, "all", "solo", "desc", 4, 0,
-                null, null, null, nextUpdateAt,
-                new TierListResponse.Coverage(0, 0, 0, 0), List.of());
+        return ranking(nextUpdateAt, null, List.of());
+    }
+
+    private TierListResponse ranking(String nextUpdateAt, String asOf, List<TierListRow> rows) {
+        return new TierListResponse(TierListResponse.VERSION, "all", "solo", "desc", 4, rows.size(),
+                null, null, asOf, nextUpdateAt,
+                new TierListResponse.Coverage(0, 0, 0, 0), rows);
+    }
+
+    private static TierListRow row(double soloValue) {
+        return new TierListRow("Lith V9", "Lith", soloValue, soloValue * 3,
+                TierBand.C, TierBand.C, null, TierTrend.STEADY, null);
+    }
+
+    /** A request carrying no conditions, and its own response to write a 304 into. */
+    private static ServletWebRequest bare() {
+        return new ServletWebRequest(get(), new MockHttpServletResponse());
+    }
+
+    private static ServletWebRequest holding(String etag) {
+        MockHttpServletRequest request = get();
+        request.addHeader("If-None-Match", etag);
+        return new ServletWebRequest(request, new MockHttpServletResponse());
+    }
+
+    /**
+     * The method is set explicitly: a mock request carries none, and an
+     * If-None-Match on anything but a GET or a HEAD is a precondition rather
+     * than a cache question — which Spring answers 412 to, as it should.
+     */
+    private static MockHttpServletRequest get() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("GET");
+        return request;
     }
 
     private ResponseEntity<?> call(String vault, String sort, String order, Integer limit)
             throws IOException {
         when(service.rank(any())).thenReturn(ranking(null));
-        return controller.tierList(vault, sort, order, limit);
+        return controller.tierList(vault, sort, order, limit, bare());
     }
 
     @Test
@@ -99,6 +136,37 @@ class TierListControllerTest {
         assertThat(TierListController.holdFor(
                 Instant.now().minus(Duration.ofMinutes(5)).toString())).isZero();
         assertThat(TierListController.holdFor(null)).isZero();
+    }
+
+    @Test
+    void answersACallerThatAlreadyHasThisRankingWithNothing() throws IOException {
+        List<TierListRow> rows = List.of(row(10));
+        when(service.rank(any())).thenReturn(ranking(null, "2026-09-12T10:00:00Z", rows));
+
+        String tag = TierListController.rankingTag(ranking(null, "2026-09-12T10:00:00Z", rows));
+        ServletWebRequest second = holding(tag);
+
+        assertThat(controller.tierList(null, null, null, null, second)).isNull();
+        assertThat(second.getResponse().getStatus()).isEqualTo(304);
+    }
+
+    @Test
+    void keepsTheSameTagForARankingWhosePricesWereOnlyReReRead() {
+        // The measured defect: the rolling refresh re-reads one price every five
+        // seconds and most re-reads come back with the number they had, so a tag
+        // that followed asOf handed a poller a fresh 200 every minute for rows
+        // that had not moved.
+        List<TierListRow> rows = List.of(row(10));
+
+        assertThat(TierListController.rankingTag(ranking(null, "2026-09-12T10:00:00Z", rows)))
+                .isEqualTo(TierListController.rankingTag(
+                        ranking("2026-09-12T14:00:00Z", "2026-09-12T10:05:00Z", rows)));
+    }
+
+    @Test
+    void changesTheTagWhenAnyNumberInTheRankingMoves() {
+        assertThat(TierListController.rankingTag(ranking(null, null, List.of(row(10)))))
+                .isNotEqualTo(TierListController.rankingTag(ranking(null, null, List.of(row(10.5)))));
     }
 
     @Test
