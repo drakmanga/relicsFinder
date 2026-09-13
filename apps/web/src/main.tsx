@@ -6,6 +6,7 @@ import { OrokinProvider } from "relic-finder-ui";
 import "relic-finder-ui/styles.css";
 import "./app.css";
 import { App } from "./App";
+import { forgetSkippedVersion } from "./lib/forgetSkippedVersion";
 import { syncFromServer } from "./lib/wishlist";
 import { syncOwnedFromServer } from "./lib/owned";
 
@@ -30,6 +31,10 @@ const queryClient = new QueryClient({
 // arrives.
 void syncFromServer();
 void syncOwnedFromServer();
+
+// Before the topbar asks whether to announce anything. See the module: it is
+// one-shot and dated, and it is the last thing that knows the old key's name.
+forgetSkippedVersion();
 
 const container = document.getElementById("root");
 if (!container) throw new Error("#root non trovato in index.html");

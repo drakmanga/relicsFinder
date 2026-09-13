@@ -24,9 +24,6 @@ interface Versions {
    * versions and the notes either way.
    */
   action?: ReactNode;
-
-  /** They chose not to be asked about this version again. */
-  onSkip: () => void;
 }
 
 export interface UpdateDialogProps extends Versions {
@@ -50,6 +47,16 @@ export interface UpdateNoticeProps extends Versions {
  * characters over "Update" and assumes nothing of a reader who has never
  * thought about software versions — which is the project's standing rule, and
  * the reason none of this is in a tooltip either.
+ *
+ * `Close` is the only way out that is not the action, and that is the decision
+ * rather than an omission. There used to be a `Skip this version` beside it,
+ * which remembered the release and never mentioned it again: one click, on a
+ * button that looked as harmless as `Close`, deleted the only signal that a
+ * newer version exists, and nothing brought it back or said it had gone. The
+ * argument for it — that a notice returning on every reload is a notice people
+ * learn to ignore — is true and is the accepted cost, because an insistent
+ * badge can still be looked at again and a deleted one cannot. Do not add a
+ * third exit back without answering that.
  */
 export function UpdateDialog({
   open,
@@ -58,7 +65,6 @@ export function UpdateDialog({
   currentVersion,
   notes,
   action,
-  onSkip,
 }: UpdateDialogProps) {
   return (
     <Dialog
@@ -70,15 +76,6 @@ export function UpdateDialog({
         <>
           <Button variant="ghost" onClick={onClose}>
             Close
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              onClose();
-              onSkip();
-            }}
-          >
-            Skip this version
           </Button>
           {action}
         </>
@@ -121,10 +118,10 @@ export function UpdateDialog({
  * library: it takes two version strings, some text and an ending, and the thing
  * that knows where those came from stays in the app.
  *
- * Skipping unmounts the notice, so focus lands on the document and the next Tab
- * starts at the first control in the bar. That is deliberate rather than
- * unhandled: the element focus would otherwise return to is the one being
- * removed, and the top of the bar is where the notice was.
+ * Nothing here ever unmounts itself: the notice stands for as long as the
+ * version it names is behind, so closing the dialog hands focus back to a
+ * button that is still on screen, which is what the dialog's focus return
+ * expects.
  */
 export function UpdateNotice({ className, ...versions }: UpdateNoticeProps) {
   const [open, setOpen] = useState(false);

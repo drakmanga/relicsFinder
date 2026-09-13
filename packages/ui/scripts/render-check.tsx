@@ -52,6 +52,13 @@ interface Check {
   element: ReactElement;
   /** Substrings that must appear in the rendered markup. */
   expect: string[];
+  /**
+   * Substrings that must NOT appear. For the cases where the absence is the
+   * decision rather than a thing not built yet, and where a positive list can
+   * only say what is there — a footer that grew a button back still satisfies
+   * every needle in `expect`.
+   */
+  reject?: string[];
 }
 
 const checks: Check[] = [
@@ -404,7 +411,6 @@ const checks: Check[] = [
         latestVersion="0.2.0"
         currentVersion="0.1.0"
         notes={"What changed\n- a thing"}
-        onSkip={() => {}}
       />
     ),
     // Closed: the notice is a button in the topbar until somebody opens it, so
@@ -422,7 +428,6 @@ const checks: Check[] = [
         currentVersion="0.1.0"
         notes={"What changed\n- a thing"}
         action={<Button variant="primary">See the release</Button>}
-        onSkip={() => {}}
       />
     ),
     // Both numbers spelled out, and the ending the dialog did not supply.
@@ -436,9 +441,12 @@ const checks: Check[] = [
       "You have version 0.1.0.",
       "rf-update-notes",
       'tabindex="0"',
-      "Skip this version",
       "See the release",
     ],
+    // `Close` and the ending, and no third way out. A button that remembers a
+    // release and never mentions it again is a badge one click deletes for
+    // good; the reason it went is on `UpdateDialog`.
+    reject: ["Skip this version"],
   },
   {
     name: "Modal",
@@ -526,6 +534,14 @@ for (const check of checks) {
 
   if (missing.length > 0) {
     console.error(`FAIL  ${check.name} — missing: ${missing.join(", ")}`);
+    failures++;
+    continue;
+  }
+
+  const present = (check.reject ?? []).filter((needle) => html.includes(needle));
+
+  if (present.length > 0) {
+    console.error(`FAIL  ${check.name} — should not render: ${present.join(", ")}`);
     failures++;
     continue;
   }
