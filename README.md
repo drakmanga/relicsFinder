@@ -42,6 +42,11 @@ return measured in **platinum per void trace**, filters by tier / rarity / refin
 vault state / maximum price on the catalogue and by kind / progress / status on the sets,
 and the whole view in the URL — a screen is shared with a link.
 
+On the three ranked views a **Refresh** button re-reads what they rest on without losing
+your filters, your sort or an open panel, and then says in words what it re-read — a
+refresh that changed nothing because the data was already new used to look exactly like one
+that failed.
+
 ### 🚀 Coming soon
 
 - **🧾 Inventory tracking** — know whether you already own a relic
@@ -245,22 +250,55 @@ A Postman collection is included.
 1. Open Postman
 2. Click **Import**
 3. Pick `src/main/resources/warframeRelic.postman_collection.json`
-4. Try every endpoint
+4. Try the relic endpoints
 
-### Main endpoints
+It covers the catalogue half only — it predates prices, rankings and the lists — so the
+full surface is the one below rather than the one in the collection.
+
+### The endpoints
+
+The catalogue:
 
 ```
 GET  /api/relics                             every relic, four states each
+GET  /api/relics/tiers                       the whole catalogue, grouped
+GET  /api/relics/{axi}                       one era: lith, meso, neo or axi
 GET  /api/relics/relic/{Lith V9}             one relic (full name, tier included)
 GET  /api/relics/drop-info/{Lith V9}         missions that drop it
+GET  /api/relics/isVaulted/{Lith V9}         true or false, nothing else
 GET  /api/relics/unvaulted                   what is in rotation right now
+GET  /api/search/{Volt Prime Chassis}        every relic that holds that part
 GET  /api/sets/lifecycle                     where each Prime set sits in its price cycle
 POST /api/relics/update                      re-read the catalogue from the drop tables
-GET  /api/market/item/{Volt Prime Chassis}   price of one part
-POST /api/market/items                       prices in bulk (array of names in the body)
-POST /api/market/relics                      prices of whole relics, in bulk
-GET  /api/market/status                      how much of the price cache is warm
+```
+
+Prices:
+
+```
+GET  /api/market/item/{Volt Prime Chassis}           price of one part
+GET  /api/market/item/{Volt Prime Chassis}/history   ninety days of trades for it
+POST /api/market/items                               prices in bulk (array of names in the body)
+GET  /api/market/relic/{Lith V9}                     price, median, trades and trend of a relic
+GET  /api/market/relic/{Lith V9}/history             ninety days of trades for that relic
+POST /api/market/relics                              prices of whole relics, in bulk
+GET  /api/market/{Lith V9}                           the bare average for a relic, and nothing else
+GET  /api/market/status                              how much of the price cache is warm
+GET  /api/market/sensitive                           which prices are re-read faster than the rest
+POST /api/market/priority                            which rows are on screen, so they are priced first
+```
+
+Rankings:
+
+```
+GET  /api/tiers                              every relic banded S to F, solo and radshare
 GET  /api/endo/offers                        Ayatan ranked by Endo per platinum
+GET  /api/endo/status                        when those offers were last read
+POST /api/refresh/{ducats|endo|tiers}        re-read what one ranked view rests on
+```
+
+Your lists, and the application itself:
+
+```
 GET  /api/wishlist                           the stored wishlist
 PUT  /api/wishlist                           replaces it
 GET  /api/owned                              the parts you already have
@@ -272,6 +310,33 @@ GET  /api/app/update/install                 how far that has got, or why it wil
 
 Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
 200, `/api/relics/relic/V9` answers 404.
+
+`/api/tiers` is the whole Tier List as data, for a squad spreadsheet or a script that
+checks the top twenty before a session. It takes `vault` (`all`, `farmable`, `vaulted`),
+`sort` (`solo`, `radshare`, `price`, `relic`), `order` (`asc`, `desc`) and `limit` — and
+`limit` cuts the response, never the population, so the top twenty are still banded against
+every relic the vault filter left. It answers an `ETag` and a `Cache-Control` computed from
+when the ranking can first differ, so polling it costs a 304 and no body. A misspelled
+parameter is a 400 naming what it accepts, rather than a 200 carrying the default. It is
+the one endpoint that allows any origin, because it is read by tools rather than by this
+page.
+
+`/api/refresh/{view}` is what the **Refresh** button on those three views calls: it re-reads
+the source behind one of them — the drop tables and the item database for `ducats` and
+`tiers`, the Ayatan sell orders for `endo` — and never the ~1500 cached prices, which are eight
+minutes of a market that allows three requests a second. Each source carries a cooldown
+(`relics.refresh.catalogue-cooldown`, `relics.refresh.orders-cooldown`), so asking twice
+inside the window is one re-read and one refusal, and the answer says when the view may be
+asked again. A source that did not answer still comes back 200, carrying
+`source-unavailable`: somebody else's host being down is an answer, not a failure of this
+one.
+
+`/api/market/{relicName}` predates `/api/market/relic/{relicName}` and answers a bare
+average with no trade count. New callers want the second one.
+
+`/api/market/priority` is a hint rather than a request for data: the tables go on asking for
+the whole catalogue, and this says which thirty rows someone is looking at. It answers 204
+whatever happens, so there is nothing to handle.
 
 `/api/app/update` is the one that talks to GitHub rather than to Warframe. It answers 200
 even with no network — `known: false` and nothing else filled — because a machine that is
@@ -350,12 +415,27 @@ relics.wishlist.path=data/wishlist.json
 relics.owned.path=data/owned.json
 relics.price-cache.path=data/price-cache.json
 relics.catalogue.path=src/main/resources/relics.json
+relics.unknown-items.path=data/unknown-items.txt
 ```
 
 The paths are relative to the working directory, which is fine for a checkout and wrong for
-an installed program: the Windows build points all four at
+an installed program: the Windows build points them all at
 `%LOCALAPPDATA%\RelicFinder\data` instead, since the folder it was installed into is not
-writable.
+writable. `unknown-items.txt` is a log rather than state: the parts the drop tables named
+and warframe.market has no listing for.
+
+### The rest of it
+
+```properties
+relics.update.repository=drakmanga/relicsFinder   # where a new release is looked for
+relics.update.image=ghcr.io/drakmanga/relicsfinder
+relics.update.ttl=PT1H                            # how long that answer is cached
+relics.refresh.catalogue-cooldown=PT15M           # floor under refresh/ducats and refresh/tiers
+relics.refresh.orders-cooldown=PT1M               # floor under refresh/endo
+```
+
+Both cooldowns are held on the source rather than on the view, so refreshing Ducanetor and
+then the Tier List inside the window is one re-read and one refusal.
 
 ### API keys
 
