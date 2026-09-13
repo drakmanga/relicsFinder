@@ -53,10 +53,14 @@ describe("installMessage", () => {
     expect(installMessage(install({ stage: "verifying" }))).toContain("real one");
   });
 
-  it("warns that the application is about to disappear and come back", () => {
+  /* The promise the ending now has to keep: the tab the reader is looking at
+     is the one that comes back, rather than being left behind by a second one.
+     A sentence about the application closing described the old behaviour and
+     would now be describing something the reader does not see. */
+  it("promises that this page is what comes back", () => {
     const message = installMessage(install({ stage: "starting" }));
-    expect(message).toContain("close");
-    expect(message).toContain("open again");
+    expect(message).toContain("This page");
+    expect(message).toContain("comes back");
   });
 
   it("hands a failure straight to its explanation", () => {

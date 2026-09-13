@@ -2,6 +2,7 @@ import { Button, ExternalLinkIcon, UpdateNotice } from "relic-finder-ui";
 
 import { useAppUpdate } from "../api/queries";
 import { plainReleaseNotes } from "../lib/releaseNotes";
+import { useAwaitNewVersion } from "../lib/useAwaitNewVersion";
 import { DockerUpdateAction } from "./DockerUpdateAction";
 import { WindowsUpdateAction } from "./WindowsUpdateAction";
 
@@ -42,6 +43,11 @@ import { WindowsUpdateAction } from "./WindowsUpdateAction";
 export function AppUpdateNotice() {
   const update = useAppUpdate();
 
+  // Above the dialog on purpose: the wait for the restarted application has to
+  // outlive a reader clicking Close on a download that takes a minute. See
+  // `useAwaitNewVersion`.
+  const { stalled } = useAwaitNewVersion(update.data?.current);
+
   const status = update.data;
   if (!status?.updateAvailable) return null;
 
@@ -57,7 +63,7 @@ export function AppUpdateNotice() {
       notes={plainReleaseNotes(status.releaseNotes)}
       action={
         status.platform === "windows" ? (
-          <WindowsUpdateAction releaseUrl={status.releaseUrl} />
+          <WindowsUpdateAction releaseUrl={status.releaseUrl} stalled={stalled} />
         ) : status.platform === "docker" ? (
           <DockerUpdateAction />
         ) : (

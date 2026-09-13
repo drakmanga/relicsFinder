@@ -234,6 +234,19 @@ export const api = {
   },
 
   /**
+   * Which build is answering right now.
+   *
+   * Deliberately not `appUpdate`, which can mean a call to GitHub: this is
+   * asked once a second by a page waiting for the application to come back from
+   * an update, and it reads a constant. It also throws while the server is
+   * being replaced, which is what the waiting is watching for.
+   */
+  async appVersion(signal?: AbortSignal): Promise<string> {
+    const { version } = await get<{ version: string }>("/app/version", signal);
+    return version;
+  },
+
+  /**
    * Asks the application to update itself, and answers with the first stage.
    *
    * Returns long before the update is done — the download outlives the request

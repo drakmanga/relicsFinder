@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import relics.reliceApi.model.UpdateInstall;
 import relics.reliceApi.model.UpdateStatus;
+import relics.reliceApi.service.AppVersion;
 import relics.reliceApi.service.InstallPlatform;
 import relics.reliceApi.service.UpdateCheckService;
 import relics.reliceApi.service.UpdateInstaller;
@@ -58,6 +59,26 @@ public class AppUpdateController {
                 .filter(installer -> installer.platform() == platform)
                 .findFirst();
     }
+
+    /**
+     * Which build is answering, and nothing else.
+     *
+     * <p>{@link #update()} carries the same number, but reaching it can mean a
+     * call to GitHub, and this is asked once a second by a page waiting for the
+     * application to come back from an update. What that page is watching for
+     * is the moment the answer changes: the version it was told before the
+     * server went away is the old one, so a different answer means the new copy
+     * is up and the page can reload itself onto it.
+     *
+     * <p>Local, immediate, and free. It reads a constant.
+     */
+    @GetMapping("/version")
+    public ResponseEntity<RunningVersion> version() {
+        return ResponseEntity.ok(new RunningVersion(AppVersion.RUNNING));
+    }
+
+    /** The running build, as the one thing this answer is. */
+    public record RunningVersion(String version) {}
 
     /**
      * Always 200, including with no network at all. Offline is an answer this

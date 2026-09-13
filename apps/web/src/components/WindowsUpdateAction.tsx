@@ -24,7 +24,18 @@ import { installMessage } from "../lib/updateInstall";
  * button: `useUpdateInstall` reads the install off the server, which is where
  * it lives.
  */
-export function WindowsUpdateAction({ releaseUrl }: { releaseUrl: string | null }) {
+export function WindowsUpdateAction({
+  releaseUrl,
+  stalled,
+}: {
+  releaseUrl: string | null;
+  /**
+   * Whether the wait for the new version gave up. Passed in rather than
+   * watched here: the wait belongs above the dialog, which unmounts everything
+   * inside it the moment somebody clicks Close — see `useAwaitNewVersion`.
+   */
+  stalled: boolean;
+}) {
   const queryClient = useQueryClient();
   const install = useUpdateInstall();
 
@@ -52,6 +63,15 @@ export function WindowsUpdateAction({ releaseUrl }: { releaseUrl: string | null 
     return (
       <p className="rf-update-install rf-text-body-sm">
         Relic Finder is not answering. Close this and try again.
+      </p>
+    );
+  }
+
+  if (stalled) {
+    return (
+      <p className="rf-update-install rf-text-body-sm">
+        The new version has not come back. Open Relic Finder from the tray icon, or reload this
+        page, to see which version is running.
       </p>
     );
   }

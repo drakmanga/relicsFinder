@@ -77,7 +77,7 @@ export function installMessage(install: UpdateInstall): string | null {
     case "verifying":
       return "Checking that the download is the real one";
     case "starting":
-      return "Installing. Relic Finder will close and open again on its own.";
+      return "Installing. This page comes back on its own when the new version is running.";
     case "failed":
       return problemMessage(install.problem);
   }

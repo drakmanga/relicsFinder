@@ -417,12 +417,12 @@ const MUTANTS = [
     to: '    install?.stage === "starting" ||\n    install?.stage === "failed"',
   },
   {
-    // The whole of what "starting" tells a user: the window is about to
-    // vanish and come back on its own. Without it, an application that closes
-    // itself reads as a crash.
-    name: "the last stage stops warning that the application will close",
+    // The whole of what "starting" tells a user: this page goes quiet for a
+    // few seconds and then comes back by itself, on the new version. Without
+    // it, a page that stops answering mid-update reads as a crash.
+    name: "the last stage stops promising the page will come back",
     file: "apps/web/src/lib/updateInstall.ts",
-    from: '      return "Installing. Relic Finder will close and open again on its own.";',
+    from: '      return "Installing. This page comes back on its own when the new version is running.";',
     to: '      return "Installing.";',
   },
   {
