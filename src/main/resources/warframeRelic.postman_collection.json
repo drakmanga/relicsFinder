@@ -2,195 +2,780 @@
 	"info": {
 		"_postman_id": "75e0f177-8de3-431f-b94d-d08b3835bf3a",
 		"name": "warframeRelic",
+		"description": "Every endpoint Relic Finder serves, grouped by the question it answers.\n\nbaseUrl is http://localhost:8080 — the backend's own port, which is what a checkout and the Docker compose both expose. Behind nginx on port 80 the same paths work under http://localhost.\n\nEndpoints addressed by name want the FULL name: /api/relics/relic/Lith%20V9 answers 200, /api/relics/relic/V9 answers 404.\n\nFive of these are not reads. POST /api/relics/update rebuilds the catalogue, POST /api/refresh/{view} re-reads the source behind one ranked view, POST /api/app/update/install replaces this copy of the application, and the two PUTs replace a stored list whole.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43332647"
 	},
 	"item": [
 		{
-			"name": "downloadRelic",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/relics/update",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"relics",
-						"update"
-					]
+			"name": "Catalogue",
+			"description": "What exists: relics, what is inside them, where they drop, and what is still farmable. Nothing here touches warframe.market.",
+			"item": [
+				{
+					"name": "Every relic",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Every relic in four states — Intact, Exceptional, Flawless, Radiant — with the six rewards and the chance each carries at that refinement.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Every relic, grouped",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "The same catalogue as a map: era, then refinement, then the relics.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics/tiers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics",
+								"tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "One era",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "One era at a time: lith, meso, neo or axi. 404 when the era holds nothing.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics/axi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics",
+								"axi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "One relic",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "All four states of one relic. The full name is required: /api/relics/relic/V9 answers 404.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics/relic/Lith%20V9",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics",
+								"relic",
+								"Lith%20V9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Where a relic drops",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "The missions that drop this relic, with the rotation and the chance. A relic that is vaulted drops nowhere and answers an empty array, which is why the example is one still in rotation.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics/drop-info/Lith%20A12",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics",
+								"drop-info",
+								"Lith%20A12"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Is it vaulted",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "true or false, and nothing else.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics/isVaulted/Lith%20V9",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics",
+								"isVaulted",
+								"Lith%20V9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "What is in rotation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Every relic still dropping in the game right now, grouped by era.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics/unvaulted",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics",
+								"unvaulted"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Which relics hold a part",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Every relic that holds that Prime part. 404 when no relic does.",
+						"url": {
+							"raw": "{{baseUrl}}/api/search/Volt%20Prime%20Chassis",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"search",
+								"Volt%20Prime%20Chassis"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Where a set sits in its cycle",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "For each Prime set: whether it still drops from relics, how long ago it stopped, and where that puts it in its price cycle.",
+						"url": {
+							"raw": "{{baseUrl}}/api/sets/lifecycle",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sets",
+								"lifecycle"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Re-read the drop tables",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"description": "Rebuilds the catalogue from drops.warframestat.us. This is the relic catalogue, NOT the application — see GET /api/app/update for that one.",
+						"url": {
+							"raw": "{{baseUrl}}/api/relics/update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"relics",
+								"update"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "RequestRelic",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/relics",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"relics"
-					]
+			"name": "Prices",
+			"description": "warframe.market, through a server-side cache and one rate limiter. The market allows about three requests a second, which is why the bulk endpoints exist: firing the single-item one forty times gets the caller throttled.",
+			"item": [
+				{
+					"name": "Price of one part",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Average, median, trades and trend for a single Prime part.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/item/Volt%20Prime%20Chassis",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"item",
+								"Volt%20Prime%20Chassis"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ninety days of a part",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "The series behind the price chart. warframe.market keeps it, so nothing is stored on this side.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/item/Volt%20Prime%20Chassis/history",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"item",
+								"Volt%20Prime%20Chassis",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Prices in bulk",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"description": "Up to 5000 part names in one call. An item with no listing comes back with a null price rather than being dropped, so the response lines up with the request.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"items"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  \"Volt Prime Chassis\",\n  \"Volt Prime Neuroptics\",\n  \"Volt Prime Systems\"\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Price of one relic",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "A relic and a part of the same name are two different listings on the market, and the slug differs — a relic's ends in _relic.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/relic/Lith%20V9",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"relic",
+								"Lith%20V9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ninety days of a relic",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "The same series, for a sealed relic.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/relic/Lith%20V9/history",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"relic",
+								"Lith%20V9",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Relic prices in bulk",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"description": "Every row of the relics table in one call. Same null-rather-than-dropped rule as /items.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/relics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"relics"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  \"Lith V9\",\n  \"Meso V5\",\n  \"Neo V10\",\n  \"Axi A19\"\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bare average for a relic",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Predates /api/market/relic/{name} and answers an average with no trade count. New callers want that one instead.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/Lith%20V9",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"Lith%20V9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "How warm the cache is",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "The cache fills in the background over a few minutes. This is what the page reads to say so, rather than showing a table full of dashes.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Which prices are read faster",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "A diagnostic: the items whose price is re-read more often than the default rule would, and how much drift each is allowed. It answers 'why is this item read hourly', which an interval alone cannot.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/sensitive",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"sensitive"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Say what is on screen",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"description": "A hint, not a request for data: the tables go on asking for the whole catalogue, and this says which rows someone is actually looking at so those are priced first. Answers 204 whatever happens.",
+						"url": {
+							"raw": "{{baseUrl}}/api/market/priority",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"market",
+								"priority"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    \"Volt Prime Chassis\"\n  ],\n  \"relics\": [\n    \"Lith V9\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "RequestRelicFromParam",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/relics/axi",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"relics",
-						"axi"
-					]
+			"name": "Rankings",
+			"description": "The three views that answer a question with a number, and the one door that makes those numbers newer.",
+			"item": [
+				{
+					"name": "Tier list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Every relic banded S to F, twice: once for opening it alone and once for a radshare. The bands are drawn around the median of the population asked for, so vault moves them with it; limit cuts the response and never the population. Answers an ETag, so polling it costs a 304 and no body. A misspelled parameter is a 400 naming what it accepts.",
+						"url": {
+							"raw": "{{baseUrl}}/api/tiers?vault=farmable&sort=radshare&order=desc&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tiers"
+							],
+							"query": [
+								{
+									"key": "vault",
+									"value": "farmable"
+								},
+								{
+									"key": "sort",
+									"value": "radshare"
+								},
+								{
+									"key": "order",
+									"value": "desc"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ayatan by Endo per platinum",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Sell orders from sellers who are online, best Endo per platinum first, computed from the stars actually socketed in that specific sculpture.",
+						"url": {
+							"raw": "{{baseUrl}}/api/endo/offers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"endo",
+								"offers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "When the offers were read",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "An ISO instant, or null before the first read. Its own endpoint because /offers is parsed as a bare array by everything that asks for it.",
+						"url": {
+							"raw": "{{baseUrl}}/api/endo/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"endo",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh a ranked view",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"description": "ducats, endo or tiers. Re-reads the source behind that view — the drop tables and the item database for ducats and tiers, the Ayatan orders for endo — and never the ~1500 cached prices. Each source carries a cooldown, so asking twice inside the window is one re-read and one refusal, and the answer says when it may be asked again. A source that did not answer still comes back 200, carrying source-unavailable.",
+						"url": {
+							"raw": "{{baseUrl}}/api/refresh/tiers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"refresh",
+								"tiers"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "RequestRelicTiers",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/relics/tiers",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"relics",
-						"tiers"
-					]
+			"name": "Your lists",
+			"description": "Plain JSON files under data/, no database and no accounts: the service is single-tenant, so whoever runs it owns the only list. Both PUTs REPLACE the whole list — firing one with the example body below overwrites what is stored.",
+			"item": [
+				{
+					"name": "The wishlist",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Every line, with the kind that says what it is for: part, set, relic, ducat or endo. The same part can appear twice under two kinds, and that is two lines rather than a conflict.",
+						"url": {
+							"raw": "{{baseUrl}}/api/wishlist",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wishlist"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Replace the wishlist",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"description": "Replaces it whole. Send back what GET returned, changed — an empty array empties the list.",
+						"url": {
+							"raw": "{{baseUrl}}/api/wishlist",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wishlist"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"itemName\": \"Volt Prime Chassis\",\n    \"kind\": \"part\",\n    \"tier\": \"Lith\",\n    \"relicFullName\": \"Lith V9\",\n    \"refinement\": \"Radiant\",\n    \"quantity\": 1\n  }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Parts already owned",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Name and count. A count rather than a bare name because a set is not one copy of each piece.",
+						"url": {
+							"raw": "{{baseUrl}}/api/owned",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"owned"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Replace what is owned",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"description": "Replaces it whole, same as the wishlist.",
+						"url": {
+							"raw": "{{baseUrl}}/api/owned",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"owned"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"itemName\": \"Volt Prime Chassis\",\n    \"quantity\": 1\n  }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "RequestRelicStates",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/relics/Axi_a19",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"relics",
-						"Axi_a19"
-					]
+			"name": "The application itself",
+			"description": "These talk to GitHub rather than to Warframe, and one of them changes the machine.",
+			"item": [
+				{
+					"name": "Which build is running",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Reads a constant: local, immediate and free. It is what a page waiting out an update polls once a second — a different answer than before the server went away means the new copy is up.",
+						"url": {
+							"raw": "{{baseUrl}}/api/app/version",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"app",
+								"version"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Is there a newer release",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "200 even with no network — known: false and nothing else filled — because a machine that is offline is an ordinary state and not a server error. Cached for an hour, so two calls in a row are one request outward.",
+						"url": {
+							"raw": "{{baseUrl}}/api/app/update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"app",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Install the newer release",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"description": "The one that changes the machine. A Windows install downloads the release's setup, verifies it against the sha256 GitHub publishes and only then runs it. Everything else is refused with not-supported, a container included: a container is recreated from outside by whoever runs the daemon.",
+						"url": {
+							"raw": "{{baseUrl}}/api/app/update/install",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"app",
+								"update",
+								"install"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "How far the install got",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Polled while it works. It also answers before anybody starts, which is how a page knows whether an install is already running.",
+						"url": {
+							"raw": "{{baseUrl}}/api/app/update/install",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"app",
+								"update",
+								"install"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
-		},
+			]
+		}
+	],
+	"variable": [
 		{
-			"name": "RequestUnvaulted",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
-		},
-		{
-			"name": "RequestCheckVaulted",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/relics/isVaulted/Axi/A1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"relics",
-						"isVaulted",
-						"Axi",
-						"A1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "RequestDropInfo",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/relics/drop-info/Axi_A1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"relics",
-						"drop-info",
-						"Axi_A1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "RequestAvgPrice",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/api/market/axi_a19",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"market",
-						"axi_a19"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "RequestSearchItem",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
 		}
 	]
 }

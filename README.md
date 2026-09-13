@@ -250,10 +250,16 @@ A Postman collection is included.
 1. Open Postman
 2. Click **Import**
 3. Pick `src/main/resources/warframeRelic.postman_collection.json`
-4. Try the relic endpoints
+4. Try every endpoint
 
-It covers the catalogue half only — it predates prices, rankings and the lists — so the
-full surface is the one below rather than the one in the collection.
+All thirty-two of them, grouped the way the list below is, each with an example that
+answers something real and a note saying what the answer means. `baseUrl` is a collection
+variable — point it at `http://localhost` instead to go through nginx.
+
+Five of them are not reads, and the collection says so on each: `POST /api/relics/update`
+rebuilds the catalogue, `POST /api/refresh/{view}` re-reads a source, `POST
+/api/app/update/install` replaces this copy of the application, and the two PUTs replace a
+stored list whole.
 
 ### The endpoints
 
