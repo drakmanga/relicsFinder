@@ -16,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Locale;
 
 /**
@@ -48,6 +50,33 @@ public final class DesktopRuntime {
      */
     static final String PORT_FILE = "port";
 
+    /**
+     * Written by the copy on its way out when the update it started is about to
+     * replace it, and read by the copy that comes back.
+     *
+     * <p>It holds the port that copy was serving on, which is the whole point:
+     * a browser tab is sitting on that number waiting to be told the new
+     * version is up, and a restart that binds somewhere else leaves it pointing
+     * at nothing. Binding the same port again is what lets that tab reload
+     * itself instead of being replaced by a second one.
+     *
+     * <p>A plain file rather than a handover between the two processes: they do
+     * not overlap. The outgoing one is gone before the installer relaunches,
+     * which is the only reason the port is free to take again.
+     */
+    static final String RESTART_FILE = "restarting";
+
+    /**
+     * How long a restart record is worth obeying.
+     *
+     * <p>The install between the two processes is a sixty-megabyte setup
+     * unpacking itself, so this cannot be tight. It exists for the case the
+     * record outlives what it describes — a setup that failed, a machine
+     * switched off mid-update — where a much later start would otherwise
+     * silently skip opening a browser and look like it did not start at all.
+     */
+    private static final Duration RESTART_VALID_FOR = Duration.ofMinutes(5);
+
     private static final String LOCK_FILE = ".lock";
 
     /**
@@ -56,6 +85,16 @@ public final class DesktopRuntime {
      */
     @SuppressWarnings("unused")
     private static FileChannel lockChannel;
+
+    /**
+     * The port this start is trying to take back, when it is an update coming
+     * back rather than somebody launching the application.
+     *
+     * <p>Static because the thing that needs it — the decision not to open a
+     * second browser tab — happens in a Spring bean, and this is decided before
+     * Spring exists.
+     */
+    private static volatile int resumingOn = 0;
 
     private DesktopRuntime() {
     }
@@ -85,11 +124,25 @@ public final class DesktopRuntime {
             throw new IllegalStateException("Cannot create the application directory at " + home, e);
         }
 
+        // Read before the lock is decided, because both branches below need the
+        // answer and only one of them may consume it.
+        resumingOn = recordedRestartPort(home);
+
         // Before the log is touched: a second launch is about to hand over and
         // exit, and rotating the file the running copy is writing to would cost
         // that copy its log to save nothing.
         if (!takeSingleInstanceLock(home)) {
-            browse("http://127.0.0.1:" + waitForPort(home));
+            // A launch that lands during a restart-after-update is the
+            // installer's doing, not a person asking for the window: the copy
+            // that will serve is starting up beside this one, and its own tab
+            // is already open and waiting. Opening a browser here is how the
+            // update used to end with a second tab — and with a blank one,
+            // because waitForPort settles for a port that is merely busy, which
+            // during a handover is the outgoing copy still holding it while it
+            // dies.
+            if (resumingOn == 0) {
+                browse("http://127.0.0.1:" + waitForPort(home));
+            }
             System.exit(0);
         }
 
@@ -102,7 +155,7 @@ public final class DesktopRuntime {
         // question the user cannot answer, about a service that is for this
         // machine alone.
         setIfAbsent("server.address", "127.0.0.1");
-        setIfAbsent("server.port", String.valueOf(freePort()));
+        setIfAbsent("server.port", String.valueOf(freePort(resumingOn)));
     }
 
     /**
@@ -227,6 +280,98 @@ public final class DesktopRuntime {
         }
     }
 
+    /**
+     * The port a restart-after-update is trying to take back, or zero.
+     *
+     * <p>Answered once, before Spring starts, and then read from here by
+     * whatever needs it. Zero for every ordinary launch, which is every launch
+     * but the one the updater causes.
+     */
+    public static int resumingOn() {
+        return resumingOn;
+    }
+
+    /**
+     * Says that the copy running now is about to be replaced by an installer,
+     * and on which port its browser tab is waiting.
+     *
+     * <p>Called on the way out rather than by the new copy on the way in: only
+     * the outgoing one knows that what follows is an update rather than a
+     * crash, and the difference decides whether a browser opens.
+     *
+     * <p>A failure here is not worth stopping an update for. The cost is the
+     * old ending — a second tab — and the update itself still happens.
+     *
+     * <p>The port is copied from the file the running copy already publishes
+     * rather than passed in: the caller is the updater, which has no reason to
+     * know a port number, and the published file is the same answer the waiting
+     * tab's address was built from.
+     */
+    public static void recordRestart(Path home) {
+        try {
+            String port = Files.readString(home.resolve(PORT_FILE), StandardCharsets.UTF_8).trim();
+            Files.writeString(home.resolve(RESTART_FILE), port, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("relics: could not record the restart — " + e.getMessage());
+        }
+    }
+
+    /**
+     * Reads that record without consuming it, and refuses one too old to be
+     * about this start.
+     *
+     * <p>Left in place deliberately: a second launch may arrive while the
+     * update is settling, and it has to see the same answer this one did or it
+     * opens the tab this whole change exists to prevent. {@link #clearRestart}
+     * removes it once the browser decision has been made.
+     */
+    private static int recordedRestartPort(Path home) {
+        Path file = home.resolve(RESTART_FILE);
+        try {
+            Instant written = Files.getLastModifiedTime(file).toInstant();
+            if (written.isBefore(Instant.now().minus(RESTART_VALID_FOR))) {
+                Files.deleteIfExists(file);
+                return 0;
+            }
+            int port = Integer.parseInt(Files.readString(file, StandardCharsets.UTF_8).trim());
+            return port > 0 ? port : 0;
+        } catch (IOException | NumberFormatException absentOrUnreadable) {
+            // The ordinary case by far: no update happened.
+            return 0;
+        }
+    }
+
+    /**
+     * Hands the single-instance lock back.
+     *
+     * <p>For tests, and for nothing else: the application holds this lock for
+     * as long as it runs, and the only thing that ever released it was the
+     * process ending. A test cannot end the process, and on Windows a file that
+     * is still open cannot be deleted — so without this, every test that
+     * configures a desktop runtime leaves a temporary directory behind that
+     * JUnit then fails trying to remove, which reads as nine broken tests with
+     * nothing wrong in them.
+     */
+    static void releaseLock() {
+        FileChannel channel = lockChannel;
+        lockChannel = null;
+        if (channel == null) return;
+        try {
+            channel.close();
+        } catch (IOException ignored) {
+            // Nothing to do and nothing to report: the process is a test's.
+        }
+    }
+
+    /** Forgets the restart, once nothing is left to decide from it. */
+    static void clearRestart(Path home) {
+        try {
+            Files.deleteIfExists(home.resolve(RESTART_FILE));
+        } catch (IOException e) {
+            System.err.println("relics: could not clear the restart record — " + e.getMessage());
+        }
+    }
+
     /** Records the port for the next launch to find. */
     static void publishPort(Path home, int port) {
         try {
@@ -267,14 +412,23 @@ public final class DesktopRuntime {
     }
 
     /**
-     * 8080 when it is free, any free port otherwise.
+     * The port asked for when it is free, any free port otherwise.
      *
-     * <p>8080 is worth trying for: it is the address in every note, bookmark
-     * and screenshot about this application. It is also the most contended
-     * port on a developer's machine, and "port already in use" is not an error
-     * a desktop user can act on.
+     * <p>{@code wanted} is the port a restart is trying to take back, or zero
+     * on an ordinary launch, which falls through to 8080: the address in every
+     * note, bookmark and screenshot about this application. It is also the most
+     * contended port on a developer's machine, and "port already in use" is not
+     * an error a desktop user can act on, so neither is ever insisted on.
+     *
+     * <p>A restart that cannot have its old port back is not a failure — it
+     * just means the tab waiting on that address cannot be reached, and the
+     * caller opens a browser rather than leaving the update with nothing on
+     * screen. {@link DesktopTray} compares the two to tell which happened.
      */
-    private static int freePort() {
+    private static int freePort(int wanted) {
+        if (wanted > 0 && isFree(wanted)) {
+            return wanted;
+        }
         if (isFree(PREFERRED_PORT)) {
             return PREFERRED_PORT;
         }

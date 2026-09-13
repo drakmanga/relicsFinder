@@ -302,6 +302,13 @@ public class WindowsUpdateInstaller implements UpdateInstaller {
      * the conversation that follows.
      */
     private static void runSetupAndStandAside(Path setup) throws IOException {
+        // Before the setup starts, because after it there may be no time: this
+        // process has two seconds to live and the record is what tells the copy
+        // coming back that a browser tab is already open and waiting on the
+        // port this one is serving. Without it the update ends with a second
+        // tab beside the first.
+        DesktopRuntime.recordRestart(DesktopRuntime.home());
+
         new ProcessBuilder(concat(setup.toString(), SETUP_ARGUMENTS))
                 .directory(setup.getParent().toFile())
                 .start();
