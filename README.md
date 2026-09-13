@@ -303,6 +303,7 @@ GET  /api/wishlist                           the stored wishlist
 PUT  /api/wishlist                           replaces it
 GET  /api/owned                              the parts you already have
 PUT  /api/owned                              replaces them
+GET  /api/app/version                        which build is answering, and nothing else
 GET  /api/app/update                         whether a newer release of the app exists
 POST /api/app/update/install                 replace this copy with the newer one
 GET  /api/app/update/install                 how far that has got, or why it will not
@@ -337,6 +338,10 @@ average with no trade count. New callers want the second one.
 `/api/market/priority` is a hint rather than a request for data: the tables go on asking for
 the whole catalogue, and this says which thirty rows someone is looking at. It answers 204
 whatever happens, so there is nothing to handle.
+
+`/api/app/version` reads a constant: local, immediate and free, which is why the page that
+waits out an update asks it once a second rather than asking `/api/app/update`. A different
+answer than the one it was given before the server went away means the new copy is up.
 
 `/api/app/update` is the one that talks to GitHub rather than to Warframe. It answers 200
 even with no network — `known: false` and nothing else filled — because a machine that is
