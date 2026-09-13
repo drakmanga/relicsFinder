@@ -56,9 +56,14 @@ public class DesktopTray {
 
     private TrayIcon icon;
 
+    /** Who says whether a tab is already there. */
+    private final BrowserPresence presence;
+
     public DesktopTray(ApplicationContext context,
+                       BrowserPresence presence,
                        @Value("${relics.desktop.browser:true}") boolean openBrowser) {
         this.context = context;
+        this.presence = presence;
         this.openBrowser = openBrowser;
     }
 
@@ -77,10 +82,68 @@ public class DesktopTray {
     @EventListener
     public void onReady(ApplicationReadyEvent event) {
         install();
-        if (openBrowser) {
-            DesktopRuntime.browse(url());
+        if (!openBrowser) {
+            // Nothing here will ask the question the record exists to answer,
+            // and a record left behind is one the next start would obey.
+            DesktopRuntime.clearRestart(DesktopRuntime.home());
+            return;
         }
+
+        if (DesktopRuntime.resumingOn() == port) {
+            openUnlessATabComesBack();
+            return;
+        }
+
+        // Either an ordinary launch, or a restart that could not have its old
+        // port back — which leaves the waiting tab pointing at an address
+        // nothing answers on, so it has to be replaced after all.
+        DesktopRuntime.clearRestart(DesktopRuntime.home());
+        DesktopRuntime.browse(url());
     }
+
+    /**
+     * The ending of an update: give the tab that was already open its moment to
+     * come back, and open one only if it does not.
+     *
+     * <p>The wait is what makes this honest in both directions. A tab that
+     * reloads itself arrives within a second or so of the server answering, and
+     * seeing it is what says the reader already has the new version on screen.
+     * Seeing nothing means the browser was closed while the installer ran, and
+     * an update that ends with nothing on screen reads as an update that
+     * failed.
+     *
+     * <p>On its own thread because this runs on the startup one: sleeping here
+     * would hold the last step of the boot for as long as the wait, and the tab
+     * this is waiting for cannot arrive until the boot is done.
+     */
+    private void openUnlessATabComesBack() {
+        long readyAt = System.nanoTime();
+        Thread waiter = new Thread(() -> {
+            try {
+                Thread.sleep(TAB_GRACE);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            if (!presence.seenSince(readyAt)) {
+                DesktopRuntime.browse(url());
+            }
+            DesktopRuntime.clearRestart(DesktopRuntime.home());
+        }, "relics-update-tab");
+        // Daemon: whether a browser opens must never be the reason Quit hangs.
+        waiter.setDaemon(true);
+        waiter.start();
+    }
+
+    /**
+     * How long the tab that started the update is given to come back.
+     *
+     * <p>It polls every second while it waits, so this is several tries rather
+     * than one. Long enough to survive a slow first paint on a cold machine,
+     * short enough that somebody whose browser really is closed is not left
+     * looking at a desktop wondering.
+     */
+    private static final long TAB_GRACE = 6_000;
 
     /**
      * Puts the icon in the tray, or carries on without one.
