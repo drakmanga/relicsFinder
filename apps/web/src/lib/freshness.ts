@@ -10,10 +10,13 @@
  * The clock time to show, in the reader's own locale and zone — with the date
  * in front of it once that instant is not today.
  *
- * The date is not decoration. This label reports the OLDEST price held, and a
- * part nobody trades keeps its reading for days: the live cache answers with
- * an instant two days back. Rendered as a bare "18:51" that reads as this
- * evening, which is the one thing it is not.
+ * The date is not decoration. This label reports the NEWEST reading held — see
+ * `LastUpdated` for why that one and not the oldest — and even the newest can
+ * be days back: the server restores its price cache from disk when it starts,
+ * so a machine that has been off since Friday answers Monday's first request
+ * with Friday's instant, and a market that has been refusing calls does the
+ * same to a server that never stopped. Rendered as a bare "18:51" that reads as
+ * this evening, which is the one thing it is not.
  */
 export function asOfTime(iso: string | null | undefined, now: Date = new Date()): string | null {
   const when = parse(iso);

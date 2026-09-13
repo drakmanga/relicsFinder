@@ -1224,12 +1224,18 @@ body {
    whose width the sentence decides. The measure caps it at the width that fits
    the longest of the four messages on one or two lines, whatever the pane does
    above. */
+/* `min(..., 100%)` and not the measure alone. The button is 73px wide and the
+   sentence under it is not, so the column is sized by whichever message is
+   showing; `flex: none` then refuses to shrink it, and a measure's worth of
+   text pushed the control out of the headline and into the ranked table's own
+   horizontal scroller, where at 360px the sentence had to be scrolled to be
+   read. The cap keeps the wrap inside the space the headline actually has. */
 .rf-refresh {
   flex: none;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: var(--rf-measure);
+  max-width: min(var(--rf-measure), 100%);
 }
 
 /* The space between the button and the sentence belongs to the sentence rather

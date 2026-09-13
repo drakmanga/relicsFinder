@@ -443,6 +443,24 @@ const MUTANTS = [
     from: '  "never cloned the repository.";',
     to: '  "";',
   },
+  {
+    // The one sentence for both sources is the defect: a catalogue re-read
+    // reads no price, so "the newest data available" contradicted the
+    // `Prices as of` four inches away, which had not moved and was right.
+    name: "the button claims the newest prices after a re-read that read none",
+    file: "apps/web/src/lib/snapshotRefresh.ts",
+    from: '  if (source === "orders") return "Updated. This is the newest data available.";',
+    to: '  return "Updated. This is the newest data available.";',
+  },
+  {
+    // A refusal promises no more than the re-read it stands in for, and on the
+    // catalogue that is the list — the prices move inside the fifteen minutes
+    // the same sentence asks the reader to wait through.
+    name: "a refusal on the catalogue promises prices it is about to let go stale",
+    file: "apps/web/src/lib/snapshotRefresh.ts",
+    from: '  if (source === "orders") return "This is already the newest data.";',
+    to: '  return "This is already the newest data.";',
+  },
 ];
 
 let killed = 0;

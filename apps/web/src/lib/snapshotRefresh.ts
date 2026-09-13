@@ -55,20 +55,55 @@ export function refreshMessage(state: RefreshState, now: number = Date.now()): s
 function answered(outcome: RefreshOutcome, now: number): string {
   switch (outcome.status) {
     case "refreshed":
-      return "Updated. This is the newest data available.";
+      return refreshed(sourceOf(outcome.view));
 
     // Not "please wait" and not an error. The data on screen is already what a
     // second fetch would have produced, so the honest sentence says that first
     // and treats the wait as a detail — and it names a time, because "try again
     // later" is the answer that sends somebody back to click again.
     case "already-current":
-      return `This is already the newest data. You can check again ${inWords(
+      return `${alreadyCurrent(sourceOf(outcome.view))} You can check again ${inWords(
         Date.parse(outcome.nextRefreshAt) - now,
       )}.`;
 
     case "source-unavailable":
       return "The site this data comes from did not answer. What you see is the last copy that did.";
   }
+}
+
+/**
+ * What a successful re-read is allowed to claim, which is not the same sentence
+ * on both sources.
+ *
+ * On the Endo tab the two agree by construction: the re-read fetches the very
+ * list the topbar dates, so `Offers as of` moves with the click. The catalogue
+ * does not work that way. It re-reads WHICH items exist, from two hosts that
+ * are not the market, and touches no price — the warm-up pass it ends on only
+ * queues names, which the rolling warmer then reads over the following minutes.
+ * So `/api/market/status` honestly answers the refetch with the instant it
+ * answered before, and "This is the newest data available" sat four inches from
+ * a `Prices as of` that had not moved. The label was the one telling the truth.
+ *
+ * The label is named in the sentence rather than described, because it is on
+ * screen next to it and the reader can look at the words being pointed at.
+ */
+function refreshed(source: RefreshSource): string {
+  if (source === "orders") return "Updated. This is the newest data available.";
+
+  return `Updated. New items are now listed. Prices refresh on their own — "Prices as of" says how recent they are.`;
+}
+
+/**
+ * What a refusal is allowed to claim, split the same way and for the same
+ * reason: the refusal is a re-read that did not happen, so it can promise no
+ * more than the re-read itself would have. On the catalogue that is the list of
+ * items and never the prices, which go on moving inside the fifteen minutes the
+ * sentence is asking the reader to wait.
+ */
+function alreadyCurrent(source: RefreshSource): string {
+  if (source === "orders") return "This is already the newest data.";
+
+  return "The list of items is already up to date.";
 }
 
 /**
@@ -102,9 +137,25 @@ export function invalidatedBy(view: RefreshView): readonly (readonly unknown[])[
   // The offers and the clock beside them. Nothing else on the Endo tab is built
   // out of the market snapshot, and dropping six hundred prices to refresh
   // eleven sculptures would be a round trip nobody asked for.
-  if (view === "endo") return [keys.endo, keys.endoStatus];
+  if (sourceOf(view) === "orders") return [keys.endo, keys.endoStatus];
 
   return [keys.relics, keys.allItemPrices, keys.allTierLists, keys.marketStatus];
+}
+
+/**
+ * What a view's Refresh actually goes and reads.
+ *
+ * Named once because two different answers turn on it and they used to draw the
+ * line separately: what is thrown away after a re-read, and what the button is
+ * allowed to claim afterwards. The server holds the same vocabulary — see
+ * `RefreshSource` and `SnapshotRefresher.sourceOf` — and it is derived here
+ * rather than carried on the response because it is known before the request
+ * leaves, and a field on the wire would let the two drift apart silently.
+ */
+type RefreshSource = "catalogue" | "orders";
+
+function sourceOf(view: RefreshView): RefreshSource {
+  return view === "endo" ? "orders" : "catalogue";
 }
 
 async function invalidate(queryClient: QueryClient, view: RefreshView): Promise<void> {

@@ -271,11 +271,15 @@ export function useEndoOffers(enabled: boolean) {
 }
 
 /**
- * How old the oldest price held is — what the topbar reports.
+ * When the newest price held was read — what the topbar reports. Newest and not
+ * oldest, for the reason `LastUpdated` gives: one orphaned entry would
+ * otherwise pin the label forever.
  *
  * Polled rather than invalidated: the warmer moves the figure on its own
- * schedule, server-side, with nothing the client does to trigger it. A minute
- * is finer than the label's own resolution.
+ * schedule, server-side, with nothing the client does to trigger it. That is
+ * also why a Refresh on Ducanetor or the Tier List leaves this where it is —
+ * that gesture re-reads the catalogue, never a price. A minute is finer than
+ * the label's own resolution.
  */
 export function useMarketStatus(enabled: boolean) {
   return useQuery({
