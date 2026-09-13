@@ -24,7 +24,9 @@ function answers(...replies: (string | null)[]) {
   return {
     asked: () => asked,
     read: () => {
-      const reply = replies[Math.min(asked, replies.length - 1)];
+      // Past the end is the last answer repeated, and an empty script is a
+      // server that is not there — which is what `null` means here anyway.
+      const reply = replies[Math.min(asked, replies.length - 1)] ?? null;
       asked += 1;
       return reply === null
         ? Promise.reject(new Error("connection refused"))
