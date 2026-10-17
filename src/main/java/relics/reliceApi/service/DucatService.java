@@ -63,6 +63,15 @@ public class DucatService {
             Map.entry("Pets", "pet")
     );
 
+    /**
+     * Where the components live since WFCD/warframe-items#992 (2026-09-24).
+     *
+     * <p>Before that each item carried its components inline with name and
+     * ducats; now it carries only {@code uniqueName} and {@code itemCount}, and
+     * the rest is in this file. Missing it is what emptied Ducanetor.
+     */
+    private static final String COMPONENTS = "Components";
+
     /** The item database only moves when a new Prime is released. */
     private static final Duration TTL = Duration.ofHours(24);
 
@@ -222,17 +231,18 @@ public class DucatService {
         Map<String, ItemMeta> byName = new HashMap<>();
         Map<String, SetDates> datesBySet = new HashMap<>();
 
-        for (Map.Entry<String, String> category : CATEGORIES.entrySet()) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BASE + category.getKey() + ".json"))
-                    .timeout(TIMEOUT)
-                    .header("Accept", "application/json")
-                    .header("User-Agent", ApiIdentity.USER_AGENT)
-                    .GET()
-                    .build();
+        // Unlike a category, the catalogue is not optional: without it every
+        // component is a bare reference and the index comes out empty, so a
+        // failure here throws and keeps the previous snapshot.
+        HttpResponse<String> catalogueResponse = get(COMPONENTS);
+        if (catalogueResponse.statusCode() != 200) {
+            throw new IllegalStateException(
+                    COMPONENTS + " → HTTP " + catalogueResponse.statusCode());
+        }
+        Map<String, JsonNode> catalogue = catalogue(mapper.readTree(catalogueResponse.body()));
 
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        for (Map.Entry<String, String> category : CATEGORIES.entrySet()) {
+            HttpResponse<String> response = get(category.getKey());
 
             // One missing category should not cost the other seven.
             if (response.statusCode() != 200) {
@@ -242,19 +252,62 @@ public class DucatService {
             }
 
             JsonNode items = mapper.readTree(response.body());
-            index(items, category.getValue(), byName);
+            index(items, category.getValue(), catalogue, byName);
             indexDates(items, datesBySet);
         }
 
         return new Snapshot(Map.copyOf(byName), Map.copyOf(datesBySet), Instant.now());
     }
 
+    private HttpResponse<String> get(String file) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + file + ".json"))
+                .timeout(TIMEOUT)
+                .header("Accept", "application/json")
+                .header("User-Agent", ApiIdentity.USER_AGENT)
+                .GET()
+                .build();
+
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    /** The component catalogue keyed by the {@code uniqueName} items refer to it by. */
+    static Map<String, JsonNode> catalogue(JsonNode components) {
+        Map<String, JsonNode> byUniqueName = new HashMap<>();
+        for (JsonNode component : components) {
+            String uniqueName = component.path("uniqueName").asText("");
+            if (!uniqueName.isEmpty()) byUniqueName.put(uniqueName, component);
+        }
+        return byUniqueName;
+    }
+
+    /**
+     * The component's own record: inline in the old shape, looked up in the
+     * catalogue in the new one. Null when neither knows it, which is every
+     * shared resource — the catalogue carries Prime parts, not Orokin Cells.
+     */
+    private static JsonNode resolve(JsonNode reference, Map<String, JsonNode> catalogue) {
+        if (reference.hasNonNull("name")) return reference;
+        return catalogue.get(reference.path("uniqueName").asText(""));
+    }
+
     static void index(JsonNode items, String category, Map<String, ItemMeta> byName) {
+        index(items, category, Map.of(), byName);
+    }
+
+    static void index(
+            JsonNode items,
+            String category,
+            Map<String, JsonNode> catalogue,
+            Map<String, ItemMeta> byName) {
         for (JsonNode item : items) {
             String setName = item.path("name").asText("");
             if (setName.isEmpty()) continue;
 
-            for (JsonNode component : item.path("components")) {
+            for (JsonNode reference : item.path("components")) {
+                JsonNode component = resolve(reference, catalogue);
+                if (component == null) continue;
+
                 String componentName = component.path("name").asText("");
                 if (componentName.isEmpty()) continue;
 
@@ -269,7 +322,9 @@ public class DucatService {
                 // component rather than compared against a number: every
                 // itemCount in the data today is 2, and nothing here should
                 // stop being true the day one is 3.
-                JsonNode copies = component.path("itemCount");
+                // Off the reference, not the catalogue entry: the count belongs
+                // to this set's recipe, and one Blade record serves every set.
+                JsonNode copies = reference.path("itemCount");
 
                 byName.put(
                         normalize(setName + " " + componentName),

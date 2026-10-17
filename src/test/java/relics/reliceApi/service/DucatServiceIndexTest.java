@@ -81,4 +81,60 @@ class DucatServiceIndexTest {
         assertThat(blade.setName()).isEqualTo("Kestrel Prime");
         assertThat(blade.category()).isEqualTo("melee");
     }
+
+    /**
+     * The shape WFCD publishes since warframe-items#992: the item carries only
+     * references, and the name and ducats live in Components.json.
+     */
+    private static final String KESTREL_REFERENCES =
+            """
+            [
+              {
+                "name": "Kestrel Prime",
+                "components": [
+                  { "uniqueName": "/K/Blueprint", "itemCount": 1 },
+                  { "uniqueName": "/K/Blade", "itemCount": 2 },
+                  { "uniqueName": "/OrokinCell", "itemCount": 10 }
+                ]
+              }
+            ]
+            """;
+
+    private static final String CATALOGUE =
+            """
+            [
+              { "uniqueName": "/K/Blueprint", "name": "Blueprint", "ducats": 15 },
+              { "uniqueName": "/K/Blade", "name": "Blade", "ducats": 45, "itemCount": 1 }
+            ]
+            """;
+
+    private static Map<String, DucatService.ItemMeta> indexedByReference() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, DucatService.ItemMeta> byName = new HashMap<>();
+        DucatService.index(
+                mapper.readTree(KESTREL_REFERENCES),
+                "melee",
+                DucatService.catalogue(mapper.readTree(CATALOGUE)),
+                byName);
+        return byName;
+    }
+
+    @Test
+    void resolvesAReferencedComponentThroughTheCatalogue() throws Exception {
+        DucatService.ItemMeta blade = indexedByReference().get("kestrel prime blade");
+
+        assertThat(blade.ducats()).isEqualTo(45);
+        assertThat(blade.setName()).isEqualTo("Kestrel Prime");
+    }
+
+    /** The recipe's count, not whatever the shared catalogue entry happens to say. */
+    @Test
+    void takesTheCopiesFromTheSetsReferenceRatherThanTheCatalogue() throws Exception {
+        assertThat(indexedByReference().get("kestrel prime blade").copiesPerSet()).isEqualTo(2);
+    }
+
+    @Test
+    void skipsAReferenceTheCatalogueDoesNotCarry() throws Exception {
+        assertThat(indexedByReference()).containsOnlyKeys("kestrel prime blueprint", "kestrel prime blade");
+    }
 }
