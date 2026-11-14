@@ -14,6 +14,7 @@ interface Props {
   feedPending: boolean;
   options: CrackOptions;
   now: number;
+  onOpened: (relic: OwnedRelic) => void;
 }
 
 /**
@@ -22,7 +23,7 @@ interface Props {
  * It owns the one request only it needs — the prices of what the held relics
  * drop — so the inventory beside it keeps working while those load.
  */
-export function CrackBoard({ owned, catalogue, feed, feedPending, options, now }: Props) {
+export function CrackBoard({ owned, catalogue, feed, feedPending, options, now, onOpened }: Props) {
   const held = new Set(owned.map((relic) => `${relic.relicName}|${relic.refinement}`));
   const drops = catalogue
     .filter((relic) => held.has(`${relic.fullName}|${relic.refinement}`))
@@ -53,6 +54,7 @@ export function CrackBoard({ owned, catalogue, feed, feedPending, options, now }
       ) : (
         <CrackRanking
           rows={rankCrack(owned, catalogue, prices.data, feed, options, now)}
+          onOpened={onOpened}
           now={now}
         />
       )}

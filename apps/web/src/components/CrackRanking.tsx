@@ -1,8 +1,13 @@
+import { Button } from "relic-finder-ui";
+
 import { REFINEMENT_LABEL } from "../lib/rows";
+import type { OwnedRelic } from "../api/types";
 import { crackLine, formatCrackValue, type CrackRow, type CrackVerdict } from "../lib/relicCrack";
 
 interface Props {
   rows: CrackRow[];
+  /** One copy of this relic was just opened: take it off the inventory. */
+  onOpened: (relic: OwnedRelic) => void;
   now: number;
 }
 
@@ -21,7 +26,7 @@ const VERDICT_LABEL: Record<CrackVerdict, string> = {
  * Capture, expires in 30 min") with two figures beside it, and a sentence
  * does not fit a column at 360px.
  */
-export function CrackRanking({ rows, now }: Props) {
+export function CrackRanking({ rows, onOpened, now }: Props) {
   return (
     <ol className="rf-crack-ranking" aria-label="Relics ranked by value per minute">
       {rows.map((row) => {
@@ -60,9 +65,30 @@ export function CrackRanking({ rows, now }: Props) {
                 </dl>
               </div>
 
-              <p className="rf-text-body-sm rf-fg-secondary rf-crack-line">
-                {row.tier ? crackLine(row, row.tier, now) : "not in the relic catalogue any more"}
-              </p>
+              <div className="rf-crack-row-foot">
+                <p className="rf-text-body-sm rf-fg-secondary rf-crack-line">
+                  {row.tier ? crackLine(row, row.tier, now) : "not in the relic catalogue any more"}
+                </p>
+                {/* Here and not only in the inventory: the reader has just
+                    opened the relic this row told them to, and walking back to
+                    find it in a list of hundreds is how an inventory stops
+                    matching the game after one session. */}
+                {row.refine && (
+                  <p className="rf-text-caption rf-fg-muted rf-crack-refine">
+                    Refine to {REFINEMENT_LABEL[row.refine.to]}: +
+                    {formatCrackValue(row.refine.gain, "plat")} a run for {row.refine.traces} traces
+                  </p>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rf-hit-block"
+                  aria-label={`Opened one ${row.relic.relicName} ${REFINEMENT_LABEL[row.relic.refinement]}`}
+                  onClick={() => onOpened(row.relic)}
+                >
+                  Opened one
+                </Button>
+              </div>
             </div>
           </li>
         );

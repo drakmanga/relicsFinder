@@ -96,3 +96,46 @@ export const catalogueNames = (relics: readonly Relic[]) => [
 /** The refinement a typed or stored value names, or null for anything else. */
 export const parseRefinement = (value: string): Refinement | null =>
   (ALL_REFINEMENTS as string[]).includes(value) ? (value as Refinement) : null;
+
+/** The tiers a held relic can be in, as its name spells them. */
+export const OWNED_TIERS = ["Lith", "Meso", "Neo", "Axi", "Requiem", "Vanguard"] as const;
+export type OwnedTier = (typeof OWNED_TIERS)[number];
+
+/** How the inventory list is ordered. "added" is the order the lines were entered in. */
+export type OwnedSort = "added" | "name" | "copies";
+export const ALL_OWNED_SORTS: OwnedSort[] = ["added", "name", "copies"];
+
+/** The tier word a full relic name starts with: "Neo" for "Neo N16". */
+export const tierOfName = (relicName: string) => relicName.slice(0, relicName.indexOf(" "));
+
+/**
+ * The lines matching what was typed and the tiers picked, in the order asked for.
+ *
+ * Nothing picked means every tier, the way the Sets view's kinds work. The
+ * term matches the name with spaces ignored, as the picker does, so "neon1"
+ * finds what "Neo N1" would. Name order is natural — Neo N2 before Neo N10 —
+ * since that is how the game lists them.
+ */
+export function filterOwnedRelics(
+  list: readonly OwnedRelic[],
+  term: string,
+  tiers: ReadonlySet<string>,
+  sort: OwnedSort,
+): OwnedRelic[] {
+  const needle = squash(term);
+  const kept = list.filter(
+    (entry) =>
+      (tiers.size === 0 || tiers.has(tierOfName(entry.relicName))) &&
+      (!needle || squash(entry.relicName).includes(needle)),
+  );
+
+  if (sort === "added") return kept;
+
+  const byName = (a: OwnedRelic, b: OwnedRelic) =>
+    a.relicName.localeCompare(b.relicName, undefined, { numeric: true }) ||
+    ALL_REFINEMENTS.indexOf(a.refinement) - ALL_REFINEMENTS.indexOf(b.refinement);
+
+  return [...kept].sort(
+    sort === "name" ? byName : (a, b) => b.quantity - a.quantity || byName(a, b),
+  );
+}

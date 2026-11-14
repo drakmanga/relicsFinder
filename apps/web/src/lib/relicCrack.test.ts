@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import type { Fissure, FissureFeed, ItemPrice, OwnedRelic, PriceMap, Relic } from "../api/types";
 import { defaultCrackOptions, type CrackOptions } from "./crackOptions";
-import { STEEL_PATH_PENALTY, crackLine, rankCrack, visibleFissures } from "./relicCrack";
+import {
+  STEEL_PATH_PENALTY,
+  crackLine,
+  rankCrack,
+  refineAdvice,
+  visibleFissures,
+} from "./relicCrack";
 
 /*
   The fixture, and the hand calculation every expectation below comes from.
@@ -221,5 +227,42 @@ describe("visibleFissures", () => {
     );
 
     expect(shown.map((f) => f.id)).toEqual(["LithCap", "OmniaCap", "NeoSurv", "Flood"]);
+  });
+});
+
+describe("refineAdvice", () => {
+  // Same drops in two states: Radiant moves chance onto the 100p reward.
+  const intact = {
+    ...relic("neo", "N16", [
+      ["A", 2],
+      ["B", 25.33],
+      ["C", 72.67],
+    ]),
+    refinement: "intact" as const,
+  };
+  const radiant = {
+    ...relic("neo", "N16", [
+      ["A", 10],
+      ["B", 20],
+      ["C", 70],
+    ]),
+    refinement: "radiant" as const,
+  };
+
+  it("suggests the step up that pays per trace, with what it gains", () => {
+    // Intact 2 + 2.533 + 0.7267 = 5.26p; Radiant 12.7p; +7.44p for 100 traces.
+    const advice = refineAdvice({ intact, radiant }, "intact", PRICES, 1);
+
+    expect(advice!.to).toBe("radiant");
+    expect(advice!.traces).toBe(100);
+    expect(advice!.gain).toBeCloseTo(7.44, 2);
+  });
+
+  it("suggests nothing for a copy already at the top", () => {
+    expect(refineAdvice({ intact, radiant }, "radiant", PRICES, 1)).toBeNull();
+  });
+
+  it("suggests nothing when refining loses value", () => {
+    expect(refineAdvice({ intact: radiant, radiant: intact }, "intact", PRICES, 1)).toBeNull();
   });
 });

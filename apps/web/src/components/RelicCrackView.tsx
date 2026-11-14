@@ -74,6 +74,11 @@ export function RelicCrackView({ options, onOptions }: Props) {
           feedPending={fissures.isPending}
           options={options}
           now={now}
+          onOpened={(relic) =>
+            save.mutate(
+              setOwnedRelic(entries, relic.relicName, relic.refinement, relic.quantity - 1),
+            )
+          }
         />
       </div>
     </div>

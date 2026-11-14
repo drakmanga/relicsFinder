@@ -1,6 +1,14 @@
-import type { Fissure, FissureFeed, OwnedRelic, PriceMap, Relic, Tier } from "../api/types";
+import type {
+  Fissure,
+  FissureFeed,
+  OwnedRelic,
+  PriceMap,
+  Refinement,
+  Relic,
+  Tier,
+} from "../api/types";
 import type { CrackOptions } from "./crackOptions";
-import { squadValueBy } from "./rows";
+import { ALL_REFINEMENTS, TRACE_COST, squadValueBy } from "./rows";
 
 /**
  * Which held relic to open, and where, given the fissures up right now.
@@ -61,6 +69,25 @@ export interface FissureChoice {
   score: number;
 }
 
+/**
+ * The least extra platinum a run has to pay for refining to be suggested.
+ *
+ * Most relics gain something from Radiant, often a few tenths of a platinum:
+ * with 200 relics held, a line under three in four rows suggested spending 75
+ * traces on +0.3p. One platinum a run is where the suggestion starts to be
+ * worth the traces and the reader's attention.
+ */
+export const MIN_REFINE_GAIN = 1;
+
+/** Refining a held copy further, and what it buys. */
+export interface RefineAdvice {
+  to: Refinement;
+  /** Extra platinum one run pays in that state, for the squad size. */
+  gain: number;
+  /** Void traces it costs from the state the copy is in. */
+  traces: number;
+}
+
 export interface CrackRow {
   key: string;
   relic: OwnedRelic;
@@ -82,6 +109,8 @@ export interface CrackRow {
    * when none is open at all.
    */
   soonest: Fissure | null;
+  /** The refinement worth paying traces for, when there is one. */
+  refine: RefineAdvice | null;
 }
 
 /** A relic matches the fissures of its own tier, and every Omnia fissure. */
@@ -174,6 +203,39 @@ export function relicValue(
 }
 
 /**
+ * The higher refinement that buys the most platinum per void trace, from the
+ * state this copy is in.
+ *
+ * The same reasoning as `bestRefinementByTrace` in `rows`, measured from the
+ * held state rather than from Intact — a Flawless copy has already spent its
+ * fifty traces — and over the squad's value, since a radshare is where
+ * refining pays most. None when every step up loses value, which on a relic
+ * whose rare is cheap is the honest answer.
+ */
+export function refineAdvice(
+  states: Partial<Record<Refinement, Relic>>,
+  current: Refinement,
+  prices: PriceMap | undefined,
+  players: number,
+): RefineAdvice | null {
+  const base = relicValue(states[current], prices, players, "plat");
+  let best: (RefineAdvice & { rate: number }) | null = null;
+
+  for (const to of ALL_REFINEMENTS) {
+    const traces = TRACE_COST[to] - TRACE_COST[current];
+    if (traces <= 0 || !states[to]) continue;
+
+    const gain = relicValue(states[to], prices, players, "plat") - base;
+    const rate = gain / traces;
+    if (gain >= MIN_REFINE_GAIN && (best === null || rate > best.rate)) {
+      best = { to, gain, traces, rate };
+    }
+  }
+
+  return best && { to: best.to, gain: best.gain, traces: best.traces };
+}
+
+/**
  * Every held relic, scored and given a verdict, best first.
  *
  * Open before wait, because the open ones are what to do now; then by score.
@@ -189,6 +251,10 @@ export function rankCrack(
   now: number,
 ): CrackRow[] {
   const byKey = new Map(catalogue.map((relic) => [`${relic.fullName}|${relic.refinement}`, relic]));
+  const statesOf = new Map<string, Partial<Record<Refinement, Relic>>>();
+  for (const relic of catalogue) {
+    statesOf.set(relic.fullName, { ...statesOf.get(relic.fullName), [relic.refinement]: relic });
+  }
   const fissures = eligibleFissures(feed, options, now);
   const fastest = fastestMinutes(feed, options);
 
@@ -222,7 +288,14 @@ export function rankCrack(
           ? "open"
           : "wait";
 
-    return { key, relic, tier: entry?.tier ?? null, value, ducats, best, verdict, soonest };
+    const refine = refineAdvice(
+      statesOf.get(relic.relicName) ?? {},
+      relic.refinement,
+      prices,
+      options.players,
+    );
+
+    return { key, relic, tier: entry?.tier ?? null, value, ducats, best, verdict, soonest, refine };
   });
 
   const order: Record<CrackVerdict, number> = { open: 0, wait: 1, unpriced: 2 };
