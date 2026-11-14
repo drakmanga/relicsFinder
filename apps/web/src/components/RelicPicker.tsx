@@ -26,6 +26,7 @@ export function RelicPicker({ names, onAdd }: Props) {
   const [quantity, setQuantity] = useState(1);
   const fieldId = useId();
   const listId = useId();
+  const refinementId = useId();
 
   const matches = matchRelicNames(names, term);
 
@@ -56,23 +57,26 @@ export function RelicPicker({ names, onAdd }: Props) {
         helper={term && matches.length === 0 ? "No relic by that name." : undefined}
       />
 
-      <div
-        className="rf-set-filters-group"
-        role="group"
-        aria-label="Refinement of the relics added"
-      >
-        <p className="rf-text-overline rf-fg-muted rf-set-filters-label">Refinement</p>
-        {ALL_REFINEMENTS.map((option) => (
-          <button
-            key={option}
-            type="button"
-            aria-pressed={refinement === option}
-            className={`rf-focus-ring rf-set-filter rf-hit-block${refinement === option ? " rf-set-filter-on" : ""}`}
-            onClick={() => setRefinement(option)}
-          >
-            {REFINEMENT_LABEL[option]}
-          </button>
-        ))}
+      {/* Labelled like the two fields beside it, above its options, rather
+          than with the chips' own uppercase overline: in that style the word
+          read as a fifth chip. */}
+      <div className="rf-crack-refinement" role="group" aria-labelledby={refinementId}>
+        <p id={refinementId} className="rf-field-label rf-crack-refinement-label">
+          Refinement
+        </p>
+        <div className="rf-set-filters-group">
+          {ALL_REFINEMENTS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={refinement === option}
+              className={`rf-focus-ring rf-set-filter rf-hit-block${refinement === option ? " rf-set-filter-on" : ""}`}
+              onClick={() => setRefinement(option)}
+            >
+              {REFINEMENT_LABEL[option]}
+            </button>
+          ))}
+        </div>
       </div>
 
       <Input

@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 
 import {
-  ALL_CURRENCIES,
   ALL_STEEL_PATH,
   SQUAD_SIZES,
-  type CrackCurrency,
   type CrackOptions,
   type SteelPathFilter,
 } from "../lib/crackOptions";
@@ -16,7 +14,6 @@ interface Props {
   missionTypes: string[];
 }
 
-const CURRENCY_LABEL: Record<CrackCurrency, string> = { plat: "Platinum", ducats: "Ducats" };
 const STEEL_PATH_LABEL: Record<SteelPathFilter, string> = {
   both: "Both",
   only: "Only",
@@ -38,7 +35,7 @@ function Group({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * What the ranking assumes: the currency, the squad, which fissures count, and
+ * What the ranking assumes: the squad, which fissures count, and
  * whether Steel Path is slower for this player.
  *
  * Always open, like the Sets view's strip: these change the answer, and a
@@ -55,20 +52,6 @@ export function CrackFilters({ options, onChange, missionTypes }: Props) {
 
   return (
     <div className="rf-set-filters rf-crack-filters">
-      <Group label="Value">
-        {ALL_CURRENCIES.map((currency) => (
-          <button
-            key={currency}
-            type="button"
-            aria-pressed={options.currency === currency}
-            className={chip(options.currency === currency)}
-            onClick={() => set({ currency })}
-          >
-            {CURRENCY_LABEL[currency]}
-          </button>
-        ))}
-      </Group>
-
       <Group label="Squad">
         {SQUAD_SIZES.map((players) => (
           <button

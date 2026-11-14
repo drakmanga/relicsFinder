@@ -6,7 +6,7 @@ import { squadValueBy } from "./rows";
  * Which held relic to open, and where, given the fissures up right now.
  *
  * A relic's score in a fissure is what it pays per minute there: its expected
- * value (platinum or ducats, alone or in a radshare) over the minutes one round
+ * value in platinum (alone or in a radshare) over the minutes one round
  * of that mission takes. The same Axi relic is worth five times as much per
  * minute in a Capture as in a Survival, which is the whole reason this tab
  * exists.
@@ -66,8 +66,14 @@ export interface CrackRow {
   relic: OwnedRelic;
   /** From the catalogue; null for a held relic the catalogue no longer lists. */
   tier: Tier | null;
-  /** What one opening pays, in the chosen currency and squad size. */
+  /** What one opening pays in platinum, for the squad size. The ranking is built on it. */
   value: number;
+  /**
+   * The same in ducats, shown beside it and never ranked on: the reader wants
+   * both numbers on every row, and one ordering — platinum, which is what the
+   * rest of the app ranks by — rather than a switch that hides half of them.
+   */
+  ducats: number;
   /** The best open fissure for this relic under the filters, if any. */
   best: FissureChoice | null;
   verdict: CrackVerdict;
@@ -81,6 +87,38 @@ export interface CrackRow {
 /** A relic matches the fissures of its own tier, and every Omnia fissure. */
 export function matchesTier(tier: Tier, fissure: Fissure): boolean {
   return fissure.tier === OMNIA || fissure.tier === FISSURE_TIER[tier];
+}
+
+/** Tiers in the order the game lists them, Omnia last since it takes any of them. */
+const TIER_ORDER = ["Lith", "Meso", "Neo", "Axi", "Requiem", "Omnia"];
+
+/**
+ * The open fissures the filters leave, fastest first.
+ *
+ * What the fissure cards show. Unlike `eligibleFissures` it keeps the mission
+ * types with no time estimate (Void Flood, the Railjack ones): they are open
+ * and the reader may want to know, they just cannot be scored, so they go last.
+ */
+export function visibleFissures(feed: FissureFeed, options: CrackOptions, now: number): Fissure[] {
+  const tierRank = (tier: string) => {
+    const index = TIER_ORDER.indexOf(tier);
+    return index === -1 ? TIER_ORDER.length : index;
+  };
+
+  return feed.fissures
+    .filter(
+      (fissure) =>
+        Date.parse(fissure.expiry) > now &&
+        !options.excluded.has(fissure.missionType) &&
+        (options.voidStorms || !fissure.voidStorm) &&
+        (options.steelPath === "both" || fissure.steelPath === (options.steelPath === "only")),
+    )
+    .sort(
+      (a, b) =>
+        (a.minutes ?? Infinity) - (b.minutes ?? Infinity) ||
+        tierRank(a.tier) - tierRank(b.tier) ||
+        Date.parse(a.expiry) - Date.parse(b.expiry),
+    );
 }
 
 /** The fissures the filters leave, with a time estimate and not yet expired. */
@@ -116,19 +154,23 @@ export function fastestMinutes(feed: FissureFeed, options: CrackOptions): number
   return rated.length > 0 ? Math.min(...rated) : null;
 }
 
+/** Which measure of a drop a value is in. */
+export type CrackMeasure = "plat" | "ducats";
+
 /** What one opening of this relic pays, or 0 when nothing in it is priced. */
 export function relicValue(
   catalogueEntry: Relic | undefined,
   prices: PriceMap | undefined,
-  options: CrackOptions,
+  players: number,
+  measure: CrackMeasure,
 ): number {
   if (!catalogueEntry || !prices) return 0;
 
   const valueOf = (itemName: string) => {
     const price = prices.get(itemName);
-    return (options.currency === "ducats" ? price?.ducats : price?.averagePrice) ?? 0;
+    return (measure === "ducats" ? price?.ducats : price?.averagePrice) ?? 0;
   };
-  return squadValueBy(catalogueEntry.rewards, valueOf, options.players);
+  return squadValueBy(catalogueEntry.rewards, valueOf, players);
 }
 
 /**
@@ -153,7 +195,8 @@ export function rankCrack(
   const rows = owned.map((relic): CrackRow => {
     const key = `${relic.relicName}|${relic.refinement}`;
     const entry = byKey.get(key);
-    const value = relicValue(entry, prices, options);
+    const value = relicValue(entry, prices, options.players, "plat");
+    const ducats = relicValue(entry, prices, options.players, "ducats");
     const matching = entry ? fissures.filter((fissure) => matchesTier(entry.tier, fissure)) : [];
 
     const best = matching
@@ -179,7 +222,7 @@ export function rankCrack(
           ? "open"
           : "wait";
 
-    return { key, relic, tier: entry?.tier ?? null, value, best, verdict, soonest };
+    return { key, relic, tier: entry?.tier ?? null, value, ducats, best, verdict, soonest };
   });
 
   const order: Record<CrackVerdict, number> = { open: 0, wait: 1, unpriced: 2 };
@@ -219,8 +262,8 @@ export function crackLine(row: CrackRow, tier: Tier, now: number): string {
   return `wait - only slow missions for ${tierWord(tier)} right now; the first expires in ${minutesLeft(row.soonest, now)} min`;
 }
 
-/** A value in the chosen currency, the way the rest of the app writes it: "12.7p", "29.5 ducats". */
-export function formatCrackValue(value: number, currency: "plat" | "ducats"): string {
+/** A value the way the rest of the app writes it: "12.7p", "29.5 ducats". */
+export function formatCrackValue(value: number, measure: CrackMeasure): string {
   const rounded = value >= 10 ? value.toFixed(0) : value.toFixed(1);
-  return currency === "plat" ? `${rounded}p` : `${rounded} ducats`;
+  return measure === "plat" ? `${rounded}p` : `${rounded} ducats`;
 }

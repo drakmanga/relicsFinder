@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Fissure, FissureFeed, ItemPrice, OwnedRelic, PriceMap, Relic } from "../api/types";
 import { defaultCrackOptions, type CrackOptions } from "./crackOptions";
-import { STEEL_PATH_PENALTY, crackLine, rankCrack } from "./relicCrack";
+import { STEEL_PATH_PENALTY, crackLine, rankCrack, visibleFissures } from "./relicCrack";
 
 /*
   The fixture, and the hand calculation every expectation below comes from.
@@ -159,14 +159,12 @@ describe("rankCrack", () => {
     expect(row!.best!.fissure.id).toBe("NeoStorm");
   });
 
-  it("re-ranks when the currency changes", () => {
-    const feed = feedOf(omniaCapture);
+  it("ranks on platinum and carries the ducats beside it", () => {
+    const rows = rank([a1, n16], feedOf(omniaCapture));
 
-    expect(rank([n16, a1], feed).map((row) => row.relic.relicName)).toEqual(["Neo N16", "Axi A1"]);
-    expect(rank([n16, a1], feed, { currency: "ducats" }).map((row) => row.relic.relicName)).toEqual(
-      ["Axi A1", "Neo N16"],
-    );
-    expect(rank([n16], feed, { currency: "ducats" })[0]!.value).toBeCloseTo(29.5);
+    expect(rows.map((row) => row.relic.relicName)).toEqual(["Neo N16", "Axi A1"]);
+    expect(rows[0]!.ducats).toBeCloseTo(29.5);
+    expect(rows[1]!.ducats).toBeCloseTo(100);
   });
 
   it("values a radshare as the best of the squad's rolls", () => {
@@ -209,5 +207,19 @@ describe("Steel Path", () => {
     expect(crackLine(rank([n16], feedOf(spCapture))[0]!, "neo", NOW)).toBe(
       "open now on SpCap (Void) - Capture [SP], expires in 10 min",
     );
+  });
+});
+
+describe("visibleFissures", () => {
+  it("lists fastest first, keeps unrated types last, and drops what the filters exclude", () => {
+    const flood = fissure("Flood", "Omnia", "Void Flood", null, "12:20");
+
+    const shown = visibleFissures(
+      feedOf(neoSurvival, flood, omniaCapture, lithCapture, neoStorm, closed),
+      options(),
+      NOW,
+    );
+
+    expect(shown.map((f) => f.id)).toEqual(["LithCap", "OmniaCap", "NeoSurv", "Flood"]);
   });
 });

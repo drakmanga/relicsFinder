@@ -2879,6 +2879,43 @@ body {
   font-size: var(--rf-text-caption);
 }
 
+/* The fissures run the full width above both columns: they are what both
+   the inventory's relics and the ranking are read against. */
+.rf-crack-fissures {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-3);
+  min-width: 0;
+}
+
+.rf-crack-cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The big number with its unit under it, where Ducanetor's rank sits. A fixed
+   width so the node names line up down a column of cards whatever the digit. */
+.rf-crack-card-minutes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--rf-space-1);
+  flex: 0 0 4.5rem;
+  text-align: center;
+}
+
+.rf-crack-refinement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-1);
+}
+
+.rf-crack-refinement-label {
+  margin: 0;
+}
+
 .rf-crack-board {
   display: flex;
   flex-direction: column;
@@ -2944,8 +2981,16 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* The two figures, platinum and ducats, each under a small label. */
 .rf-crack-figures {
+  display: flex;
+  gap: var(--rf-space-4);
+  margin: 0;
   white-space: nowrap;
+}
+
+.rf-crack-figures dd {
+  margin: 0;
 }
 
 .rf-crack-line {

@@ -1,10 +1,8 @@
 import { REFINEMENT_LABEL } from "../lib/rows";
 import { crackLine, formatCrackValue, type CrackRow, type CrackVerdict } from "../lib/relicCrack";
-import type { CrackCurrency } from "../lib/crackOptions";
 
 interface Props {
   rows: CrackRow[];
-  currency: CrackCurrency;
   now: number;
 }
 
@@ -23,7 +21,7 @@ const VERDICT_LABEL: Record<CrackVerdict, string> = {
  * Capture, expires in 30 min") with two figures beside it, and a sentence
  * does not fit a column at 360px.
  */
-export function CrackRanking({ rows, currency, now }: Props) {
+export function CrackRanking({ rows, now }: Props) {
   return (
     <ol className="rf-crack-ranking" aria-label="Relics ranked by value per minute">
       {rows.map((row) => {
@@ -40,15 +38,26 @@ export function CrackRanking({ rows, currency, now }: Props) {
                   </span>
                 </span>
 
-                <span className="rf-tabular rf-text-body-sm rf-crack-figures">
-                  {formatCrackValue(row.value, currency)} a run
+                {/* Both currencies on every row, each as "a run" and "per
+                    minute". The order is platinum's; ducats ride along. */}
+                <dl className="rf-tabular rf-text-body-sm rf-crack-figures">
+                  <div>
+                    <dt className="rf-text-caption rf-fg-muted">a run</dt>
+                    <dd>
+                      {formatCrackValue(row.value, "plat")} ·{" "}
+                      {formatCrackValue(row.ducats, "ducats")}
+                    </dd>
+                  </div>
                   {row.best && (
-                    <span className="rf-fg-muted">
-                      {" "}
-                      · {formatCrackValue(row.best.score, currency)}/min
-                    </span>
+                    <div>
+                      <dt className="rf-text-caption rf-fg-muted">per min</dt>
+                      <dd>
+                        {formatCrackValue(row.best.score, "plat")} ·{" "}
+                        {formatCrackValue(row.ducats / row.best.minutes, "ducats")}
+                      </dd>
+                    </div>
                   )}
-                </span>
+                </dl>
               </div>
 
               <p className="rf-text-body-sm rf-fg-secondary rf-crack-line">

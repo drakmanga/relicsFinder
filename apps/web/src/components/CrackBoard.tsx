@@ -1,45 +1,33 @@
-import { Button, EmptyState, Skeleton } from "relic-finder-ui";
+import { EmptyState, Skeleton } from "relic-finder-ui";
 
-import { CrackFilters } from "./CrackFilters";
 import { CrackRanking } from "./CrackRanking";
-import { useFissures, useItemPrices } from "../api/queries";
+import { useItemPrices } from "../api/queries";
 import { rankCrack } from "../lib/relicCrack";
-import { useNow } from "../lib/useNow";
 import type { CrackOptions } from "../lib/crackOptions";
-import type { OwnedRelic, Relic } from "../api/types";
-
-/** Often enough that "expires in N min" is never a minute stale for long. */
-const CLOCK_TICK = 30_000;
+import type { FissureFeed, OwnedRelic, Relic } from "../api/types";
 
 interface Props {
   owned: OwnedRelic[];
   catalogue: Relic[];
+  /** Undefined while the feed is loading or unavailable; the section above says which. */
+  feed: FissureFeed | undefined;
+  feedPending: boolean;
   options: CrackOptions;
-  onOptions: (next: CrackOptions) => void;
+  now: number;
 }
 
 /**
- * The ranking half of the tab: the controls, and the held relics scored
- * against the fissures up right now.
+ * The held relics scored against the fissures up right now.
  *
- * It owns the two requests only it needs — the fissure feed and the prices of
- * what the held relics drop — so the inventory beside it keeps working when the
- * worldstate does not answer.
+ * It owns the one request only it needs — the prices of what the held relics
+ * drop — so the inventory beside it keeps working while those load.
  */
-export function CrackBoard({ owned, catalogue, options, onOptions }: Props) {
-  const fissures = useFissures(true);
-  const now = useNow(CLOCK_TICK);
-
+export function CrackBoard({ owned, catalogue, feed, feedPending, options, now }: Props) {
   const held = new Set(owned.map((relic) => `${relic.relicName}|${relic.refinement}`));
   const drops = catalogue
     .filter((relic) => held.has(`${relic.fullName}|${relic.refinement}`))
     .flatMap((relic) => relic.rewards.map((reward) => reward.itemName));
   const prices = useItemPrices(drops);
-
-  // Fastest first, which is the order the threshold reads them in.
-  const missionTypes = Object.entries(fissures.data?.missionMinutes ?? {})
-    .sort(([a, x], [b, y]) => x - y || a.localeCompare(b))
-    .map(([type]) => type);
 
   return (
     <section className="rf-crack-board" aria-labelledby="rf-crack-board-title">
@@ -47,27 +35,16 @@ export function CrackBoard({ owned, catalogue, options, onOptions }: Props) {
         What to open now
       </h3>
 
-      <CrackFilters options={options} onChange={onOptions} missionTypes={missionTypes} />
-
-      {fissures.isPending ? (
+      {feedPending ? (
         <div className="rf-skeleton-stack" aria-hidden="true">
           {Array.from({ length: 4 }, (_, index) => (
             <Skeleton key={index} height={56} />
           ))}
         </div>
-      ) : fissures.isError ? (
-        /* Said as unavailable, never as an empty ranking: "nothing to open"
-           would be a claim about the game the app cannot make right now. */
-        <EmptyState
-          tone="error"
-          title="Fissure data unavailable"
-          description={fissures.error.message}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => fissures.refetch()}>
-              Retry
-            </Button>
-          }
-        />
+      ) : !feed ? (
+        <p className="rf-text-body-sm rf-fg-muted">
+          Nothing can be ranked until the fissure data is back.
+        </p>
       ) : owned.length === 0 ? (
         <EmptyState
           title="No relics to rank yet"
@@ -75,17 +52,16 @@ export function CrackBoard({ owned, catalogue, options, onOptions }: Props) {
         />
       ) : (
         <CrackRanking
-          rows={rankCrack(owned, catalogue, prices.data, fissures.data, options, now)}
-          currency={options.currency}
+          rows={rankCrack(owned, catalogue, prices.data, feed, options, now)}
           now={now}
         />
       )}
 
       <p className="rf-text-caption rf-fg-muted">
-        Value per minute is what one opening pays over the minutes one round of that mission takes.
-        Open means the best fissure reaches at least half the rate of the fastest mission type you
-        play. Requiem relics drop mods rather than Prime parts, so only what the market prices
-        counts toward theirs.
+        Ranked by platinum per minute: what one opening pays over the minutes one round of that
+        mission takes. Open means the best fissure reaches at least half the rate of the fastest
+        mission type you play. Requiem relics drop mods rather than Prime parts, so only what the
+        market prices counts toward theirs.
       </p>
     </section>
   );

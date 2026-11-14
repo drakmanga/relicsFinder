@@ -1,11 +1,16 @@
 import { useMemo } from "react";
 
+import { ActiveFissures } from "./ActiveFissures";
 import { CrackBoard } from "./CrackBoard";
 import { RelicInventory } from "./RelicInventory";
-import { useOwnedRelics, useRelics, useSaveOwnedRelics } from "../api/queries";
+import { useFissures, useOwnedRelics, useRelics, useSaveOwnedRelics } from "../api/queries";
 import { addOwnedRelic, catalogueNames, setOwnedRelic } from "../lib/ownedRelics";
+import { useNow } from "../lib/useNow";
 import type { CrackOptions } from "../lib/crackOptions";
 import type { OwnedRelic, Refinement } from "../api/types";
+
+/** Often enough that "closes in N min" is never a minute stale for long. */
+const CLOCK_TICK = 30_000;
 
 interface Props {
   /** The ranking's controls. From the shell, because they live in the URL. */
@@ -25,6 +30,11 @@ export function RelicCrackView({ options, onOptions }: Props) {
   const relics = useRelics();
   const owned = useOwnedRelics();
   const save = useSaveOwnedRelics();
+  // Here rather than in either section: the cards and the ranking read the
+  // same feed and must count down off the same clock, or a card could say a
+  // fissure closes in 1 min while the ranking beside it says 2.
+  const fissures = useFissures(true);
+  const now = useNow(CLOCK_TICK);
 
   const names = useMemo(() => catalogueNames(relics.data ?? []), [relics.data]);
   const entries: OwnedRelic[] = owned.data ?? [];
@@ -47,6 +57,8 @@ export function RelicCrackView({ options, onOptions }: Props) {
       </div>
 
       <div className="rf-ranked-body rf-crack">
+        <ActiveFissures fissures={fissures} options={options} onOptions={onOptions} now={now} />
+
         <RelicInventory
           entries={entries}
           names={names}
@@ -58,8 +70,10 @@ export function RelicCrackView({ options, onOptions }: Props) {
         <CrackBoard
           owned={entries}
           catalogue={relics.data ?? []}
+          feed={fissures.data}
+          feedPending={fissures.isPending}
           options={options}
-          onOptions={onOptions}
+          now={now}
         />
       </div>
     </div>

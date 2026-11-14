@@ -309,7 +309,6 @@ describe("the Relic Crack controls", () => {
 
   it("survive the round trip, so a shared link reopens the same ranking", () => {
     const crack = {
-      currency: "ducats" as const,
       steelPath: "none" as const,
       voidStorms: true,
       players: 4,
@@ -324,7 +323,7 @@ describe("the Relic Crack controls", () => {
   });
 
   it("drop a value no control can show", () => {
-    const read = fromSearch("?view=crack&cur=gold&sp=sometimes&squad=9", emptyFilters());
+    const read = fromSearch("?view=crack&sp=sometimes&squad=9", emptyFilters());
 
     expect(read.crack).toEqual(defaultCrackOptions());
   });
