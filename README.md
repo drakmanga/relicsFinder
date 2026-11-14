@@ -252,7 +252,7 @@ A Postman collection is included.
 3. Pick `src/main/resources/warframeRelic.postman_collection.json`
 4. Try every endpoint
 
-All thirty-two of them, grouped the way the list below is, each with an example that
+All thirty-three of them, grouped the way the list below is, each with an example that
 answers something real and a note saying what the answer means. `baseUrl` is a collection
 variable — point it at `http://localhost` instead to go through nginx.
 
@@ -302,6 +302,12 @@ GET  /api/endo/status                        when those offers were last read
 POST /api/refresh/{ducats|endo|tiers}        re-read what one ranked view rests on
 ```
 
+The game right now:
+
+```
+GET  /api/fissures                           the Void Fissures open now, with minutes per relic
+```
+
 Your lists, and the application itself:
 
 ```
@@ -314,6 +320,13 @@ GET  /api/app/update                         whether a newer release of the app 
 POST /api/app/update/install                 replace this copy with the newer one
 GET  /api/app/update/install                 how far that has got, or why it will not
 ```
+
+`/api/fissures` is read through a one-minute cache on the server, so the page never calls
+warframestat itself and a room full of open tabs costs one request a minute. Expired fissures
+are dropped on every read. When warframestat is down it answers 503 with an `error`, not an
+empty list, because "no fissures open" is a claim about the game and an outage is not
+evidence for it. The minutes per mission type come from `relics.fissures.minutes` in
+`application.properties`.
 
 Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
 200, `/api/relics/relic/V9` answers 404.

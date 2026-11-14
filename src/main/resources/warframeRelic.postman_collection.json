@@ -573,6 +573,31 @@
 			]
 		},
 		{
+			"name": "The game right now",
+			"description": "What the live worldstate says, cached on the server so a page full of viewers costs one upstream call a minute.",
+			"item": [
+				{
+					"name": "Open fissures",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "Every Void Fissure open right now, normal, Steel Path and Void Storm, already stripped of the ones that have expired. Each carries the minutes one relic takes on that mission type, from relics.fissures.minutes; a type the table does not rate (Void Flood, the Railjack missions) has minutes null. missionMinutes is that whole table. Read through a 60-second cache, so two calls inside a minute cost warframestat one request. When warframestat cannot be reached the answer is a 503 with an error saying fissure data is unavailable, never a 200 with an empty list.",
+						"url": {
+							"raw": "{{baseUrl}}/api/fissures",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"fissures"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Your lists",
 			"description": "Plain JSON files under data/, no database and no accounts: the service is single-tenant, so whoever runs it owns the only list. Both PUTs REPLACE the whole list — firing one with the example body below overwrites what is stored.",
 			"item": [
