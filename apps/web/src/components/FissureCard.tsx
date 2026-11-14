@@ -5,8 +5,8 @@ import type { Fissure } from "../api/types";
 
 interface Props {
   fissure: Fissure;
-  /** Whether this is the fastest mission type there is, which gilds it. */
-  fastest: boolean;
+  /** The leader of the three, which alone is gilded. */
+  first: boolean;
   now: number;
 }
 
@@ -15,15 +15,15 @@ interface Props {
  *
  * The big number is what the cards are compared by — minutes to crack one
  * relic there — in the slot where Ducanetor puts its rank, so the eye runs down
- * the same column on both tabs. Only the fastest are gilded, for the reason
- * only Ducanetor's leader is: gold on everything ranks nothing.
+ * the same column on both tabs. Only the first is gilded, for the reason only
+ * Ducanetor's leader is: gold on everything ranks nothing.
  */
-export function FissureCard({ fissure, fastest, now }: Props) {
+export function FissureCard({ fissure, first, now }: Props) {
   return (
-    <Frame notch="md" variant={fastest ? "gilded" : "default"} surface={2}>
+    <Frame notch="md" variant={first ? "gilded" : "default"} surface={2}>
       <div className="rf-highlight">
         <span
-          className={`rf-text-display-sm rf-highlight-rank rf-crack-card-minutes${fastest ? " rf-highlight-rank-first" : ""}`}
+          className={`rf-text-display-sm rf-highlight-rank rf-crack-card-minutes${first ? " rf-highlight-rank-first" : ""}`}
         >
           {fissure.minutes ?? "–"}
           <span className="rf-text-caption rf-fg-muted">

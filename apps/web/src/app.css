@@ -2965,6 +2965,12 @@ body {
   color: var(--rf-success);
 }
 
+/* Red rather than muted: "wait" is an instruction not to spend this relic
+   now, and grey read as "nothing to say". The word still carries it alone. */
+.rf-crack-row-wait .rf-crack-verdict {
+  color: var(--rf-danger);
+}
+
 .rf-crack-row-body {
   flex: 1;
   min-width: 0;
