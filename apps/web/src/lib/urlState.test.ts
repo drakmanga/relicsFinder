@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { defaultCrackOptions } from "./crackOptions";
 import { emptyFilters } from "./rows";
 import { fromSearch, toSearch } from "./urlState";
 import type { UrlState } from "./urlState";
@@ -15,6 +16,7 @@ const state = (overrides: Partial<UrlState> = {}): UrlState => ({
   setStatus: "all",
   setPhases: new Set(),
   sort: null,
+  crack: defaultCrackOptions(),
   ...overrides,
 });
 
@@ -298,4 +300,32 @@ describe("a link survives the round trip", () => {
       expect(read.sort).toEqual(original.sort);
     },
   );
+});
+
+describe("the Relic Crack controls", () => {
+  it("write nothing at their defaults", () => {
+    expect(toSearch(state({ view: "crack" }))).toBe("?view=crack");
+  });
+
+  it("survive the round trip, so a shared link reopens the same ranking", () => {
+    const crack = {
+      currency: "ducats" as const,
+      steelPath: "none" as const,
+      voidStorms: true,
+      players: 4,
+      excluded: new Set(["Survival", "Mobile Defense"]),
+      penaliseSteelPath: true,
+    };
+
+    const read = fromSearch(toSearch(state({ view: "crack", crack })), emptyFilters());
+
+    expect(read.view).toBe("crack");
+    expect(read.crack).toEqual(crack);
+  });
+
+  it("drop a value no control can show", () => {
+    const read = fromSearch("?view=crack&cur=gold&sp=sometimes&squad=9", emptyFilters());
+
+    expect(read.crack).toEqual(defaultCrackOptions());
+  });
 });

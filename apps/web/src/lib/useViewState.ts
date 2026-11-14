@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import type { CrackOptions } from "./crackOptions";
 import { remember, tokensAdded } from "./filterMemory";
 import type { SetStatus } from "./setCategories";
 import type { TierSortColumn, TierSortState } from "./tierList";
@@ -180,6 +181,8 @@ export function useViewState() {
    */
   const [tierVault, setTierVault] = useState<VaultFilter>(initial.tierVault);
   const [tierSort, setTierSort] = useState<TierSortState>(initial.tierSort);
+  /** The Relic Crack tab's controls, whole: they are only ever read together. */
+  const [crack, setCrack] = useState<CrackOptions>(initial.crack);
 
   /**
    * One click on a header, on either table.
@@ -249,6 +252,7 @@ export function useViewState() {
       setStatus,
       setPhases,
       sort,
+      crack,
     });
     if (search !== window.location.search) {
       window.history.replaceState(null, "", `${window.location.pathname}${search}`);
@@ -264,6 +268,7 @@ export function useViewState() {
     setStatus,
     setPhases,
     sort,
+    crack,
   ]);
 
   useEffect(() => {
@@ -292,6 +297,7 @@ export function useViewState() {
       setSetStatus(next.setStatus);
       setSetPhases(next.setPhases);
       setSort(next.sort);
+      setCrack(next.crack);
     };
 
     window.addEventListener("popstate", onPop);
@@ -420,6 +426,8 @@ export function useViewState() {
     setTierVault,
     tierSort,
     cycleTierSort,
+    crack,
+    setCrack,
     trail,
     openItem,
     openRelic,

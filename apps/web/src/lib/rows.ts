@@ -251,13 +251,27 @@ export function squadValue(
   prices: PriceMap | undefined,
   players: number,
 ): number {
-  if (!prices || players < 1) return 0;
+  if (!prices) return 0;
+  return squadValueBy(rewards, (itemName) => prices.get(itemName)?.averagePrice ?? 0, players);
+}
+
+/**
+ * `squadValue` over any measure of a drop, not only its platinum.
+ *
+ * The Relic Crack tab ranks by ducats as readily as by platinum, and in a
+ * radshare each player picks the reward worth the most ducats exactly as they
+ * would pick the one worth the most platinum — so the formula is the same and
+ * only the measure changes. With one player it is the plain expected value.
+ */
+export function squadValueBy(
+  rewards: Reward[],
+  valueOf: (itemName: string) => number,
+  players: number,
+): number {
+  if (players < 1) return 0;
 
   const sorted = rewards
-    .map((reward) => ({
-      value: prices.get(reward.itemName)?.averagePrice ?? 0,
-      p: reward.chance / 100,
-    }))
+    .map((reward) => ({ value: valueOf(reward.itemName), p: reward.chance / 100 }))
     .sort((a, b) => b.value - a.value);
 
   let total = 0;

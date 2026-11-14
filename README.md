@@ -14,7 +14,7 @@ searches: everything you need in one place.
 
 ### 🎯 What it does today
 
-Seven views, each answering one question:
+Eight views, each answering one question:
 
 - **Relics** — _which relic should I open?_ One row per relic, with **expected value**
   (every drop weighted by its chance), the best drop, what the relic itself sells for, and
@@ -34,6 +34,11 @@ Seven views, each answering one question:
   twice: once for opening it alone and once for a **radshare**. The two are separate
   columns because they are separate answers — solo and squad-of-four share only 11 of their
   top 20, and a relic can move 376 places between them.
+- **Relic Crack** — _which of my relics do I open, and where?_ The relics you hold (entered
+  by hand: Warframe has no public inventory) ranked by **value per minute** in the Void
+  Fissures open right now, normal, Steel Path and Void Storm. Each one says either where to
+  open it — node, mission, when the fissure closes — or that only slow missions are up for
+  its tier and when the first of them closes. Platinum or ducats, solo or radshare.
 
 Plus: ninety-day price charts and a **Trend** column that says which way a price is moving,
 a **Status** column saying whether a set still drops from relics and how long ago it

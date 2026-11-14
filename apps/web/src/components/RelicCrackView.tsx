@@ -1,18 +1,27 @@
 import { useMemo } from "react";
 
+import { CrackBoard } from "./CrackBoard";
 import { RelicInventory } from "./RelicInventory";
 import { useOwnedRelics, useRelics, useSaveOwnedRelics } from "../api/queries";
 import { addOwnedRelic, catalogueNames, setOwnedRelic } from "../lib/ownedRelics";
+import type { CrackOptions } from "../lib/crackOptions";
 import type { OwnedRelic, Refinement } from "../api/types";
+
+interface Props {
+  /** The ranking's controls. From the shell, because they live in the URL. */
+  options: CrackOptions;
+  onOptions: (next: CrackOptions) => void;
+}
 
 /**
  * The Relic Crack tab: the relics the player holds, and which to open where.
  *
  * Fetches its own data rather than taking it from the shell. Nothing else in
- * the app reads the inventory, and threading it through App and ResultsPane
- * would add props to two components that only pass it along.
+ * the app reads the inventory or the fissures, and threading them through App
+ * and ResultsPane would add props to two components that only pass them along.
+ * The controls are the exception, because the URL is the shell's.
  */
-export function RelicCrackView() {
+export function RelicCrackView({ options, onOptions }: Props) {
   const relics = useRelics();
   const owned = useOwnedRelics();
   const save = useSaveOwnedRelics();
@@ -44,6 +53,13 @@ export function RelicCrackView() {
           onAdd={onAdd}
           onSet={onSet}
           error={save.isError ? save.error.message : null}
+        />
+
+        <CrackBoard
+          owned={entries}
+          catalogue={relics.data ?? []}
+          options={options}
+          onOptions={onOptions}
         />
       </div>
     </div>

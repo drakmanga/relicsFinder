@@ -63,6 +63,8 @@ export function App() {
     setTierVault,
     tierSort,
     cycleTierSort,
+    crack,
+    setCrack,
     trail,
     openItem,
     openRelic,
@@ -351,6 +353,8 @@ export function App() {
               tierSort={tierSort}
               onTierSort={cycleTierSort}
               onOpenTierRelic={showRelic}
+              crack={crack}
+              onCrack={setCrack}
             />
           </main>
 

@@ -2790,6 +2790,15 @@ body {
   padding: var(--rf-space-4) var(--rf-space-6) var(--rf-space-6);
 }
 
+/* Side by side from --rf-bp-lg (1024px): the inventory is a narrow column of
+   short rows and the ranking a wide one of sentences, and stacked on a
+   laptop the ranking would start below the fold. */
+@media (min-width: 1024px) {
+  .rf-crack {
+    grid-template-columns: minmax(18rem, 26rem) minmax(0, 1fr);
+  }
+}
+
 .rf-crack-section-title {
   margin: 0 0 var(--rf-space-3);
 }
@@ -2868,4 +2877,78 @@ body {
   min-width: 2ch;
   text-align: center;
   font-size: var(--rf-text-caption);
+}
+
+.rf-crack-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-3);
+  min-width: 0;
+}
+
+/* The Sets view's strip, without the inset it takes as a section head: here
+   it sits inside a section that already has one. */
+.rf-crack-filters {
+  padding-inline: 0;
+  border-top: var(--rf-hairline) solid var(--rf-border-subtle);
+  border-bottom-color: var(--rf-border-subtle);
+}
+
+.rf-crack-filters .rf-set-filter {
+  /* A squad size is one digit and "Spy" three letters: drawn to their ink
+     they are 38 to 42px wide, under rule 7. Widening the chip is cheaper here
+     than growing a hit area sideways, since these chips sit 4px apart and a
+     border grown into the gap would be the neighbour's target. */
+  min-width: var(--rf-touch-target);
+  text-align: center;
+}
+
+.rf-crack-ranking {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rf-crack-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--rf-space-3);
+  padding: var(--rf-space-2) 0;
+  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+/* A fixed column, so the relic names line up down the list whatever the
+   verdict word is. The word carries the meaning; the colour only repeats it. */
+.rf-crack-verdict {
+  flex: 0 0 4.5rem;
+  color: var(--rf-fg-muted);
+}
+
+.rf-crack-row-open .rf-crack-verdict {
+  color: var(--rf-success);
+}
+
+.rf-crack-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.rf-crack-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--rf-space-1) var(--rf-space-3);
+}
+
+.rf-crack-row-name {
+  overflow-wrap: anywhere;
+}
+
+.rf-crack-figures {
+  white-space: nowrap;
+}
+
+.rf-crack-line {
+  margin: var(--rf-space-1) 0 0;
+  overflow-wrap: anywhere;
 }

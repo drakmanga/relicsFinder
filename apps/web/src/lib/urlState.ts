@@ -12,6 +12,7 @@ import {
   type RelicSortColumn,
   type VaultFilter,
 } from "./rows";
+import { readCrackParams, writeCrackParams, type CrackOptions } from "./crackOptions";
 import { fromSortParam, toSortParam, type SortState } from "./sorting";
 import { ALL_TIER_SORTS, type TierSortState } from "./tierList";
 
@@ -83,6 +84,13 @@ export interface UrlState {
    * the table's own order and writes no key at all.
    */
   sort: SortState<RelicSortColumn>;
+  /**
+   * The Relic Crack tab's six controls. Written by `crackOptions`, which owns
+   * their keys (`cur`, `sp`, `storm`, `squad`, `skip`, `sppen`), for the
+   * reason the Sets view's three have keys of their own: none of them means
+   * anything to a catalogue view.
+   */
+  crack: CrackOptions;
 }
 
 /** Only what differs from the default is written, so a clean view is a clean URL. */
@@ -110,6 +118,7 @@ export function toSearch(state: UrlState): string {
   if (tierSort) params.set("tsort", tierSort);
   const sort = toSortParam(state.sort);
   if (sort) params.set("sort", sort);
+  writeCrackParams(params, state.crack);
 
   const search = params.toString();
   return search ? `?${search}` : "";
@@ -148,6 +157,7 @@ export function fromSearch(search: string, base: Filters): UrlState {
     setStatus: pickOne<SetStatus>(params.get("prog"), ALL_SET_STATUSES, "all"),
     setPhases: pickMany<PrimePhase>(params.get("phase"), ALL_PRIME_PHASES),
     sort: fromSortParam(params.get("sort"), ALL_RELIC_SORTS),
+    crack: readCrackParams(params),
     filters: {
       ...base,
       term: params.get("q") ?? "",
