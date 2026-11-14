@@ -15,7 +15,7 @@ import {
 import { fromSearch, toSearch } from "./urlState";
 import type { PrimePhase, Refinement, SetCategory, WishlistKind } from "../api/types";
 
-export type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers";
+export type View = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers" | "crack";
 
 /**
  * Views that browse the relic catalogue.

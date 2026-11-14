@@ -8,6 +8,7 @@ import { Button, EmptyState, Skeleton } from "relic-finder-ui";
 import { DucanetorTable } from "./DucanetorTable";
 import { EndoTable } from "./EndoTable";
 import { ItemsTable } from "./ItemsTable";
+import { RelicCrackView } from "./RelicCrackView";
 import { ResultsTable } from "./ResultsTable";
 import { SetFilters } from "./SetFilters";
 import { SetsTable } from "./SetsTable";
@@ -33,7 +34,8 @@ import type { SortState } from "../lib/sorting";
 import type { TierSortColumn, TierSortState } from "../lib/tierList";
 import type { WishlistEntry } from "../lib/wishlist";
 
-export type PaneView = "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers";
+export type PaneView =
+  "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers" | "crack";
 
 interface Props {
   view: PaneView;
@@ -215,6 +217,10 @@ export function ResultsPane({
       />
     );
   }
+
+  // Below the catalogue guards: the picker and the expected values both read
+  // the relic catalogue, so this view waits on it like the others.
+  if (view === "crack") return <RelicCrackView />;
 
   if (view === "ducats") {
     return <DucanetorTable prices={prices} onInfo={onInfo} quantityOf={quantityOf} />;

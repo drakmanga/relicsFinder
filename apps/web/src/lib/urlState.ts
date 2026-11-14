@@ -33,6 +33,7 @@ export const ALL_VIEWS = [
   "ducats",
   "endo",
   "tiers",
+  "crack",
 ] as const;
 
 export type UrlView = (typeof ALL_VIEWS)[number];

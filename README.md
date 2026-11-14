@@ -252,13 +252,13 @@ A Postman collection is included.
 3. Pick `src/main/resources/warframeRelic.postman_collection.json`
 4. Try every endpoint
 
-All thirty-three of them, grouped the way the list below is, each with an example that
+All thirty-five of them, grouped the way the list below is, each with an example that
 answers something real and a note saying what the answer means. `baseUrl` is a collection
 variable — point it at `http://localhost` instead to go through nginx.
 
-Five of them are not reads, and the collection says so on each: `POST /api/relics/update`
+Six of them are not reads, and the collection says so on each: `POST /api/relics/update`
 rebuilds the catalogue, `POST /api/refresh/{view}` re-reads a source, `POST
-/api/app/update/install` replaces this copy of the application, and the two PUTs replace a
+/api/app/update/install` replaces this copy of the application, and the three PUTs replace a
 stored list whole.
 
 ### The endpoints
@@ -315,6 +315,8 @@ GET  /api/wishlist                           the stored wishlist
 PUT  /api/wishlist                           replaces it
 GET  /api/owned                              the parts you already have
 PUT  /api/owned                              replaces them
+GET  /api/owned-relics                       the relics you hold, per refinement
+PUT  /api/owned-relics                       replaces them, or refuses a relic it does not know
 GET  /api/app/version                        which build is answering, and nothing else
 GET  /api/app/update                         whether a newer release of the app exists
 POST /api/app/update/install                 replace this copy with the newer one
@@ -327,6 +329,10 @@ are dropped on every read. When warframestat is down it answers 503 with an `err
 empty list, because "no fissures open" is a claim about the game and an outage is not
 evidence for it. The minutes per mission type come from `relics.fissures.minutes` in
 `application.properties`.
+
+`/api/owned-relics` checks every name against the relic catalogue before storing anything,
+because these names are typed rather than picked from a row: one unknown relic refuses the
+whole list with a 400 that names it, and what was stored stays as it was.
 
 Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
 200, `/api/relics/relic/V9` answers 404.

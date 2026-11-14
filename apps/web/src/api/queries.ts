@@ -1,9 +1,9 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "./client";
 // The one piece of logic this layer needs and does not own: whether an install
 // is still running is a fact about the record, not about fetching it.
 import { installUnderWay } from "../lib/updateInstall";
-import type { RelicPriceMap } from "./types";
+import type { OwnedRelic, RelicPriceMap } from "./types";
 
 /**
  * Query keys in one place so an invalidation can never miss a cache entry
@@ -46,6 +46,8 @@ export const keys = {
   allTierLists: ["tiers"] as const,
   tierList: (vault: string) => [...keys.allTierLists, vault] as const,
   appUpdate: ["app", "update"] as const,
+  ownedRelics: ["owned-relics"] as const,
+  fissures: ["fissures"] as const,
   updateInstall: ["app", "update", "install"] as const,
 };
 
@@ -440,5 +442,64 @@ export function useIsVaulted(relicName: string | null) {
     queryFn: ({ signal }) => api.isVaulted(relicName!, signal),
     enabled: !!relicName,
     ...STATIC_DATA,
+  });
+}
+
+/**
+ * The relics the player is holding.
+ *
+ * Static within a session except for the reader's own edits, which write the
+ * cache directly (see `useSaveOwnedRelics`), so nothing here needs to poll.
+ */
+export function useOwnedRelics() {
+  return useQuery({
+    queryKey: keys.ownedRelics,
+    queryFn: ({ signal }) => api.ownedRelics(signal),
+    ...STATIC_DATA,
+  });
+}
+
+/**
+ * Replaces the held relics, showing the change before the server confirms it.
+ *
+ * Optimistic because a stepper that waits a round trip per click is one nobody
+ * can press fast, and a player entering dozens of relics presses it a lot. A
+ * refusal puts the previous list back, and the mutation's error carries the
+ * server's reason for the screen to show.
+ */
+export function useSaveOwnedRelics() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (next: OwnedRelic[]) => api.saveOwnedRelics(next),
+    onMutate: async (next) => {
+      await queryClient.cancelQueries({ queryKey: keys.ownedRelics });
+      const previous = queryClient.getQueryData<OwnedRelic[]>(keys.ownedRelics);
+      queryClient.setQueryData(keys.ownedRelics, next);
+      return { previous };
+    },
+    onError: (_error, _next, context) => {
+      queryClient.setQueryData(keys.ownedRelics, context?.previous ?? []);
+    },
+    // The server's copy is canonical — names in catalogue spelling, duplicates
+    // added together — so it replaces the optimistic one.
+    onSuccess: (stored) => queryClient.setQueryData(keys.ownedRelics, stored),
+  });
+}
+
+/**
+ * The fissures open right now.
+ *
+ * Polled on the server's own cache period: the backend reads warframestat at
+ * most once a minute, so asking more often would only be told the same thing,
+ * and asking less often would leave a closed fissure recommended for longer.
+ */
+export function useFissures(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.fissures,
+    queryFn: ({ signal }) => api.fissures(signal),
+    enabled,
+    staleTime: 60_000,
+    refetchInterval: enabled ? 60_000 : false,
   });
 }

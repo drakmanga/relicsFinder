@@ -156,6 +156,9 @@ export function App() {
               // Relics: it ranks the catalogue rather than listing it, which
               // is the question the three tabs at this end of the row share.
               { id: "tiers", label: "Tier List" },
+              // After the rankings because it is one: what to open, ordered by
+              // what it pays per minute in the fissures up right now.
+              { id: "crack", label: "Relic Crack" },
             ]}
           />
 

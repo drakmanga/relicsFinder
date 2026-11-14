@@ -30,6 +30,7 @@ const VIEWS = [
   ["ducanetor", "/?view=ducats"],
   ["endo", "/?view=endo"],
   ["tier list", "/?view=tiers"],
+  ["relic crack", "/?view=crack"],
 ];
 
 const BLOCKING = new Set(["serious", "critical"]);

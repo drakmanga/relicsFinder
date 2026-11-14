@@ -3,8 +3,8 @@
  *
  * The crawler finds one route on its own and stops: this is a single-page app
  * whose navigation is buttons, so there are no internal links to follow. The
- * seven views are listed by hand — the same seven the axe check walks —
- * because a measurement of the home page alone says nothing about the six
+ * eight views are listed by hand — the same eight the axe check walks —
+ * because a measurement of the home page alone says nothing about the seven
  * screens made of dense tables.
  */
 export default {
@@ -24,5 +24,6 @@ export default {
     "/?view=ducats",
     "/?view=endo",
     "/?view=tiers",
+    "/?view=crack",
   ],
 };

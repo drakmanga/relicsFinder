@@ -616,3 +616,42 @@ export interface TierPriceCoverage {
   relics: number;
   relicsPriced: number;
 }
+
+/**
+ * Copies of one relic, in one refinement, that the player is holding.
+ *
+ * Relic and refinement together are the identity: Neo N16 Intact and Neo N16
+ * Radiant are two lines, because a relic is refined one copy at a time.
+ * `relicName` is the full name, tier included — the server refuses anything
+ * the catalogue does not list.
+ */
+export interface OwnedRelic {
+  relicName: string;
+  refinement: Refinement;
+  quantity: number;
+}
+
+/** The tier a fissure accepts. Omnia accepts every relic. */
+export type FissureTier = "Lith" | "Meso" | "Neo" | "Axi" | "Requiem" | "Omnia";
+
+/** One Void Fissure open right now, as `/api/fissures` normalises it. */
+export interface Fissure {
+  id: string;
+  node: string;
+  /** As the worldstate spells it: "Extermination", not "Exterminate". */
+  missionType: string;
+  /** Free-form on the wire; a tier this app does not know matches nothing. */
+  tier: string;
+  steelPath: boolean;
+  voidStorm: boolean;
+  /** ISO-8601. */
+  expiry: string;
+  /** Minutes to crack one relic there. Null for a mission type with no estimate. */
+  minutes: number | null;
+}
+
+export interface FissureFeed {
+  fissures: Fissure[];
+  /** The whole configured table, including mission types with nothing open. */
+  missionMinutes: Record<string, number>;
+}

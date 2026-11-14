@@ -3,9 +3,11 @@ import type {
   DropInfo,
   EndoOffer,
   EndoStatus,
+  FissureFeed,
   ItemPrice,
   LifecycleMap,
   MarketStatus,
+  OwnedRelic,
   PricePoint,
   PrimeLifecycle,
   RefreshOutcome,
@@ -60,6 +62,20 @@ async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   }
 
   return (await res.json()) as T;
+}
+
+/**
+ * The `error` an endpoint explains a refusal with, or the status line when it
+ * sent none. Only the endpoints whose refusals a reader acts on use it.
+ */
+async function reasonOf(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: unknown };
+    if (typeof body.error === "string" && body.error) return body.error;
+  } catch {
+    // Not JSON: fall through to the status line.
+  }
+  return `${res.status} ${res.statusText}`;
 }
 
 /**
@@ -336,6 +352,57 @@ export const api = {
 
     if (!res.ok) throw new ApiError(res.status, url, `${res.status} ${res.statusText}`);
     return (await res.json()) as WireOwnedEntry[];
+  },
+
+  /** The relics the player is holding. */
+  async ownedRelics(signal?: AbortSignal): Promise<OwnedRelic[]> {
+    return await get<OwnedRelic[]>("/owned-relics", signal);
+  },
+
+  /**
+   * Replaces the held relics with this list, or fails whole.
+   *
+   * A 400 carries the server's reason ("Unknown relic …"), which is what the
+   * reader has to see, so it is surfaced as the error's message rather than
+   * as the bare status line `get` would give.
+   */
+  async saveOwnedRelics(entries: OwnedRelic[]): Promise<OwnedRelic[]> {
+    const url = `${BASE}/owned-relics`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(entries),
+      });
+    } catch (cause) {
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, await reasonOf(res));
+    return (await res.json()) as OwnedRelic[];
+  },
+
+  /**
+   * The Void Fissures open right now.
+   *
+   * A 503 means the worldstate could not be read, and its reason is kept for
+   * the same reason as above: the screen says "fissure data unavailable"
+   * rather than "no fissures".
+   */
+  async fissures(signal?: AbortSignal): Promise<FissureFeed> {
+    const url = `${BASE}/fissures`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, { signal, headers: { Accept: "application/json" } });
+    } catch (cause) {
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, await reasonOf(res));
+    return (await res.json()) as FissureFeed;
   },
 
   /** Ayatan offers ranked by Endo per platinum. */

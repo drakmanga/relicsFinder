@@ -2775,3 +2775,97 @@ body {
      `.rf-commands-text`, which is where CommandBlock always meant it to be. */
   min-width: 0;
 }
+
+/* ------------------------------------------------------------ Relic Crack -- */
+/* The tab borrows the ranked views' shell (`.rf-ranked`, its head and body)
+   and adds only what is its own: the inventory and the ranking beside it.
+   Its own section rather than more RankedPage props, because that shell
+   requires a refresh control for a snapshot the server holds, and the
+   fissure list is a poll rather than a snapshot. */
+.rf-crack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--rf-space-6);
+  padding: var(--rf-space-4) var(--rf-space-6) var(--rf-space-6);
+}
+
+.rf-crack-section-title {
+  margin: 0 0 var(--rf-space-3);
+}
+
+.rf-crack-inventory {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-3);
+  min-width: 0;
+}
+
+.rf-crack-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--rf-space-3);
+}
+
+/* The name field takes what the row has left; the count stays narrow, since
+   it holds two digits and a wider box would read as a second search. */
+.rf-crack-picker > .rf-field:first-child {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.rf-crack-picker-qty {
+  flex: 0 0 6rem;
+  /* Without it the box is as wide as the input's own 20-character default,
+     because a flex item will not shrink below its min-content width. */
+  min-width: 0;
+}
+
+.rf-crack-picker-qty input {
+  width: 100%;
+  min-width: 0;
+}
+
+.rf-crack-matches {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rf-crack-error {
+  margin: 0;
+  color: var(--rf-danger);
+}
+
+.rf-crack-owned {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-crack-owned-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rf-space-3);
+  padding: var(--rf-space-1) 0;
+  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-crack-owned-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Two digits' room, so the `+` does not move when 9 becomes 10. */
+.rf-crack-owned-qty {
+  min-width: 2ch;
+  text-align: center;
+  font-size: var(--rf-text-caption);
+}

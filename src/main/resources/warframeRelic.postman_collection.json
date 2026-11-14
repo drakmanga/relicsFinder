@@ -704,6 +704,58 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Relics held",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "The relics you hold, one entry per relic and refinement with a quantity. Entered by hand on the Relic Crack tab: Warframe has no public inventory API.",
+						"url": {
+							"raw": "{{baseUrl}}/api/owned-relics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"owned-relics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Replace the relics held",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"description": "Replaces the whole list. Not a read. Every relicName is checked against the relic catalogue and stored in its spelling, so \"neo n16\" becomes \"Neo N16\"; refinement is intact, exceptional, flawless or radiant. One unknown name refuses the whole list with a 400 whose error names it, and the stored list is left as it was. Two entries for the same relic and refinement are added together, and a quantity of 0 drops the entry.",
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  { \"relicName\": \"Neo N16\", \"refinement\": \"radiant\", \"quantity\": 3 },\n  { \"relicName\": \"Neo N16\", \"refinement\": \"intact\", \"quantity\": 1 }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/owned-relics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"owned-relics"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
