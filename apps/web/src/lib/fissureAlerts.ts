@@ -10,12 +10,27 @@ import { tierOfName } from "./ownedRelics";
  * notifications (`useFissureAlerts`) only decides when to ask.
  */
 
-/** How long notifications stay on, as the reader can choose it. Never open-ended. */
-export const ALERT_DURATIONS = [
-  { label: "30 min", ms: 30 * 60_000 },
-  { label: "1 h", ms: 60 * 60_000 },
-  { label: "2 h", ms: 2 * 60 * 60_000 },
-] as const;
+/**
+ * How long notifications stay on, in hours the reader types. Never open-ended:
+ * a quarter of an hour at least, and a cap the reader will not reach by
+ * accident (999 h is six weeks) but that still keeps a typo like 10000 from
+ * meaning "for ever".
+ */
+export const ALERT_HOURS = { min: 0.25, max: 999, initial: 1 } as const;
+
+const HOUR_MS = 60 * 60_000;
+
+/**
+ * The typed hours as milliseconds, or null when they are not a duration the
+ * switch accepts. A comma is read as a decimal point, as an Italian keyboard
+ * types "1,5".
+ */
+export function alertDurationMs(typed: string): number | null {
+  const hours = Number(typed.trim().replace(",", "."));
+  if (!typed.trim() || !Number.isFinite(hours)) return null;
+  if (hours < ALERT_HOURS.min || hours > ALERT_HOURS.max) return null;
+  return hours * HOUR_MS;
+}
 
 /** Omnia fissures accept every tier, so every held copy counts toward them. */
 const OMNIA = "Omnia";

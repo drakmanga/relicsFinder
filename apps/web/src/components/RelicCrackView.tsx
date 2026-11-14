@@ -54,30 +54,27 @@ export function RelicCrackView({ options, onOptions }: Props) {
   return (
     <div ref={pane} className="rf-ranked">
       <div className="rf-ranked-head">
-        <div className="rf-ranked-heading">
-          <h2 className="rf-text-display-sm rf-ranked-title">Relic Crack</h2>
-          <p className="rf-text-body-sm rf-fg-muted rf-prose rf-ranked-lead">
-            The relics you hold, and which of them to open in the fissures up right now.
-          </p>
+        <div className="rf-ranked-headline">
+          <div className="rf-ranked-heading">
+            <h2 className="rf-text-display-sm rf-ranked-title">Relic Crack</h2>
+            <p className="rf-text-body-sm rf-fg-muted rf-prose rf-ranked-lead">
+              The relics you hold, and which of them to open in the fissures up right now.
+            </p>
+          </div>
+          {/* Where the ranked views keep their refresh: the head's right end
+              holds what acts on the whole tab. */}
+          <FissureAlerts
+            active={alerts.active}
+            until={alerts.until}
+            permission={alerts.permission}
+            onStart={alerts.start}
+            onStop={alerts.stop}
+          />
         </div>
       </div>
 
       <div className="rf-ranked-body rf-crack">
-        <ActiveFissures
-          fissures={fissures}
-          options={options}
-          onOptions={onOptions}
-          now={now}
-          alerts={
-            <FissureAlerts
-              active={alerts.active}
-              until={alerts.until}
-              permission={alerts.permission}
-              onStart={alerts.start}
-              onStop={alerts.stop}
-            />
-          }
-        />
+        <ActiveFissures fissures={fissures} options={options} onOptions={onOptions} now={now} />
 
         <RelicInventory
           entries={entries}
@@ -96,6 +93,7 @@ export function RelicCrackView({ options, onOptions }: Props) {
           options={options}
           now={now}
           pane={pane}
+          onByFissure={(byFissure) => onOptions({ ...options, byFissure })}
           onOpened={(relic) =>
             save.mutate(
               setOwnedRelic(entries, relic.relicName, relic.refinement, relic.quantity - 1),

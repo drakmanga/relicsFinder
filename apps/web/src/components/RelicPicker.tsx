@@ -57,7 +57,18 @@ export function RelicPicker({ names, onAdd }: Props) {
         helper={term && matches.length === 0 ? "No relic by that name." : undefined}
       />
 
-      {/* Labelled like the two fields beside it, above its options, rather
+      {/* On the name's line rather than under the refinement: two digits
+          on a row of their own cost a field's height for nothing. */}
+      <Input
+        type="number"
+        label="Copies"
+        min={1}
+        value={quantity}
+        wrapperClassName="rf-crack-picker-qty"
+        onChange={(event) => setQuantity(Math.max(1, Math.trunc(Number(event.target.value)) || 1))}
+      />
+
+      {/* Labelled like the two fields above it, above its options, rather
           than with the chips' own uppercase overline: in that style the word
           read as a fifth chip. */}
       <div className="rf-crack-refinement" role="group" aria-labelledby={refinementId}>
@@ -78,15 +89,6 @@ export function RelicPicker({ names, onAdd }: Props) {
           ))}
         </div>
       </div>
-
-      <Input
-        type="number"
-        label="Copies"
-        min={1}
-        value={quantity}
-        wrapperClassName="rf-crack-picker-qty"
-        onChange={(event) => setQuantity(Math.max(1, Math.trunc(Number(event.target.value)) || 1))}
-      />
 
       {/* Buttons rather than an ARIA combobox: each match is one action,
           "add this", and a list of real buttons is reachable by Tab with no

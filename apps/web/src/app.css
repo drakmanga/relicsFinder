@@ -2813,19 +2813,23 @@ body {
 .rf-crack-picker {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  /* Top, not bottom: the name field grows a helper line under it ("No relic
+     by that name"), and bottom alignment lifted its box out of line with the
+     count's. Both labels are one line, so the tops agree. */
+  align-items: flex-start;
   gap: var(--rf-space-3);
 }
 
 /* The name field takes what the row has left; the count stays narrow, since
    it holds two digits and a wider box would read as a second search. */
 .rf-crack-picker > .rf-field:first-child {
-  flex: 1 1 14rem;
+  /* 12rem so the name and the count share a line down to 360px. */
+  flex: 1 1 12rem;
   min-width: 0;
 }
 
 .rf-crack-picker-qty {
-  flex: 0 0 6rem;
+  flex: 0 0 5rem;
   /* Without it the box is as wide as the input's own 20-character default,
      because a flex item will not shrink below its min-content width. */
   min-width: 0;
@@ -2920,6 +2924,7 @@ body {
 }
 
 .rf-crack-refinement {
+  flex: 1 0 100%;
   display: flex;
   flex-direction: column;
   gap: var(--rf-space-1);
@@ -2936,16 +2941,53 @@ body {
   min-width: 0;
 }
 
+/* Folded to a line under the cards; see CrackFilters. */
+.rf-crack-filters {
+  border-block: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-crack-filters-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--rf-space-1) var(--rf-space-3);
+  padding: var(--rf-space-2) 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* The browser's own triangle is a list marker in one engine and a pseudo
+   element in the other; both are removed and one chevron drawn instead, so
+   the line looks the same in Chromium and Firefox. */
+.rf-crack-filters-summary::-webkit-details-marker {
+  display: none;
+}
+
+.rf-crack-filters-summary::before {
+  content: "\203A";
+  color: var(--rf-fg-muted);
+  transition: transform var(--rf-dur-fast) var(--rf-ease-standard);
+}
+
+.rf-crack-filters[open] > .rf-crack-filters-summary::before {
+  transform: rotate(90deg);
+}
+
+.rf-crack-filters[open] > .rf-crack-filters-summary .rf-text-caption {
+  display: none;
+}
+
 /* The Sets view's strip, without the inset it takes as a section head: here
    it sits inside a section that already has one. */
-.rf-crack-filters {
+.rf-crack-filters-strip {
   padding-inline: 0;
-  border-top: var(--rf-hairline) solid var(--rf-border-subtle);
-  border-bottom-color: var(--rf-border-subtle);
+  padding-top: 0;
+  border-bottom: 0;
 }
 
 .rf-crack-filters .rf-set-filter,
-.rf-crack-inventory-filters .rf-set-filter {
+.rf-crack-inventory-filters .rf-set-filter,
+.rf-crack-board-head .rf-set-filter {
   /* A squad size is one digit, "Spy" and "Axi" three letters: drawn to their
      ink they are 37 to 43px wide, under rule 7. Widening the chip is cheaper here
      than growing a hit area sideways, since these chips sit 4px apart and a
@@ -2962,6 +3004,7 @@ body {
 
 .rf-crack-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--rf-space-3);
   padding: var(--rf-space-2) 0;
@@ -2986,15 +3029,20 @@ body {
 }
 
 .rf-crack-row-body {
-  flex: 1;
+  flex: 1 1 14rem;
   min-width: 0;
 }
 
-.rf-crack-row-head {
+/* The figures with the button under them, right-aligned: a column of their
+   own, so neither the sentence nor the refining advice can push the button
+   onto a line of its own. Under 14rem of body it wraps beneath, where a
+   phone has the width for it. */
+.rf-crack-row-side {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--rf-space-1) var(--rf-space-3);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--rf-space-2);
+  margin-left: auto;
 }
 
 .rf-crack-row-name {
@@ -3013,21 +3061,39 @@ body {
   margin: 0;
 }
 
-.rf-crack-row-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--rf-space-2) var(--rf-space-3);
+.rf-crack-refine {
+  margin: var(--rf-space-1) 0 0;
 }
 
-.rf-crack-refine {
+/* A block's heading in the grouped ranking: the fissure on one line, its
+   facts beside it, over a gold rule that says the rows below belong to it. */
+.rf-crack-group {
+  padding-top: var(--rf-space-4);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-emphasis);
+}
+
+.rf-crack-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--rf-space-1) var(--rf-space-3);
+  padding-bottom: var(--rf-space-2);
+}
+
+.rf-crack-group-title {
   margin: 0;
-  flex-basis: 100%;
+}
+
+.rf-crack-board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--rf-space-2) var(--rf-space-4);
 }
 
 .rf-crack-line {
-  margin: var(--rf-space-1) 0 0;
+  margin: var(--rf-space-2) 0 0;
   overflow-wrap: anywhere;
 }
 
@@ -3037,17 +3103,49 @@ body {
   padding-block: var(--rf-virtual-before, 0) var(--rf-virtual-after, 0);
 }
 
-/* The notification switch: a sentence and its choices on one line, wrapping
-   under each other at phone width. */
+/* The notification switch at the head's right end: one framed line with
+   the bell, gilded while it is on so "something is watching" is visible from
+   anywhere on the tab. */
 .rf-crack-alerts {
+  margin-left: auto;
+  max-width: 100%;
+}
+
+.rf-crack-alerts-inner {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--rf-space-2);
+  gap: var(--rf-space-2) var(--rf-space-3);
+  padding: var(--rf-space-1) var(--rf-space-1) var(--rf-space-1) var(--rf-space-3);
 }
 
-/* "1 h" is two characters and a space: drawn to its ink the button is 41px
-   wide, under rule 7. */
-.rf-crack-alerts .rf-btn {
-  min-width: var(--rf-touch-target);
+.rf-crack-alerts-bell {
+  flex: none;
+  width: var(--rf-space-5);
+  height: var(--rf-space-5);
+  color: var(--rf-fg-muted);
+}
+
+/* Gold, the gilded frame's own colour, as the leading card's rank is. */
+.rf-crack-alerts-bell-on {
+  color: var(--rf-gold-300);
+}
+
+/* Its fields flow in the frame's own row, so on a phone the sentence wraps
+   beside the bell rather than leaving the bell alone on a line above it. */
+.rf-crack-alerts-form {
+  display: contents;
+}
+
+/* Three digits and the unit: wider would read as a search box. 6rem rather
+   than less because the "h" and the padding take their share, and at 5.5rem
+   Firefox left the input itself 43px wide, under rule 7. */
+.rf-crack-alerts-hours {
+  flex: 0 0 6rem;
+  min-width: 0;
+}
+
+.rf-crack-alerts-hours input {
+  width: 100%;
+  min-width: 0;
 }

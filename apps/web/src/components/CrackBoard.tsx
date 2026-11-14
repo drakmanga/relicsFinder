@@ -16,9 +16,16 @@ interface Props {
   options: CrackOptions;
   now: number;
   onOpened: (relic: OwnedRelic) => void;
+  /** Switches the ranking between one line per relic and one block per fissure. */
+  onByFissure: (byFissure: boolean) => void;
   /** The tab's scrolling pane, which the ranking scrolls with. */
   pane: RefObject<HTMLElement | null>;
 }
+
+const GROUPINGS = [
+  { byFissure: false, label: "By relic" },
+  { byFissure: true, label: "By fissure" },
+] as const;
 
 /**
  * The held relics scored against the fissures up right now.
@@ -34,6 +41,7 @@ export function CrackBoard({
   options,
   now,
   onOpened,
+  onByFissure,
   pane,
 }: Props) {
   const held = new Set(owned.map((relic) => `${relic.relicName}|${relic.refinement}`));
@@ -44,9 +52,26 @@ export function CrackBoard({
 
   return (
     <section className="rf-crack-board" aria-labelledby="rf-crack-board-title">
-      <h3 id="rf-crack-board-title" className="rf-text-heading-md rf-crack-section-title">
-        What to open now
-      </h3>
+      <div className="rf-crack-board-head">
+        <h3 id="rf-crack-board-title" className="rf-text-heading-md rf-crack-section-title">
+          What to open now
+        </h3>
+        {/* A switch rather than a second list: the same rows, read as "which
+            relic" or as "where do I go and what do I open there". */}
+        <div className="rf-set-filters-group" role="group" aria-label="Show">
+          {GROUPINGS.map(({ byFissure, label }) => (
+            <button
+              key={label}
+              type="button"
+              aria-pressed={options.byFissure === byFissure}
+              className={`rf-focus-ring rf-set-filter rf-hit-block${options.byFissure === byFissure ? " rf-set-filter-on" : ""}`}
+              onClick={() => onByFissure(byFissure)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {feedPending ? (
         <div className="rf-skeleton-stack" aria-hidden="true">
@@ -66,6 +91,7 @@ export function CrackBoard({
       ) : (
         <CrackRanking
           rows={rankCrack(owned, catalogue, prices.data, feed, options, now)}
+          byFissure={options.byFissure}
           onOpened={onOpened}
           pane={pane}
           now={now}

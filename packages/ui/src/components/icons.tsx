@@ -212,6 +212,15 @@ export const InfoIcon = strokeIcon(
   "InfoIcon",
 );
 
+/** A bell. Notifications: asking for them, and saying they are on. */
+export const BellIcon = strokeIcon(
+  <>
+    <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16Z" />
+    <path d="M10 20.5a2 2 0 0 0 4 0" />
+  </>,
+  "BellIcon",
+);
+
 export const TrendingUpIcon = strokeIcon(
   <>
     <path d="m3 17 6-6 4 4 8-8" />

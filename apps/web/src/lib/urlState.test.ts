@@ -314,6 +314,7 @@ describe("the Relic Crack controls", () => {
       players: 4,
       excluded: new Set(["Survival", "Mobile Defense"]),
       penaliseSteelPath: true,
+      byFissure: true,
     };
 
     const read = fromSearch(toSearch(state({ view: "crack", crack })), emptyFilters());

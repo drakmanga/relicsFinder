@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Fissure, FissureFeed, ItemPrice, OwnedRelic, PriceMap, Relic } from "../api/types";
 import { defaultCrackOptions, type CrackOptions } from "./crackOptions";
-import { alertText, alertWorthy, copiesFor, heldByTier } from "./fissureAlerts";
+import { alertDurationMs, alertText, alertWorthy, copiesFor, heldByTier } from "./fissureAlerts";
 import {
   STEEL_PATH_PENALTY,
   crackLine,
@@ -295,5 +295,15 @@ describe("fissure alerts", () => {
       title: "Neo Survival (Steel Path) on NeoSurvSP (Void)",
       body: "You hold 3 relics it can open.",
     });
+  });
+
+  it("takes typed hours, a comma as the decimal point, and refuses what is not a duration", () => {
+    expect(alertDurationMs("200")).toBe(200 * 3_600_000);
+    expect(alertDurationMs("1,5")).toBe(1.5 * 3_600_000);
+    expect(alertDurationMs(" 0.25 ")).toBe(900_000);
+    expect(alertDurationMs("")).toBeNull();
+    expect(alertDurationMs("abc")).toBeNull();
+    expect(alertDurationMs("0")).toBeNull();
+    expect(alertDurationMs("1000")).toBeNull();
   });
 });

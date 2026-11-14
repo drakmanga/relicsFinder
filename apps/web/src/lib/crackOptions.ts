@@ -1,8 +1,8 @@
 /**
  * The Relic Crack tab's controls, and how they travel in the address bar.
  *
- * Their own module rather than more fields spelled out in `urlState`: the
- * five of them are one question ("rank my relics under these conditions"),
+ * Their own module rather than more fields spelled out in `urlState`: they
+ * are one question ("rank my relics under these conditions, shown this way"),
  * and `urlState` only has to hand them a `URLSearchParams` either way.
  */
 
@@ -22,6 +22,11 @@ export interface CrackOptions {
   excluded: Set<string>;
   /** Count Steel Path as slower — for a player who finds it hard. See `relicCrack`. */
   penaliseSteelPath: boolean;
+  /**
+   * The ranking drawn as one block per fissure ("go here, open these")
+   * rather than one line per relic. Same rows and figures either way.
+   */
+  byFissure: boolean;
 }
 
 /**
@@ -39,6 +44,7 @@ export const defaultCrackOptions = (): CrackOptions => ({
   players: 1,
   excluded: new Set(),
   penaliseSteelPath: false,
+  byFissure: false,
 });
 
 /** Writes only what differs from the default, so a clean tab is a clean URL. */
@@ -48,6 +54,7 @@ export function writeCrackParams(params: URLSearchParams, options: CrackOptions)
   if (options.players !== 1) params.set("squad", String(options.players));
   if (options.excluded.size > 0) params.set("skip", [...options.excluded].sort().join(","));
   if (options.penaliseSteelPath) params.set("sppen", "1");
+  if (options.byFissure) params.set("by", "fissure");
 }
 
 /**
@@ -71,5 +78,6 @@ export function readCrackParams(params: URLSearchParams): CrackOptions {
     players: (SQUAD_SIZES as readonly number[]).includes(squad) ? squad : fallback.players,
     excluded: new Set(skip ? skip.split(",").filter(Boolean) : []),
     penaliseSteelPath: params.get("sppen") === "1",
+    byFissure: params.get("by") === "fissure",
   };
 }
