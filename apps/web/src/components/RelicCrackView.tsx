@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
 import { ActiveFissures } from "./ActiveFissures";
+import { FissureAlerts } from "./FissureAlerts";
 import { CrackBoard } from "./CrackBoard";
 import { RelicInventory } from "./RelicInventory";
 import { useFissures, useOwnedRelics, useRelics, useSaveOwnedRelics } from "../api/queries";
 import { addOwnedRelic, catalogueNames, setOwnedRelic } from "../lib/ownedRelics";
+import { useFissureAlerts } from "../lib/useFissureAlerts";
 import { useNow } from "../lib/useNow";
 import type { CrackOptions } from "../lib/crackOptions";
 import type { OwnedRelic, Refinement } from "../api/types";
@@ -35,9 +37,13 @@ export function RelicCrackView({ options, onOptions }: Props) {
   // fissure closes in 1 min while the ranking beside it says 2.
   const fissures = useFissures(true);
   const now = useNow(CLOCK_TICK);
+  // The one element that scrolls on this tab: both long lists draw only the
+  // rows near it. See lib/useVirtualList.
+  const pane = useRef<HTMLDivElement>(null);
 
   const names = useMemo(() => catalogueNames(relics.data ?? []), [relics.data]);
   const entries: OwnedRelic[] = owned.data ?? [];
+  const alerts = useFissureAlerts(fissures.data, entries, options, now);
 
   const onAdd = (relicName: string, refinement: Refinement, quantity: number) =>
     save.mutate(addOwnedRelic(entries, relicName, refinement, quantity));
@@ -46,7 +52,7 @@ export function RelicCrackView({ options, onOptions }: Props) {
     save.mutate(setOwnedRelic(entries, relicName, refinement, quantity));
 
   return (
-    <div className="rf-ranked">
+    <div ref={pane} className="rf-ranked">
       <div className="rf-ranked-head">
         <div className="rf-ranked-heading">
           <h2 className="rf-text-display-sm rf-ranked-title">Relic Crack</h2>
@@ -57,7 +63,21 @@ export function RelicCrackView({ options, onOptions }: Props) {
       </div>
 
       <div className="rf-ranked-body rf-crack">
-        <ActiveFissures fissures={fissures} options={options} onOptions={onOptions} now={now} />
+        <ActiveFissures
+          fissures={fissures}
+          options={options}
+          onOptions={onOptions}
+          now={now}
+          alerts={
+            <FissureAlerts
+              active={alerts.active}
+              until={alerts.until}
+              permission={alerts.permission}
+              onStart={alerts.start}
+              onStop={alerts.stop}
+            />
+          }
+        />
 
         <RelicInventory
           entries={entries}
@@ -65,6 +85,7 @@ export function RelicCrackView({ options, onOptions }: Props) {
           onAdd={onAdd}
           onSet={onSet}
           error={save.isError ? save.error.message : null}
+          pane={pane}
         />
 
         <CrackBoard
@@ -74,6 +95,7 @@ export function RelicCrackView({ options, onOptions }: Props) {
           feedPending={fissures.isPending}
           options={options}
           now={now}
+          pane={pane}
           onOpened={(relic) =>
             save.mutate(
               setOwnedRelic(entries, relic.relicName, relic.refinement, relic.quantity - 1),

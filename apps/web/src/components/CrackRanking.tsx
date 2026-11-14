@@ -1,15 +1,26 @@
+import type { RefObject } from "react";
 import { Button } from "relic-finder-ui";
 
 import { REFINEMENT_LABEL } from "../lib/rows";
+import { useVirtualList } from "../lib/useVirtualList";
 import type { OwnedRelic } from "../api/types";
 import { crackLine, formatCrackValue, type CrackRow, type CrackVerdict } from "../lib/relicCrack";
 
 interface Props {
   rows: CrackRow[];
+  /** The tab's scrolling pane, which the list scrolls with. */
+  pane: RefObject<HTMLElement | null>;
   /** One copy of this relic was just opened: take it off the inventory. */
   onOpened: (relic: OwnedRelic) => void;
   now: number;
 }
+
+/**
+ * A ranked row's height before it is measured: the average at 1440px, where
+ * rows run 87 to 144px depending on the refining line. Each row is measured
+ * as it renders, so this only decides how much the scrollbar settles.
+ */
+const ROW_HEIGHT = 119;
 
 /** In words as well as in colour (§5.1): the verdict is the first thing read. */
 const VERDICT_LABEL: Record<CrackVerdict, string> = {
@@ -26,12 +37,28 @@ const VERDICT_LABEL: Record<CrackVerdict, string> = {
  * Capture, expires in 30 min") with two figures beside it, and a sentence
  * does not fit a column at 360px.
  */
-export function CrackRanking({ rows, onOpened, now }: Props) {
+export function CrackRanking({ rows, pane, onOpened, now }: Props) {
+  const { listRef, items, measureElement } = useVirtualList<HTMLOListElement>(
+    rows.length,
+    pane,
+    ROW_HEIGHT,
+  );
+
   return (
-    <ol className="rf-crack-ranking" aria-label="Relics ranked by value per minute">
-      {rows.map((row) => {
+    <ol
+      ref={listRef}
+      className="rf-crack-ranking rf-virtual"
+      aria-label="Relics ranked by value per minute"
+    >
+      {items.map((item) => {
+        const row = rows[item.index]!;
         return (
-          <li key={row.key} className={`rf-crack-row rf-crack-row-${row.verdict}`}>
+          <li
+            key={row.key}
+            ref={measureElement}
+            data-index={item.index}
+            className={`rf-crack-row rf-crack-row-${row.verdict}`}
+          >
             <span className="rf-text-overline rf-crack-verdict">{VERDICT_LABEL[row.verdict]}</span>
 
             <div className="rf-crack-row-body">

@@ -3030,3 +3030,24 @@ body {
   margin: var(--rf-space-1) 0 0;
   overflow-wrap: anywhere;
 }
+
+/* A virtualised list: the rows it does not draw are this padding, set from
+   lib/useVirtualList as the reader scrolls. */
+.rf-virtual {
+  padding-block: var(--rf-virtual-before, 0) var(--rf-virtual-after, 0);
+}
+
+/* The notification switch: a sentence and its choices on one line, wrapping
+   under each other at phone width. */
+.rf-crack-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rf-space-2);
+}
+
+/* "1 h" is two characters and a space: drawn to its ink the button is 41px
+   wide, under rule 7. */
+.rf-crack-alerts .rf-btn {
+  min-width: var(--rf-touch-target);
+}

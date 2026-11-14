@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Fissure, FissureFeed, ItemPrice, OwnedRelic, PriceMap, Relic } from "../api/types";
 import { defaultCrackOptions, type CrackOptions } from "./crackOptions";
+import { alertText, alertWorthy, copiesFor, heldByTier } from "./fissureAlerts";
 import {
   STEEL_PATH_PENALTY,
   crackLine,
@@ -264,5 +265,35 @@ describe("refineAdvice", () => {
 
   it("suggests nothing when refining loses value", () => {
     expect(refineAdvice({ intact: radiant, radiant: intact }, "intact", PRICES, 1)).toBeNull();
+  });
+});
+
+describe("fissure alerts", () => {
+  const held = heldByTier([n16, a1]);
+
+  it("counts copies per tier, and every copy toward Omnia", () => {
+    expect(copiesFor(neoSurvival, held)).toBe(3);
+    expect(copiesFor(omniaCapture, held)).toBe(4);
+    expect(copiesFor(lithCapture, held)).toBe(0);
+  });
+
+  it("announces only fast fissures of a tier held", () => {
+    // Capture 1 and Extermination 2 clear half the fastest rate; Survival 5 does not.
+    const neoExterm = fissure("NeoExt", "Neo", "Extermination", 2, "12:40");
+    const worthy = alertWorthy(
+      feedOf(omniaCapture, lithCapture, neoExterm, neoSurvival),
+      options(),
+      held,
+      NOW,
+    );
+
+    expect(worthy.map((f) => f.id)).toEqual(["OmniaCap", "NeoExt"]);
+  });
+
+  it("says where and how many relics it takes", () => {
+    expect(alertText(neoSurvivalSp, 3)).toEqual({
+      title: "Neo Survival (Steel Path) on NeoSurvSP (Void)",
+      body: "You hold 3 relics it can open.",
+    });
   });
 });

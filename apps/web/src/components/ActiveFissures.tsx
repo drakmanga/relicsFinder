@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Button, EmptyState, Skeleton } from "relic-finder-ui";
 
 import { CrackFilters } from "./CrackFilters";
@@ -21,6 +22,8 @@ interface Props {
   options: CrackOptions;
   onOptions: (next: CrackOptions) => void;
   now: number;
+  /** The notification switch, between the cards and the filters. */
+  alerts: ReactNode;
 }
 
 /**
@@ -32,7 +35,7 @@ interface Props {
  * fissures first, and the cards show what they leave at the top before the
  * ranking says what it made of the rest.
  */
-export function ActiveFissures({ fissures, options, onOptions, now }: Props) {
+export function ActiveFissures({ fissures, options, onOptions, now, alerts }: Props) {
   const feed = fissures.data;
   const visible = feed ? visibleFissures(feed, options, now) : [];
   // The best three, as Ducanetor shows its best three: all thirty-odd open
@@ -81,6 +84,8 @@ export function ActiveFissures({ fissures, options, onOptions, now }: Props) {
           ))}
         </ul>
       )}
+
+      {alerts}
 
       {/* Below the cards: the cards are the answer to "what is up right now",
           the filters a refinement of it, and the answer comes first. */}

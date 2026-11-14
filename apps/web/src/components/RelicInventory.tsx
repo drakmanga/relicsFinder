@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import { Button, XIcon } from "relic-finder-ui";
 
 import { InventoryFilters } from "./InventoryFilters";
 import { RelicPicker } from "./RelicPicker";
 import { REFINEMENT_LABEL } from "../lib/rows";
 import { filterOwnedRelics, totalOwnedRelics, type OwnedSort } from "../lib/ownedRelics";
+import { useVirtualList } from "../lib/useVirtualList";
 import type { OwnedRelic, Refinement } from "../api/types";
 
 interface Props {
@@ -16,7 +17,12 @@ interface Props {
   onSet: (relicName: string, refinement: Refinement, quantity: number) => void;
   /** The server's reason for refusing the last save, when it refused one. */
   error: string | null;
+  /** The tab's scrolling pane, which the list scrolls with. */
+  pane: RefObject<HTMLElement | null>;
 }
+
+/** A line's height at rest, measured: the real one is read as each row renders. */
+const LINE_HEIGHT = 41;
 
 /**
  * The relics the player is holding: the picker that adds them and the list
@@ -25,13 +31,18 @@ interface Props {
  * One line per relic and refinement, so Neo N16 Intact and Neo N16 Radiant are
  * two lines with two counts.
  */
-export function RelicInventory({ entries, names, onAdd, onSet, error }: Props) {
+export function RelicInventory({ entries, names, onAdd, onSet, error, pane }: Props) {
   // Local rather than in the URL: finding a line in your own inventory is a
   // moment's convenience, not a view anybody would send to someone else.
   const [term, setTerm] = useState("");
   const [tiers, setTiers] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<OwnedSort>("added");
   const visible = filterOwnedRelics(entries, term, tiers, sort);
+  const { listRef, items, measureElement } = useVirtualList<HTMLUListElement>(
+    visible.length,
+    pane,
+    LINE_HEIGHT,
+  );
 
   return (
     <section className="rf-crack-inventory" aria-labelledby="rf-crack-inventory-title">
@@ -65,13 +76,19 @@ export function RelicInventory({ entries, names, onAdd, onSet, error }: Props) {
             shown={visible.length}
             total={entries.length}
           />
-          <ul className="rf-crack-owned" aria-label="Relics held">
-            {visible.map((entry) => {
+          <ul ref={listRef} className="rf-crack-owned rf-virtual" aria-label="Relics held">
+            {items.map((item) => {
+              const entry = visible[item.index]!;
               const label = `${entry.relicName} ${REFINEMENT_LABEL[entry.refinement]}`;
               const set = (quantity: number) => onSet(entry.relicName, entry.refinement, quantity);
 
               return (
-                <li key={`${entry.relicName}|${entry.refinement}`} className="rf-crack-owned-row">
+                <li
+                  key={`${entry.relicName}|${entry.refinement}`}
+                  ref={measureElement}
+                  data-index={item.index}
+                  className="rf-crack-owned-row"
+                >
                   <span className="rf-crack-owned-name">
                     {entry.relicName}
                     <span className="rf-text-caption rf-fg-muted">
