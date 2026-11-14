@@ -13,7 +13,7 @@
 ;     to use it and leave the bundled runtime out of the installation;
 ;   * puts an entry in the Start menu, and a desktop icon if asked;
 ;   * closes the application before uninstalling it, and offers to delete the
-;     wishlist and the cached prices.
+;     wishlist, the owned parts and relics, and the cached prices.
 ;
 ; Built by installer\windows\build.ps1, which passes the three defines below.
 ; Compiling this file on its own will not work.
@@ -122,7 +122,7 @@ en.JavaUseSystem=Use the Java already installed (saves about %1 MB)
 en.JavaUseBundled=Install the included Java runtime (safest choice)
 en.CreateDesktopIcon=Create a &desktop icon
 en.LaunchApp=Open %1 now
-en.RemoveDataText=Your wishlist, the parts marked as owned and the cached prices are kept in:%n%n%1%n%nDelete them?%n%nChoose No to keep them for a later reinstallation. %2 is installed for you alone, so nobody else on this computer is affected either way.
+en.RemoveDataText=Your wishlist, the parts marked as owned, the relics you hold and the cached prices are kept in:%n%n%1%n%nDelete them?%n%nChoose No to keep them for a later reinstallation. %2 is installed for you alone, so nobody else on this computer is affected either way.
 it.JavaCaptionFound=Java è già presente su questo computer
 it.JavaCaptionMissing=Java non è stato trovato, quindi verrà installato
 it.JavaHeader=%1 funziona con Java 25
@@ -132,7 +132,7 @@ it.JavaUseSystem=Usa il Java già installato (risparmia circa %1 MB)
 it.JavaUseBundled=Installa il runtime Java incluso (scelta più sicura)
 it.CreateDesktopIcon=Crea un'icona sul &desktop
 it.LaunchApp=Apri %1 adesso
-it.RemoveDataText=La wishlist, i pezzi segnati come posseduti e i prezzi in cache sono in:%n%n%1%n%nVuoi cancellarli?%n%nScegli No per conservarli in vista di una reinstallazione. %2 è installato solo per te, quindi in ogni caso non tocca nessun altro utente del computer.
+it.RemoveDataText=La wishlist, i pezzi segnati come posseduti, le reliquie che hai e i prezzi in cache sono in:%n%n%1%n%nVuoi cancellarli?%n%nScegli No per conservarli in vista di una reinstallazione. %2 è installato solo per te, quindi in ogni caso non tocca nessun altro utente del computer.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -824,8 +824,8 @@ end;
   and the uninstaller ends on "some elements could not be removed" without
   ever saying which ones. Closing it first is the whole fix.
 
-  Nothing is lost by ending it this way: the wishlist, the owned parts and the
-  price cache are each written to a temporary file and renamed over the real
+  Nothing is lost by ending it this way: the wishlist, the owned parts, the
+  owned relics and the price cache are each written to a temporary file and renamed over the real
   one, so a copy that stops mid-write leaves the previous version intact. }
 procedure StopRunningApplication;
 var
