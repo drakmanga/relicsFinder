@@ -2969,7 +2969,8 @@ body {
   transition: transform var(--rf-dur-fast) var(--rf-ease-standard);
 }
 
-.rf-crack-filters[open] > .rf-crack-filters-summary::before {
+.rf-crack-filters[open] > .rf-crack-filters-summary::before,
+.rf-crack-session[open] > .rf-crack-filters-summary::before {
   transform: rotate(90deg);
 }
 
@@ -3148,4 +3149,62 @@ body {
 .rf-crack-alerts-hours input {
   width: 100%;
   min-width: 0;
+}
+
+/* The ranking's two switches, side by side and wrapping under the title on a
+   phone. */
+.rf-crack-board-switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rf-space-2) var(--rf-space-4);
+}
+
+.rf-crack-board-switches .rf-set-filters-group + .rf-set-filters-group {
+  padding-left: var(--rf-space-4);
+  border-left: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+/* The total of what is worth opening now, a line above the list it sums. */
+.rf-crack-summary {
+  margin: 0;
+}
+
+.rf-crack-wanted {
+  margin: var(--rf-space-1) 0 0;
+  color: var(--rf-gold-300);
+}
+
+/* The session log folds like the filters, with the same summary line. */
+.rf-crack-session {
+  border-block: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-crack-session[open] {
+  padding-bottom: var(--rf-space-3);
+}
+
+.rf-crack-session-empty {
+  margin: 0 0 var(--rf-space-2);
+}
+
+.rf-crack-session-list {
+  margin: 0 0 var(--rf-space-3);
+  padding: 0;
+  list-style: none;
+}
+
+/* Time, relic, value, undo: a row of a ledger, read across. */
+.rf-crack-session-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rf-space-1) var(--rf-space-3);
+  border-bottom: var(--rf-hairline) solid var(--rf-border-subtle);
+}
+
+.rf-crack-session-name {
+  flex: 1 1 8rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }

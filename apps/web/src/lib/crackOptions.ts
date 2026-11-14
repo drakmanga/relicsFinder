@@ -27,6 +27,8 @@ export interface CrackOptions {
    * rather than one line per relic. Same rows and figures either way.
    */
   byFissure: boolean;
+  /** Only the relics to open now: the waits and the unpriced hidden. */
+  onlyOpen: boolean;
 }
 
 /**
@@ -45,6 +47,7 @@ export const defaultCrackOptions = (): CrackOptions => ({
   excluded: new Set(),
   penaliseSteelPath: false,
   byFissure: false,
+  onlyOpen: false,
 });
 
 /** Writes only what differs from the default, so a clean tab is a clean URL. */
@@ -55,6 +58,7 @@ export function writeCrackParams(params: URLSearchParams, options: CrackOptions)
   if (options.excluded.size > 0) params.set("skip", [...options.excluded].sort().join(","));
   if (options.penaliseSteelPath) params.set("sppen", "1");
   if (options.byFissure) params.set("by", "fissure");
+  if (options.onlyOpen) params.set("open", "1");
 }
 
 /**
@@ -79,5 +83,6 @@ export function readCrackParams(params: URLSearchParams): CrackOptions {
     excluded: new Set(skip ? skip.split(",").filter(Boolean) : []),
     penaliseSteelPath: params.get("sppen") === "1",
     byFissure: params.get("by") === "fissure",
+    onlyOpen: params.get("open") === "1",
   };
 }

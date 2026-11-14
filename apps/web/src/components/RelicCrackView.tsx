@@ -3,9 +3,11 @@ import { useMemo, useRef } from "react";
 import { ActiveFissures } from "./ActiveFissures";
 import { FissureAlerts } from "./FissureAlerts";
 import { CrackBoard } from "./CrackBoard";
+import { CrackSession } from "./CrackSession";
 import { RelicInventory } from "./RelicInventory";
 import { useFissures, useOwnedRelics, useRelics, useSaveOwnedRelics } from "../api/queries";
 import { addOwnedRelic, catalogueNames, setOwnedRelic } from "../lib/ownedRelics";
+import { useCrackSession } from "../lib/crackSession";
 import { useFissureAlerts } from "../lib/useFissureAlerts";
 import { useNow } from "../lib/useNow";
 import type { CrackOptions } from "../lib/crackOptions";
@@ -44,6 +46,7 @@ export function RelicCrackView({ options, onOptions }: Props) {
   const names = useMemo(() => catalogueNames(relics.data ?? []), [relics.data]);
   const entries: OwnedRelic[] = owned.data ?? [];
   const alerts = useFissureAlerts(fissures.data, entries, options, now);
+  const session = useCrackSession();
 
   const onAdd = (relicName: string, refinement: Refinement, quantity: number) =>
     save.mutate(addOwnedRelic(entries, relicName, refinement, quantity));
@@ -93,11 +96,30 @@ export function RelicCrackView({ options, onOptions }: Props) {
           options={options}
           now={now}
           pane={pane}
-          onByFissure={(byFissure) => onOptions({ ...options, byFissure })}
-          onOpened={(relic) =>
+          onOptions={(patch) => onOptions({ ...options, ...patch })}
+          onOpened={(row) => {
+            const { relic } = row;
             save.mutate(
               setOwnedRelic(entries, relic.relicName, relic.refinement, relic.quantity - 1),
-            )
+            );
+            session.record({
+              relicName: relic.relicName,
+              refinement: relic.refinement,
+              value: row.value,
+              ducats: row.ducats,
+            });
+          }}
+          session={
+            <CrackSession
+              entries={session.entries}
+              // Back in the inventory as well as off the log: a mis-click
+              // took a copy away, and the undo is for that copy.
+              onUndo={(entry) => {
+                session.remove(entry.id);
+                save.mutate(addOwnedRelic(entries, entry.relicName, entry.refinement, 1));
+              }}
+              onClear={session.clear}
+            />
           }
         />
       </div>

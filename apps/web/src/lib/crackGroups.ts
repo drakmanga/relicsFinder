@@ -60,3 +60,22 @@ export function crackLines(rows: readonly CrackRow[], byFissure: boolean): Crack
     ...group.rows.map((row): CrackLine => ({ key: row.key, kind: "row", row, grouped: true })),
   ]);
 }
+
+/**
+ * What the relics to open now add up to: lines, copies, and what opening
+ * every copy is expected to pay. Every copy rather than one of each: the
+ * question it answers is what the relics held are worth cracking right now.
+ */
+export function openSummary(rows: readonly CrackRow[]) {
+  return rows
+    .filter((row) => row.verdict === "open")
+    .reduce(
+      (sum, row) => ({
+        lines: sum.lines + 1,
+        copies: sum.copies + row.relic.quantity,
+        value: sum.value + row.value * row.relic.quantity,
+        ducats: sum.ducats + row.ducats * row.relic.quantity,
+      }),
+      { lines: 0, copies: 0, value: 0, ducats: 0 },
+    );
+}

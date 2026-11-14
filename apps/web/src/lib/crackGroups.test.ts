@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Fissure } from "../api/types";
-import { crackLines, groupCrack } from "./crackGroups";
+import { crackLines, groupCrack, openSummary } from "./crackGroups";
 import type { CrackRow, CrackVerdict } from "./relicCrack";
 
 const fissure = (id: string): Fissure => ({
@@ -73,5 +73,18 @@ describe("crackLines", () => {
     const kinds = crackLines(ranked, true).map((line) => line.kind);
 
     expect(kinds).toEqual(["head", "row", "row", "head", "row", "head", "row", "head", "row"]);
+  });
+});
+
+describe("openSummary", () => {
+  it("adds up every copy of the open relics, and nothing else", () => {
+    const twoCopies = { ...ranked[0]!, relic: { ...ranked[0]!.relic, quantity: 2 } };
+
+    expect(openSummary([twoCopies, ...ranked.slice(1)])).toEqual({
+      lines: 3,
+      copies: 4,
+      value: 12 * 2 + 10 + 9,
+      ducats: 0,
+    });
   });
 });

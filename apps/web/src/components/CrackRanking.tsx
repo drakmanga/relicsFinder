@@ -4,17 +4,18 @@ import { CrackGroupHead } from "./CrackGroupHead";
 import { CrackRowItem } from "./CrackRowItem";
 import { crackLines } from "../lib/crackGroups";
 import { useVirtualList } from "../lib/useVirtualList";
-import type { OwnedRelic } from "../api/types";
 import type { CrackRow } from "../lib/relicCrack";
 
 interface Props {
   rows: CrackRow[];
+  /** Each relic's drops on the wishlist, by full name; absent when none are. */
+  wanted: ReadonlyMap<string, string[]>;
   /** One block per fissure instead of one ranked line per relic. */
   byFissure: boolean;
   /** The tab's scrolling pane, which the list scrolls with. */
   pane: RefObject<HTMLElement | null>;
   /** One copy of this relic was just opened: take it off the inventory. */
-  onOpened: (relic: OwnedRelic) => void;
+  onOpened: (row: CrackRow) => void;
   now: number;
 }
 
@@ -32,7 +33,7 @@ const LINE_HEIGHT = 96;
  * Capture, expires in 30 min") with two figures beside it, and a sentence
  * does not fit a column at 360px.
  */
-export function CrackRanking({ rows, byFissure, pane, onOpened, now }: Props) {
+export function CrackRanking({ rows, wanted, byFissure, pane, onOpened, now }: Props) {
   const lines = crackLines(rows, byFissure);
   const { listRef, items, measureElement } = useVirtualList<HTMLOListElement>(
     lines.length,
@@ -62,7 +63,13 @@ export function CrackRanking({ rows, byFissure, pane, onOpened, now }: Props) {
             {line.kind === "head" ? (
               <CrackGroupHead group={line.group} now={now} />
             ) : (
-              <CrackRowItem row={line.row} grouped={line.grouped} onOpened={onOpened} now={now} />
+              <CrackRowItem
+                row={line.row}
+                wanted={wanted.get(line.row.relic.relicName) ?? []}
+                grouped={line.grouped}
+                onOpened={onOpened}
+                now={now}
+              />
             )}
           </li>
         );

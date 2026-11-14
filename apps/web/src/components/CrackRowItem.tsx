@@ -2,13 +2,14 @@ import { Button } from "relic-finder-ui";
 
 import { REFINEMENT_LABEL } from "../lib/rows";
 import { crackLine, formatCrackValue, type CrackRow, type CrackVerdict } from "../lib/relicCrack";
-import type { OwnedRelic } from "../api/types";
 
 interface Props {
   row: CrackRow;
+  /** Its drops that are on the wishlist. */
+  wanted: string[];
   /** Under a fissure's heading, which already says where: the row drops its "open now on" line. */
   grouped: boolean;
-  onOpened: (relic: OwnedRelic) => void;
+  onOpened: (row: CrackRow) => void;
   now: number;
 }
 
@@ -28,7 +29,7 @@ const VERDICT_LABEL: Record<CrackVerdict, string> = {
  * with the refining advice and wrapped onto a line of its own whenever the
  * advice was there, so rows changed height and the button changed place.
  */
-export function CrackRowItem({ row, grouped, onOpened, now }: Props) {
+export function CrackRowItem({ row, wanted, grouped, onOpened, now }: Props) {
   const label = `${row.relic.relicName} ${REFINEMENT_LABEL[row.relic.refinement]}`;
   const showLine = !(grouped && row.verdict === "open");
 
@@ -47,6 +48,12 @@ export function CrackRowItem({ row, grouped, onOpened, now }: Props) {
           <p className="rf-text-body-sm rf-fg-secondary rf-crack-line">
             {row.tier ? crackLine(row, row.tier, now) : "not in the relic catalogue any more"}
           </p>
+        )}
+        {/* Gold, the app's colour for "yours": a relic that can drop what
+            the reader is collecting is worth cracking for that alone, whatever
+            its platinum says. */}
+        {wanted.length > 0 && (
+          <p className="rf-text-caption rf-crack-wanted">On your wishlist: {wanted.join(", ")}</p>
         )}
         {row.refine && (
           <p className="rf-text-caption rf-fg-muted rf-crack-refine">
@@ -86,7 +93,7 @@ export function CrackRowItem({ row, grouped, onOpened, now }: Props) {
           size="sm"
           className="rf-hit-block"
           aria-label={`Opened one ${label}`}
-          onClick={() => onOpened(row.relic)}
+          onClick={() => onOpened(row)}
         >
           Opened one
         </Button>
