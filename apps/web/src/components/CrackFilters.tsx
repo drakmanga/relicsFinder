@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   ALL_STEEL_PATH,
@@ -52,12 +52,14 @@ function summary(options: CrackOptions, missionTypes: string[]): string {
  * What the ranking assumes: the squad, which fissures count, and
  * whether Steel Path is slower for this player.
  *
- * Folded to one line by default: open, the five rows of chips pushed the
- * inventory and the ranking under the fold for settings read once a session.
- * Folded, though, the line still says every setting in force, because a
- * filter hidden behind a toggle is one the reader forgets is on.
+ * Open when the tab opens, since these change the answer and the reader
+ * should see them set; foldable to one line for a reader who has set them and
+ * wants the ranking higher up. Folded, the line still says every setting in
+ * force, because a filter hidden behind a toggle is one the reader forgets is
+ * on.
  */
 export function CrackFilters({ options, onChange, missionTypes }: Props) {
+  const [open, setOpen] = useState(true);
   const set = (patch: Partial<CrackOptions>) => onChange({ ...options, ...patch });
 
   const toggleMission = (type: string) => {
@@ -67,7 +69,13 @@ export function CrackFilters({ options, onChange, missionTypes }: Props) {
   };
 
   return (
-    <details className="rf-crack-filters">
+    // Controlled rather than a bare `open` attribute: React would leave a
+    // static one alone, but a controlled value cannot drift from the DOM.
+    <details
+      className="rf-crack-filters"
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary className="rf-focus-ring rf-hit-block rf-crack-filters-summary">
         <span className="rf-text-overline rf-fg-secondary">Filters</span>
         <span className="rf-text-caption rf-fg-muted">{summary(options, missionTypes)}</span>
