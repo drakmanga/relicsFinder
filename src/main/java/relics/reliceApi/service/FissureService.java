@@ -108,6 +108,8 @@ public class FissureService {
     }
 
     private void remember(Exception cause) {
+        // Once per TTL at most, since a failure is cached like an answer.
+        System.err.println("fissures: unavailable — " + cause.getMessage());
         cached = null;
         failure = new FissureUnavailableException(
                 "fissure data unavailable: " + cause.getMessage(), cause);

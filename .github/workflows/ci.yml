@@ -106,9 +106,19 @@ jobs:
       # repository, so the tables fill even when the market API is unreachable —
       # which is what makes this job about the markup rather than about
       # warframe.market's uptime.
+      # The fissures are the one thing the backend reads live on every request,
+      # and both their hosts can be down or refuse a datacenter address (both
+      # did on 2026-11-15). Served from a fixture instead, for the same reason
+      # the catalogue is: this job checks the markup of Relic Crack, not
+      # whether warframestat is up.
+      - name: Serve the fissure fixture
+        run: python3 -m http.server 8181 --directory scripts/fixtures > fixture.log 2>&1 &
+
       - name: Start the backend
         run: |
-          ./mvnw --batch-mode spring-boot:run > backend.log 2>&1 &
+          ./mvnw --batch-mode spring-boot:run \
+            -Dspring-boot.run.arguments="--relics.fissures.url=http://localhost:8181/fissures.json --relics.fissures.fallback.worldstate-url=http://localhost:8181/missing --relics.fissures.fallback.nodes-url=http://localhost:8181/missing" \
+            > backend.log 2>&1 &
           for _ in $(seq 1 60); do
             curl -sf http://localhost:8080/api/relics -o /dev/null && exit 0
             sleep 2
@@ -143,4 +153,5 @@ jobs:
           path: |
             backend.log
             preview.log
+            fixture.log
           if-no-files-found: ignore

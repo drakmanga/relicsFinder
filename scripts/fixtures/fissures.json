@@ -1,0 +1,56 @@
+[
+  {
+    "id": "ci-1",
+    "node": "Hepit (Void)",
+    "missionType": "Capture",
+    "tier": "Lith",
+    "isHard": false,
+    "isStorm": false,
+    "expiry": "2099-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ci-2",
+    "node": "Ukko (Void)",
+    "missionType": "Capture",
+    "tier": "Meso",
+    "isHard": true,
+    "isStorm": false,
+    "expiry": "2099-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ci-3",
+    "node": "Martialis (Mars)",
+    "missionType": "Rescue",
+    "tier": "Neo",
+    "isHard": false,
+    "isStorm": false,
+    "expiry": "2099-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ci-4",
+    "node": "Mot (Void)",
+    "missionType": "Survival",
+    "tier": "Axi",
+    "isHard": false,
+    "isStorm": false,
+    "expiry": "2099-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ci-5",
+    "node": "Bendar Cluster (Earth)",
+    "missionType": "Skirmish",
+    "tier": "Lith",
+    "isHard": false,
+    "isStorm": true,
+    "expiry": "2099-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ci-6",
+    "node": "Yuvarium (Lua)",
+    "missionType": "Survival",
+    "tier": "Omnia",
+    "isHard": true,
+    "isStorm": false,
+    "expiry": "2099-01-01T00:00:00.000Z"
+  }
+]
