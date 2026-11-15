@@ -38,7 +38,17 @@ Eight views, each answering one question:
   by hand: Warframe has no public inventory) ranked by **value per minute** in the Void
   Fissures open right now, normal, Steel Path and Void Storm. Each one says either where to
   open it — node, mission, when the fissure closes — or that only slow missions are up for
-  its tier and when the first of them closes. Platinum or ducats, solo or radshare.
+  its tier and when the first of them closes. Platinum or ducats, solo or radshare. On top
+  of that:
+  - **Opened one** takes the copy off your inventory and writes it in a folded **session
+    log**, with what the evening was worth and an **Undo** for a mis-click;
+  - a summary line says how many relics are **worth opening right now**, and what they
+    pay together in platinum and ducats; **Only open** hides the rest;
+  - **By fissure** regroups the same ranking under the fissure to go to;
+  - a gold line marks the relics that drop something **on your wishlist**;
+  - **alerts** for fast fissures, for as many hours as you type (up to 999);
+  - the fissures come from warframestat and, **when warframestat is down**, straight from
+    the game's own worldstate.
 
 Plus: ninety-day price charts and a **Trend** column that says which way a price is moving,
 a **Status** column saying whether a set still drops from relics and how long ago it
@@ -52,10 +62,43 @@ your filters, your sort or an open panel, and then says in words what it re-read
 refresh that changed nothing because the data was already new used to look exactly like one
 that failed.
 
+### 📸 Screenshots
+
+**Relics** — expected value, best drop and cost of every relic.
+
+![Relics view](docs/screenshots/relics.png)
+
+**Prime Items** — where each part comes from, its price and its ducats.
+
+![Prime Items view](docs/screenshots/items.png)
+
+**Sets** — what each set is missing, and what finishing it costs.
+
+![Sets view](docs/screenshots/sets.png)
+
+**Wishlist** — stored on the server, split by what each line is for.
+
+![Wishlist view](docs/screenshots/wishlist.png)
+
+**Ducanetor** — parts ranked by ducats per platinum, for Baro.
+
+![Ducanetor view](docs/screenshots/ducats.png)
+
+**Endo** — Ayatan sculptures ranked by Endo per platinum.
+
+![Endo view](docs/screenshots/endo.png)
+
+**Tier List** — every relic banded S to F, solo and radshare.
+
+![Tier List view](docs/screenshots/tiers.png)
+
+**Relic Crack** — the relics you hold, ranked against the fissures open right now.
+
+![Relic Crack view](docs/screenshots/crack.png)
+
 ### 🚀 Coming soon
 
-- **🧾 Inventory tracking** — know whether you already own a relic
-- **🔔 Notifications** — alert when a price drops below a threshold
+- **🔔 Price alerts** — a notice when a price drops below a threshold
 
 ## 🎮 Why use it?
 
@@ -330,7 +373,9 @@ GET  /api/app/update/install                 how far that has got, or why it wil
 
 `/api/fissures` is read through a one-minute cache on the server, so the page never calls
 warframestat itself and a room full of open tabs costs one request a minute. Expired fissures
-are dropped on every read. When warframestat is down it answers 503 with an `error`, not an
+are dropped on every read. When warframestat fails, the same list is read from the game's own
+worldstate (`relics.fissures.fallback.*`), with WFCD's node table turning `SolNode401` into
+"Hepit (Void)". Only when both are down does it answer 503 with an `error`, not an
 empty list, because "no fissures open" is a claim about the game and an outage is not
 evidence for it. The minutes per mission type come from `relics.fissures.minutes` in
 `application.properties`.
@@ -514,7 +559,8 @@ Found a bug, or have an idea?
 - [x] Set completion: what a set is missing, and whether to buy or farm it
 - [x] Relic tier list: every relic banded S to F, solo and radshare
 - [x] Price direction: ninety-day trend, and where a Prime set sits in its price cycle
-- [ ] Personal inventory
+- [x] Relic inventory, and which relics to open in the fissures up right now (Relic Crack)
+- [x] Fissure alerts and a session log of what was opened
 - [ ] Price alerts
 - [ ] Mobile companion app
 
