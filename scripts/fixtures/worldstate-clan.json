@@ -1,0 +1,64 @@
+{
+  "WeeklyVaultBonusRewards": [
+    {
+      "WeekCount": 667,
+      "BonusRegion": "/Lotus/Language/Locations/Pluto",
+      "Rewards": [
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 500,
+          "ItemCount": 50,
+          "Reward": "/Lotus/StoreItems/Types/Restoratives/SyndicateTeamHealTotem"
+        },
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 1000,
+          "ItemCount": 100,
+          "Reward": "/Lotus/StoreItems/Types/Items/MiscItems/DistillPoints"
+        },
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 1500,
+          "ItemCount": 2,
+          "Reward": "/Lotus/StoreItems/Types/BoosterPacks/RandomProjection"
+        },
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 2000,
+          "ItemCount": 1,
+          "Reward": "/Lotus/StoreItems/Types/Items/MiscItems/Forma"
+        }
+      ]
+    },
+    {
+      "WeekCount": 668,
+      "BonusRegion": "/Lotus/Language/Locations/Ceres",
+      "Rewards": [
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 500,
+          "ItemCount": 50,
+          "Reward": "/Lotus/StoreItems/Types/Restoratives/SyndicateTeamEnergyTotem"
+        },
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 1000,
+          "ItemCount": 7000,
+          "Reward": "/Lotus/StoreItems/Types/Items/MiscItems/Kuva"
+        },
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 1500,
+          "ItemCount": 2,
+          "Reward": "/Lotus/StoreItems/Types/PickUps/Credits/50000Credits"
+        },
+        {
+          "RewardClaimed": false,
+          "PointThreshold": 2000,
+          "ItemCount": 21000,
+          "Reward": "/Lotus/StoreItems/Types/Items/MiscItems/Kuva"
+        }
+      ]
+    }
+  ]
+}

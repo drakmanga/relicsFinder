@@ -110,14 +110,16 @@ jobs:
       # and both their hosts can be down or refuse a datacenter address (both
       # did on 2026-11-15). Served from a fixture instead, for the same reason
       # the catalogue is: this job checks the markup of Relic Crack, not
-      # whether warframestat is up.
+      # whether warframestat is up. The Kuva tab's clan initiative comes from
+      # the same fixture server for the same reason; its weeks are fixed in the
+      # past, so the tab draws its "not announced" line, which is markup too.
       - name: Serve the fissure fixture
         run: python3 -m http.server 8181 --directory scripts/fixtures > fixture.log 2>&1 &
 
       - name: Start the backend
         run: |
           ./mvnw --batch-mode spring-boot:run \
-            -Dspring-boot.run.arguments="--relics.fissures.url=http://localhost:8181/fissures.json --relics.fissures.fallback.worldstate-url=http://localhost:8181/missing --relics.fissures.fallback.nodes-url=http://localhost:8181/missing" \
+            -Dspring-boot.run.arguments="--relics.fissures.url=http://localhost:8181/fissures.json --relics.fissures.fallback.worldstate-url=http://localhost:8181/missing --relics.fissures.fallback.nodes-url=http://localhost:8181/missing --relics.clan-initiative.worldstate-url=http://localhost:8181/worldstate-clan.json" \
             > backend.log 2>&1 &
           for _ in $(seq 1 60); do
             curl -sf http://localhost:8080/api/relics -o /dev/null && exit 0
