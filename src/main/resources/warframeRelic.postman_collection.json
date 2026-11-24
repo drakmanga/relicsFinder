@@ -594,12 +594,32 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "What the clan initiative pays",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "The Clan Weekly Initiative's announced weeks — usually this one and the next — read from the game's own worldstate (WeeklyVaultBonusRewards). week is the Monday 00:00 UTC it starts on, region the bonus region, tiers every threshold with the clan points that unlock it, and kuva what the whole week pays in Kuva: 0 in a week with none. Cached for half an hour on the server. A 503 with an error means the worldstate could not be read, which is not the same as a week with no Kuva.",
+						"url": {
+							"raw": "{{baseUrl}}/api/kuva/clan-initiative",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"kuva",
+								"clan-initiative"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
 		{
 			"name": "Your lists",
-			"description": "Plain JSON files under data/, no database and no accounts: the service is single-tenant, so whoever runs it owns the only list. Both PUTs REPLACE the whole list — firing one with the example body below overwrites what is stored.",
+			"description": "Plain JSON files under data/, no database and no accounts: the service is single-tenant, so whoever runs it owns the only list. Every PUT here REPLACES what it stores — firing one with the example body below overwrites what is stored.",
 			"item": [
 				{
 					"name": "The wishlist",
@@ -752,6 +772,60 @@
 							"path": [
 								"api",
 								"owned-relics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Kuva bought this week",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"description": "What the Kuva tab has ticked this week: purchases per vendor offer id in counts, and Kuva collected per weekly reward id in rewards. week is the Monday 00:00 UTC it belongs to, in epoch milliseconds; the page reads anything stamped with an earlier week as empty, which is how Monday clears it. {\"week\":0,...} means nothing was ever ticked.",
+						"url": {
+							"raw": "{{baseUrl}}/api/kuva/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"kuva",
+								"purchases"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Replace the Kuva ticks",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"description": "Replaces the stored week whole. Not a read. week must be a Monday 00:00 UTC in epoch milliseconds; ids are the Kuva catalogue's, lower case with hyphens; counts go from 0 to 100 and reward amounts from 0 to 1,000,000. Anything out of shape refuses the whole body with a 400 whose error names the value, and what was stored stays as it was. Zeros are dropped. The server does not know the vendors' limits — those live with the catalogue in the page.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"week\": 1795392000000,\n  \"counts\": { \"teshin\": 5, \"palladino\": 1 },\n  \"rewards\": { \"icebind\": 45750, \"circuit-milestone\": 20000 }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kuva/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"kuva",
+								"purchases"
 							]
 						}
 					},

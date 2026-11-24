@@ -14,7 +14,7 @@ searches: everything you need in one place.
 
 ### 🎯 What it does today
 
-Eight views, each answering one question:
+Nine views, each answering one question:
 
 - **Relics** — _which relic should I open?_ One row per relic, with **expected value**
   (every drop weighted by its chance), the best drop, what the relic itself sells for, and
@@ -49,6 +49,25 @@ Eight views, each answering one question:
   - **alerts** for fast fissures, for as many hours as you type (up to 999);
   - the fissures come from warframestat and, **when warframestat is down**, straight from
     the game's own worldstate.
+- **Kuva** — _where do I get Kuva this week, and how much is left?_ Every vendor that sells
+  it — Teshin, Palladino, Yonta, Hunhow, Acrithis, Flare, Nightcap, Cephalon Melica, Zorba,
+  Nightwave and the Arbiters — with the price in its own currency, the weekly limit and what
+  the limit adds up to, and every weekly reward that pays it, from the Icebind to Sortie
+  rolls, with the chance where it is a roll. Direct farming (Siphons, the Kuva Fortress,
+  bounties) is left out on purpose: this is what to buy and collect, not where to grind.
+  On top of that:
+  - a **Done** toggle on every capped offer and every weekly reward, with a `− 2/3 +`
+    stepper where there is more than one, and a field for the Icebind and the clan
+    initiative, which pay a different sum every week;
+  - what the **clan weekly initiative** pays in Kuva this week and next week, read live
+    from the game, so a 28,000 week is known before the reset;
+  - **Obtained this week** and **Left to buy this week** add it up; the ticks are stored on
+    the server, so every browser sees the same week, and they **clear themselves at the
+    Monday reset**;
+  - a countdown to the reset, and when **Teshin's 50,000** is next in the Steel Path Honors
+    shop — computed from the rotation's own calendar, so it needs no network;
+  - an **alert** for the week the 50,000 comes in, switched on and off like the fissure
+    alerts.
 
 Plus: ninety-day price charts and a **Trend** column that says which way a price is moving,
 a **Status** column saying whether a set still drops from relics and how long ago it
@@ -95,6 +114,10 @@ that failed.
 **Relic Crack** — the relics you hold, ranked against the fissures open right now.
 
 ![Relic Crack view](docs/screenshots/crack.png)
+
+**Kuva** — every vendor and weekly reward that pays Kuva, ticked off as the week goes.
+
+![Kuva view](docs/screenshots/kuva.png)
 
 ### 🚀 Coming soon
 
@@ -300,13 +323,13 @@ A Postman collection is included.
 3. Pick `src/main/resources/warframeRelic.postman_collection.json`
 4. Try every endpoint
 
-All thirty-five of them, grouped the way the list below is, each with an example that
+All thirty-eight of them, grouped the way the list below is, each with an example that
 answers something real and a note saying what the answer means. `baseUrl` is a collection
 variable — point it at `http://localhost` instead to go through nginx.
 
-Six of them are not reads, and the collection says so on each: `POST /api/relics/update`
+Seven of them are not reads, and the collection says so on each: `POST /api/relics/update`
 rebuilds the catalogue, `POST /api/refresh/{view}` re-reads a source, `POST
-/api/app/update/install` replaces this copy of the application, and the three PUTs replace a
+/api/app/update/install` replaces this copy of the application, and the four PUTs replace a
 stored list whole.
 
 ### The endpoints
@@ -354,6 +377,7 @@ The game right now:
 
 ```
 GET  /api/fissures                           the Void Fissures open now, with minutes per relic
+GET  /api/kuva/clan-initiative               what the clan initiative pays, this week and next
 ```
 
 Your lists, and the application itself:
@@ -365,6 +389,8 @@ GET  /api/owned                              the parts you already have
 PUT  /api/owned                              replaces them
 GET  /api/owned-relics                       the relics you hold, per refinement
 PUT  /api/owned-relics                       replaces them, or refuses a relic it does not know
+GET  /api/kuva/purchases                     this week's Kuva ticks: vendor purchases and rewards
+PUT  /api/kuva/purchases                     replaces them, or refuses a week out of shape
 GET  /api/app/version                        which build is answering, and nothing else
 GET  /api/app/update                         whether a newer release of the app exists
 POST /api/app/update/install                 replace this copy with the newer one
@@ -380,9 +406,21 @@ empty list, because "no fissures open" is a claim about the game and an outage i
 evidence for it. The minutes per mission type come from `relics.fissures.minutes` in
 `application.properties`.
 
+`/api/kuva/clan-initiative` reads the game's own worldstate rather than warframestat, because
+only the worldstate lists next week as well as this one. Half an hour of cache on the server,
+since the answer changes once a week, and a 503 with an `error` when it cannot be read: an
+unknown week is not a week without Kuva.
+
 `/api/owned-relics` checks every name against the relic catalogue before storing anything,
 because these names are typed rather than picked from a row: one unknown relic refuses the
 whole list with a 400 that names it, and what was stored stays as it was.
+
+`/api/kuva/purchases` stores the Kuva tab's week whole: `week` is the Monday 00:00 UTC it
+belongs to, `counts` the purchases per vendor offer and `rewards` the Kuva each weekly reward
+paid. The server checks shape only — a real weekly reset, catalogue-style ids, counts and
+amounts in range — because the vendors and their limits live with the catalogue in the
+page. Ticks from an earlier week are read as none, which is the whole of the Monday reset:
+nothing runs at midnight.
 
 Endpoints addressed by name want the **full** name: `/api/relics/relic/Lith%20V9` answers
 200, `/api/relics/relic/V9` answers 404.
@@ -450,7 +488,7 @@ relicsFinder/
 ├── packages/ui/               # Orokin design system (React library)
 ├── design-system/             # the design specification
 ├── installer/windows/         # jpackage and Inno Setup, for the .exe
-├── data/                      # wishlist and owned parts, written at runtime
+├── data/                      # wishlist, owned parts and relics, Kuva ticks: written at runtime
 ├── pom.xml                    # Maven dependencies
 └── README.md                  # this file
 ```
@@ -482,17 +520,28 @@ relicsFinder/
    not an average
 4. **Refining** says whether spending the traces was worth it at all
 
+### You want all the Kuva you can get this week
+
+1. Open **Kuva**: the vendors come biggest weekly total first, so the top of the list is
+   where the week's Kuva mostly is
+2. Press **Done** as you buy, or step the count for the vendors that sell more than once
+3. Do the same on the weekly rewards as you collect them, typing in what the Icebind paid
+4. **Left to buy this week** is what you would lose by not going back before Monday
+
 ## 🔧 Configuration
 
 ### Storage
 
-The wishlist and the list of owned parts are plain JSON files under `data/`. No database
+The wishlist, the owned parts and relics and the Kuva tab's ticks are plain JSON files
+under `data/`. No database
 and no accounts: the service is self-hosted and single-tenant, so whoever runs it owns the
 only list.
 
 ```properties
 relics.wishlist.path=data/wishlist.json
 relics.owned.path=data/owned.json
+relics.owned-relics.path=data/owned-relics.json
+relics.kuva-purchases.path=data/kuva-purchases.json
 relics.price-cache.path=data/price-cache.json
 relics.catalogue.path=src/main/resources/relics.json
 relics.unknown-items.path=data/unknown-items.txt
@@ -561,6 +610,7 @@ Found a bug, or have an idea?
 - [x] Price direction: ninety-day trend, and where a Prime set sits in its price cycle
 - [x] Relic inventory, and which relics to open in the fissures up right now (Relic Crack)
 - [x] Fissure alerts and a session log of what was opened
+- [x] Kuva: every vendor and weekly reward, ticked off per week, with Teshin's rotation
 - [ ] Price alerts
 - [ ] Mobile companion app
 
