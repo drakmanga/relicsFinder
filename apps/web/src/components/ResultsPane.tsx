@@ -8,6 +8,7 @@ import { Button, EmptyState, Skeleton } from "relic-finder-ui";
 import { DucanetorTable } from "./DucanetorTable";
 import { EndoTable } from "./EndoTable";
 import { ItemsTable } from "./ItemsTable";
+import { KuvaView } from "./KuvaView";
 import { RelicCrackView } from "./RelicCrackView";
 import { ResultsTable } from "./ResultsTable";
 import { SetFilters } from "./SetFilters";
@@ -36,7 +37,7 @@ import type { TierSortColumn, TierSortState } from "../lib/tierList";
 import type { WishlistEntry } from "../lib/wishlist";
 
 export type PaneView =
-  "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers" | "crack";
+  "relics" | "items" | "sets" | "wishlist" | "ducats" | "endo" | "tiers" | "crack" | "kuva";
 
 interface Props {
   view: PaneView;
@@ -198,6 +199,8 @@ export function ResultsPane({
   // Ayatan offers come straight from the market: nothing here waits on the
   // relic catalogue, so it must not wait on its loading state.
   if (view === "endo") return <EndoTable active quantityOf={quantityOf} />;
+  // The same, and more so: the Kuva tab reads no data at all.
+  if (view === "kuva") return <KuvaView />;
 
   if (catalogue.isPending) {
     return (

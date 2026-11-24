@@ -25,5 +25,6 @@ export default {
     "/?view=endo",
     "/?view=tiers",
     "/?view=crack",
+    "/?view=kuva",
   ],
 };

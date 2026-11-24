@@ -3,7 +3,7 @@ import { ApiError, api } from "./client";
 // The one piece of logic this layer needs and does not own: whether an install
 // is still running is a fact about the record, not about fetching it.
 import { installUnderWay } from "../lib/updateInstall";
-import type { OwnedRelic, RelicPriceMap } from "./types";
+import type { KuvaPurchases, OwnedRelic, RelicPriceMap } from "./types";
 
 /**
  * Query keys in one place so an invalidation can never miss a cache entry
@@ -47,6 +47,8 @@ export const keys = {
   tierList: (vault: string) => [...keys.allTierLists, vault] as const,
   appUpdate: ["app", "update"] as const,
   ownedRelics: ["owned-relics"] as const,
+  kuvaPurchases: ["kuva", "purchases"] as const,
+  clanInitiative: ["kuva", "clan-initiative"] as const,
   fissures: ["fissures"] as const,
   updateInstall: ["app", "update", "install"] as const,
 };
@@ -484,6 +486,74 @@ export function useSaveOwnedRelics() {
     // The server's copy is canonical — names in catalogue spelling, duplicates
     // added together — so it replaces the optimistic one.
     onSuccess: (stored) => queryClient.setQueryData(keys.ownedRelics, stored),
+  });
+}
+
+/**
+ * This week's Kuva ticks.
+ *
+ * Refetched when the window regains focus, against the app-wide default of
+ * not doing so: the same player ticks from more than one browser, and coming
+ * back to this one should show what was ticked in the other. Stale after half
+ * a minute so that refetch actually asks rather than trusting the cache.
+ */
+export function useKuvaPurchases() {
+  return useQuery({
+    queryKey: keys.kuvaPurchases,
+    queryFn: ({ signal }) => api.kuvaPurchases(signal),
+    staleTime: 30_000,
+    gcTime: STATIC_DATA.gcTime,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * Changes this week's ticks, optimistically for the reason `useSaveOwnedRelics`
+ * gives, through an updater rather than a finished value.
+ *
+ * The updater is applied to the cache as it stands at the click, and the
+ * result written back before the request leaves: three quick clicks each
+ * build on the one before. Built from a value captured at render instead, the
+ * second click is computed from data the first has not reached yet, and the
+ * last save silently drops what the others added — measured, a Sortie tick
+ * vanished behind an Icebind amount typed straight after it.
+ *
+ * The requests share a scope, so they reach the server one at a time and in
+ * click order, and the stored week is always the last one asked for. A failed
+ * save refetches rather than restoring a snapshot: with several in flight, no
+ * one snapshot is the state to go back to, and the server's copy is.
+ */
+export function useUpdateKuvaPurchases() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (next: KuvaPurchases) => api.saveKuvaPurchases(next),
+    scope: { id: "kuva-purchases" },
+    onError: () => queryClient.invalidateQueries({ queryKey: keys.kuvaPurchases }),
+  });
+
+  const update = (change: (current: KuvaPurchases | null) => KuvaPurchases) => {
+    const next = change(queryClient.getQueryData<KuvaPurchases>(keys.kuvaPurchases) ?? null);
+    void queryClient.cancelQueries({ queryKey: keys.kuvaPurchases });
+    queryClient.setQueryData(keys.kuvaPurchases, next);
+    mutation.mutate(next);
+  };
+
+  return { update, error: mutation.isError ? mutation.error.message : null };
+}
+
+/**
+ * What the Clan Weekly Initiative pays this week and the next.
+ *
+ * Half an hour, the server's own cache period: the answer changes once a
+ * week, and asking more often would only be told the same thing.
+ */
+export function useClanInitiative() {
+  return useQuery({
+    queryKey: keys.clanInitiative,
+    queryFn: ({ signal }) => api.clanInitiative(signal),
+    staleTime: 30 * 60_000,
+    gcTime: STATIC_DATA.gcTime,
   });
 }
 

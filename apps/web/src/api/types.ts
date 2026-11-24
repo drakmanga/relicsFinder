@@ -631,6 +631,42 @@ export interface OwnedRelic {
   quantity: number;
 }
 
+/**
+ * How many of each capped Kuva offer the player has bought in one week, and
+ * how much Kuva each weekly reward paid, as `/api/kuva/purchases` stores it.
+ * `week` is the Monday 00:00 UTC it started on, in epoch milliseconds;
+ * anything stamped with an earlier week reads as none.
+ */
+export interface KuvaPurchases {
+  week: number;
+  /** Purchases per vendor offer id. */
+  counts: Record<string, number>;
+  /** Kuva collected per reward id: an amount, since some rewards pay a different sum each week. */
+  rewards: Record<string, number>;
+}
+
+/** One threshold of a Clan Weekly Initiative, as `/api/kuva/clan-initiative` serves it. */
+export interface ClanInitiativeTier {
+  /** The clan's score that unlocks it. */
+  points: number;
+  /** The reward's internal name, last segment only: "Kuva", "Forma", "DistillPoints". */
+  reward: string;
+  count: number;
+  /** The Kuva it pays: `count` when the reward is Kuva, else 0. */
+  kuva: number;
+}
+
+/** One announced week of the Clan Weekly Initiative — usually this one and the next. */
+export interface ClanInitiativeWeek {
+  /** The Monday 00:00 UTC it starts on, in epoch milliseconds. */
+  week: number;
+  /** The region whose missions earn bonus points. */
+  region: string;
+  tiers: ClanInitiativeTier[];
+  /** Every tier's Kuva together; 0 in a week with none. */
+  kuva: number;
+}
+
 /** The tier a fissure accepts. Omnia accepts every relic. */
 export type FissureTier = "Lith" | "Meso" | "Neo" | "Axi" | "Requiem" | "Omnia";
 

@@ -1,10 +1,12 @@
 import { normalizeDropInfo, normalizeRelic, normalizeTierList } from "./normalize";
 import type {
+  ClanInitiativeWeek,
   DropInfo,
   EndoOffer,
   EndoStatus,
   FissureFeed,
   ItemPrice,
+  KuvaPurchases,
   LifecycleMap,
   MarketStatus,
   OwnedRelic,
@@ -384,6 +386,33 @@ export const api = {
     return (await res.json()) as OwnedRelic[];
   },
 
+  /** This week's Kuva purchases, ticked on the Kuva tab. */
+  async kuvaPurchases(signal?: AbortSignal): Promise<KuvaPurchases> {
+    return await get<KuvaPurchases>("/kuva/purchases", signal);
+  },
+
+  /**
+   * Replaces the stored week. A 400 carries the server's reason, kept as the
+   * error's message for the reason `saveOwnedRelics` gives.
+   */
+  async saveKuvaPurchases(next: KuvaPurchases): Promise<KuvaPurchases> {
+    const url = `${BASE}/kuva/purchases`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(next),
+      });
+    } catch (cause) {
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, await reasonOf(res));
+    return (await res.json()) as KuvaPurchases;
+  },
+
   /**
    * The Void Fissures open right now.
    *
@@ -403,6 +432,24 @@ export const api = {
 
     if (!res.ok) throw new ApiError(res.status, url, await reasonOf(res));
     return (await res.json()) as FissureFeed;
+  },
+
+  /**
+   * What the Clan Weekly Initiative pays this week and the next. A 503 keeps
+   * its reason for the fissures' reason: "unknown" is not "no Kuva".
+   */
+  async clanInitiative(signal?: AbortSignal): Promise<ClanInitiativeWeek[]> {
+    const url = `${BASE}/kuva/clan-initiative`;
+    let res: Response;
+
+    try {
+      res = await fetch(url, { signal, headers: { Accept: "application/json" } });
+    } catch (cause) {
+      throw new ApiError(0, url, `Cannot reach the server: ${String(cause)}`);
+    }
+
+    if (!res.ok) throw new ApiError(res.status, url, await reasonOf(res));
+    return (await res.json()) as ClanInitiativeWeek[];
   },
 
   /** Ayatan offers ranked by Endo per platinum. */

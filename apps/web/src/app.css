@@ -3208,3 +3208,192 @@ body {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* ---- Kuva tab ---------------------------------------------------------- */
+
+/* Two short tables stacked in one scrolling pane, like the Relic Crack's
+   sections: thirteen and nine rows, so neither is virtualised and the pane,
+   not each table, owns the vertical scroll. */
+.rf-kuva {
+  /* Its content's height, not `.rf-ranked-body`'s `flex: 1`. That rule sizes
+     a body whose table scrolls inside it; here the whole pane scrolls, and a
+     body held to the pane's leftover height let the tables run out past it
+     and under the footnote, which then sat across the vendor rows. */
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--rf-space-6);
+  padding: var(--rf-space-4) var(--rf-space-6) var(--rf-space-6);
+}
+
+.rf-kuva-section-title {
+  margin: 0 0 var(--rf-space-3);
+}
+
+/* §4.6: horizontal scroll with a sticky first column. The region is the
+   sideways scroller so it can carry the name and tab stop that strategy asks
+   for; the table's own wrapper never overflows inside it. */
+.rf-kuva-scroll {
+  overflow-x: auto;
+  min-width: 0;
+}
+
+/* These cells hold two or three lines — a vendor, its hub, what unlocks it —
+   where every other table in the app holds one. `.rf-table` clips cells to a
+   single ellipsised line for the virtualised tables' sake, which would cut the
+   hub and the requirement off; none of that applies to a short static table,
+   so the cells wrap and grow instead, and the 48px comfortable height stays
+   their floor. */
+.rf-cols-kuva-vendors tbody td,
+.rf-cols-kuva-rewards tbody td {
+  white-space: normal;
+  padding-block: var(--rf-space-2);
+}
+
+/* 60rem: the Done column is 12% of it, 115px, and holds the `− 2/3 +`
+   stepper — two 24px buttons and the count — with the cell's padding. */
+.rf-cols-kuva-vendors {
+  min-width: 60rem;
+}
+.rf-cols-kuva-vendors col:nth-child(1) {
+  width: 29%;
+} /* Vendor, hub and requirement */
+.rf-cols-kuva-vendors col:nth-child(2) {
+  width: 21%;
+} /* Price — Hunhow's two currencies are the longest */
+.rf-cols-kuva-vendors col:nth-child(3) {
+  width: 11%;
+} /* Kuva */
+.rf-cols-kuva-vendors col:nth-child(4) {
+  width: 15%;
+} /* Per week — the rotation's countdown */
+.rf-cols-kuva-vendors col:nth-child(5) {
+  width: 12%;
+} /* Weekly total */
+.rf-cols-kuva-vendors col:nth-child(6) {
+  width: 12%;
+} /* Done */
+
+/* The table stops in the middle of the pane rather than at its bottom edge,
+   as every other table here does, so its last row needs the closing rule the
+   pane edge draws for the others. border-default, the weight of the line
+   under the header, so the table reads as a closed box: with only the
+   subtle row divider the column lines seemed to run off and stop. */
+.rf-cols-kuva-vendors tbody tr:last-child td,
+.rf-cols-kuva-rewards tbody tr:last-child td {
+  border-bottom: var(--rf-hairline) solid var(--rf-border-default);
+}
+
+/* Bought out for the week: the row steps back so what is left stands out.
+   Only the icons fade and the total loses its gold. Fading the whole row
+   would take the muted hub and requirement lines under 4.5:1, and the row
+   already says it is done in text, through the ticked box or the "3/3". */
+.rf-kuva-row-done img {
+  opacity: 0.35;
+}
+.rf-kuva-row-done .rf-gold {
+  color: var(--rf-fg-secondary);
+}
+
+/* The Done column: an optional stepper over the toggle, both centred on the
+   column's axis so the toggles line up down the table whether or not a row
+   has a stepper above its own. */
+.rf-kuva-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--rf-space-2);
+}
+
+/* Its own row rather than the wishlist's `.rf-qty`: that one carries an
+   invisible counterweight for its remove button, which is what pushed this
+   stepper off centre, and this stepper has no remove button to balance. */
+.rf-kuva-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rf-space-1);
+}
+.rf-kuva-stepper > .rf-btn {
+  flex: none;
+  width: auto;
+}
+
+.rf-kuva-done-count {
+  min-width: 3.25em;
+  text-align: center;
+}
+
+/* `.rf-btn-outline` stretches to its container; the toggle keeps one width
+   pressed or not, so the column does not twitch when the check icon lands. */
+.rf-kuva-done-toggle {
+  width: 6rem;
+}
+
+/* 64rem: the Done column is 13% of it, 133px, which holds the Sortie's
+   `− 3/7 +` stepper and the amount field with its "Kuva" unit. */
+.rf-cols-kuva-rewards {
+  min-width: 64rem;
+}
+.rf-cols-kuva-rewards col:nth-child(1) {
+  width: 24%;
+} /* Source */
+.rf-cols-kuva-rewards col:nth-child(2) {
+  width: 14%;
+} /* Kuva — the Icebind range is the widest figure */
+.rf-cols-kuva-rewards col:nth-child(3) {
+  width: 8%;
+} /* Chance */
+.rf-cols-kuva-rewards col:nth-child(4) {
+  width: 11%;
+} /* How often */
+.rf-cols-kuva-rewards col:nth-child(5) {
+  width: 30%;
+} /* How it pays */
+.rf-cols-kuva-rewards col:nth-child(6) {
+  width: 13%;
+} /* Done */
+
+/* The amount field for the rewards that pay a different sum each week: wide
+   enough for six digits and its unit, and no wider than the Done toggles in
+   the rows around it, so the column keeps one edge. */
+.rf-kuva-amount-field {
+  width: 7.5rem;
+  margin-inline: auto;
+}
+
+.rf-kuva-who,
+.rf-kuva-cost,
+.rf-kuva-rotation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-1);
+}
+
+.rf-kuva-rotation {
+  align-items: flex-end;
+}
+
+.rf-kuva-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rf-space-2);
+}
+
+/* An icon box, pinned in px on purpose (§4.3): it sits beside text that
+   grows with the reader's font size, and a currency glyph that grew with it
+   would only crowd the number it labels. */
+.rf-kuva-icon {
+  width: var(--rf-size-icon-lg);
+  height: var(--rf-size-icon-lg);
+  flex: none;
+  object-fit: contain;
+}
+
+.rf-kuva-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rf-space-1);
+  padding: var(--rf-space-3) var(--rf-space-4);
+}

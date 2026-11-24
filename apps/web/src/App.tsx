@@ -19,6 +19,7 @@ import { StatusTerms } from "./components/StatusTerms";
 import { emptyFilters } from "./lib/rows";
 import { useReloadSpentAfterFirstRender } from "./lib/snapshotRefresh";
 import { useCatalogue } from "./lib/useCatalogue";
+import { useTeshinAlertWatcher } from "./lib/teshinAlert";
 import { isCatalogue, useViewState } from "./lib/useViewState";
 
 export function App() {
@@ -27,6 +28,9 @@ export function App() {
      effect after the children's, so the ranked view showing at load has already
      asked by the time it does. See lib/snapshotRefresh. */
   useReloadSpentAfterFirstRender();
+  // Here rather than in the Kuva tab, which only exists while it is in front:
+  // the bundle can come into the shop while the reader is on any other view.
+  useTeshinAlertWatcher();
 
   const {
     view,
@@ -161,6 +165,9 @@ export function App() {
               // After the rankings because it is one: what to open, ordered by
               // what it pays per minute in the fissures up right now.
               { id: "crack", label: "Relic Crack" },
+              // Last: the one tab about a resource rather than about relics
+              // and Prime parts.
+              { id: "kuva", label: "Kuva" },
             ]}
           />
 

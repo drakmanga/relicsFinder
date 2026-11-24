@@ -31,6 +31,7 @@ const VIEWS = [
   ["endo", "/?view=endo"],
   ["tier list", "/?view=tiers"],
   ["relic crack", "/?view=crack"],
+  ["kuva", "/?view=kuva"],
 ];
 
 const BLOCKING = new Set(["serious", "critical"]);
